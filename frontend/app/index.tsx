@@ -392,7 +392,7 @@ export default function Index() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Failed to generate AI stencil');
+        throw new Error(errorData.detail || 'Failed to generate stencil');
       }
 
       const data = await response.json();
