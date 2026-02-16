@@ -386,6 +386,11 @@ export default function Index() {
     }
 
     setIsGeneratingAI(true);
+    // Reset post-processing to defaults when generating new stencil
+    setPostContrast(100);
+    setPostBrightness(100);
+    setPostDetail(100);
+    
     try {
       const response = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
@@ -396,6 +401,8 @@ export default function Index() {
           image_base64: originalImage,
           style: 'tattoo',
           line_color: lineColor,
+          shading_detail: aiShadingDetail,
+          solid_fill: aiSolidFill,
         }),
       });
 
@@ -413,6 +420,15 @@ export default function Index() {
     } finally {
       setIsGeneratingAI(false);
     }
+  };
+
+  // Get CSS filter string for post-processing adjustments
+  const getPostProcessingStyle = () => {
+    if (stencilMode !== 'ai' || !stencilImage) return {};
+    
+    return {
+      filter: `contrast(${postContrast}%) brightness(${postBrightness}%) saturate(${postDetail}%)`,
+    };
   };
 
   // Remove background function
