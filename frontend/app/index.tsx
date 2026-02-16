@@ -88,6 +88,98 @@ export default function Index() {
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   
+  // Crop PanResponder for reliable touch handling
+  const cropPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        const { locationX, locationY } = evt.nativeEvent;
+        const box = cropBox;
+        const margin = 40;
+        
+        // Check corners first (larger hit area)
+        if (Math.abs(locationX - box.x) < margin && Math.abs(locationY - box.y) < margin) {
+          setActiveCropHandle('tl');
+        } else if (Math.abs(locationX - (box.x + box.width)) < margin && Math.abs(locationY - box.y) < margin) {
+          setActiveCropHandle('tr');
+        } else if (Math.abs(locationX - box.x) < margin && Math.abs(locationY - (box.y + box.height)) < margin) {
+          setActiveCropHandle('bl');
+        } else if (Math.abs(locationX - (box.x + box.width)) < margin && Math.abs(locationY - (box.y + box.height)) < margin) {
+          setActiveCropHandle('br');
+        } else if (locationX >= box.x && locationX <= box.x + box.width &&
+                   locationY >= box.y && locationY <= box.y + box.height) {
+          setActiveCropHandle('move');
+        } else {
+          setActiveCropHandle(null);
+        }
+        setCropStartPos({ x: locationX, y: locationY });
+        setCropStartBox({ ...box });
+      },
+      onPanResponderMove: (evt, gestureState) => {
+        if (!activeCropHandle) return;
+        
+        const dx = gestureState.dx;
+        const dy = gestureState.dy;
+        const minSize = 60;
+        const containerWidth = SCREEN_WIDTH - 40;
+        const containerHeight = SCREEN_HEIGHT - 250;
+
+        if (activeCropHandle === 'move') {
+          setCropBox({
+            ...cropStartBox,
+            x: Math.max(0, Math.min(containerWidth - cropStartBox.width, cropStartBox.x + dx)),
+            y: Math.max(0, Math.min(containerHeight - cropStartBox.height, cropStartBox.y + dy)),
+          });
+        } else if (activeCropHandle === 'br') {
+          setCropBox({
+            ...cropStartBox,
+            width: Math.max(minSize, Math.min(containerWidth - cropStartBox.x, cropStartBox.width + dx)),
+            height: Math.max(minSize, Math.min(containerHeight - cropStartBox.y, cropStartBox.height + dy)),
+          });
+        } else if (activeCropHandle === 'bl') {
+          const newWidth = Math.max(minSize, cropStartBox.width - dx);
+          const newX = cropStartBox.x + cropStartBox.width - newWidth;
+          if (newX >= 0) {
+            setCropBox({
+              ...cropStartBox,
+              x: newX,
+              width: newWidth,
+              height: Math.max(minSize, Math.min(containerHeight - cropStartBox.y, cropStartBox.height + dy)),
+            });
+          }
+        } else if (activeCropHandle === 'tr') {
+          const newHeight = Math.max(minSize, cropStartBox.height - dy);
+          const newY = cropStartBox.y + cropStartBox.height - newHeight;
+          if (newY >= 0) {
+            setCropBox({
+              ...cropStartBox,
+              y: newY,
+              width: Math.max(minSize, Math.min(containerWidth - cropStartBox.x, cropStartBox.width + dx)),
+              height: newHeight,
+            });
+          }
+        } else if (activeCropHandle === 'tl') {
+          const newWidth = Math.max(minSize, cropStartBox.width - dx);
+          const newHeight = Math.max(minSize, cropStartBox.height - dy);
+          const newX = cropStartBox.x + cropStartBox.width - newWidth;
+          const newY = cropStartBox.y + cropStartBox.height - newHeight;
+          if (newX >= 0 && newY >= 0) {
+            setCropBox({
+              x: newX,
+              y: newY,
+              width: newWidth,
+              height: newHeight,
+            });
+          }
+        }
+      },
+      onPanResponderRelease: () => {
+        setActiveCropHandle(null);
+      },
+    })
+  ).current;
+  
   // Settings state - defaults optimized for detailed stencils
   const [settings, setSettings] = useState<StencilSettings>({
     clarity: 30,  // Lower = more detail captured
