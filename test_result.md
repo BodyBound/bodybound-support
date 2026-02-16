@@ -116,54 +116,69 @@ backend:
       - working: true
         agent: "main"
         comment: "Health endpoint returns healthy status"
+      - working: true
+        agent: "testing"
+        comment: "Verified GET /api/health returns {'status': 'healthy', 'service': 'tattoo-stencil-api'} with 200 status code"
 
   - task: "Image processing API (edge detection)"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented using OpenCV Canny edge detection with adjustable settings"
+      - working: true
+        agent: "testing"
+        comment: "Tested POST /api/process with test image and settings. Successfully processes images to stencils using OpenCV Canny edge detection. Processing time ~1.77ms. Returns valid base64 stencil image. Error handling works for invalid base64 data."
 
   - task: "Save stencil endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/stencils saves to MongoDB"
+      - working: true
+        agent: "testing"
+        comment: "Tested POST /api/stencils with original image, stencil image, settings, and name. Successfully saves to MongoDB and returns stencil object with UUID. Data persistence verified."
 
   - task: "Get stencils endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "GET /api/stencils returns list of saved stencils"
+      - working: true
+        agent: "testing"
+        comment: "Tested GET /api/stencils. Successfully retrieves saved stencils from MongoDB, returns array with proper stencil objects including id, name, settings, and timestamps. Sorted by created_at descending."
 
   - task: "Delete stencil endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "low"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "DELETE /api/stencils/{id} removes stencil"
+      - working: true
+        agent: "testing"
+        comment: "Tested DELETE /api/stencils/{id}. Successfully deletes stencils by UUID and returns confirmation message. Properly handles 404 for non-existent stencils."
 
 frontend:
   - task: "Image picker and camera functionality"
