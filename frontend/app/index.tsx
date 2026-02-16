@@ -1201,11 +1201,30 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 12,
   },
+  imageLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   imageLabel: {
     color: '#9CA3AF',
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 8,
+  },
+  holdHintContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  holdHintText: {
+    color: '#8B5CF6',
+    fontSize: 11,
+    fontWeight: '500',
   },
   stencilLabelRow: {
     flexDirection: 'row',
