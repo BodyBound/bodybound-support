@@ -1154,7 +1154,13 @@ export default function Index() {
                 {/* Image display */}
                 <Image
                   source={{ uri: stencilImage && !showingOriginal ? stencilImage : originalImage }}
-                  style={styles.previewImage}
+                  style={[
+                    styles.previewImage,
+                    // Apply post-processing filters for AI stencil on web
+                    stencilMode === 'ai' && stencilImage && !showingOriginal && Platform.OS === 'web' && {
+                      filter: `contrast(${postContrast}%) brightness(${postBrightness}%) saturate(${postDetail}%)`,
+                    } as any
+                  ]}
                   resizeMode="contain"
                 />
                 
