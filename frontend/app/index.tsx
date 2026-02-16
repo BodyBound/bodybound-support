@@ -1938,6 +1938,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   saveButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1948,6 +1949,22 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#8B5CF6',
     gap: 8,
+  },
+  saveToDeviceButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10B981',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    gap: 8,
+  },
+  saveToDeviceButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
   saveButtonText: {
     color: '#8B5CF6',
