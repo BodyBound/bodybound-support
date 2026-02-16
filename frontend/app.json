@@ -2,7 +2,7 @@
   "expo": {
     "name": "Body Bound Stencil Generator",
     "slug": "body-bound-stencil",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "body-bound-stencil",
@@ -12,8 +12,7 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Take photos to convert to stencils",
-        "NSPhotoLibraryUsageDescription": "Select photos to convert to stencils",
-        "NSPhotoLibraryAddUsageDescription": "Save stencils to your photo library"
+        "NSPhotoLibraryUsageDescription": "Select photos to convert to stencils"
       }
     },
     "android": {
@@ -23,11 +22,7 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.ACCESS_MEDIA_LOCATION"
+        "android.permission.CAMERA"
       ]
     },
     "web": {
@@ -51,14 +46,6 @@
         {
           "photosPermission": "Select photos to convert to stencils",
           "cameraPermission": "Take photos to convert to stencils"
-        }
-      ],
-      [
-        "expo-media-library",
-        {
-          "photosPermission": "Save stencils to your photo library",
-          "savePhotosPermission": "Save stencils to your photo library",
-          "isAccessMediaLocationEnabled": true
         }
       ]
     ],
