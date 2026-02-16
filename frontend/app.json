@@ -57,7 +57,8 @@
         "expo-media-library",
         {
           "photosPermission": "Save stencils to your photo library",
-          "savePhotosPermission": "Save stencils to your photo library"
+          "savePhotosPermission": "Save stencils to your photo library",
+          "isAccessMediaLocationEnabled": true
         }
       ]
     ],
