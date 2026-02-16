@@ -442,9 +442,9 @@ export default function Index() {
     Image.getSize(originalImage, (width, height) => {
       setCropImageSize({ width, height });
       
-      // Calculate display dimensions
+      // Calculate display dimensions - use same values as PanResponder
       const containerWidth = SCREEN_WIDTH - 40;
-      const containerHeight = SCREEN_HEIGHT - 200;
+      const containerHeight = SCREEN_HEIGHT - 150;
       
       // Calculate how the image will be displayed (contain mode)
       const imageAspect = width / height;
