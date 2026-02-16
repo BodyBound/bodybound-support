@@ -1293,7 +1293,7 @@ export default function Index() {
               >
                 <Text style={styles.modeIcon}>✨</Text>
                 <Text style={[styles.modeButtonText, stencilMode === 'ai' && styles.modeButtonTextActive]}>
-                  AI Stencil
+                  Handmade Stencil
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -1360,7 +1360,7 @@ export default function Index() {
                 ) : (
                   <>
                     <Text style={styles.generateIcon}>✨</Text>
-                    <Text style={styles.aiButtonText}>Generate AI Stencil</Text>
+                    <Text style={styles.aiButtonText}>Generate Handmade Stencil</Text>
                   </>
                 )}
               </Pressable>
