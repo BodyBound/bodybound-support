@@ -2636,19 +2636,6 @@ const styles = StyleSheet.create({
     margin: 20,
     position: 'relative',
   },
-  cropDarkOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  cropInstructionsText: {
-    color: '#9CA3AF',
-    fontSize: 14,
-    textAlign: 'center',
-  },
   // Welcome Screen Styles
   welcomeContainer: {
     flex: 1,
