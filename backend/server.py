@@ -411,8 +411,11 @@ async def process_image(request: ProcessImageRequest):
         import time
         start_time = time.time()
         
+        # Auto-resize image if too large to prevent processing issues
+        resized_image = resize_image_if_needed(request.image_base64, max_dimension=2000, max_file_size_mb=4.0)
+        
         # Convert base64 to OpenCV image
-        img = base64_to_cv2(request.image_base64)
+        img = base64_to_cv2(resized_image)
         if img is None:
             raise HTTPException(status_code=400, detail="Invalid image data")
         
