@@ -514,33 +514,45 @@ export default function Index() {
         {/* Settings Controls */}
         {originalImage && (
           <View style={styles.settingsSection}>
-            <Text style={styles.sectionTitle}>Stencil Settings</Text>
+            <View style={styles.sectionTitleRow}>
+              <Text style={styles.sectionTitle}>Stencil Settings</Text>
+              {hasGeneratedOnce && (
+                <Text style={styles.liveUpdateHint}>Live updates enabled</Text>
+              )}
+            </View>
 
             {renderSlider(
               'Clarity',
               settings.clarity,
-              (val) => setSettings(prev => ({ ...prev, clarity: val })),
+              'clarity',
               'contrast-outline'
             )}
 
             {renderSlider(
               'Line Weight',
               settings.line_weight,
-              (val) => setSettings(prev => ({ ...prev, line_weight: val })),
+              'line_weight',
               'pencil-outline'
             )}
 
             {renderSlider(
               'Noise Reduction',
               settings.noise_reduction,
-              (val) => setSettings(prev => ({ ...prev, noise_reduction: val })),
+              'noise_reduction',
               'sparkles-outline'
             )}
 
             {/* Invert Toggle */}
             <TouchableOpacity
               style={styles.invertToggle}
-              onPress={() => setSettings(prev => ({ ...prev, invert: !prev.invert }))}
+              onPress={() => {
+                const newSettings = { ...settings, invert: !settings.invert };
+                setSettings(newSettings);
+                if (hasGeneratedOnce) {
+                  handleSettingsChange(newSettings);
+                }
+              }}
+            >
             >
               <View style={styles.invertToggleLeft}>
                 <Ionicons name="color-wand-outline" size={18} color="#8B5CF6" />
