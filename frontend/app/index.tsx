@@ -70,11 +70,11 @@ export default function Index() {
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   
-  // Settings state
+  // Settings state - defaults optimized for detailed stencils
   const [settings, setSettings] = useState<StencilSettings>({
-    clarity: 50,
-    line_weight: 50,
-    noise_reduction: 50,
+    clarity: 30,  // Lower = more detail captured
+    line_weight: 40,  // Medium line weight
+    noise_reduction: 30,  // Lower = more detail preserved
     invert: true,
   });
 
