@@ -420,6 +420,122 @@ export default function Index() {
     }
   };
 
+  // Save stencil to device photo library
+  const saveToDevice = async () => {
+    if (!stencilImage) {
+      Alert.alert('Error', 'No stencil to save.');
+      return;
+    }
+
+    try {
+      // Request permission
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please allow access to save images to your device.');
+        return;
+      }
+
+      // Extract base64 data
+      const base64Data = stencilImage.includes(',') ? stencilImage.split(',')[1] : stencilImage;
+      
+      // Create a temporary file
+      const filename = `stencil_${Date.now()}.png`;
+      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+      
+      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Save to media library
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      await MediaLibrary.createAlbumAsync('Tattoo Stencils', asset, false);
+
+      Alert.alert('Success', 'Stencil saved to your photo library!');
+    } catch (error) {
+      console.error('Error saving to device:', error);
+      Alert.alert('Error', 'Failed to save to device. Please try again.');
+    }
+  };
+
+  // Print stencil
+  const printStencil = async () => {
+    if (!stencilImage) {
+      Alert.alert('Error', 'No stencil to print.');
+      return;
+    }
+
+    try {
+      const html = `
+        <html>
+          <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body {
+                margin: 0;
+                padding: 20px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+              }
+              img {
+                max-width: 100%;
+                height: auto;
+              }
+              @page {
+                size: auto;
+                margin: 10mm;
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${stencilImage}" />
+          </body>
+        </html>
+      `;
+
+      await Print.printAsync({ html });
+    } catch (error) {
+      console.error('Error printing:', error);
+      Alert.alert('Error', 'Failed to print. Please try again.');
+    }
+  };
+
+  // Share stencil
+  const shareStencil = async () => {
+    if (!stencilImage) {
+      Alert.alert('Error', 'No stencil to share.');
+      return;
+    }
+
+    try {
+      // Check if sharing is available
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert('Error', 'Sharing is not available on this device.');
+        return;
+      }
+
+      // Extract base64 data
+      const base64Data = stencilImage.includes(',') ? stencilImage.split(',')[1] : stencilImage;
+      
+      // Create a temporary file
+      const filename = `stencil_${Date.now()}.png`;
+      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+      
+      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'image/png',
+        dialogTitle: 'Share Tattoo Stencil',
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+      Alert.alert('Error', 'Failed to share. Please try again.');
+    }
+  };
+
   const loadGallery = async () => {
     setLoadingGallery(true);
     try {
