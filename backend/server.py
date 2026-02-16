@@ -237,6 +237,42 @@ async def process_image(request: ProcessImageRequest):
         logger.error(f"Error processing image: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
 
+class RemoveBackgroundRequest(BaseModel):
+    image_base64: str
+    method: str = Field(default="auto")  # "auto", "grabcut", or "threshold"
+
+class RemoveBackgroundResponse(BaseModel):
+    image_base64: str
+    processing_time_ms: float
+
+@api_router.post("/remove-background", response_model=RemoveBackgroundResponse)
+async def remove_background_endpoint(request: RemoveBackgroundRequest):
+    """Remove background from an image"""
+    try:
+        import time
+        start_time = time.time()
+        
+        # Convert base64 to OpenCV image
+        img = base64_to_cv2(request.image_base64)
+        if img is None:
+            raise HTTPException(status_code=400, detail="Invalid image data")
+        
+        # Remove background
+        result = remove_background(img, request.method)
+        
+        # Convert back to base64 (PNG to preserve transparency)
+        result_base64 = cv2_to_base64_png(result)
+        
+        processing_time = (time.time() - start_time) * 1000
+        
+        return RemoveBackgroundResponse(
+            image_base64=result_base64,
+            processing_time_ms=round(processing_time, 2)
+        )
+    except Exception as e:
+        logger.error(f"Error removing background: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error removing background: {str(e)}")
+
 @api_router.post("/stencils", response_model=SavedStencil)
 async def save_stencil(request: SaveStencilRequest):
     """Save a stencil to the database"""
