@@ -329,20 +329,54 @@ export default function Index() {
     // Get image dimensions to set up crop box
     Image.getSize(originalImage, (width, height) => {
       setCropImageSize({ width, height });
-      // Set initial crop box to center 70% of image
-      const boxWidth = Math.min(SCREEN_WIDTH - 80, width * 0.7);
-      const boxHeight = boxWidth * (height / width);
+      
+      // Calculate display dimensions
+      const containerWidth = SCREEN_WIDTH - 40;
+      const containerHeight = SCREEN_HEIGHT - 200;
+      
+      // Calculate how the image will be displayed (contain mode)
+      const imageAspect = width / height;
+      const containerAspect = containerWidth / containerHeight;
+      
+      let displayWidth, displayHeight, offsetX, offsetY;
+      if (imageAspect > containerAspect) {
+        // Image is wider - fit to width
+        displayWidth = containerWidth;
+        displayHeight = containerWidth / imageAspect;
+        offsetX = 0;
+        offsetY = (containerHeight - displayHeight) / 2;
+      } else {
+        // Image is taller - fit to height
+        displayHeight = containerHeight;
+        displayWidth = containerHeight * imageAspect;
+        offsetX = (containerWidth - displayWidth) / 2;
+        offsetY = 0;
+      }
+      
+      // Set initial crop box to 80% of the displayed image area, centered
+      const cropWidth = displayWidth * 0.8;
+      const cropHeight = displayHeight * 0.8;
+      const cropX = offsetX + (displayWidth - cropWidth) / 2;
+      const cropY = offsetY + (displayHeight - cropHeight) / 2;
+      
       setCropBox({
-        x: (SCREEN_WIDTH - 40 - boxWidth) / 2,
-        y: 50,
-        width: boxWidth,
-        height: Math.min(boxHeight, 300),
+        x: cropX,
+        y: cropY,
+        width: cropWidth,
+        height: cropHeight,
       });
       setShowCropModal(true);
     }, () => {
       // Fallback if can't get size
+      const containerWidth = SCREEN_WIDTH - 40;
+      const containerHeight = SCREEN_HEIGHT - 200;
       setCropImageSize({ width: 1000, height: 1000 });
-      setCropBox({ x: 40, y: 40, width: 200, height: 200 });
+      setCropBox({ 
+        x: containerWidth * 0.1, 
+        y: containerHeight * 0.1, 
+        width: containerWidth * 0.8, 
+        height: containerHeight * 0.8 
+      });
       setShowCropModal(true);
     });
   };
