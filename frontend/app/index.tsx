@@ -1551,9 +1551,17 @@ export default function Index() {
           </TouchableOpacity>
           
           <View style={styles.previewModalActions}>
-            <TouchableOpacity style={styles.previewActionButton} onPress={saveToDevice}>
-              <Text style={styles.previewActionIcon}>💾</Text>
-              <Text style={styles.previewActionText}>Save</Text>
+            <TouchableOpacity 
+              style={styles.previewActionButton} 
+              onPress={saveToDevice}
+              disabled={isSavingToDevice}
+            >
+              {isSavingToDevice ? (
+                <ActivityIndicator size="small" color="#10B981" />
+              ) : (
+                <Text style={styles.previewActionIcon}>📱</Text>
+              )}
+              <Text style={styles.previewActionText}>To Phone</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.previewActionButton} onPress={printStencil}>
               <Text style={styles.previewActionIcon}>🖨️</Text>
