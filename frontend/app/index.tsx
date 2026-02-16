@@ -699,11 +699,13 @@ export default function Index() {
       return;
     }
 
+    setIsSavingToDevice(true);
     try {
       // Request permission
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permission Required', 'Please allow access to save images to your device.');
+        setIsSavingToDevice(false);
         return;
       }
 
@@ -720,12 +722,14 @@ export default function Index() {
 
       // Save to media library
       const asset = await MediaLibrary.createAssetAsync(fileUri);
-      await MediaLibrary.createAlbumAsync('Tattoo Stencils', asset, false);
+      await MediaLibrary.createAlbumAsync('Body Bound Stencils', asset, false);
 
-      Alert.alert('Success', 'Stencil saved to your photo library!');
+      Alert.alert('Saved!', 'Stencil saved to your photo gallery in "Body Bound Stencils" album!');
     } catch (error) {
       console.error('Error saving to device:', error);
       Alert.alert('Error', 'Failed to save to device. Please try again.');
+    } finally {
+      setIsSavingToDevice(false);
     }
   };
 
