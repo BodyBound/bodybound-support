@@ -723,7 +723,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#fff',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
+  },
+  liveUpdateHint: {
+    fontSize: 12,
+    color: '#10B981',
+    fontWeight: '500',
   },
   sliderContainer: {
     marginBottom: 20,
@@ -739,6 +749,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginLeft: 8,
     flex: 1,
+  },
+  sliderValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  miniLoader: {
+    marginRight: 6,
   },
   sliderValue: {
     color: '#8B5CF6',
