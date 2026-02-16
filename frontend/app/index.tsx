@@ -870,24 +870,52 @@ export default function Index() {
                 />
               </View>
 
-              {/* Stencil Image */}
+              {/* Stencil Image - Clickable for full preview */}
               {stencilImage && (
                 <View style={styles.imageWrapper}>
                   <View style={styles.stencilLabelRow}>
                     <Text style={styles.imageLabel}>Stencil</Text>
-                    {isLiveUpdating && (
-                      <View style={styles.updatingBadge}>
-                        <ActivityIndicator size="small" color="#8B5CF6" />
-                        <Text style={styles.updatingText}>Updating...</Text>
-                      </View>
-                    )}
+                    <TouchableOpacity 
+                      onPress={() => setShowPreviewModal(true)}
+                      style={styles.expandButton}
+                    >
+                      <Ionicons name="expand-outline" size={18} color="#8B5CF6" />
+                      <Text style={styles.expandButtonText}>Full View</Text>
+                    </TouchableOpacity>
                   </View>
-                  <View style={styles.stencilImageContainer}>
-                    <Image
-                      source={{ uri: stencilImage }}
-                      style={[styles.previewImage, isLiveUpdating && styles.imageUpdating]}
-                      resizeMode="contain"
-                    />
+                  <TouchableOpacity 
+                    onPress={() => setShowPreviewModal(true)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.stencilImageContainer}>
+                      <Image
+                        source={{ uri: stencilImage }}
+                        style={[styles.previewImage, isLiveUpdating && styles.imageUpdating]}
+                        resizeMode="contain"
+                      />
+                      {isLiveUpdating && (
+                        <View style={styles.updatingOverlay}>
+                          <ActivityIndicator size="small" color="#8B5CF6" />
+                          <Text style={styles.updatingText}>Updating...</Text>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                  
+                  {/* Export Action Buttons */}
+                  <View style={styles.exportButtons}>
+                    <TouchableOpacity style={styles.exportButton} onPress={saveToDevice}>
+                      <Ionicons name="download-outline" size={20} color="#10B981" />
+                      <Text style={styles.exportButtonText}>Save</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.exportButton} onPress={printStencil}>
+                      <Ionicons name="print-outline" size={20} color="#3B82F6" />
+                      <Text style={styles.exportButtonText}>Print</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.exportButton} onPress={shareStencil}>
+                      <Ionicons name="share-outline" size={20} color="#F59E0B" />
+                      <Text style={styles.exportButtonText}>Share</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               )}
