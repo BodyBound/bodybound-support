@@ -1185,7 +1185,7 @@ export default function Index() {
               }}
             >
               <View style={styles.invertToggleLeft}>
-                <Ionicons name="color-wand-outline" size={18} color="#8B5CF6" />
+                <Text style={styles.invertIcon}>🎨</Text>
                 <Text style={styles.invertToggleLabel}>Invert Colors</Text>
               </View>
               <View style={[
