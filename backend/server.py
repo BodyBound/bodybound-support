@@ -518,32 +518,41 @@ async def generate_ai_stencil(request: AIStencilRequest):
         line_color = color_map.get(request.line_color, "purple/violet")
         
         # Convert shading_detail and solid_fill to descriptive levels
-        shading_level = "minimal" if request.shading_detail < 33 else "moderate" if request.shading_detail < 66 else "heavy"
-        fill_level = "none (lines only)" if request.solid_fill < 33 else "some solid areas" if request.solid_fill < 66 else "heavy solid black fills"
+        shading_level = "minimal" if request.shading_detail < 20 else "light" if request.shading_detail < 40 else "moderate" if request.shading_detail < 60 else "heavy"
+        fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
         
-        # Create the prompt for EXACT tracing with customizable shading
-        prompt = f"""TRACE this exact image into a professional tattoo stencil. Do NOT create a new design or interpretation.
+        # Create the prompt for EXACT tracing
+        prompt = f"""YOU MUST TRACE THIS EXACT IMAGE. This is NOT a creative task - you are converting this specific image into a line drawing stencil.
 
-STRICT TRACING REQUIREMENTS:
-1. TRACE THE EXACT IMAGE PROVIDED - every shape, every detail, every element in the SAME position
-2. This is a DIRECT CONVERSION, not a creative reinterpretation
-3. The stencil must match the input image EXACTLY - same composition, same poses, same proportions
-4. Use {line_color} colored lines on a pure white background
-5. DO NOT add, remove, or move any elements from the original image
+CRITICAL - DO NOT:
+- Create a new image or design
+- Change the composition
+- Add or remove any elements
+- Reinterpret or reimagine the subject
+- Draw something "similar" - it MUST be THIS EXACT image
 
-LINE WORK STYLE PREFERENCES:
-- Cross-hatching/Shading Detail Level: {shading_level.upper()} - {"Use minimal dotted/dashed lines, focus on clean outlines" if shading_level == "minimal" else "Use moderate cross-hatching and stippling for depth and shadows" if shading_level == "moderate" else "Use heavy cross-hatching, stippling, and textured lines throughout for maximum depth and contrast"}
-- Solid Fill Level: {fill_level.upper()} - {"Keep all areas as line work only, no solid black fills" if request.solid_fill < 33 else "Add some solid black fills in the darkest shadow areas" if request.solid_fill < 66 else "Use solid black fills extensively in shadow areas and for bold contrast"}
+WHAT TO DO:
+1. Look at the input image carefully
+2. Trace EXACTLY what you see - same shapes, same positions, same proportions
+3. Convert it to {line_color} lines on white background
+4. This is like putting tracing paper over the photo and drawing the outlines
 
-LINE TECHNIQUES TO USE:
-- Bold solid lines for main outlines
-- Medium lines for secondary details
-- Fine lines for intricate details
-{"- Minimal use of dotted/dashed lines" if shading_level == "minimal" else "- DOTTED or DASHED lines to indicate shading areas and shadows" if shading_level == "moderate" else "- Heavy use of DOTTED, DASHED, and STIPPLED lines for shading"}
-{"- Keep areas open and clean" if request.solid_fill < 33 else "- Some solid black areas where shadows are darkest" if request.solid_fill < 66 else "- Bold solid black fills in dark areas for high contrast"}
+SHADING STYLE: {shading_level.upper()}
+{
+"- Clean outlines only, no cross-hatching or texture marks" if shading_level == "minimal" else
+"- Light texture/contour lines in shadow areas" if shading_level == "light" else
+"- Moderate cross-hatching and stippling for depth" if shading_level == "moderate" else
+"- Heavy cross-hatching and texture throughout"
+}
 
-The goal is a stencil that matches the original image EXACTLY while using the specified level of shading detail and solid fill.
-Ready for thermal transfer paper."""
+SOLID BLACK FILL: {fill_level.upper()}
+{
+"- NO solid black fills - lines only" if fill_level == "none" else
+"- Minimal solid black in darkest shadows only" if fill_level == "minimal" else
+"- Moderate solid black fills in shadow areas"
+}
+
+OUTPUT: A line art stencil that is an EXACT TRACE of the input image, suitable for tattoo transfer paper."""
 
         # Send the image with prompt
         msg = UserMessage(
