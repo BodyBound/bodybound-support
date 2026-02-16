@@ -2013,13 +2013,13 @@ const styles = StyleSheet.create({
   },
   previewModalImage: {
     width: SCREEN_WIDTH - 40,
-    height: SCREEN_HEIGHT * 0.6,
+    height: SCREEN_HEIGHT * 0.5,
     borderRadius: 12,
   },
   previewModalActions: {
     flexDirection: 'row',
-    marginTop: 30,
-    gap: 20,
+    marginTop: 20,
+    gap: 30,
   },
   previewActionButton: {
     alignItems: 'center',
@@ -2029,5 +2029,71 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '500',
+  },
+  // Zoom controls
+  zoomControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  zoomButton: {
+    padding: 8,
+  },
+  zoomText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    minWidth: 50,
+    textAlign: 'center',
+  },
+  previewScrollView: {
+    flex: 1,
+    width: '100%',
+  },
+  previewScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewCompareHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginBottom: 10,
+    gap: 8,
+  },
+  previewCompareText: {
+    color: '#8B5CF6',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  // Crop modal styles
+  cropImageArea: {
+    flex: 1,
+    margin: 20,
+    position: 'relative',
+  },
+  cropDarkOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  cropInstructionsText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
