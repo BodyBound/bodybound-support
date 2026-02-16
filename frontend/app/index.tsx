@@ -1507,7 +1507,7 @@ export default function Index() {
                       styles.versionButtonText,
                       selectedVersion === 'light' && styles.versionButtonTextSelected
                     ]}>Light</Text>
-                    <Text style={styles.versionButtonDesc}>Clean lines</Text>
+                    <Text style={styles.versionButtonDesc}>Clean lines only</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity
@@ -1524,7 +1524,7 @@ export default function Index() {
                       styles.versionButtonText,
                       selectedVersion === 'medium' && styles.versionButtonTextSelected
                     ]}>Medium</Text>
-                    <Text style={styles.versionButtonDesc}>Balanced</Text>
+                    <Text style={styles.versionButtonDesc}>Lines + texture</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity
@@ -1541,7 +1541,7 @@ export default function Index() {
                       styles.versionButtonText,
                       selectedVersion === 'heavy' && styles.versionButtonTextSelected
                     ]}>Heavy</Text>
-                    <Text style={styles.versionButtonDesc}>Rich detail</Text>
+                    <Text style={styles.versionButtonDesc}>Texture + black</Text>
                   </TouchableOpacity>
                 </View>
               </View>
