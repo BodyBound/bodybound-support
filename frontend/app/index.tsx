@@ -296,6 +296,7 @@ export default function Index() {
   const resetAll = () => {
     setOriginalImage(null);
     setStencilImage(null);
+    setHasGeneratedOnce(false);
     setSettings({
       clarity: 50,
       line_weight: 50,
