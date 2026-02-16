@@ -373,23 +373,29 @@ async def generate_ai_stencil(request: AIStencilRequest):
         }
         line_color = color_map.get(request.line_color, "purple/violet")
         
-        # Create the prompt for professional tattoo stencil
-        prompt = f"""Transform this image into a professional tattoo stencil drawing.
+        # Create the prompt for professional tattoo stencil with MORE DETAIL
+        prompt = f"""Transform this image into a professional tattoo stencil drawing with RICH DETAIL.
 
 CRITICAL REQUIREMENTS:
 1. Create clean, smooth, continuous lines - NO noise or scattered marks
 2. Use {line_color} colored lines on a pure white background
-3. Draw like a skilled tattoo artist would hand-draw a stencil:
-   - Main outline contours with solid, confident lines
-   - Inner detail lines for important features
-   - Use dotted or dashed lines to indicate shading/contour areas where the tattoo artist would add shading
-4. Simplify the image - remove unnecessary details, keep only the essential form
+3. Draw like a skilled tattoo artist would hand-draw a detailed stencil:
+   - Bold main outline contours defining the primary shapes
+   - Medium-weight inner detail lines for secondary features (facial features, petals, textures)
+   - Fine detail lines for intricate elements (hair strands, feathers, leaf veins, skin texture)
+   - Use dotted or dashed lines to indicate shading/contour areas and depth
+4. CAPTURE MORE DETAIL than a simple outline:
+   - Include inner structures and forms
+   - Show depth through layered line work
+   - Add contour lines that follow the form's curves
+   - Include fine details that make the subject recognizable
 5. Lines should be bold enough to transfer clearly to skin
-6. The output should look like a professional tattoo stencil/blueprint
-7. NO grayscale shading - only line work
+6. The output should look like a DETAILED professional tattoo stencil/blueprint
+7. NO grayscale shading - only line work of varying weights
 8. Ensure all lines are connected and flowing, not broken or pixelated
+9. Think like a realism tattoo artist - capture the essence with lines
 
-Style: Professional tattoo stencil suitable for thermal transfer paper"""
+Style: Professional DETAILED tattoo stencil suitable for thermal transfer paper - similar to what a skilled tattoo artist would hand-draw"""
 
         # Send the image with prompt
         msg = UserMessage(
