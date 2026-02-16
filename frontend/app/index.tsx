@@ -198,6 +198,7 @@ export default function Index() {
 
       const data = await response.json();
       setStencilImage(data.stencil_base64);
+      setHasGeneratedOnce(true); // Enable live updates after first generation
     } catch (error) {
       console.error('Error processing image:', error);
       Alert.alert('Error', 'Failed to process image. Please try again.');
