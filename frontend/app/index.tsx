@@ -2216,13 +2216,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
   },
+  galleryItemContainer: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
   galleryItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
     padding: 12,
-    marginBottom: 12,
   },
   galleryImage: {
     width: 80,
@@ -2244,8 +2247,42 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginTop: 4,
   },
+  galleryItemActions: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: '#2A2A2A',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  exportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10B981',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    gap: 6,
+  },
+  exportIcon: {
+    fontSize: 16,
+  },
+  exportButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   deleteButton: {
-    padding: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EF4444',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+  },
+  deleteIcon: {
+    fontSize: 16,
   },
   emptyGallery: {
     flex: 1,
