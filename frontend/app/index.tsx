@@ -379,7 +379,7 @@ export default function Index() {
     }
   }, [originalImage, settings]);
 
-  // AI-Powered Stencil Generation
+  // AI-Powered Stencil Generation - Generate 3 versions
   const generateAIStencil = async () => {
     if (!originalImage) {
       Alert.alert('No Image', 'Please select an image first.');
@@ -387,39 +387,103 @@ export default function Index() {
     }
 
     setIsGeneratingAI(true);
-    // Reset post-processing to defaults when generating new stencil
-    setPostContrast(100);
-    setPostBrightness(100);
-    setPostDetail(100);
+    setIsGeneratingVersions(true);
+    setGenerationProgress(0);
+    setStencilVersions({ light: null, medium: null, heavy: null });
+    
+    const versions: { light: string | null; medium: string | null; heavy: string | null } = {
+      light: null,
+      medium: null,
+      heavy: null
+    };
     
     try {
-      const response = await fetch(`${API_URL}/api/ai-stencil`, {
+      // Generate Light version (minimal shading)
+      setGenerationProgress(1);
+      const lightResponse = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image_base64: originalImage,
           style: 'tattoo',
           line_color: lineColor,
-          shading_detail: aiShadingDetail,
-          solid_fill: aiSolidFill,
+          shading_detail: 15,
+          solid_fill: 10,
         }),
       });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'Failed to generate stencil');
+      if (lightResponse.ok) {
+        const lightData = await lightResponse.json();
+        versions.light = lightData.stencil_base64;
+        setStencilVersions({ ...versions });
       }
 
-      const data = await response.json();
-      setStencilImage(data.stencil_base64);
+      // Generate Medium version (balanced)
+      setGenerationProgress(2);
+      const mediumResponse = await fetch(`${API_URL}/api/ai-stencil`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_base64: originalImage,
+          style: 'tattoo',
+          line_color: lineColor,
+          shading_detail: 50,
+          solid_fill: 35,
+        }),
+      });
+      if (mediumResponse.ok) {
+        const mediumData = await mediumResponse.json();
+        versions.medium = mediumData.stencil_base64;
+        setStencilVersions({ ...versions });
+      }
+
+      // Generate Heavy version (detailed shading)
+      setGenerationProgress(3);
+      const heavyResponse = await fetch(`${API_URL}/api/ai-stencil`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_base64: originalImage,
+          style: 'tattoo',
+          line_color: lineColor,
+          shading_detail: 85,
+          solid_fill: 65,
+        }),
+      });
+      if (heavyResponse.ok) {
+        const heavyData = await heavyResponse.json();
+        versions.heavy = heavyData.stencil_base64;
+        setStencilVersions({ ...versions });
+      }
+
+      // Set the medium version as default selected
+      setSelectedVersion('medium');
+      if (versions.medium) {
+        setStencilImage(versions.medium);
+      } else if (versions.light) {
+        setStencilImage(versions.light);
+        setSelectedVersion('light');
+      } else if (versions.heavy) {
+        setStencilImage(versions.heavy);
+        setSelectedVersion('heavy');
+      }
+      
       setHasGeneratedOnce(true);
     } catch (error: any) {
-      console.error('Error generating stencil:', error);
-      Alert.alert('Error', error.message || 'Failed to generate stencil. Please try again.');
+      console.error('Error generating stencil versions:', error);
+      Alert.alert('Error', error.message || 'Failed to generate stencils. Please try again.');
     } finally {
       setIsGeneratingAI(false);
+      setIsGeneratingVersions(false);
+      setGenerationProgress(0);
+    }
+  };
+
+  // Select a stencil version
+  const selectVersion = (version: 'light' | 'medium' | 'heavy') => {
+    setSelectedVersion(version);
+    const selectedStencil = stencilVersions[version];
+    if (selectedStencil) {
+      setStencilImage(selectedStencil);
     }
   };
 
