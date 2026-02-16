@@ -445,23 +445,30 @@ export default function Index() {
     });
   };
 
-  // Apply crop
+  // Apply crop using visual crop box coordinates
   const applyCrop = async () => {
-    if (!cropImage) return;
+    if (!cropImage || displayImageSize.width === 0) return;
 
     try {
-      // Extract base64 data
-      const base64Data = cropImage.includes(',') ? cropImage.split(',')[1] : cropImage;
+      // Calculate scale factor between display size and actual image size
+      const scaleX = imageSize.width / displayImageSize.width;
+      const scaleY = imageSize.height / displayImageSize.height;
+      
+      // Convert display coordinates to actual image coordinates
+      const actualCropX = Math.round(cropBoxPosition.x * scaleX);
+      const actualCropY = Math.round(cropBoxPosition.y * scaleY);
+      const actualCropWidth = Math.round(cropBoxSize.width * scaleX);
+      const actualCropHeight = Math.round(cropBoxSize.height * scaleY);
       
       const manipResult = await ImageManipulator.manipulateAsync(
         cropImage,
         [
           {
             crop: {
-              originX: Math.max(0, Math.round(cropRegion.originX)),
-              originY: Math.max(0, Math.round(cropRegion.originY)),
-              width: Math.max(10, Math.round(cropRegion.width)),
-              height: Math.max(10, Math.round(cropRegion.height)),
+              originX: Math.max(0, actualCropX),
+              originY: Math.max(0, actualCropY),
+              width: Math.max(10, Math.min(actualCropWidth, imageSize.width - actualCropX)),
+              height: Math.max(10, Math.min(actualCropHeight, imageSize.height - actualCropY)),
             },
           },
         ],
