@@ -881,46 +881,6 @@ export default function Index() {
             </View>
           )}
         </View>
-                  </View>
-                  <TouchableOpacity 
-                    onPress={() => setShowPreviewModal(true)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.stencilImageContainer}>
-                      <Image
-                        source={{ uri: stencilImage }}
-                        style={[styles.previewImage, isLiveUpdating && styles.imageUpdating]}
-                        resizeMode="contain"
-                      />
-                      {isLiveUpdating && (
-                        <View style={styles.updatingOverlay}>
-                          <ActivityIndicator size="small" color="#8B5CF6" />
-                          <Text style={styles.updatingText}>Updating...</Text>
-                        </View>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                  
-                  {/* Export Action Buttons */}
-                  <View style={styles.exportButtons}>
-                    <TouchableOpacity style={styles.exportButton} onPress={saveToDevice}>
-                      <Ionicons name="download-outline" size={20} color="#10B981" />
-                      <Text style={styles.exportButtonText}>Save</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.exportButton} onPress={printStencil}>
-                      <Ionicons name="print-outline" size={20} color="#3B82F6" />
-                      <Text style={styles.exportButtonText}>Print</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.exportButton} onPress={shareStencil}>
-                      <Ionicons name="share-outline" size={20} color="#F59E0B" />
-                      <Text style={styles.exportButtonText}>Share</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </View>
-          )}
-        </View>
 
         {/* Image Source Buttons */}
         <View style={styles.sourceButtons}>
@@ -946,7 +906,7 @@ export default function Index() {
             <View style={styles.editToolsRow}>
               <TouchableOpacity 
                 style={styles.editToolButton} 
-                onPress={openCropModal}
+                onPress={cropImage}
               >
                 <Ionicons name="crop-outline" size={22} color="#8B5CF6" />
                 <Text style={styles.editToolButtonText}>Crop</Text>
