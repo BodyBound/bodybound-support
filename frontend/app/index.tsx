@@ -471,17 +471,38 @@ export default function Index() {
     if (!originalImage) return;
 
     try {
-      // Calculate the crop region in actual image coordinates
-      const displayWidth = SCREEN_WIDTH - 40;
-      const displayHeight = 350;
+      // Calculate display dimensions (same logic as openCropModal)
+      const containerWidth = SCREEN_WIDTH - 40;
+      const containerHeight = SCREEN_HEIGHT - 200;
       
-      // Scale factors
+      const imageAspect = cropImageSize.width / cropImageSize.height;
+      const containerAspect = containerWidth / containerHeight;
+      
+      let displayWidth, displayHeight, offsetX, offsetY;
+      if (imageAspect > containerAspect) {
+        displayWidth = containerWidth;
+        displayHeight = containerWidth / imageAspect;
+        offsetX = 0;
+        offsetY = (containerHeight - displayHeight) / 2;
+      } else {
+        displayHeight = containerHeight;
+        displayWidth = containerHeight * imageAspect;
+        offsetX = (containerWidth - displayWidth) / 2;
+        offsetY = 0;
+      }
+      
+      // Convert crop box from display coordinates to image coordinates
+      // First, adjust for the offset (where the image starts in the container)
+      const adjustedX = cropBox.x - offsetX;
+      const adjustedY = cropBox.y - offsetY;
+      
+      // Scale factors from display to actual image
       const scaleX = cropImageSize.width / displayWidth;
       const scaleY = cropImageSize.height / displayHeight;
       
       const cropRegion = {
-        originX: Math.round(cropBox.x * scaleX),
-        originY: Math.round(cropBox.y * scaleY),
+        originX: Math.round(Math.max(0, adjustedX * scaleX)),
+        originY: Math.round(Math.max(0, adjustedY * scaleY)),
         width: Math.round(cropBox.width * scaleX),
         height: Math.round(cropBox.height * scaleY),
       };
@@ -489,8 +510,8 @@ export default function Index() {
       // Ensure crop region is within bounds
       cropRegion.originX = Math.max(0, Math.min(cropRegion.originX, cropImageSize.width - 10));
       cropRegion.originY = Math.max(0, Math.min(cropRegion.originY, cropImageSize.height - 10));
-      cropRegion.width = Math.min(cropRegion.width, cropImageSize.width - cropRegion.originX);
-      cropRegion.height = Math.min(cropRegion.height, cropImageSize.height - cropRegion.originY);
+      cropRegion.width = Math.max(10, Math.min(cropRegion.width, cropImageSize.width - cropRegion.originX));
+      cropRegion.height = Math.max(10, Math.min(cropRegion.height, cropImageSize.height - cropRegion.originY));
 
       const result = await ImageManipulator.manipulateAsync(
         originalImage,
