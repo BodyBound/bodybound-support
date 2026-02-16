@@ -679,6 +679,32 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 8,
   },
+  stencilLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  updatingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  updatingText: {
+    color: '#8B5CF6',
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 6,
+  },
+  stencilImageContainer: {
+    position: 'relative',
+  },
+  imageUpdating: {
+    opacity: 0.6,
+  },
   previewImage: {
     width: '100%',
     height: 250,
