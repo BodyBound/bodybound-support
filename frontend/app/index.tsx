@@ -2115,7 +2115,73 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
   },
+  // Preview compare button
+  previewCompareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#8B5CF6',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+    marginBottom: 15,
+    gap: 8,
+  },
+  previewCompareButtonActive: {
+    backgroundColor: '#8B5CF6',
+  },
+  previewCompareButtonText: {
+    color: '#8B5CF6',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  previewCompareButtonTextActive: {
+    color: '#fff',
+  },
+  // Compare button for main view
+  compareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#8B5CF6',
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 10,
+    gap: 8,
+  },
+  compareButtonActive: {
+    backgroundColor: '#8B5CF6',
+  },
+  compareButtonText: {
+    color: '#8B5CF6',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  compareButtonTextActive: {
+    color: '#fff',
+  },
   // Crop modal styles
+  cropPreviewArea: {
+    flex: 1,
+    margin: 20,
+    position: 'relative',
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  cropIndicator: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: '#8B5CF6',
+    backgroundColor: 'transparent',
+  },
+  cropSliders: {
+    padding: 20,
+    backgroundColor: '#1A1A1A',
+  },
   cropImageArea: {
     flex: 1,
     margin: 20,
