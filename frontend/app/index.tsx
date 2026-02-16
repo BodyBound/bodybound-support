@@ -1337,7 +1337,7 @@ export default function Index() {
           )}
         </View>
 
-        {/* Edit Tools - Crop and Remove Background */}
+        {/* Edit Tools - Crop */}
         {originalImage && (
           <View style={styles.editToolsSection}>
             <Text style={styles.editToolsTitle}>Edit Tools</Text>
@@ -1347,21 +1347,7 @@ export default function Index() {
                 onPress={openCropModal}
               >
                 <Text style={styles.toolIcon}>✂️</Text>
-                <Text style={styles.editToolButtonText}>Crop</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.editToolButton, isRemovingBackground && styles.buttonDisabled]} 
-                onPress={removeBackground}
-                disabled={isRemovingBackground}
-              >
-                {isRemovingBackground ? (
-                  <ActivityIndicator size="small" color="#8B5CF6" />
-                ) : (
-                  <Text style={styles.toolIcon}>🎭</Text>
-                )}
-                <Text style={styles.editToolButtonText}>
-                  {isRemovingBackground ? 'Removing...' : 'Remove BG'}
-                </Text>
+                <Text style={styles.editToolButtonText}>Crop Image</Text>
               </TouchableOpacity>
             </View>
           </View>
