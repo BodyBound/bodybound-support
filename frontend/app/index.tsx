@@ -83,9 +83,10 @@ export default function Index() {
     invert: true,
   });
 
-  // Live update function with debouncing
+  // Live update function with debouncing - ONLY for basic mode
   const processImageLive = useCallback(async (currentSettings: StencilSettings) => {
-    if (!originalImage || !hasGeneratedOnce) return;
+    // Only process in basic mode with live updates enabled
+    if (!originalImage || !hasGeneratedOnce || stencilMode !== 'basic') return;
 
     // Cancel any pending request
     if (abortControllerRef.current) {
@@ -122,12 +123,14 @@ export default function Index() {
     } finally {
       setIsLiveUpdating(false);
     }
-  }, [originalImage, hasGeneratedOnce]);
+  }, [originalImage, hasGeneratedOnce, stencilMode]);
 
-  // Debounced settings change handler
+  // Debounced settings change handler - ONLY for basic mode
   const handleSettingsChange = useCallback((newSettings: StencilSettings) => {
     setSettings(newSettings);
     
+    // Only trigger live update in basic mode
+    if (stencilMode !== 'basic') return;
     // Only trigger live update if we've generated at least once
     if (hasGeneratedOnce && originalImage) {
       // Clear existing timer
