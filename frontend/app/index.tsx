@@ -1588,6 +1588,10 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.6,
   },
+  buttonPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
   processButtonText: {
     color: '#fff',
     fontSize: 16,
