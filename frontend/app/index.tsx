@@ -96,6 +96,99 @@ export default function Index() {
     invert: true,
   });
 
+  // Min crop size
+  const MIN_CROP_SIZE = 50;
+
+  // PanResponder for moving the crop box
+  const panResponderMove = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gesture) => {
+        const maxX = displayImageSize.width - cropBoxSize.width;
+        const maxY = displayImageSize.height - cropBoxSize.height;
+        setCropBoxPosition({
+          x: Math.max(0, Math.min(maxX, cropBoxPosition.x + gesture.dx)),
+          y: Math.max(0, Math.min(maxY, cropBoxPosition.y + gesture.dy)),
+        });
+      },
+      onPanResponderRelease: () => {},
+    })
+  ).current;
+
+  // PanResponder for top-left corner
+  const panResponderTopLeft = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gesture) => {
+        const newX = Math.max(0, cropBoxPosition.x + gesture.dx);
+        const newY = Math.max(0, cropBoxPosition.y + gesture.dy);
+        const newWidth = Math.max(MIN_CROP_SIZE, cropBoxSize.width - gesture.dx);
+        const newHeight = Math.max(MIN_CROP_SIZE, cropBoxSize.height - gesture.dy);
+        
+        if (newWidth >= MIN_CROP_SIZE && newHeight >= MIN_CROP_SIZE) {
+          setCropBoxPosition({ x: newX, y: newY });
+          setCropBoxSize({ width: newWidth, height: newHeight });
+        }
+      },
+      onPanResponderRelease: () => {},
+    })
+  ).current;
+
+  // PanResponder for top-right corner
+  const panResponderTopRight = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gesture) => {
+        const newY = Math.max(0, cropBoxPosition.y + gesture.dy);
+        const newWidth = Math.max(MIN_CROP_SIZE, Math.min(displayImageSize.width - cropBoxPosition.x, cropBoxSize.width + gesture.dx));
+        const newHeight = Math.max(MIN_CROP_SIZE, cropBoxSize.height - gesture.dy);
+        
+        if (newWidth >= MIN_CROP_SIZE && newHeight >= MIN_CROP_SIZE) {
+          setCropBoxPosition(prev => ({ ...prev, y: newY }));
+          setCropBoxSize({ width: newWidth, height: newHeight });
+        }
+      },
+      onPanResponderRelease: () => {},
+    })
+  ).current;
+
+  // PanResponder for bottom-left corner
+  const panResponderBottomLeft = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gesture) => {
+        const newX = Math.max(0, cropBoxPosition.x + gesture.dx);
+        const newWidth = Math.max(MIN_CROP_SIZE, cropBoxSize.width - gesture.dx);
+        const newHeight = Math.max(MIN_CROP_SIZE, Math.min(displayImageSize.height - cropBoxPosition.y, cropBoxSize.height + gesture.dy));
+        
+        if (newWidth >= MIN_CROP_SIZE && newHeight >= MIN_CROP_SIZE) {
+          setCropBoxPosition(prev => ({ ...prev, x: newX }));
+          setCropBoxSize({ width: newWidth, height: newHeight });
+        }
+      },
+      onPanResponderRelease: () => {},
+    })
+  ).current;
+
+  // PanResponder for bottom-right corner
+  const panResponderBottomRight = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderMove: (_, gesture) => {
+        const newWidth = Math.max(MIN_CROP_SIZE, Math.min(displayImageSize.width - cropBoxPosition.x, cropBoxSize.width + gesture.dx));
+        const newHeight = Math.max(MIN_CROP_SIZE, Math.min(displayImageSize.height - cropBoxPosition.y, cropBoxSize.height + gesture.dy));
+        
+        setCropBoxSize({ width: newWidth, height: newHeight });
+      },
+      onPanResponderRelease: () => {},
+    })
+  ).current;
+
   // Live update function with debouncing - ONLY for basic mode
   const processImageLive = useCallback(async (currentSettings: StencilSettings) => {
     // Only process in basic mode with live updates enabled
