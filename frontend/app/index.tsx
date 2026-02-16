@@ -1135,7 +1135,7 @@ export default function Index() {
       {renderGalleryModal()}
       {renderSaveModal()}
       
-      {/* Crop Modal */}
+      {/* Crop Modal with Sliders */}
       <Modal
         visible={showCropModal}
         animationType="slide"
@@ -1153,11 +1153,8 @@ export default function Index() {
             </TouchableOpacity>
           </View>
 
-          <View 
-            style={styles.cropImageArea}
-            onTouchMove={handleCropTouchMove}
-            onTouchEnd={handleCropTouchEnd}
-          >
+          {/* Image Preview with Crop Box Overlay */}
+          <View style={styles.cropPreviewArea}>
             {originalImage && (
               <Image
                 source={{ uri: originalImage }}
@@ -1166,47 +1163,79 @@ export default function Index() {
               />
             )}
             
-            {/* Dark overlay */}
-            <View style={styles.cropDarkOverlay} pointerEvents="none" />
-            
-            {/* Crop box */}
+            {/* Visual crop indicator overlay */}
             <View 
-              style={[styles.cropBox, {
-                left: cropBox.x,
-                top: cropBox.y,
-                width: cropBox.width,
-                height: cropBox.height,
+              style={[styles.cropIndicator, {
+                left: `${(cropBox.x / (SCREEN_WIDTH - 40)) * 100}%`,
+                top: `${(cropBox.y / 300) * 100}%`,
+                width: `${(cropBox.width / (SCREEN_WIDTH - 40)) * 100}%`,
+                height: `${(cropBox.height / 300) * 100}%`,
               }]}
-              onTouchStart={(e) => handleCropTouchStart('move', e)}
-            >
-              {/* Grid lines */}
-              <View style={[styles.cropGridLine, { left: '33%', top: 0, bottom: 0, width: 1 }]} />
-              <View style={[styles.cropGridLine, { left: '66%', top: 0, bottom: 0, width: 1 }]} />
-              <View style={[styles.cropGridLine, { top: '33%', left: 0, right: 0, height: 1 }]} />
-              <View style={[styles.cropGridLine, { top: '66%', left: 0, right: 0, height: 1 }]} />
-            </View>
-
-            {/* Corner handles */}
-            <View 
-              style={[styles.cropHandle, { left: cropBox.x - 12, top: cropBox.y - 12 }]}
-              onTouchStart={(e) => handleCropTouchStart('tl', e)}
-            />
-            <View 
-              style={[styles.cropHandle, { left: cropBox.x + cropBox.width - 12, top: cropBox.y - 12 }]}
-              onTouchStart={(e) => handleCropTouchStart('tr', e)}
-            />
-            <View 
-              style={[styles.cropHandle, { left: cropBox.x - 12, top: cropBox.y + cropBox.height - 12 }]}
-              onTouchStart={(e) => handleCropTouchStart('bl', e)}
-            />
-            <View 
-              style={[styles.cropHandle, { left: cropBox.x + cropBox.width - 12, top: cropBox.y + cropBox.height - 12 }]}
-              onTouchStart={(e) => handleCropTouchStart('br', e)}
+              pointerEvents="none"
             />
           </View>
 
+          {/* Crop Sliders */}
+          <View style={styles.cropSliders}>
+            <View style={styles.cropSliderRow}>
+              <Text style={styles.cropSliderLabel}>Left Position</Text>
+              <Slider
+                style={styles.cropSlider}
+                minimumValue={0}
+                maximumValue={SCREEN_WIDTH - 100}
+                value={cropBox.x}
+                onValueChange={(val) => setCropBox(prev => ({ ...prev, x: val }))}
+                minimumTrackTintColor="#8B5CF6"
+                maximumTrackTintColor="#374151"
+                thumbTintColor="#8B5CF6"
+              />
+            </View>
+            
+            <View style={styles.cropSliderRow}>
+              <Text style={styles.cropSliderLabel}>Top Position</Text>
+              <Slider
+                style={styles.cropSlider}
+                minimumValue={0}
+                maximumValue={200}
+                value={cropBox.y}
+                onValueChange={(val) => setCropBox(prev => ({ ...prev, y: val }))}
+                minimumTrackTintColor="#8B5CF6"
+                maximumTrackTintColor="#374151"
+                thumbTintColor="#8B5CF6"
+              />
+            </View>
+            
+            <View style={styles.cropSliderRow}>
+              <Text style={styles.cropSliderLabel}>Width</Text>
+              <Slider
+                style={styles.cropSlider}
+                minimumValue={50}
+                maximumValue={SCREEN_WIDTH - 40}
+                value={cropBox.width}
+                onValueChange={(val) => setCropBox(prev => ({ ...prev, width: val }))}
+                minimumTrackTintColor="#8B5CF6"
+                maximumTrackTintColor="#374151"
+                thumbTintColor="#8B5CF6"
+              />
+            </View>
+            
+            <View style={styles.cropSliderRow}>
+              <Text style={styles.cropSliderLabel}>Height</Text>
+              <Slider
+                style={styles.cropSlider}
+                minimumValue={50}
+                maximumValue={300}
+                value={cropBox.height}
+                onValueChange={(val) => setCropBox(prev => ({ ...prev, height: val }))}
+                minimumTrackTintColor="#8B5CF6"
+                maximumTrackTintColor="#374151"
+                thumbTintColor="#8B5CF6"
+              />
+            </View>
+          </View>
+
           <View style={styles.cropInstructions}>
-            <Text style={styles.cropInstructionsText}>Drag corners to resize • Drag inside to move</Text>
+            <Text style={styles.cropInstructionsText}>Use sliders to adjust crop area</Text>
           </View>
         </SafeAreaView>
       </Modal>
