@@ -79,6 +79,15 @@ export default function Index() {
   const [stencilMode, setStencilMode] = useState<'basic' | 'ai'>('ai'); // Default to AI mode
   const [lineColor, setLineColor] = useState<'purple' | 'blue' | 'black'>('purple');
   
+  // AI Generation Preferences (pre-generation)
+  const [aiShadingDetail, setAiShadingDetail] = useState(50); // 0-100: how much cross-hatching
+  const [aiSolidFill, setAiSolidFill] = useState(30); // 0-100: how much solid black fill
+  
+  // Post-Processing Adjustments (real-time after generation)
+  const [postContrast, setPostContrast] = useState(100); // 50-150: line contrast
+  const [postBrightness, setPostBrightness] = useState(100); // 50-150: brightness/darkness
+  const [postDetail, setPostDetail] = useState(100); // 50-150: detail sharpness
+  
   // Full-size preview state with zoom
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewShowingOriginal, setPreviewShowingOriginal] = useState(false);
