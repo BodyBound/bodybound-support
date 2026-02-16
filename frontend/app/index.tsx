@@ -1146,6 +1146,46 @@ export default function Index() {
       {renderGalleryModal()}
       {renderSaveModal()}
       {renderCropModal()}
+      
+      {/* Full-Size Preview Modal */}
+      <Modal
+        visible={showPreviewModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowPreviewModal(false)}
+      >
+        <View style={styles.previewModalContainer}>
+          <TouchableOpacity 
+            style={styles.previewModalClose}
+            onPress={() => setShowPreviewModal(false)}
+          >
+            <Ionicons name="close-circle" size={36} color="#fff" />
+          </TouchableOpacity>
+          
+          {stencilImage && (
+            <Image
+              source={{ uri: stencilImage }}
+              style={styles.previewModalImage}
+              resizeMode="contain"
+            />
+          )}
+          
+          <View style={styles.previewModalActions}>
+            <TouchableOpacity style={styles.previewActionButton} onPress={saveToDevice}>
+              <Ionicons name="download-outline" size={24} color="#10B981" />
+              <Text style={styles.previewActionText}>Save to Device</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.previewActionButton} onPress={printStencil}>
+              <Ionicons name="print-outline" size={24} color="#3B82F6" />
+              <Text style={styles.previewActionText}>Print</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.previewActionButton} onPress={shareStencil}>
+              <Ionicons name="share-outline" size={24} color="#F59E0B" />
+              <Text style={styles.previewActionText}>Share</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
