@@ -399,8 +399,8 @@ export default function Index() {
       setStencilImage(data.stencil_base64);
       setHasGeneratedOnce(true);
     } catch (error: any) {
-      console.error('Error generating AI stencil:', error);
-      Alert.alert('Error', error.message || 'Failed to generate AI stencil. Please try again.');
+      console.error('Error generating stencil:', error);
+      Alert.alert('Error', error.message || 'Failed to generate stencil. Please try again.');
     } finally {
       setIsGeneratingAI(false);
     }
