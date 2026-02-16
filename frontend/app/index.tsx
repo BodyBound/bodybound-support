@@ -487,15 +487,6 @@ export default function Index() {
     }
   };
 
-  // Get CSS filter string for post-processing adjustments
-  const getPostProcessingStyle = () => {
-    if (stencilMode !== 'ai' || !stencilImage) return {};
-    
-    return {
-      filter: `contrast(${postContrast}%) brightness(${postBrightness}%) saturate(${postDetail}%)`,
-    };
-  };
-
   // Remove background function
   const removeBackground = async () => {
     if (!originalImage) {
