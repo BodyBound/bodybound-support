@@ -482,12 +482,22 @@ export default function Index() {
               {/* Stencil Image */}
               {stencilImage && (
                 <View style={styles.imageWrapper}>
-                  <Text style={styles.imageLabel}>Stencil</Text>
-                  <Image
-                    source={{ uri: stencilImage }}
-                    style={styles.previewImage}
-                    resizeMode="contain"
-                  />
+                  <View style={styles.stencilLabelRow}>
+                    <Text style={styles.imageLabel}>Stencil</Text>
+                    {isLiveUpdating && (
+                      <View style={styles.updatingBadge}>
+                        <ActivityIndicator size="small" color="#8B5CF6" />
+                        <Text style={styles.updatingText}>Updating...</Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.stencilImageContainer}>
+                    <Image
+                      source={{ uri: stencilImage }}
+                      style={[styles.previewImage, isLiveUpdating && styles.imageUpdating]}
+                      resizeMode="contain"
+                    />
+                  </View>
                 </View>
               )}
             </View>
