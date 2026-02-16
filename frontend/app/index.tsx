@@ -1462,4 +1462,98 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontSize: 12,
   },
+  // Mode Selection Styles
+  modeSection: {
+    marginTop: 20,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 16,
+  },
+  modeSectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 12,
+  },
+  modeToggle: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modeButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#8B5CF6',
+    backgroundColor: 'transparent',
+    gap: 8,
+  },
+  modeButtonActive: {
+    backgroundColor: '#8B5CF6',
+  },
+  modeButtonText: {
+    color: '#8B5CF6',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modeButtonTextActive: {
+    color: '#fff',
+  },
+  // Color Selection Styles
+  colorSection: {
+    marginTop: 16,
+  },
+  colorSectionTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#9CA3AF',
+    marginBottom: 10,
+  },
+  colorOptions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  colorOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 2,
+    backgroundColor: '#0F0F0F',
+    gap: 6,
+  },
+  colorOptionActive: {
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+  },
+  colorDot: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+  },
+  colorOptionText: {
+    color: '#D1D5DB',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  // AI Button Styles
+  aiButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#7C3AED',
+    paddingVertical: 16,
+    borderRadius: 12,
+    gap: 8,
+  },
+  aiButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
