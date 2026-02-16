@@ -1280,7 +1280,7 @@ export default function Index() {
             </TouchableOpacity>
           </View>
           
-          {/* Image with hold-to-compare */}
+          {/* Image display */}
           <ScrollView 
             style={styles.previewScrollView}
             contentContainerStyle={styles.previewScrollContent}
@@ -1289,29 +1289,29 @@ export default function Index() {
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
           >
-            <TouchableOpacity
-              activeOpacity={1}
-              onPressIn={() => setPreviewShowingOriginal(true)}
-              onPressOut={() => setPreviewShowingOriginal(false)}
-              delayLongPress={100}
-            >
-              {(stencilImage || originalImage) && (
-                <Image
-                  source={{ uri: previewShowingOriginal ? originalImage! : stencilImage! }}
-                  style={[styles.previewModalImage, { transform: [{ scale: previewScale }] }]}
-                  resizeMode="contain"
-                />
-              )}
-            </TouchableOpacity>
+            {(stencilImage || originalImage) && (
+              <Image
+                source={{ uri: previewShowingOriginal ? originalImage! : stencilImage! }}
+                style={[styles.previewModalImage, { transform: [{ scale: previewScale }] }]}
+                resizeMode="contain"
+              />
+            )}
           </ScrollView>
           
-          {/* Compare hint */}
-          <View style={styles.previewCompareHint}>
-            <Ionicons name="finger-print-outline" size={16} color="#8B5CF6" />
-            <Text style={styles.previewCompareText}>
-              {previewShowingOriginal ? 'Showing Original' : 'Hold to see Original'}
+          {/* Compare toggle button */}
+          <TouchableOpacity
+            style={[styles.previewCompareButton, previewShowingOriginal && styles.previewCompareButtonActive]}
+            onPress={() => setPreviewShowingOriginal(!previewShowingOriginal)}
+          >
+            <Ionicons 
+              name={previewShowingOriginal ? "eye" : "eye-outline"} 
+              size={20} 
+              color={previewShowingOriginal ? "#fff" : "#8B5CF6"} 
+            />
+            <Text style={[styles.previewCompareButtonText, previewShowingOriginal && styles.previewCompareButtonTextActive]}>
+              {previewShowingOriginal ? 'Showing Original' : 'Compare with Original'}
             </Text>
-          </View>
+          </TouchableOpacity>
           
           <View style={styles.previewModalActions}>
             <TouchableOpacity style={styles.previewActionButton} onPress={saveToDevice}>
