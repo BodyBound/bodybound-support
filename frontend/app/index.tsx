@@ -1910,6 +1910,11 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 24,
   },
+  saveButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 12,
+  },
   processButton: {
     flex: 1,
     flexDirection: 'row',
