@@ -530,19 +530,26 @@ CRITICAL - DO NOT:
 - Add or remove any elements
 - Reinterpret or reimagine the subject
 - Draw something "similar" - it MUST be THIS EXACT image
+- Use soft shading, gradients, or airbrush effects
+- Use grayscale tones or blending
 
 WHAT TO DO:
 1. Look at the input image carefully
 2. Trace EXACTLY what you see - same shapes, same positions, same proportions
-3. Convert it to {line_color} lines on white background
+3. Convert it to {line_color} lines on pure white background
 4. This is like putting tracing paper over the photo and drawing the outlines
 
-SHADING STYLE: {shading_level.upper()}
+IMPORTANT - LINE WORK ONLY:
+- The entire image must be made of LINES only
+- NO soft shading, NO gradients, NO grayscale fills
+- All shading must be done with LINE TECHNIQUES: cross-hatching, stippling (dots), parallel lines, contour lines
+
+TEXTURE/SHADING LEVEL: {shading_level.upper()}
 {
-"- Clean outlines only, no cross-hatching or texture marks" if shading_level == "minimal" else
-"- Light texture/contour lines in shadow areas" if shading_level == "light" else
-"- Moderate cross-hatching and stippling for depth" if shading_level == "moderate" else
-"- Heavy cross-hatching and texture throughout"
+"- Clean outlines only - NO texture lines, NO cross-hatching, NO dots" if shading_level == "minimal" else
+"- Add LIGHT cross-hatching lines and dotted lines in shadow areas to imply depth - still mostly clean" if shading_level == "light" else
+"- Use cross-hatching, stippled dots, and contour lines to show shading - all done with LINES not soft shading" if shading_level == "moderate" else
+"- Heavy use of cross-hatching, stippling, and parallel lines for shading"
 }
 
 SOLID BLACK FILL: {fill_level.upper()}
@@ -552,7 +559,7 @@ SOLID BLACK FILL: {fill_level.upper()}
 "- Moderate solid black fills in shadow areas"
 }
 
-OUTPUT: A line art stencil that is an EXACT TRACE of the input image, suitable for tattoo transfer paper."""
+OUTPUT: A line art stencil using ONLY lines (no soft shading) that is an EXACT TRACE of the input image, suitable for tattoo transfer paper."""
 
         # Send the image with prompt
         msg = UserMessage(
