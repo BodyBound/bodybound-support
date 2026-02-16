@@ -64,12 +64,8 @@ export default function Index() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false);
   
-  // New states for crop and background removal
+  // Background removal state
   const [isRemovingBackground, setIsRemovingBackground] = useState(false);
-  const [showCropModal, setShowCropModal] = useState(false);
-  const [cropImage, setCropImage] = useState<string | null>(null);
-  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
-  const [cropRegion, setCropRegion] = useState<CropRegion>({ originX: 0, originY: 0, width: 100, height: 100 });
   
   // AI Stencil states
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -79,10 +75,8 @@ export default function Index() {
   // Full-size preview state
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   
-  // Interactive crop states
-  const [cropBoxPosition, setCropBoxPosition] = useState({ x: 20, y: 20 });
-  const [cropBoxSize, setCropBoxSize] = useState({ width: 200, height: 200 });
-  const [displayImageSize, setDisplayImageSize] = useState({ width: 0, height: 0 });
+  // Hold to compare - shows original when pressing down
+  const [showingOriginal, setShowingOriginal] = useState(false);
   
   // Refs for debouncing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -95,9 +89,6 @@ export default function Index() {
     noise_reduction: 30,  // Lower = more detail preserved
     invert: true,
   });
-
-  // Min crop size
-  const MIN_CROP_SIZE = 50;
 
   // PanResponder for moving the crop box
   const panResponderMove = useRef(
