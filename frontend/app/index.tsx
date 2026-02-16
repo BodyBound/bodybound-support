@@ -46,6 +46,14 @@ interface SavedStencil {
   name: string | null;
 }
 
+// Lightweight interface for gallery list (thumbnails only)
+interface StencilListItem {
+  id: string;
+  stencil_thumbnail: string | null;
+  created_at: string;
+  name: string | null;
+}
+
 export default function Index() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
@@ -53,7 +61,7 @@ export default function Index() {
   const [isLiveUpdating, setIsLiveUpdating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
-  const [savedStencils, setSavedStencils] = useState<SavedStencil[]>([]);
+  const [savedStencils, setSavedStencils] = useState<StencilListItem[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
   const [stencilName, setStencilName] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
