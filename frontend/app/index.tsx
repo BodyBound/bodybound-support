@@ -1533,6 +1533,79 @@ const styles = StyleSheet.create({
   galleryButton: {
     padding: 8,
   },
+  iconText: {
+    fontSize: 22,
+  },
+  placeholderIcon: {
+    fontSize: 48,
+  },
+  holdHintIcon: {
+    fontSize: 12,
+    marginRight: 4,
+  },
+  compareIconText: {
+    fontSize: 16,
+    marginRight: 4,
+  },
+  exportIconText: {
+    fontSize: 18,
+  },
+  closeIcon: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: '300',
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  deleteIcon: {
+    fontSize: 20,
+  },
+  invertIcon: {
+    fontSize: 16,
+    marginRight: 4,
+  },
+  modeIcon: {
+    fontSize: 16,
+    marginRight: 4,
+  },
+  generateIcon: {
+    fontSize: 20,
+    marginRight: 6,
+  },
+  saveIcon: {
+    fontSize: 18,
+    marginRight: 6,
+  },
+  sliderIcon: {
+    fontSize: 16,
+    marginRight: 8,
+  },
+  modalCloseIcon: {
+    fontSize: 28,
+    color: '#fff',
+    fontWeight: '300',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    textAlign: 'center',
+    lineHeight: 36,
+  },
+  zoomButtonText: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: '300',
+  },
+  previewCompareIcon: {
+    fontSize: 18,
+    marginRight: 6,
+  },
+  previewActionIcon: {
+    fontSize: 22,
+    marginBottom: 4,
+  },
   content: {
     flex: 1,
     paddingHorizontal: 20,
