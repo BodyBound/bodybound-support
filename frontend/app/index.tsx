@@ -848,11 +848,22 @@ export default function Index() {
     );
   };
 
-  const loadStencilFromGallery = (stencil: SavedStencil) => {
-    setOriginalImage(stencil.original_image);
-    setStencilImage(stencil.stencil_image);
-    setSettings(stencil.settings);
-    setShowGallery(false);
+  const loadStencilFromGallery = async (stencilItem: StencilListItem) => {
+    // Fetch full stencil details when user selects from gallery
+    try {
+      const response = await fetch(`${API_URL}/api/stencils/${stencilItem.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to load stencil');
+      }
+      const stencil = await response.json();
+      setOriginalImage(stencil.original_image);
+      setStencilImage(stencil.stencil_image);
+      setSettings(stencil.settings);
+      setShowGallery(false);
+    } catch (error) {
+      console.error('Error loading stencil:', error);
+      Alert.alert('Error', 'Failed to load stencil.');
+    }
   };
 
   const resetAll = () => {
