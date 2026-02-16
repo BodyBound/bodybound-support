@@ -1852,12 +1852,73 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
+  cropHeaderButton: {
+    padding: 8,
+  },
+  cropApplyText: {
+    color: '#10B981',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   // Visual Crop Styles
   cropAreaContainer: {
     flex: 1,
     margin: 20,
     position: 'relative',
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
     overflow: 'hidden',
+  },
+  cropFullImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cropDarkOverlay: {
+    position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  cropBoxBorder: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: '#8B5CF6',
+    backgroundColor: 'transparent',
+  },
+  cropGridLineH: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  cropGridLineV: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    width: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  cropCornerHandle: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    backgroundColor: '#8B5CF6',
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  cropCornerTL: {},
+  cropCornerTR: {},
+  cropCornerBL: {},
+  cropCornerBR: {},
+  cropBottomInfo: {
+    padding: 16,
+    alignItems: 'center',
+    backgroundColor: '#1A1A1A',
+  },
+  cropInstructionsText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    textAlign: 'center',
   },
   cropBackgroundImage: {
     width: '100%',
