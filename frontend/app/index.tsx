@@ -42,13 +42,6 @@ interface SavedStencil {
   name: string | null;
 }
 
-interface CropRegion {
-  originX: number;
-  originY: number;
-  width: number;
-  height: number;
-}
-
 export default function Index() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
