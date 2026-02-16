@@ -1025,31 +1025,52 @@ export default function Index() {
         ) : (
           <ScrollView style={styles.galleryScroll}>
             {savedStencils.map((stencil) => (
-              <TouchableOpacity
-                key={stencil.id}
-                style={styles.galleryItem}
-                onPress={() => loadStencilFromGallery(stencil)}
-              >
-                <Image
-                  source={{ uri: stencil.stencil_thumbnail || '' }}
-                  style={styles.galleryImage}
-                  resizeMode="contain"
-                />
-                <View style={styles.galleryItemInfo}>
-                  <Text style={styles.galleryItemName}>
-                    {stencil.name || 'Untitled'}
-                  </Text>
-                  <Text style={styles.galleryItemDate}>
-                    {new Date(stencil.created_at).toLocaleDateString()}
-                  </Text>
-                </View>
+              <View key={stencil.id} style={styles.galleryItemContainer}>
                 <TouchableOpacity
-                  onPress={() => deleteStencil(stencil.id)}
-                  style={styles.deleteButton}
+                  style={styles.galleryItem}
+                  onPress={() => loadStencilFromGallery(stencil)}
                 >
-                  <Text style={styles.deleteIcon}>🗑️</Text>
+                  <Image
+                    source={{ uri: stencil.stencil_thumbnail || '' }}
+                    style={styles.galleryImage}
+                    resizeMode="contain"
+                  />
+                  <View style={styles.galleryItemInfo}>
+                    <Text style={styles.galleryItemName}>
+                      {stencil.name || 'Untitled'}
+                    </Text>
+                    <Text style={styles.galleryItemDate}>
+                      {new Date(stencil.created_at).toLocaleDateString()}
+                    </Text>
+                  </View>
                 </TouchableOpacity>
-              </TouchableOpacity>
+                <View style={styles.galleryItemActions}>
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      exportStencilToDevice(stencil.id);
+                    }}
+                    style={styles.exportButton}
+                    disabled={exportingStencilId === stencil.id}
+                  >
+                    {exportingStencilId === stencil.id ? (
+                      <ActivityIndicator size="small" color="#10B981" />
+                    ) : (
+                      <Text style={styles.exportIcon}>📱</Text>
+                    )}
+                    <Text style={styles.exportButtonText}>Export</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      deleteStencil(stencil.id);
+                    }}
+                    style={styles.deleteButton}
+                  >
+                    <Text style={styles.deleteIcon}>🗑️</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             ))}
           </ScrollView>
         )}
