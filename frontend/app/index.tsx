@@ -2282,9 +2282,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 8,
   },
-  deleteIcon: {
-    fontSize: 16,
-  },
   // Version Selector Styles
   versionSelectorSection: {
     backgroundColor: '#1A1A1A',
