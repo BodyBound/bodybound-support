@@ -517,7 +517,11 @@ async def generate_ai_stencil(request: AIStencilRequest):
         }
         line_color = color_map.get(request.line_color, "purple/violet")
         
-        # Create the prompt for EXACT tracing with contour details
+        # Convert shading_detail and solid_fill to descriptive levels
+        shading_level = "minimal" if request.shading_detail < 33 else "moderate" if request.shading_detail < 66 else "heavy"
+        fill_level = "none (lines only)" if request.solid_fill < 33 else "some solid areas" if request.solid_fill < 66 else "heavy solid black fills"
+        
+        # Create the prompt for EXACT tracing with customizable shading
         prompt = f"""TRACE this exact image into a professional tattoo stencil. Do NOT create a new design or interpretation.
 
 STRICT TRACING REQUIREMENTS:
@@ -527,22 +531,19 @@ STRICT TRACING REQUIREMENTS:
 4. Use {line_color} colored lines on a pure white background
 5. DO NOT add, remove, or move any elements from the original image
 
-LINE WORK TECHNIQUES (apply while tracing):
-- Bold solid lines for main outlines and primary shapes
-- Medium solid lines for secondary details and features
-- Fine solid lines for intricate details
-- DOTTED or DASHED lines to indicate shading areas and shadows from the original
-- STIPPLED or TEXTURED lines to show contour, depth, and tonal contrast
-- Use varying line density to represent darker vs lighter areas
-- Cross-hatching or parallel lines in areas of shadow/depth
+LINE WORK STYLE PREFERENCES:
+- Cross-hatching/Shading Detail Level: {shading_level.upper()} - {"Use minimal dotted/dashed lines, focus on clean outlines" if shading_level == "minimal" else "Use moderate cross-hatching and stippling for depth and shadows" if shading_level == "moderate" else "Use heavy cross-hatching, stippling, and textured lines throughout for maximum depth and contrast"}
+- Solid Fill Level: {fill_level.upper()} - {"Keep all areas as line work only, no solid black fills" if request.solid_fill < 33 else "Add some solid black fills in the darkest shadow areas" if request.solid_fill < 66 else "Use solid black fills extensively in shadow areas and for bold contrast"}
 
-The goal is a stencil that:
-- Matches the original image EXACTLY in composition
-- Uses professional tattoo line techniques (dots, dashes, stippling) to capture shading and contrast
-- Shows depth and form through varied line work, not just outlines
-- Is ready for thermal transfer paper
+LINE TECHNIQUES TO USE:
+- Bold solid lines for main outlines
+- Medium lines for secondary details
+- Fine lines for intricate details
+{"- Minimal use of dotted/dashed lines" if shading_level == "minimal" else "- DOTTED or DASHED lines to indicate shading areas and shadows" if shading_level == "moderate" else "- Heavy use of DOTTED, DASHED, and STIPPLED lines for shading"}
+{"- Keep areas open and clean" if request.solid_fill < 33 else "- Some solid black areas where shadows are darkest" if request.solid_fill < 66 else "- Bold solid black fills in dark areas for high contrast"}
 
-Think: EXACT TRACE of the image + professional tattoo stencil shading techniques (dotted lines, contour marks, texture lines)."""
+The goal is a stencil that matches the original image EXACTLY while using the specified level of shading detail and solid fill.
+Ready for thermal transfer paper."""
 
         # Send the image with prompt
         msg = UserMessage(
