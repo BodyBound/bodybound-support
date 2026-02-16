@@ -1156,9 +1156,17 @@ export default function Index() {
                       <Text style={styles.exportIconText}>🔍</Text>
                       <Text style={styles.exportButtonText}>Full View</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.exportButton} onPress={saveToDevice}>
-                      <Text style={[styles.exportIconText, { color: '#10B981' }]}>💾</Text>
-                      <Text style={styles.exportButtonText}>Save</Text>
+                    <TouchableOpacity 
+                      style={styles.exportButton} 
+                      onPress={saveToDevice}
+                      disabled={isSavingToDevice}
+                    >
+                      {isSavingToDevice ? (
+                        <ActivityIndicator size="small" color="#10B981" />
+                      ) : (
+                        <Text style={[styles.exportIconText, { color: '#10B981' }]}>📱</Text>
+                      )}
+                      <Text style={styles.exportButtonText}>To Phone</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.exportButton} onPress={printStencil}>
                       <Text style={[styles.exportIconText, { color: '#3B82F6' }]}>🖨️</Text>
