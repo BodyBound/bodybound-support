@@ -1033,6 +1033,49 @@ export default function Index() {
     </Modal>
   );
 
+  // Welcome Screen Component
+  const renderWelcomeScreen = () => (
+    <SafeAreaView style={styles.welcomeContainer}>
+      <View style={styles.welcomeContent}>
+        {/* Logo */}
+        <Image 
+          source={require('../assets/images/logo.png')} 
+          style={styles.welcomeLogo}
+          resizeMode="contain"
+        />
+        
+        {/* App Title */}
+        <Text style={styles.welcomeTitle}>BODY BOUND</Text>
+        <Text style={styles.welcomeSubtitle}>Stencil Generator</Text>
+        
+        {/* Tagline */}
+        <Text style={styles.welcomeTagline}>
+          Transform photos into tattoo stencils{'\n'}as good as handmade
+        </Text>
+        
+        {/* Get Started Button */}
+        <TouchableOpacity
+          style={styles.welcomeButton}
+          onPress={() => setShowWelcome(false)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.welcomeButtonText}>Get Started</Text>
+          <Text style={styles.welcomeButtonArrow}>→</Text>
+        </TouchableOpacity>
+        
+        {/* Footer Note */}
+        <Text style={styles.welcomeFooter}>
+          for tattoo artists{'\n'}developed by a tattoo artist
+        </Text>
+      </View>
+    </SafeAreaView>
+  );
+
+  // Show welcome screen if active
+  if (showWelcome) {
+    return renderWelcomeScreen();
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
