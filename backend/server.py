@@ -140,6 +140,91 @@ def generate_thumbnail(base64_string: str, max_size: int = 150) -> str:
         logger.error(f"Error generating thumbnail: {str(e)}")
         return ""  # Return empty string if thumbnail generation fails
 
+def resize_image_if_needed(base64_string: str, max_dimension: int = 2000, max_file_size_mb: float = 4.0) -> str:
+    """Resize image if it's too large to prevent AI processing failures
+    
+    Args:
+        base64_string: The original base64 encoded image
+        max_dimension: Maximum width or height in pixels (default 2000)
+        max_file_size_mb: Maximum file size in MB (default 4MB)
+        
+    Returns:
+        Base64 encoded image (resized if necessary, original if within limits)
+    """
+    try:
+        # Remove data URL prefix if present
+        prefix = ""
+        if ',' in base64_string:
+            prefix_parts = base64_string.split(',')
+            prefix = prefix_parts[0] + ","
+            base64_data = prefix_parts[1]
+        else:
+            base64_data = base64_string
+        
+        # Check file size
+        img_data = base64.b64decode(base64_data)
+        file_size_mb = len(img_data) / (1024 * 1024)
+        
+        # Open image to check dimensions
+        img = Image.open(BytesIO(img_data))
+        width, height = img.size
+        
+        # Determine if resizing is needed
+        needs_resize = False
+        if width > max_dimension or height > max_dimension:
+            needs_resize = True
+            logger.info(f"Image dimensions ({width}x{height}) exceed max ({max_dimension}), will resize")
+        if file_size_mb > max_file_size_mb:
+            needs_resize = True
+            logger.info(f"Image size ({file_size_mb:.2f}MB) exceeds max ({max_file_size_mb}MB), will resize")
+        
+        if not needs_resize:
+            return base64_string  # Return original if no resize needed
+        
+        # Calculate new dimensions maintaining aspect ratio
+        if width > height:
+            if width > max_dimension:
+                new_width = max_dimension
+                new_height = int(height * (max_dimension / width))
+            else:
+                new_width = width
+                new_height = height
+        else:
+            if height > max_dimension:
+                new_height = max_dimension
+                new_width = int(width * (max_dimension / height))
+            else:
+                new_width = width
+                new_height = height
+        
+        # Convert to RGB if necessary (for JPEG compatibility)
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+        
+        # Resize image with high quality
+        resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        # Save with compression - start with quality 85 and reduce if needed
+        quality = 85
+        buffer = BytesIO()
+        resized.save(buffer, format='JPEG', quality=quality, optimize=True)
+        
+        # If still too large, reduce quality further
+        while buffer.tell() / (1024 * 1024) > max_file_size_mb and quality > 50:
+            quality -= 10
+            buffer = BytesIO()
+            resized.save(buffer, format='JPEG', quality=quality, optimize=True)
+        
+        resized_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        logger.info(f"Image resized from {width}x{height} ({file_size_mb:.2f}MB) to {new_width}x{new_height} ({buffer.tell()/(1024*1024):.2f}MB)")
+        
+        return f"data:image/jpeg;base64,{resized_base64}"
+        
+    except Exception as e:
+        logger.error(f"Error resizing image: {str(e)}")
+        return base64_string  # Return original if resize fails
+
 def process_image_to_stencil(img: np.ndarray, settings: StencilSettings) -> np.ndarray:
     """Process image to create tattoo stencil using advanced edge detection
     
