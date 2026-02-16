@@ -758,6 +758,53 @@ export default function Index() {
     }
   };
 
+  // Export saved stencil from gallery to device photo library
+  const [exportingStencilId, setExportingStencilId] = useState<string | null>(null);
+  
+  const exportStencilToDevice = async (stencilId: string) => {
+    setExportingStencilId(stencilId);
+    try {
+      // Request permission
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Please allow access to save images to your device.');
+        setExportingStencilId(null);
+        return;
+      }
+
+      // Fetch full stencil data from API
+      const response = await fetch(`${API_URL}/api/stencils/${stencilId}`);
+      if (!response.ok) {
+        throw new Error('Failed to load stencil');
+      }
+      const stencilData = await response.json();
+      
+      // Extract base64 data
+      const base64Data = stencilData.stencil_image.includes(',') 
+        ? stencilData.stencil_image.split(',')[1] 
+        : stencilData.stencil_image;
+      
+      // Create a temporary file
+      const filename = `stencil_${Date.now()}.png`;
+      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+      
+      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Save to media library
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      await MediaLibrary.createAlbumAsync('Body Bound Stencils', asset, false);
+
+      Alert.alert('Exported!', 'Stencil exported to your photo gallery!');
+    } catch (error) {
+      console.error('Error exporting stencil:', error);
+      Alert.alert('Error', 'Failed to export stencil. Please try again.');
+    } finally {
+      setExportingStencilId(null);
+    }
+  };
+
   // Print stencil
   const printStencil = async () => {
     if (!stencilImage) {
