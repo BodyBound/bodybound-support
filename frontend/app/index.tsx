@@ -1018,7 +1018,7 @@ export default function Index() {
             setShowGallery(true);
           }}
         >
-          <Ionicons name="folder-outline" size={24} color="#8B5CF6" />
+          <Text style={styles.iconText}>📁</Text>
         </TouchableOpacity>
       </View>
 
@@ -1027,7 +1027,7 @@ export default function Index() {
         <View style={styles.previewSection}>
           {!originalImage ? (
             <View style={styles.placeholderContainer}>
-              <Ionicons name="image-outline" size={64} color="#4B5563" />
+              <Text style={styles.placeholderIcon}>🖼️</Text>
               <Text style={styles.placeholderText}>Select or capture a photo</Text>
             </View>
           ) : (
@@ -1040,7 +1040,7 @@ export default function Index() {
                   </Text>
                   {stencilImage && (
                     <View style={styles.holdHintContainer}>
-                      <Ionicons name="finger-print-outline" size={14} color="#8B5CF6" />
+                      <Text style={styles.holdHintIcon}>👆</Text>
                       <Text style={styles.holdHintText}>Tap Compare button</Text>
                     </View>
                   )}
@@ -1059,11 +1059,7 @@ export default function Index() {
                     style={[styles.compareButton, showingOriginal && styles.compareButtonActive]}
                     onPress={() => setShowingOriginal(!showingOriginal)}
                   >
-                    <Ionicons 
-                      name={showingOriginal ? "eye" : "eye-outline"} 
-                      size={18} 
-                      color={showingOriginal ? "#fff" : "#8B5CF6"} 
-                    />
+                    <Text style={styles.compareIconText}>{showingOriginal ? "👁️" : "👁️‍🗨️"}</Text>
                     <Text style={[styles.compareButtonText, showingOriginal && styles.compareButtonTextActive]}>
                       {showingOriginal ? "Showing Original" : "Compare"}
                     </Text>
@@ -1077,7 +1073,7 @@ export default function Index() {
                       style={styles.exportButton} 
                       onPress={() => setShowPreviewModal(true)}
                     >
-                      <Ionicons name="expand-outline" size={20} color="#8B5CF6" />
+                      <Text style={styles.exportIconText}>🔍</Text>
                       <Text style={styles.exportButtonText}>Full View</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.exportButton} onPress={saveToDevice}>
