@@ -2291,6 +2291,93 @@ const styles = StyleSheet.create({
   deleteIcon: {
     fontSize: 16,
   },
+  // Version Selector Styles
+  versionSelectorSection: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 16,
+  },
+  versionSelectorTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  versionSelectorSubtitle: {
+    color: '#9CA3AF',
+    fontSize: 13,
+    marginBottom: 16,
+  },
+  versionButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  versionButton: {
+    flex: 1,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  versionButtonSelected: {
+    borderColor: '#8B5CF6',
+    backgroundColor: '#1A1A2E',
+  },
+  versionButtonDisabled: {
+    opacity: 0.4,
+  },
+  versionButtonEmoji: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+  versionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  versionButtonTextSelected: {
+    color: '#8B5CF6',
+  },
+  versionButtonDesc: {
+    color: '#6B7280',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  // Generation Progress Styles
+  generationProgressSection: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 20,
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  generationProgressTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  progressDotsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 12,
+  },
+  progressDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#374151',
+  },
+  progressDotComplete: {
+    backgroundColor: '#8B5CF6',
+  },
+  generationProgressLabel: {
+    color: '#9CA3AF',
+    fontSize: 14,
+  },
   emptyGallery: {
     flex: 1,
     justifyContent: 'center',
