@@ -323,65 +323,104 @@ def process_image_to_stencil(img: np.ndarray, settings: StencilSettings) -> np.n
     return stencil_rgb
 
 def remove_background(img: np.ndarray, method: str = "auto") -> np.ndarray:
-    """Remove background from image using various methods"""
+    """Remove background from image while preserving the main subject"""
     
     height, width = img.shape[:2]
     
     if method == "grabcut":
-        # GrabCut algorithm - good for complex backgrounds
+        # GrabCut algorithm with better initialization
         mask = np.zeros((height, width), np.uint8)
         bgd_model = np.zeros((1, 65), np.float64)
         fgd_model = np.zeros((1, 65), np.float64)
         
-        # Define rectangle containing foreground (with margin)
-        margin = int(min(height, width) * 0.05)
-        rect = (margin, margin, width - 2*margin, height - 2*margin)
+        # Use a smaller margin to keep more of the subject
+        margin_x = int(width * 0.02)
+        margin_y = int(height * 0.02)
+        rect = (margin_x, margin_y, width - 2*margin_x, height - 2*margin_y)
         
-        # Apply GrabCut
-        cv2.grabCut(img, mask, rect, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_RECT)
+        # Apply GrabCut with more iterations for better accuracy
+        cv2.grabCut(img, mask, rect, bgd_model, fgd_model, 8, cv2.GC_INIT_WITH_RECT)
         
         # Create mask where sure/probable foreground is 1
         mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
         
+        # Dilate the mask slightly to avoid cutting into the subject
+        kernel = np.ones((3, 3), np.uint8)
+        mask2 = cv2.dilate(mask2, kernel, iterations=2)
+        
     elif method == "threshold":
-        # Simple threshold-based removal - good for light backgrounds
+        # Simple threshold-based removal - good for light/white backgrounds
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        _, mask2 = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY_INV)
+        
+        # Check if background is light (white/light gray)
+        corners = [gray[0:10, 0:10], gray[0:10, -10:], gray[-10:, 0:10], gray[-10:, -10:]]
+        avg_corner = np.mean([np.mean(c) for c in corners])
+        
+        if avg_corner > 200:  # Light background
+            _, mask2 = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY_INV)
+        else:  # Dark background
+            _, mask2 = cv2.threshold(gray, 30, 255, cv2.THRESH_BINARY)
+        
         mask2 = mask2 // 255
         
-    else:  # "auto" - combine methods for best results
-        # Convert to grayscale
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        # Apply edge detection to find subject
-        edges = cv2.Canny(gray, 30, 100)
-        
-        # Dilate edges to connect them
+        # Clean up the mask
         kernel = np.ones((5, 5), np.uint8)
-        dilated = cv2.dilate(edges, kernel, iterations=2)
+        mask2 = cv2.morphologyEx(mask2, cv2.MORPH_CLOSE, kernel)
+        mask2 = cv2.morphologyEx(mask2, cv2.MORPH_OPEN, kernel)
         
-        # Find contours
-        contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    else:  # "auto" - use GrabCut with smart initialization
+        # Convert to different color spaces for better segmentation
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         
-        # Create mask from largest contours
-        mask2 = np.zeros((height, width), np.uint8)
-        if contours:
-            # Sort by area and take the largest ones
-            contours = sorted(contours, key=cv2.contourArea, reverse=True)
-            # Fill the largest contours
-            for contour in contours[:min(5, len(contours))]:
-                if cv2.contourArea(contour) > (height * width * 0.01):  # At least 1% of image
-                    cv2.drawContours(mask2, [contour], -1, 1, -1)
+        # Detect edges to help identify subject boundaries
+        edges = cv2.Canny(gray, 50, 150)
+        kernel = np.ones((5, 5), np.uint8)
+        edges_dilated = cv2.dilate(edges, kernel, iterations=2)
         
-        # If mask is mostly empty, try GrabCut
-        if np.sum(mask2) < (height * width * 0.1):
-            mask = np.zeros((height, width), np.uint8)
-            bgd_model = np.zeros((1, 65), np.float64)
-            fgd_model = np.zeros((1, 65), np.float64)
-            margin = int(min(height, width) * 0.05)
+        # Use GrabCut with the center region as probable foreground
+        mask = np.zeros((height, width), np.uint8)
+        
+        # Mark center region as probable foreground
+        center_margin_x = int(width * 0.15)
+        center_margin_y = int(height * 0.15)
+        mask[center_margin_y:height-center_margin_y, center_margin_x:width-center_margin_x] = cv2.GC_PR_FGD
+        
+        # Mark edges near center as definite foreground
+        center_mask = np.zeros((height, width), np.uint8)
+        center_mask[center_margin_y:height-center_margin_y, center_margin_x:width-center_margin_x] = 255
+        edges_in_center = cv2.bitwise_and(edges_dilated, center_mask)
+        mask[edges_in_center > 0] = cv2.GC_FGD
+        
+        # Mark corners as probable background
+        corner_size = int(min(width, height) * 0.1)
+        mask[0:corner_size, 0:corner_size] = cv2.GC_PR_BGD
+        mask[0:corner_size, width-corner_size:] = cv2.GC_PR_BGD
+        mask[height-corner_size:, 0:corner_size] = cv2.GC_PR_BGD
+        mask[height-corner_size:, width-corner_size:] = cv2.GC_PR_BGD
+        
+        bgd_model = np.zeros((1, 65), np.float64)
+        fgd_model = np.zeros((1, 65), np.float64)
+        
+        # Run GrabCut with mask initialization
+        try:
+            cv2.grabCut(img, mask, None, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_MASK)
+        except:
+            # Fallback to rect-based if mask init fails
+            margin = int(min(height, width) * 0.02)
             rect = (margin, margin, width - 2*margin, height - 2*margin)
-            cv2.grabCut(img, mask, rect, bgd_model, fgd_model, 3, cv2.GC_INIT_WITH_RECT)
-            mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+            mask = np.zeros((height, width), np.uint8)
+            cv2.grabCut(img, mask, rect, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_RECT)
+        
+        # Create final mask - keep both definite and probable foreground
+        mask2 = np.where((mask == cv2.GC_FGD) | (mask == cv2.GC_PR_FGD), 1, 0).astype('uint8')
+        
+        # Dilate slightly to avoid cutting into subject
+        kernel = np.ones((3, 3), np.uint8)
+        mask2 = cv2.dilate(mask2, kernel, iterations=1)
+        
+        # Fill holes in the mask
+        mask2 = cv2.morphologyEx(mask2, cv2.MORPH_CLOSE, np.ones((7, 7), np.uint8))
     
     # Create output with transparent background (BGRA)
     result = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
