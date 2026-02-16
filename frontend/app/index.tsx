@@ -852,7 +852,6 @@ export default function Index() {
                 }
               }}
             >
-            >
               <View style={styles.invertToggleLeft}>
                 <Ionicons name="color-wand-outline" size={18} color="#8B5CF6" />
                 <Text style={styles.invertToggleLabel}>Invert Colors</Text>
@@ -870,23 +869,98 @@ export default function Index() {
           </View>
         )}
 
+        {/* Generation Mode Selection and AI Options */}
+        {originalImage && (
+          <View style={styles.modeSection}>
+            <Text style={styles.modeSectionTitle}>Generation Mode</Text>
+            
+            {/* Mode Toggle */}
+            <View style={styles.modeToggle}>
+              <TouchableOpacity
+                style={[styles.modeButton, stencilMode === 'ai' && styles.modeButtonActive]}
+                onPress={() => setStencilMode('ai')}
+              >
+                <Ionicons name="sparkles" size={18} color={stencilMode === 'ai' ? '#fff' : '#8B5CF6'} />
+                <Text style={[styles.modeButtonText, stencilMode === 'ai' && styles.modeButtonTextActive]}>
+                  AI Stencil
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modeButton, stencilMode === 'basic' && styles.modeButtonActive]}
+                onPress={() => setStencilMode('basic')}
+              >
+                <Ionicons name="options" size={18} color={stencilMode === 'basic' ? '#fff' : '#8B5CF6'} />
+                <Text style={[styles.modeButtonText, stencilMode === 'basic' && styles.modeButtonTextActive]}>
+                  Basic Edge
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Line Color Selection (AI Mode Only) */}
+            {stencilMode === 'ai' && (
+              <View style={styles.colorSection}>
+                <Text style={styles.colorSectionTitle}>Stencil Line Color</Text>
+                <View style={styles.colorOptions}>
+                  {(['purple', 'blue', 'black'] as const).map((color) => (
+                    <TouchableOpacity
+                      key={color}
+                      style={[
+                        styles.colorOption,
+                        lineColor === color && styles.colorOptionActive,
+                        { borderColor: color === 'purple' ? '#8B5CF6' : color === 'blue' ? '#3B82F6' : '#000' }
+                      ]}
+                      onPress={() => setLineColor(color)}
+                    >
+                      <View style={[
+                        styles.colorDot,
+                        { backgroundColor: color === 'purple' ? '#8B5CF6' : color === 'blue' ? '#3B82F6' : '#000' }
+                      ]} />
+                      <Text style={styles.colorOptionText}>{color.charAt(0).toUpperCase() + color.slice(1)}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Action Buttons */}
         {originalImage && (
           <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={[styles.processButton, isProcessing && styles.buttonDisabled]}
-              onPress={processImage}
-              disabled={isProcessing}
-            >
-              {isProcessing ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <>
-                  <Ionicons name="flash" size={22} color="#fff" />
-                  <Text style={styles.processButtonText}>Generate Stencil</Text>
-                </>
-              )}
-            </TouchableOpacity>
+            {stencilMode === 'ai' ? (
+              <TouchableOpacity
+                style={[styles.aiButton, isGeneratingAI && styles.buttonDisabled]}
+                onPress={generateAIStencil}
+                disabled={isGeneratingAI}
+              >
+                {isGeneratingAI ? (
+                  <>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={styles.aiButtonText}>Creating Stencil...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="sparkles" size={22} color="#fff" />
+                    <Text style={styles.aiButtonText}>Generate AI Stencil</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.processButton, isProcessing && styles.buttonDisabled]}
+                onPress={processImage}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="flash" size={22} color="#fff" />
+                    <Text style={styles.processButtonText}>Generate Stencil</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
 
             {stencilImage && (
               <TouchableOpacity
