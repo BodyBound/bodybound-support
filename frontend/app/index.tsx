@@ -229,6 +229,43 @@ export default function Index() {
     }
   }, [originalImage, settings]);
 
+  // AI-Powered Stencil Generation
+  const generateAIStencil = async () => {
+    if (!originalImage) {
+      Alert.alert('No Image', 'Please select an image first.');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const response = await fetch(`${API_URL}/api/ai-stencil`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_base64: originalImage,
+          style: 'tattoo',
+          line_color: lineColor,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to generate AI stencil');
+      }
+
+      const data = await response.json();
+      setStencilImage(data.stencil_base64);
+      setHasGeneratedOnce(true);
+    } catch (error: any) {
+      console.error('Error generating AI stencil:', error);
+      Alert.alert('Error', error.message || 'Failed to generate AI stencil. Please try again.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
   // Remove background function
   const removeBackground = async () => {
     if (!originalImage) {
