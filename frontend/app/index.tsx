@@ -398,7 +398,7 @@ export default function Index() {
     };
     
     try {
-      // Generate Light version (minimal shading)
+      // Generate Light version - Clean lines only, no texture, no black
       setGenerationProgress(1);
       const lightResponse = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
@@ -407,8 +407,8 @@ export default function Index() {
           image_base64: originalImage,
           style: 'tattoo',
           line_color: lineColor,
-          shading_detail: 15,
-          solid_fill: 10,
+          shading_detail: 5,
+          solid_fill: 0,
         }),
       });
       if (lightResponse.ok) {
@@ -417,7 +417,7 @@ export default function Index() {
         setStencilVersions({ ...versions });
       }
 
-      // Generate Medium version (balanced)
+      // Generate Medium version - Clean lines + texture/contour, NO black fill
       setGenerationProgress(2);
       const mediumResponse = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
@@ -426,8 +426,8 @@ export default function Index() {
           image_base64: originalImage,
           style: 'tattoo',
           line_color: lineColor,
-          shading_detail: 50,
-          solid_fill: 35,
+          shading_detail: 60,
+          solid_fill: 0,
         }),
       });
       if (mediumResponse.ok) {
@@ -436,7 +436,7 @@ export default function Index() {
         setStencilVersions({ ...versions });
       }
 
-      // Generate Heavy version (detailed shading)
+      // Generate Heavy version - Full detail with texture AND solid black
       setGenerationProgress(3);
       const heavyResponse = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
