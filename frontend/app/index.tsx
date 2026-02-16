@@ -1403,8 +1403,8 @@ export default function Index() {
                 style={styles.saveButton}
                 onPress={() => setShowSaveModal(true)}
               >
-                <Text style={styles.saveIcon}>💾</Text>
-                <Text style={styles.saveButtonText}>Save</Text>
+                <Text style={styles.saveIcon}>📁</Text>
+                <Text style={styles.saveButtonText}>Save to App</Text>
               </TouchableOpacity>
             )}
           </View>
