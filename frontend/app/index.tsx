@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -40,12 +40,18 @@ export default function Index() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLiveUpdating, setIsLiveUpdating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [savedStencils, setSavedStencils] = useState<SavedStencil[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
   const [stencilName, setStencilName] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false);
+  
+  // Refs for debouncing
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Settings state
   const [settings, setSettings] = useState<StencilSettings>({
@@ -54,6 +60,77 @@ export default function Index() {
     noise_reduction: 50,
     invert: true,
   });
+
+  // Live update function with debouncing
+  const processImageLive = useCallback(async (currentSettings: StencilSettings) => {
+    if (!originalImage || !hasGeneratedOnce) return;
+
+    // Cancel any pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+
+    setIsLiveUpdating(true);
+    try {
+      const response = await fetch(`${API_URL}/api/process`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_base64: originalImage,
+          settings: currentSettings,
+        }),
+        signal: abortControllerRef.current.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process image');
+      }
+
+      const data = await response.json();
+      setStencilImage(data.stencil_base64);
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error('Error processing image:', error);
+      }
+    } finally {
+      setIsLiveUpdating(false);
+    }
+  }, [originalImage, hasGeneratedOnce]);
+
+  // Debounced settings change handler
+  const handleSettingsChange = useCallback((newSettings: StencilSettings) => {
+    setSettings(newSettings);
+    
+    // Only trigger live update if we've generated at least once
+    if (hasGeneratedOnce && originalImage) {
+      // Clear existing timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      
+      // Set new debounced timer (300ms delay)
+      debounceTimerRef.current = setTimeout(() => {
+        processImageLive(newSettings);
+      }, 300);
+    }
+  }, [hasGeneratedOnce, originalImage, processImageLive]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
