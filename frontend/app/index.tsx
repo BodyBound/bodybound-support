@@ -1126,33 +1126,159 @@ export default function Index() {
       {renderGalleryModal()}
       {renderSaveModal()}
       
-      {/* Full-Size Preview Modal */}
+      {/* Crop Modal */}
+      <Modal
+        visible={showCropModal}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setShowCropModal(false)}
+      >
+        <SafeAreaView style={styles.cropModalContainer}>
+          <View style={styles.cropModalHeader}>
+            <TouchableOpacity onPress={() => setShowCropModal(false)}>
+              <Ionicons name="close" size={28} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.cropModalTitle}>Crop Image</Text>
+            <TouchableOpacity onPress={applyCrop}>
+              <Ionicons name="checkmark" size={28} color="#10B981" />
+            </TouchableOpacity>
+          </View>
+
+          <View 
+            style={styles.cropImageArea}
+            onTouchMove={handleCropTouchMove}
+            onTouchEnd={handleCropTouchEnd}
+          >
+            {originalImage && (
+              <Image
+                source={{ uri: originalImage }}
+                style={styles.cropBackgroundImage}
+                resizeMode="contain"
+              />
+            )}
+            
+            {/* Dark overlay */}
+            <View style={styles.cropDarkOverlay} pointerEvents="none" />
+            
+            {/* Crop box */}
+            <View 
+              style={[styles.cropBox, {
+                left: cropBox.x,
+                top: cropBox.y,
+                width: cropBox.width,
+                height: cropBox.height,
+              }]}
+              onTouchStart={(e) => handleCropTouchStart('move', e)}
+            >
+              {/* Grid lines */}
+              <View style={[styles.cropGridLine, { left: '33%', top: 0, bottom: 0, width: 1 }]} />
+              <View style={[styles.cropGridLine, { left: '66%', top: 0, bottom: 0, width: 1 }]} />
+              <View style={[styles.cropGridLine, { top: '33%', left: 0, right: 0, height: 1 }]} />
+              <View style={[styles.cropGridLine, { top: '66%', left: 0, right: 0, height: 1 }]} />
+            </View>
+
+            {/* Corner handles */}
+            <View 
+              style={[styles.cropHandle, { left: cropBox.x - 12, top: cropBox.y - 12 }]}
+              onTouchStart={(e) => handleCropTouchStart('tl', e)}
+            />
+            <View 
+              style={[styles.cropHandle, { left: cropBox.x + cropBox.width - 12, top: cropBox.y - 12 }]}
+              onTouchStart={(e) => handleCropTouchStart('tr', e)}
+            />
+            <View 
+              style={[styles.cropHandle, { left: cropBox.x - 12, top: cropBox.y + cropBox.height - 12 }]}
+              onTouchStart={(e) => handleCropTouchStart('bl', e)}
+            />
+            <View 
+              style={[styles.cropHandle, { left: cropBox.x + cropBox.width - 12, top: cropBox.y + cropBox.height - 12 }]}
+              onTouchStart={(e) => handleCropTouchStart('br', e)}
+            />
+          </View>
+
+          <View style={styles.cropInstructions}>
+            <Text style={styles.cropInstructionsText}>Drag corners to resize • Drag inside to move</Text>
+          </View>
+        </SafeAreaView>
+      </Modal>
+      
+      {/* Full-Size Preview Modal with Zoom and Compare */}
       <Modal
         visible={showPreviewModal}
         animationType="fade"
         transparent={true}
-        onRequestClose={() => setShowPreviewModal(false)}
+        onRequestClose={() => {
+          setShowPreviewModal(false);
+          setPreviewShowingOriginal(false);
+          setPreviewScale(1);
+        }}
       >
         <View style={styles.previewModalContainer}>
           <TouchableOpacity 
             style={styles.previewModalClose}
-            onPress={() => setShowPreviewModal(false)}
+            onPress={() => {
+              setShowPreviewModal(false);
+              setPreviewShowingOriginal(false);
+              setPreviewScale(1);
+            }}
           >
             <Ionicons name="close-circle" size={36} color="#fff" />
           </TouchableOpacity>
           
-          {stencilImage && (
-            <Image
-              source={{ uri: stencilImage }}
-              style={styles.previewModalImage}
-              resizeMode="contain"
-            />
-          )}
+          {/* Zoom controls */}
+          <View style={styles.zoomControls}>
+            <TouchableOpacity 
+              style={styles.zoomButton}
+              onPress={() => setPreviewScale(Math.max(0.5, previewScale - 0.5))}
+            >
+              <Ionicons name="remove" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.zoomText}>{Math.round(previewScale * 100)}%</Text>
+            <TouchableOpacity 
+              style={styles.zoomButton}
+              onPress={() => setPreviewScale(Math.min(3, previewScale + 0.5))}
+            >
+              <Ionicons name="add" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          
+          {/* Image with hold-to-compare */}
+          <ScrollView 
+            style={styles.previewScrollView}
+            contentContainerStyle={styles.previewScrollContent}
+            maximumZoomScale={3}
+            minimumZoomScale={0.5}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              onPressIn={() => setPreviewShowingOriginal(true)}
+              onPressOut={() => setPreviewShowingOriginal(false)}
+              delayLongPress={100}
+            >
+              {(stencilImage || originalImage) && (
+                <Image
+                  source={{ uri: previewShowingOriginal ? originalImage! : stencilImage! }}
+                  style={[styles.previewModalImage, { transform: [{ scale: previewScale }] }]}
+                  resizeMode="contain"
+                />
+              )}
+            </TouchableOpacity>
+          </ScrollView>
+          
+          {/* Compare hint */}
+          <View style={styles.previewCompareHint}>
+            <Ionicons name="finger-print-outline" size={16} color="#8B5CF6" />
+            <Text style={styles.previewCompareText}>
+              {previewShowingOriginal ? 'Showing Original' : 'Hold to see Original'}
+            </Text>
+          </View>
           
           <View style={styles.previewModalActions}>
             <TouchableOpacity style={styles.previewActionButton} onPress={saveToDevice}>
               <Ionicons name="download-outline" size={24} color="#10B981" />
-              <Text style={styles.previewActionText}>Save to Device</Text>
+              <Text style={styles.previewActionText}>Save</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.previewActionButton} onPress={printStencil}>
               <Ionicons name="print-outline" size={24} color="#3B82F6" />
