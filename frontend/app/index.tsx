@@ -1084,10 +1084,15 @@ export default function Index() {
         {originalImage && (
           <View style={styles.actionButtons}>
             {stencilMode === 'ai' ? (
-              <TouchableOpacity
-                style={[styles.aiButton, isGeneratingAI && styles.buttonDisabled]}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.aiButton,
+                  isGeneratingAI && styles.buttonDisabled,
+                  pressed && !isGeneratingAI && styles.buttonPressed
+                ]}
                 onPress={generateAIStencil}
                 disabled={isGeneratingAI}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 {isGeneratingAI ? (
                   <>
@@ -1100,12 +1105,17 @@ export default function Index() {
                     <Text style={styles.aiButtonText}>Generate AI Stencil</Text>
                   </>
                 )}
-              </TouchableOpacity>
+              </Pressable>
             ) : (
-              <TouchableOpacity
-                style={[styles.processButton, isProcessing && styles.buttonDisabled]}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.processButton,
+                  isProcessing && styles.buttonDisabled,
+                  pressed && !isProcessing && styles.buttonPressed
+                ]}
                 onPress={processImage}
                 disabled={isProcessing}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 {isProcessing ? (
                   <ActivityIndicator size="small" color="#fff" />
@@ -1115,7 +1125,7 @@ export default function Index() {
                     <Text style={styles.processButtonText}>Generate Stencil</Text>
                   </>
                 )}
-              </TouchableOpacity>
+              </Pressable>
             )}
 
             {stencilImage && (
