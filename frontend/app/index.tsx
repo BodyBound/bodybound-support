@@ -55,11 +55,15 @@ interface StencilListItem {
 }
 
 export default function Index() {
+  // Welcome screen state - shows every time app opens
+  const [showWelcome, setShowWelcome] = useState(true);
+  
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLiveUpdating, setIsLiveUpdating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingToDevice, setIsSavingToDevice] = useState(false);
   const [showGallery, setShowGallery] = useState(false);
   const [savedStencils, setSavedStencils] = useState<StencilListItem[]>([]);
   const [loadingGallery, setLoadingGallery] = useState(false);
