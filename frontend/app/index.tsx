@@ -1102,16 +1102,16 @@ export default function Index() {
         {/* Image Source Buttons */}
         <View style={styles.sourceButtons}>
           <TouchableOpacity style={styles.sourceButton} onPress={pickImage}>
-            <Ionicons name="images" size={22} color="#fff" />
+            <Text style={styles.buttonIcon}>🖼️</Text>
             <Text style={styles.sourceButtonText}>Gallery</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.sourceButton} onPress={takePhoto}>
-            <Ionicons name="camera" size={22} color="#fff" />
+            <Text style={styles.buttonIcon}>📷</Text>
             <Text style={styles.sourceButtonText}>Camera</Text>
           </TouchableOpacity>
           {originalImage && (
             <TouchableOpacity style={styles.resetButton} onPress={resetAll}>
-              <Ionicons name="refresh" size={22} color="#EF4444" />
+              <Text style={styles.buttonIcon}>🔄</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -1125,7 +1125,7 @@ export default function Index() {
                 style={styles.editToolButton} 
                 onPress={openCropModal}
               >
-                <Ionicons name="crop-outline" size={22} color="#8B5CF6" />
+                <Text style={styles.toolIcon}>✂️</Text>
                 <Text style={styles.editToolButtonText}>Crop</Text>
               </TouchableOpacity>
               <TouchableOpacity 
@@ -1136,7 +1136,7 @@ export default function Index() {
                 {isRemovingBackground ? (
                   <ActivityIndicator size="small" color="#8B5CF6" />
                 ) : (
-                  <Ionicons name="cut-outline" size={22} color="#8B5CF6" />
+                  <Text style={styles.toolIcon}>🎭</Text>
                 )}
                 <Text style={styles.editToolButtonText}>
                   {isRemovingBackground ? 'Removing...' : 'Remove BG'}
