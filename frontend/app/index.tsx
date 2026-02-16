@@ -1249,4 +1249,101 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  // Edit Tools Styles
+  editToolsSection: {
+    marginTop: 16,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 16,
+    padding: 16,
+  },
+  editToolsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#9CA3AF',
+    marginBottom: 12,
+  },
+  editToolsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  editToolButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0F0F0F',
+    paddingVertical: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#2D2D2D',
+    gap: 8,
+  },
+  editToolButtonText: {
+    color: '#8B5CF6',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  // Crop Modal Styles
+  cropModalContainer: {
+    flex: 1,
+    backgroundColor: '#0F0F0F',
+  },
+  cropModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1F1F1F',
+  },
+  cropModalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  cropPreviewContainer: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cropPreviewImage: {
+    width: '100%',
+    height: '100%',
+    maxHeight: 300,
+    borderRadius: 12,
+  },
+  cropControls: {
+    padding: 20,
+    backgroundColor: '#1A1A1A',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+  },
+  cropControlsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 16,
+  },
+  cropSliderRow: {
+    marginBottom: 16,
+  },
+  cropSliderLabel: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  cropSlider: {
+    width: '100%',
+    height: 40,
+  },
+  cropInfoRow: {
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  cropInfoText: {
+    color: '#6B7280',
+    fontSize: 12,
+  },
 });
