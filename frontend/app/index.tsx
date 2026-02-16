@@ -810,8 +810,8 @@ export default function Index() {
           </View>
         )}
 
-        {/* Settings Controls */}
-        {originalImage && (
+        {/* Settings Controls - Only show for Basic Edge mode */}
+        {originalImage && stencilMode === 'basic' && (
           <View style={styles.settingsSection}>
             <View style={styles.sectionTitleRow}>
               <Text style={styles.sectionTitle}>Stencil Settings</Text>
