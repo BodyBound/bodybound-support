@@ -798,28 +798,6 @@ export default function Index() {
                   left: cropBoxPosition.x - 12,
                   top: cropBoxPosition.y + cropBoxSize.height - 12,
                 }]}
-                {...panResponderBottomLeft.panHandlers}
-              />
-              <View 
-                style={[styles.cropHandle, styles.cropHandleBottomRight, {
-                  left: cropBoxPosition.x + cropBoxSize.width - 12,
-                  top: cropBoxPosition.y + cropBoxSize.height - 12,
-                }]}
-                {...panResponderBottomRight.panHandlers}
-              />
-            </View>
-          </View>
-        )}
-
-        <View style={styles.cropBottomBar}>
-          <Text style={styles.cropInstructions}>
-            Drag corners to resize • Drag center to move
-          </Text>
-        </View>
-      </SafeAreaView>
-    </Modal>
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -837,7 +815,7 @@ export default function Index() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Image Preview Area */}
+        {/* Image Preview Area - Stencil overlays Original with hold-to-compare */}
         <View style={styles.previewSection}>
           {!originalImage ? (
             <View style={styles.placeholderContainer}>
@@ -846,28 +824,63 @@ export default function Index() {
             </View>
           ) : (
             <View style={styles.imagesContainer}>
-              {/* Original Image */}
+              {/* Main Image Display - Shows Stencil, hold to see Original */}
               <View style={styles.imageWrapper}>
-                <Text style={styles.imageLabel}>Original</Text>
-                <Image
-                  source={{ uri: originalImage }}
-                  style={styles.previewImage}
-                  resizeMode="contain"
-                />
-              </View>
+                <View style={styles.imageLabelRow}>
+                  <Text style={styles.imageLabel}>
+                    {stencilImage ? (showingOriginal ? 'Original' : 'Stencil') : 'Original'}
+                  </Text>
+                  {stencilImage && (
+                    <View style={styles.holdHintContainer}>
+                      <Ionicons name="finger-print-outline" size={14} color="#8B5CF6" />
+                      <Text style={styles.holdHintText}>Hold to compare</Text>
+                    </View>
+                  )}
+                </View>
+                
+                {/* Pressable image for comparison */}
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPressIn={() => setShowingOriginal(true)}
+                  onPressOut={() => setShowingOriginal(false)}
+                  onLongPress={() => setShowingOriginal(true)}
+                  delayLongPress={100}
+                >
+                  <Image
+                    source={{ uri: stencilImage && !showingOriginal ? stencilImage : originalImage }}
+                    style={styles.previewImage}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
 
-              {/* Stencil Image - Clickable for full preview */}
-              {stencilImage && (
-                <View style={styles.imageWrapper}>
-                  <View style={styles.stencilLabelRow}>
-                    <Text style={styles.imageLabel}>Stencil</Text>
+                {/* Export buttons below main image when stencil exists */}
+                {stencilImage && (
+                  <View style={styles.exportButtons}>
                     <TouchableOpacity 
+                      style={styles.exportButton} 
                       onPress={() => setShowPreviewModal(true)}
-                      style={styles.expandButton}
                     >
-                      <Ionicons name="expand-outline" size={18} color="#8B5CF6" />
-                      <Text style={styles.expandButtonText}>Full View</Text>
+                      <Ionicons name="expand-outline" size={20} color="#8B5CF6" />
+                      <Text style={styles.exportButtonText}>Full View</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity style={styles.exportButton} onPress={saveToDevice}>
+                      <Ionicons name="download-outline" size={20} color="#10B981" />
+                      <Text style={styles.exportButtonText}>Save</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.exportButton} onPress={printStencil}>
+                      <Ionicons name="print-outline" size={20} color="#3B82F6" />
+                      <Text style={styles.exportButtonText}>Print</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.exportButton} onPress={shareStencil}>
+                      <Ionicons name="share-outline" size={20} color="#F59E0B" />
+                      <Text style={styles.exportButtonText}>Share</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
+            </View>
+          )}
+        </View>
                   </View>
                   <TouchableOpacity 
                     onPress={() => setShowPreviewModal(true)}
