@@ -340,47 +340,6 @@ export default function Index() {
       Alert.alert('Error', 'Failed to crop image. Please try again.');
     }
   };
-    if (!cropImage || displayImageSize.width === 0) return;
-
-    try {
-      // Calculate scale factor between display size and actual image size
-      const scaleX = imageSize.width / displayImageSize.width;
-      const scaleY = imageSize.height / displayImageSize.height;
-      
-      // Convert display coordinates to actual image coordinates
-      const actualCropX = Math.round(cropBoxPosition.x * scaleX);
-      const actualCropY = Math.round(cropBoxPosition.y * scaleY);
-      const actualCropWidth = Math.round(cropBoxSize.width * scaleX);
-      const actualCropHeight = Math.round(cropBoxSize.height * scaleY);
-      
-      const manipResult = await ImageManipulator.manipulateAsync(
-        cropImage,
-        [
-          {
-            crop: {
-              originX: Math.max(0, actualCropX),
-              originY: Math.max(0, actualCropY),
-              width: Math.max(10, Math.min(actualCropWidth, imageSize.width - actualCropX)),
-              height: Math.max(10, Math.min(actualCropHeight, imageSize.height - actualCropY)),
-            },
-          },
-        ],
-        { compress: 0.8, format: ImageManipulator.SaveFormat.PNG, base64: true }
-      );
-
-      if (manipResult.base64) {
-        const croppedImage = `data:image/png;base64,${manipResult.base64}`;
-        setOriginalImage(croppedImage);
-        setStencilImage(null);
-        setHasGeneratedOnce(false);
-        setShowCropModal(false);
-        Alert.alert('Success', 'Image cropped successfully!');
-      }
-    } catch (error) {
-      console.error('Error cropping image:', error);
-      Alert.alert('Error', 'Failed to crop image. Please try again.');
-    }
-  };
 
   const saveStencil = async () => {
     if (!originalImage || !stencilImage) {
