@@ -83,44 +83,96 @@ def cv2_to_base64(img: np.ndarray) -> str:
     return f"data:image/png;base64,{base64_string}"
 
 def process_image_to_stencil(img: np.ndarray, settings: StencilSettings) -> np.ndarray:
-    """Process image to create tattoo stencil using edge detection"""
+    """Process image to create tattoo stencil using advanced edge detection
+    
+    This creates clean, detailed line drawings similar to professional stencil apps.
+    Uses multiple techniques combined for best results.
+    """
+    
+    height, width = img.shape[:2]
     
     # Convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
-    # Map settings to actual values
-    # Noise reduction: higher = more blur (less noise)
-    blur_kernel = int(3 + (settings.noise_reduction / 100) * 8)
-    if blur_kernel % 2 == 0:
-        blur_kernel += 1  # Must be odd
+    # === STEP 1: Noise Reduction (controlled by setting) ===
+    # Lower noise_reduction = more detail preserved
+    # Higher noise_reduction = cleaner, simpler output
+    noise_level = settings.noise_reduction / 100
     
-    # Apply bilateral filter for noise reduction while preserving edges
-    denoised = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+    # Light bilateral filter to preserve edges while reducing noise
+    d = int(5 + noise_level * 4)  # 5-9 diameter
+    sigma_color = int(50 + noise_level * 50)  # 50-100
+    sigma_space = int(50 + noise_level * 50)  # 50-100
+    denoised = cv2.bilateralFilter(gray, d=d, sigmaColor=sigma_color, sigmaSpace=sigma_space)
     
-    # Apply Gaussian blur based on noise reduction setting
-    blurred = cv2.GaussianBlur(denoised, (blur_kernel, blur_kernel), 0)
+    # === STEP 2: Enhance Contrast for Better Edge Detection ===
+    # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    enhanced = clahe.apply(denoised)
     
-    # Clarity affects edge detection thresholds
-    # Lower clarity = more edges, Higher clarity = fewer, cleaner edges
-    low_threshold = int(30 + (settings.clarity / 100) * 70)
-    high_threshold = int(low_threshold * 2.5)
+    # === STEP 3: Multi-scale Edge Detection ===
+    # Clarity controls edge sensitivity (lower = more edges/detail)
+    clarity_factor = settings.clarity / 100
     
-    # Apply Canny edge detection
-    edges = cv2.Canny(blurred, low_threshold, high_threshold)
+    # Canny edge detection with adaptive thresholds
+    # Lower thresholds = more edges captured
+    median_val = np.median(enhanced)
+    lower = int(max(10, (1 - clarity_factor) * median_val * 0.5))
+    upper = int(min(255, (1 + clarity_factor * 0.5) * median_val))
     
-    # Line weight affects dilation (thickening of lines)
-    line_kernel_size = max(1, int(1 + (settings.line_weight / 100) * 4))
-    if line_kernel_size > 1:
-        kernel = np.ones((line_kernel_size, line_kernel_size), np.uint8)
-        edges = cv2.dilate(edges, kernel, iterations=1)
+    edges_canny = cv2.Canny(enhanced, lower, upper)
     
-    # Create output image (white background with black lines for tattoo stencil)
+    # === STEP 4: Adaptive Thresholding for Additional Details ===
+    # This captures details that Canny might miss
+    block_size = int(11 + (1 - clarity_factor) * 10)  # 11-21
+    if block_size % 2 == 0:
+        block_size += 1
+    
+    # Adaptive threshold captures local variations
+    adaptive = cv2.adaptiveThreshold(
+        enhanced, 255, 
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+        cv2.THRESH_BINARY_INV,
+        block_size, 
+        int(2 + clarity_factor * 3)  # C constant: 2-5
+    )
+    
+    # === STEP 5: Combine Edge Methods ===
+    # Merge Canny edges with adaptive threshold result
+    # More detail at lower clarity
+    if clarity_factor < 0.5:
+        # More detail mode - use more adaptive threshold
+        combined = cv2.bitwise_or(edges_canny, adaptive)
+    else:
+        # Cleaner mode - primarily use Canny
+        # Dilate Canny slightly to connect broken edges
+        kernel_connect = np.ones((2, 2), np.uint8)
+        edges_connected = cv2.dilate(edges_canny, kernel_connect, iterations=1)
+        combined = edges_connected
+    
+    # === STEP 6: Clean Up Small Noise ===
+    # Remove very small isolated pixels
+    kernel_clean = np.ones((2, 2), np.uint8)
+    cleaned = cv2.morphologyEx(combined, cv2.MORPH_OPEN, kernel_clean)
+    
+    # === STEP 7: Apply Line Weight ===
+    line_weight_factor = settings.line_weight / 100
+    
+    if line_weight_factor > 0.1:
+        # Dilate to thicken lines
+        kernel_size = max(1, int(1 + line_weight_factor * 3))
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
+        final_edges = cv2.dilate(cleaned, kernel, iterations=1)
+    else:
+        final_edges = cleaned
+    
+    # === STEP 8: Create Final Output ===
     if settings.invert:
         # White background, black lines (typical stencil look)
-        stencil = 255 - edges
+        stencil = 255 - final_edges
     else:
         # Black background, white lines
-        stencil = edges
+        stencil = final_edges
     
     # Convert to 3 channel for consistent output
     stencil_rgb = cv2.cvtColor(stencil, cv2.COLOR_GRAY2BGR)
