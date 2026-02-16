@@ -62,8 +62,16 @@ class SavedStencil(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     original_image: str  # base64
     stencil_image: str  # base64
+    stencil_thumbnail: Optional[str] = None  # base64 thumbnail for gallery view
     settings: StencilSettings
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    name: Optional[str] = None
+
+class StencilListItem(BaseModel):
+    """Lightweight model for gallery list view - no full images"""
+    id: str
+    stencil_thumbnail: Optional[str] = None
+    created_at: datetime
     name: Optional[str] = None
 
 class SaveStencilRequest(BaseModel):
