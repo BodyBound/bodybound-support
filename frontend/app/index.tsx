@@ -773,7 +773,43 @@ export default function Index() {
     }
   };
 
-  // Save stencil to device photo library
+  // Export stencil using Share sheet (works without media permissions)
+  const exportStencilViaShare = async (imageBase64: string, filename: string = 'stencil') => {
+    try {
+      // Extract base64 data
+      const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+      
+      // Create a temporary file
+      const tempFilename = `${filename}_${Date.now()}.png`;
+      const fileUri = `${FileSystem.cacheDirectory}${tempFilename}`;
+      
+      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Check if sharing is available
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert('Error', 'Sharing is not available on this device.');
+        return false;
+      }
+
+      // Open share sheet - user can save to photos from here
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'image/png',
+        dialogTitle: 'Save Stencil',
+        UTI: 'public.png',
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error sharing stencil:', error);
+      Alert.alert('Error', 'Failed to export stencil. Please try again.');
+      return false;
+    }
+  };
+
+  // Export current stencil to device (via share sheet)
   const saveToDevice = async () => {
     if (!stencilImage) {
       Alert.alert('Error', 'No stencil to save.');
@@ -781,53 +817,16 @@ export default function Index() {
     }
 
     setIsSavingToDevice(true);
-    try {
-      // Request permission
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please allow access to save images to your device.');
-        setIsSavingToDevice(false);
-        return;
-      }
-
-      // Extract base64 data
-      const base64Data = stencilImage.includes(',') ? stencilImage.split(',')[1] : stencilImage;
-      
-      // Create a temporary file
-      const filename = `stencil_${Date.now()}.png`;
-      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
-      
-      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      // Save to media library
-      const asset = await MediaLibrary.createAssetAsync(fileUri);
-      await MediaLibrary.createAlbumAsync('Body Bound Stencils', asset, false);
-
-      Alert.alert('Saved!', 'Stencil saved to your photo gallery in "Body Bound Stencils" album!');
-    } catch (error) {
-      console.error('Error saving to device:', error);
-      Alert.alert('Error', 'Failed to save to device. Please try again.');
-    } finally {
-      setIsSavingToDevice(false);
-    }
+    await exportStencilViaShare(stencilImage, 'body_bound_stencil');
+    setIsSavingToDevice(false);
   };
 
-  // Export saved stencil from gallery to device photo library
+  // Export saved stencil from gallery to device (via share sheet)
   const [exportingStencilId, setExportingStencilId] = useState<string | null>(null);
   
   const exportStencilToDevice = async (stencilId: string) => {
     setExportingStencilId(stencilId);
     try {
-      // Request permission
-      const { status } = await MediaLibrary.requestPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please allow access to save images to your device.');
-        setExportingStencilId(null);
-        return;
-      }
-
       // Fetch full stencil data from API
       const response = await fetch(`${API_URL}/api/stencils/${stencilId}`);
       if (!response.ok) {
@@ -835,24 +834,7 @@ export default function Index() {
       }
       const stencilData = await response.json();
       
-      // Extract base64 data
-      const base64Data = stencilData.stencil_image.includes(',') 
-        ? stencilData.stencil_image.split(',')[1] 
-        : stencilData.stencil_image;
-      
-      // Create a temporary file
-      const filename = `stencil_${Date.now()}.png`;
-      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
-      
-      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      // Save to media library
-      const asset = await MediaLibrary.createAssetAsync(fileUri);
-      await MediaLibrary.createAlbumAsync('Body Bound Stencils', asset, false);
-
-      Alert.alert('Exported!', 'Stencil exported to your photo gallery!');
+      await exportStencilViaShare(stencilData.stencil_image, stencilData.name || 'stencil');
     } catch (error) {
       console.error('Error exporting stencil:', error);
       Alert.alert('Error', 'Failed to export stencil. Please try again.');
