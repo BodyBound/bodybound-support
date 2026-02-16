@@ -224,6 +224,108 @@ export default function Index() {
     }
   }, [originalImage, settings]);
 
+  // Remove background function
+  const removeBackground = async () => {
+    if (!originalImage) {
+      Alert.alert('No Image', 'Please select an image first.');
+      return;
+    }
+
+    setIsRemovingBackground(true);
+    try {
+      const response = await fetch(`${API_URL}/api/remove-background`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          image_base64: originalImage,
+          method: 'auto',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove background');
+      }
+
+      const data = await response.json();
+      setOriginalImage(data.image_base64);
+      setStencilImage(null);
+      setHasGeneratedOnce(false);
+      Alert.alert('Success', 'Background removed! Generate stencil to see the result.');
+    } catch (error) {
+      console.error('Error removing background:', error);
+      Alert.alert('Error', 'Failed to remove background. Please try again.');
+    } finally {
+      setIsRemovingBackground(false);
+    }
+  };
+
+  // Open crop modal
+  const openCropModal = async () => {
+    if (!originalImage) {
+      Alert.alert('No Image', 'Please select an image first.');
+      return;
+    }
+
+    // Get image dimensions
+    Image.getSize(originalImage, (width, height) => {
+      setImageSize({ width, height });
+      setCropRegion({
+        originX: width * 0.1,
+        originY: height * 0.1,
+        width: width * 0.8,
+        height: height * 0.8,
+      });
+      setCropImage(originalImage);
+      setShowCropModal(true);
+    }, (error) => {
+      console.error('Error getting image size:', error);
+      // Default size
+      setImageSize({ width: 1000, height: 1000 });
+      setCropRegion({ originX: 100, originY: 100, width: 800, height: 800 });
+      setCropImage(originalImage);
+      setShowCropModal(true);
+    });
+  };
+
+  // Apply crop
+  const applyCrop = async () => {
+    if (!cropImage) return;
+
+    try {
+      // Extract base64 data
+      const base64Data = cropImage.includes(',') ? cropImage.split(',')[1] : cropImage;
+      
+      const manipResult = await ImageManipulator.manipulateAsync(
+        cropImage,
+        [
+          {
+            crop: {
+              originX: Math.max(0, Math.round(cropRegion.originX)),
+              originY: Math.max(0, Math.round(cropRegion.originY)),
+              width: Math.max(10, Math.round(cropRegion.width)),
+              height: Math.max(10, Math.round(cropRegion.height)),
+            },
+          },
+        ],
+        { compress: 0.8, format: ImageManipulator.SaveFormat.PNG, base64: true }
+      );
+
+      if (manipResult.base64) {
+        const croppedImage = `data:image/png;base64,${manipResult.base64}`;
+        setOriginalImage(croppedImage);
+        setStencilImage(null);
+        setHasGeneratedOnce(false);
+        setShowCropModal(false);
+        Alert.alert('Success', 'Image cropped successfully!');
+      }
+    } catch (error) {
+      console.error('Error cropping image:', error);
+      Alert.alert('Error', 'Failed to crop image. Please try again.');
+    }
+  };
+
   const saveStencil = async () => {
     if (!originalImage || !stencilImage) {
       Alert.alert('Error', 'Please process an image first.');
