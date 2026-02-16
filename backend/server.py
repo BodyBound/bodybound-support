@@ -456,13 +456,30 @@ Style: Professional DETAILED tattoo stencil suitable for thermal transfer paper 
         
         text_response, images = await chat.send_message_multimodal_response(msg)
         
+        logger.info(f"AI response - text: {text_response[:100] if text_response else 'None'}..., images count: {len(images) if images else 0}")
+        
         if not images or len(images) == 0:
-            raise HTTPException(status_code=500, detail="AI failed to generate stencil image")
+            logger.error(f"AI did not return any images. Text response: {text_response}")
+            raise HTTPException(status_code=500, detail="AI failed to generate stencil image - no image returned")
         
         # Get the generated image
         generated_image = images[0]
-        image_base64 = generated_image['data']
-        mime_type = generated_image.get('mime_type', 'image/png')
+        logger.info(f"Generated image keys: {generated_image.keys() if isinstance(generated_image, dict) else type(generated_image)}")
+        
+        # Handle different response formats
+        if isinstance(generated_image, dict):
+            image_base64 = generated_image.get('data') or generated_image.get('b64_json') or generated_image.get('base64')
+            mime_type = generated_image.get('mime_type', 'image/png')
+        elif isinstance(generated_image, str):
+            image_base64 = generated_image
+            mime_type = 'image/png'
+        else:
+            logger.error(f"Unexpected image format: {type(generated_image)}")
+            raise HTTPException(status_code=500, detail="Unexpected image format from AI")
+        
+        if not image_base64:
+            logger.error(f"No image data found in response: {generated_image}")
+            raise HTTPException(status_code=500, detail="AI returned empty image data")
         
         # Format as data URL
         stencil_base64 = f"data:{mime_type};base64,{image_base64}"
