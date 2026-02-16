@@ -1077,15 +1077,15 @@ export default function Index() {
                       <Text style={styles.exportButtonText}>Full View</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.exportButton} onPress={saveToDevice}>
-                      <Ionicons name="download-outline" size={20} color="#10B981" />
+                      <Text style={[styles.exportIconText, { color: '#10B981' }]}>💾</Text>
                       <Text style={styles.exportButtonText}>Save</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.exportButton} onPress={printStencil}>
-                      <Ionicons name="print-outline" size={20} color="#3B82F6" />
+                      <Text style={[styles.exportIconText, { color: '#3B82F6' }]}>🖨️</Text>
                       <Text style={styles.exportButtonText}>Print</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.exportButton} onPress={shareStencil}>
-                      <Ionicons name="share-outline" size={20} color="#F59E0B" />
+                      <Text style={[styles.exportIconText, { color: '#F59E0B' }]}>📤</Text>
                       <Text style={styles.exportButtonText}>Share</Text>
                     </TouchableOpacity>
                   </View>
