@@ -1914,6 +1914,13 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 24,
   },
+  actionButtonsContainer: {
+    marginTop: 24,
+  },
+  generateButtonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   saveButtonsRow: {
     flexDirection: 'row',
     gap: 12,
