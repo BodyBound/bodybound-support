@@ -858,6 +858,15 @@ export default function Index() {
     });
   };
 
+  const getSliderIcon = (key: string) => {
+    switch (key) {
+      case 'clarity': return '🔆';
+      case 'line_weight': return '✏️';
+      case 'noise_reduction': return '✨';
+      default: return '⚙️';
+    }
+  };
+
   const renderSlider = (
     label: string,
     value: number,
@@ -866,7 +875,7 @@ export default function Index() {
   ) => (
     <View style={styles.sliderContainer}>
       <View style={styles.sliderHeader}>
-        <Ionicons name={icon as any} size={18} color="#8B5CF6" />
+        <Text style={styles.sliderIcon}>{getSliderIcon(settingKey as string)}</Text>
         <Text style={styles.sliderLabel}>{label}</Text>
         <View style={styles.sliderValueContainer}>
           {isLiveUpdating && <ActivityIndicator size="small" color="#8B5CF6" style={styles.miniLoader} />}
