@@ -1762,4 +1762,83 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  // Export buttons
+  exportButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#2D2D2D',
+  },
+  exportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    gap: 6,
+  },
+  exportButtonText: {
+    color: '#9CA3AF',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  // Expand button
+  expandButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  expandButtonText: {
+    color: '#8B5CF6',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  // Updating overlay
+  updatingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 12,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  // Full-size preview modal
+  previewModalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  previewModalClose: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    zIndex: 10,
+  },
+  previewModalImage: {
+    width: SCREEN_WIDTH - 40,
+    height: SCREEN_HEIGHT * 0.6,
+    borderRadius: 12,
+  },
+  previewModalActions: {
+    flexDirection: 'row',
+    marginTop: 30,
+    gap: 20,
+  },
+  previewActionButton: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  previewActionText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
 });
