@@ -583,9 +583,9 @@ export default function Index() {
     if (!originalImage) return;
 
     try {
-      // Calculate display dimensions (same logic as openCropModal)
+      // Calculate display dimensions (same logic as openCropModal and PanResponder)
       const containerWidth = SCREEN_WIDTH - 40;
-      const containerHeight = SCREEN_HEIGHT - 200;
+      const containerHeight = SCREEN_HEIGHT - 150;
       
       const imageAspect = cropImageSize.width / cropImageSize.height;
       const containerAspect = containerWidth / containerHeight;
