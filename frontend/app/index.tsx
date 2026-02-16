@@ -738,6 +738,36 @@ export default function Index() {
           )}
         </View>
 
+        {/* Edit Tools - Crop and Remove Background */}
+        {originalImage && (
+          <View style={styles.editToolsSection}>
+            <Text style={styles.editToolsTitle}>Edit Tools</Text>
+            <View style={styles.editToolsRow}>
+              <TouchableOpacity 
+                style={styles.editToolButton} 
+                onPress={openCropModal}
+              >
+                <Ionicons name="crop-outline" size={22} color="#8B5CF6" />
+                <Text style={styles.editToolButtonText}>Crop</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.editToolButton, isRemovingBackground && styles.buttonDisabled]} 
+                onPress={removeBackground}
+                disabled={isRemovingBackground}
+              >
+                {isRemovingBackground ? (
+                  <ActivityIndicator size="small" color="#8B5CF6" />
+                ) : (
+                  <Ionicons name="cut-outline" size={22} color="#8B5CF6" />
+                )}
+                <Text style={styles.editToolButtonText}>
+                  {isRemovingBackground ? 'Removing...' : 'Remove BG'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+
         {/* Settings Controls */}
         {originalImage && (
           <View style={styles.settingsSection}>
