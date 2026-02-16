@@ -97,6 +97,49 @@ def cv2_to_base64(img: np.ndarray) -> str:
     base64_string = base64.b64encode(buffer).decode('utf-8')
     return f"data:image/png;base64,{base64_string}"
 
+def generate_thumbnail(base64_string: str, max_size: int = 150) -> str:
+    """Generate a thumbnail from a base64 image for gallery preview
+    
+    Args:
+        base64_string: The original base64 encoded image
+        max_size: Maximum dimension (width or height) of the thumbnail
+        
+    Returns:
+        Base64 encoded thumbnail image
+    """
+    try:
+        # Remove data URL prefix if present
+        if ',' in base64_string:
+            base64_data = base64_string.split(',')[1]
+        else:
+            base64_data = base64_string
+        
+        # Decode the image
+        img_data = base64.b64decode(base64_data)
+        img = Image.open(BytesIO(img_data))
+        
+        # Calculate thumbnail size maintaining aspect ratio
+        width, height = img.size
+        if width > height:
+            new_width = max_size
+            new_height = int(height * (max_size / width))
+        else:
+            new_height = max_size
+            new_width = int(width * (max_size / height))
+        
+        # Resize image with high quality
+        thumbnail = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        
+        # Convert back to base64
+        buffer = BytesIO()
+        thumbnail.save(buffer, format='PNG', optimize=True)
+        thumbnail_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        return f"data:image/png;base64,{thumbnail_base64}"
+    except Exception as e:
+        logger.error(f"Error generating thumbnail: {str(e)}")
+        return ""  # Return empty string if thumbnail generation fails
+
 def process_image_to_stencil(img: np.ndarray, settings: StencilSettings) -> np.ndarray:
     """Process image to create tattoo stencil using advanced edge detection
     
