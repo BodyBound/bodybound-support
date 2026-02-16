@@ -911,7 +911,7 @@ export default function Index() {
             onPress={() => setShowGallery(false)}
             style={styles.closeButton}
           >
-            <Ionicons name="close" size={28} color="#fff" />
+            <Text style={styles.closeIcon}>✕</Text>
           </TouchableOpacity>
         </View>
 
@@ -919,7 +919,7 @@ export default function Index() {
           <ActivityIndicator size="large" color="#8B5CF6" style={styles.loader} />
         ) : savedStencils.length === 0 ? (
           <View style={styles.emptyGallery}>
-            <Ionicons name="images-outline" size={64} color="#4B5563" />
+            <Text style={styles.emptyIcon}>🖼️</Text>
             <Text style={styles.emptyText}>No saved stencils yet</Text>
           </View>
         ) : (
@@ -947,7 +947,7 @@ export default function Index() {
                   onPress={() => deleteStencil(stencil.id)}
                   style={styles.deleteButton}
                 >
-                  <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                  <Text style={styles.deleteIcon}>🗑️</Text>
                 </TouchableOpacity>
               </TouchableOpacity>
             ))}
