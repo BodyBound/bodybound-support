@@ -412,7 +412,7 @@ export default function Index() {
     }
   };
 
-  // Open crop modal
+  // Open crop modal with visual crop box
   const openCropModal = async () => {
     if (!originalImage) {
       Alert.alert('No Image', 'Please select an image first.');
@@ -422,19 +422,24 @@ export default function Index() {
     // Get image dimensions
     Image.getSize(originalImage, (width, height) => {
       setImageSize({ width, height });
-      setCropRegion({
-        originX: width * 0.1,
-        originY: height * 0.1,
-        width: width * 0.8,
-        height: height * 0.8,
+      // Initialize crop box at center with 80% of display area
+      const displayWidth = SCREEN_WIDTH - 40;
+      const displayHeight = SCREEN_HEIGHT * 0.5;
+      const boxWidth = displayWidth * 0.7;
+      const boxHeight = displayHeight * 0.7;
+      setCropBoxPosition({
+        x: (displayWidth - boxWidth) / 2,
+        y: (displayHeight - boxHeight) / 2,
       });
+      setCropBoxSize({ width: boxWidth, height: boxHeight });
       setCropImage(originalImage);
       setShowCropModal(true);
     }, (error) => {
       console.error('Error getting image size:', error);
-      // Default size
+      // Default values
       setImageSize({ width: 1000, height: 1000 });
-      setCropRegion({ originX: 100, originY: 100, width: 800, height: 800 });
+      setCropBoxPosition({ x: 50, y: 50 });
+      setCropBoxSize({ width: 200, height: 200 });
       setCropImage(originalImage);
       setShowCropModal(true);
     });
