@@ -349,56 +349,62 @@ export default function Index() {
 
   // Handle crop box touch events
   const handleCropTouchStart = (handle: string, event: GestureResponderEvent) => {
-    const { pageX, pageY } = event.nativeEvent;
+    const { locationX, locationY } = event.nativeEvent;
     setActiveCropHandle(handle);
-    setCropStartPos({ x: pageX, y: pageY });
+    setCropStartPos({ x: locationX, y: locationY });
     setCropStartBox({ ...cropBox });
   };
 
   const handleCropTouchMove = (event: GestureResponderEvent) => {
     if (!activeCropHandle) return;
     
-    const { pageX, pageY } = event.nativeEvent;
-    const dx = pageX - cropStartPos.x;
-    const dy = pageY - cropStartPos.y;
-    const minSize = 50;
-    const maxWidth = SCREEN_WIDTH - 40;
-    const maxHeight = 350;
+    const { locationX, locationY } = event.nativeEvent;
+    const dx = locationX - cropStartPos.x;
+    const dy = locationY - cropStartPos.y;
+    const minSize = 60;
+    const containerWidth = SCREEN_WIDTH - 40;
+    const containerHeight = SCREEN_HEIGHT - 200; // Account for header and bottom info
 
     if (activeCropHandle === 'move') {
+      const newX = Math.max(0, Math.min(containerWidth - cropStartBox.width, cropStartBox.x + dx));
+      const newY = Math.max(0, Math.min(containerHeight - cropStartBox.height, cropStartBox.y + dy));
       setCropBox({
-        ...cropBox,
-        x: Math.max(0, Math.min(maxWidth - cropBox.width, cropStartBox.x + dx)),
-        y: Math.max(0, Math.min(maxHeight - cropBox.height, cropStartBox.y + dy)),
+        ...cropStartBox,
+        x: newX,
+        y: newY,
       });
     } else if (activeCropHandle === 'br') {
       // Bottom-right corner
+      const newWidth = Math.max(minSize, Math.min(containerWidth - cropStartBox.x, cropStartBox.width + dx));
+      const newHeight = Math.max(minSize, Math.min(containerHeight - cropStartBox.y, cropStartBox.height + dy));
       setCropBox({
-        ...cropBox,
-        width: Math.max(minSize, Math.min(maxWidth - cropBox.x, cropStartBox.width + dx)),
-        height: Math.max(minSize, Math.min(maxHeight - cropBox.y, cropStartBox.height + dy)),
+        ...cropStartBox,
+        width: newWidth,
+        height: newHeight,
       });
     } else if (activeCropHandle === 'bl') {
       // Bottom-left corner
       const newWidth = Math.max(minSize, cropStartBox.width - dx);
-      const newX = cropStartBox.x + (cropStartBox.width - newWidth);
+      const newX = cropStartBox.x + cropStartBox.width - newWidth;
+      const newHeight = Math.max(minSize, Math.min(containerHeight - cropStartBox.y, cropStartBox.height + dy));
       if (newX >= 0) {
         setCropBox({
-          ...cropBox,
+          ...cropStartBox,
           x: newX,
           width: newWidth,
-          height: Math.max(minSize, Math.min(maxHeight - cropBox.y, cropStartBox.height + dy)),
+          height: newHeight,
         });
       }
     } else if (activeCropHandle === 'tr') {
       // Top-right corner
       const newHeight = Math.max(minSize, cropStartBox.height - dy);
-      const newY = cropStartBox.y + (cropStartBox.height - newHeight);
+      const newY = cropStartBox.y + cropStartBox.height - newHeight;
+      const newWidth = Math.max(minSize, Math.min(containerWidth - cropStartBox.x, cropStartBox.width + dx));
       if (newY >= 0) {
         setCropBox({
-          ...cropBox,
+          ...cropStartBox,
           y: newY,
-          width: Math.max(minSize, Math.min(maxWidth - cropBox.x, cropStartBox.width + dx)),
+          width: newWidth,
           height: newHeight,
         });
       }
@@ -406,8 +412,8 @@ export default function Index() {
       // Top-left corner
       const newWidth = Math.max(minSize, cropStartBox.width - dx);
       const newHeight = Math.max(minSize, cropStartBox.height - dy);
-      const newX = cropStartBox.x + (cropStartBox.width - newWidth);
-      const newY = cropStartBox.y + (cropStartBox.height - newHeight);
+      const newX = cropStartBox.x + cropStartBox.width - newWidth;
+      const newY = cropStartBox.y + cropStartBox.height - newHeight;
       if (newX >= 0 && newY >= 0) {
         setCropBox({
           x: newX,
@@ -417,6 +423,9 @@ export default function Index() {
         });
       }
     }
+    
+    // Update start position for continuous movement
+    setCropStartPos({ x: locationX, y: locationY });
   };
 
   const handleCropTouchEnd = () => {
