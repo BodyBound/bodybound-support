@@ -1322,45 +1322,18 @@ export default function Index() {
         <SafeAreaView style={styles.cropModalContainer}>
           <View style={styles.cropModalHeader}>
             <TouchableOpacity onPress={() => setShowCropModal(false)} style={styles.cropHeaderButton}>
-              <Ionicons name="close" size={28} color="#fff" />
+              <Text style={styles.cropCancelText}>✕</Text>
             </TouchableOpacity>
             <Text style={styles.cropModalTitle}>Crop Image</Text>
             <TouchableOpacity onPress={applyCrop} style={styles.cropHeaderButton}>
-              <Text style={styles.cropApplyText}>Apply</Text>
+              <Text style={styles.cropApplyText}>✓ Apply</Text>
             </TouchableOpacity>
           </View>
 
           {/* Crop Area with Draggable Box */}
           <View 
             style={styles.cropAreaContainer}
-            onStartShouldSetResponder={() => true}
-            onMoveShouldSetResponder={() => true}
-            onResponderGrant={(e) => {
-              const { locationX, locationY } = e.nativeEvent;
-              // Check if touch is inside crop box for move, or near edges for resize
-              const box = cropBox;
-              const margin = 30;
-              
-              // Check corners first (30px radius)
-              if (locationX >= box.x - margin && locationX <= box.x + margin &&
-                  locationY >= box.y - margin && locationY <= box.y + margin) {
-                handleCropTouchStart('tl', e);
-              } else if (locationX >= box.x + box.width - margin && locationX <= box.x + box.width + margin &&
-                         locationY >= box.y - margin && locationY <= box.y + margin) {
-                handleCropTouchStart('tr', e);
-              } else if (locationX >= box.x - margin && locationX <= box.x + margin &&
-                         locationY >= box.y + box.height - margin && locationY <= box.y + box.height + margin) {
-                handleCropTouchStart('bl', e);
-              } else if (locationX >= box.x + box.width - margin && locationX <= box.x + box.width + margin &&
-                         locationY >= box.y + box.height - margin && locationY <= box.y + box.height + margin) {
-                handleCropTouchStart('br', e);
-              } else if (locationX >= box.x && locationX <= box.x + box.width &&
-                         locationY >= box.y && locationY <= box.y + box.height) {
-                handleCropTouchStart('move', e);
-              }
-            }}
-            onResponderMove={handleCropTouchMove}
-            onResponderRelease={handleCropTouchEnd}
+            {...cropPanResponder.panHandlers}
           >
             {/* Full Image */}
             {originalImage && (
@@ -1372,10 +1345,10 @@ export default function Index() {
             )}
             
             {/* Dark overlay outside crop area */}
-            <View style={[styles.cropDarkOverlay, { top: 0, left: 0, right: 0, height: cropBox.y }]} />
-            <View style={[styles.cropDarkOverlay, { top: cropBox.y, left: 0, width: cropBox.x, height: cropBox.height }]} />
-            <View style={[styles.cropDarkOverlay, { top: cropBox.y, left: cropBox.x + cropBox.width, right: 0, height: cropBox.height }]} />
-            <View style={[styles.cropDarkOverlay, { top: cropBox.y + cropBox.height, left: 0, right: 0, bottom: 0 }]} />
+            <View style={[styles.cropDarkOverlay, { top: 0, left: 0, right: 0, height: cropBox.y }]} pointerEvents="none" />
+            <View style={[styles.cropDarkOverlay, { top: cropBox.y, left: 0, width: cropBox.x, height: cropBox.height }]} pointerEvents="none" />
+            <View style={[styles.cropDarkOverlay, { top: cropBox.y, left: cropBox.x + cropBox.width, right: 0, height: cropBox.height }]} pointerEvents="none" />
+            <View style={[styles.cropDarkOverlay, { top: cropBox.y + cropBox.height, left: 0, right: 0, bottom: 0 }]} pointerEvents="none" />
             
             {/* Crop Box Border */}
             <View style={[styles.cropBoxBorder, {
@@ -1383,7 +1356,7 @@ export default function Index() {
               top: cropBox.y,
               width: cropBox.width,
               height: cropBox.height,
-            }]}>
+            }]} pointerEvents="none">
               {/* Grid lines */}
               <View style={[styles.cropGridLineH, { top: '33%' }]} />
               <View style={[styles.cropGridLineH, { top: '66%' }]} />
@@ -1391,11 +1364,11 @@ export default function Index() {
               <View style={[styles.cropGridLineV, { left: '66%' }]} />
             </View>
             
-            {/* Corner Handles */}
-            <View style={[styles.cropCornerHandle, styles.cropCornerTL, { left: cropBox.x - 12, top: cropBox.y - 12 }]} />
-            <View style={[styles.cropCornerHandle, styles.cropCornerTR, { left: cropBox.x + cropBox.width - 12, top: cropBox.y - 12 }]} />
-            <View style={[styles.cropCornerHandle, styles.cropCornerBL, { left: cropBox.x - 12, top: cropBox.y + cropBox.height - 12 }]} />
-            <View style={[styles.cropCornerHandle, styles.cropCornerBR, { left: cropBox.x + cropBox.width - 12, top: cropBox.y + cropBox.height - 12 }]} />
+            {/* Corner Handles - larger touch targets */}
+            <View style={[styles.cropCornerHandle, { left: cropBox.x - 15, top: cropBox.y - 15 }]} pointerEvents="none" />
+            <View style={[styles.cropCornerHandle, { left: cropBox.x + cropBox.width - 15, top: cropBox.y - 15 }]} pointerEvents="none" />
+            <View style={[styles.cropCornerHandle, { left: cropBox.x - 15, top: cropBox.y + cropBox.height - 15 }]} pointerEvents="none" />
+            <View style={[styles.cropCornerHandle, { left: cropBox.x + cropBox.width - 15, top: cropBox.y + cropBox.height - 15 }]} pointerEvents="none" />
           </View>
 
           <View style={styles.cropBottomInfo}>
