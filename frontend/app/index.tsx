@@ -436,7 +436,7 @@ export default function Index() {
         setStencilVersions({ ...versions });
       }
 
-      // Generate Heavy version - Full detail with texture AND solid black
+      // Generate Heavy version - Texture AND solid black (toned down)
       setGenerationProgress(3);
       const heavyResponse = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
@@ -445,8 +445,8 @@ export default function Index() {
           image_base64: originalImage,
           style: 'tattoo',
           line_color: lineColor,
-          shading_detail: 85,
-          solid_fill: 65,
+          shading_detail: 70,
+          solid_fill: 45,
         }),
       });
       if (heavyResponse.ok) {
