@@ -1215,7 +1215,7 @@ export default function Index() {
                   setHasGeneratedOnce(false); // Reset to prevent basic mode auto-updates
                 }}
               >
-                <Ionicons name="sparkles" size={18} color={stencilMode === 'ai' ? '#fff' : '#8B5CF6'} />
+                <Text style={styles.modeIcon}>✨</Text>
                 <Text style={[styles.modeButtonText, stencilMode === 'ai' && styles.modeButtonTextActive]}>
                   AI Stencil
                 </Text>
@@ -1227,7 +1227,7 @@ export default function Index() {
                   setHasGeneratedOnce(false); // Reset when switching modes
                 }}
               >
-                <Ionicons name="options" size={18} color={stencilMode === 'basic' ? '#fff' : '#8B5CF6'} />
+                <Text style={styles.modeIcon}>⚙️</Text>
                 <Text style={[styles.modeButtonText, stencilMode === 'basic' && styles.modeButtonTextActive]}>
                   Basic Edge
                 </Text>
