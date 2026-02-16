@@ -560,45 +560,44 @@ async def generate_ai_stencil(request: AIStencilRequest):
         shading_level = "minimal" if request.shading_detail < 20 else "light" if request.shading_detail < 40 else "moderate" if request.shading_detail < 60 else "heavy"
         fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
         
-        # Create the prompt for EXACT tracing
-        prompt = f"""YOU MUST TRACE THIS EXACT IMAGE. This is NOT a creative task - you are converting this specific image into a line drawing stencil.
+        # Create the prompt for EXACT tracing - very strict
+        prompt = f"""IMPORTANT: Convert THIS EXACT input image to a line art stencil. DO NOT create a different image.
 
-CRITICAL - DO NOT:
-- Create a new image or design
-- Change the composition
-- Add or remove any elements
-- Reinterpret or reimagine the subject
-- Draw something "similar" - it MUST be THIS EXACT image
-- Use soft shading, gradients, or airbrush effects
-- Use grayscale tones or blending
+ABSOLUTE RULES - VIOLATION IS FAILURE:
+1. The output MUST show the EXACT SAME subject as the input
+2. The output MUST have the EXACT SAME composition as the input
+3. The output MUST have the EXACT SAME pose/position as the input
+4. If input shows a face, output must show THAT SAME face in SAME position
+5. If input shows an object, output must show THAT SAME object in SAME position
+6. DO NOT create your own version or interpretation
+7. DO NOT draw a "similar" subject - draw THIS subject
 
-WHAT TO DO:
-1. Look at the input image carefully
-2. Trace EXACTLY what you see - same shapes, same positions, same proportions
-3. Convert it to {line_color} lines on pure white background
-4. This is like putting tracing paper over the photo and drawing the outlines
+TASK: Photo-to-line-art conversion (NOT creative generation)
+- Input: The photo I'm providing
+- Output: A line drawing of EXACTLY what's in that photo
+- Think of this as TRACING, not drawing from imagination
 
-IMPORTANT - LINE WORK ONLY:
-- The entire image must be made of LINES only
-- NO soft shading, NO gradients, NO grayscale fills
-- All shading must be done with LINE TECHNIQUES: cross-hatching, stippling (dots), parallel lines, contour lines
+TECHNICAL SPECS:
+- Use {line_color} colored lines on pure white background
+- NO gradients, NO soft shading, NO gray tones
+- All shading via line techniques only (cross-hatch, dots, parallel lines)
 
-TEXTURE/SHADING LEVEL: {shading_level.upper()}
+SHADING AMOUNT: {shading_level.upper()}
 {
-"- Clean outlines only - NO texture lines, NO cross-hatching, NO dots" if shading_level == "minimal" else
-"- Add LIGHT cross-hatching lines and dotted lines in shadow areas to imply depth - still mostly clean" if shading_level == "light" else
-"- Use cross-hatching, stippled dots, and contour lines to show shading - all done with LINES not soft shading" if shading_level == "moderate" else
-"- Heavy use of cross-hatching, stippling, and parallel lines for shading"
+"- Outlines only, minimal internal detail" if shading_level == "minimal" else
+"- Light cross-hatching/dots in shadow areas" if shading_level == "light" else
+"- Moderate cross-hatching and stippling throughout" if shading_level == "moderate" else
+"- Heavy detailed line work"
 }
 
-SOLID BLACK FILL: {fill_level.upper()}
+BLACK FILLS: {fill_level.upper()}
 {
-"- NO solid black fills - lines only" if fill_level == "none" else
-"- Minimal solid black in darkest shadows only" if fill_level == "minimal" else
-"- Moderate solid black fills in shadow areas"
+"- None - lines only" if fill_level == "none" else
+"- Minimal in darkest areas" if fill_level == "minimal" else
+"- Moderate in shadows"
 }
 
-OUTPUT: A line art stencil using ONLY lines (no soft shading) that is an EXACT TRACE of the input image, suitable for tattoo transfer paper."""
+VERIFY: Before outputting, check that your stencil matches the input image exactly."""
 
         # Send the image with prompt
         msg = UserMessage(
