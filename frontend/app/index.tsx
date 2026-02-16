@@ -888,7 +888,17 @@ export default function Index() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Tattoo Stencil</Text>
+        <View style={styles.headerLeft}>
+          <Image 
+            source={require('../assets/images/logo.png')} 
+            style={styles.headerLogo}
+            resizeMode="contain"
+          />
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>BODY BOUND</Text>
+            <Text style={styles.headerSubtitle}>Stencil Generator</Text>
+          </View>
+        </View>
         <TouchableOpacity
           style={styles.galleryButton}
           onPress={() => {
