@@ -2662,11 +2662,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 50,
     borderRadius: 30,
     gap: 12,
-    shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
   },
   welcomeButtonText: {
     fontSize: 20,
