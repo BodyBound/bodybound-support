@@ -951,7 +951,7 @@ export default function Index() {
                 onPress={() => loadStencilFromGallery(stencil)}
               >
                 <Image
-                  source={{ uri: stencil.stencil_image }}
+                  source={{ uri: stencil.stencil_thumbnail || '' }}
                   style={styles.galleryImage}
                   resizeMode="contain"
                 />
