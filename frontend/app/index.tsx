@@ -1640,6 +1640,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  buttonIcon: {
+    fontSize: 20,
+  },
+  toolIcon: {
+    fontSize: 18,
+  },
   resetButton: {
     backgroundColor: '#374151',
     paddingHorizontal: 16,
