@@ -807,7 +807,8 @@ export default function Index() {
   const loadGallery = async () => {
     setLoadingGallery(true);
     try {
-      const response = await fetch(`${API_URL}/api/stencils`);
+      // Use the lightweight list endpoint for faster gallery loading
+      const response = await fetch(`${API_URL}/api/stencils/list`);
       if (!response.ok) {
         throw new Error('Failed to load gallery');
       }
