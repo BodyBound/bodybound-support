@@ -509,7 +509,7 @@ export default function Index() {
     const dy = locationY - cropStartPos.y;
     const minSize = 60;
     const containerWidth = SCREEN_WIDTH - 40;
-    const containerHeight = SCREEN_HEIGHT - 200; // Account for header and bottom info
+    const containerHeight = SCREEN_HEIGHT - 150; // Account for header and bottom info
 
     if (activeCropHandle === 'move') {
       const newX = Math.max(0, Math.min(containerWidth - cropStartBox.width, cropStartBox.x + dx));
