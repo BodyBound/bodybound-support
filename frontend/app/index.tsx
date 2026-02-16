@@ -318,30 +318,151 @@ export default function Index() {
     }
   };
 
-  // Crop using the native image picker with built-in cropping UI
-  const cropImage = async () => {
+  // Open the crop modal with the current image
+  const openCropModal = () => {
     if (!originalImage) {
       Alert.alert('No Image', 'Please select an image first.');
       return;
     }
 
-    try {
-      // Re-open image picker with the current image for cropping
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
-        allowsEditing: true, // This enables the native crop UI
-        quality: 0.8,
-        base64: true,
+    // Get image dimensions to set up crop box
+    Image.getSize(originalImage, (width, height) => {
+      setCropImageSize({ width, height });
+      // Set initial crop box to center 70% of image
+      const boxWidth = Math.min(SCREEN_WIDTH - 80, width * 0.7);
+      const boxHeight = boxWidth * (height / width);
+      setCropBox({
+        x: (SCREEN_WIDTH - 40 - boxWidth) / 2,
+        y: 50,
+        width: boxWidth,
+        height: Math.min(boxHeight, 300),
       });
+      setShowCropModal(true);
+    }, () => {
+      // Fallback if can't get size
+      setCropImageSize({ width: 1000, height: 1000 });
+      setCropBox({ x: 40, y: 40, width: 200, height: 200 });
+      setShowCropModal(true);
+    });
+  };
 
-      if (!result.canceled && result.assets[0].base64) {
-        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-        setOriginalImage(base64Image);
+  // Handle crop box touch events
+  const handleCropTouchStart = (handle: string, event: GestureResponderEvent) => {
+    const { pageX, pageY } = event.nativeEvent;
+    setActiveCropHandle(handle);
+    setCropStartPos({ x: pageX, y: pageY });
+    setCropStartBox({ ...cropBox });
+  };
+
+  const handleCropTouchMove = (event: GestureResponderEvent) => {
+    if (!activeCropHandle) return;
+    
+    const { pageX, pageY } = event.nativeEvent;
+    const dx = pageX - cropStartPos.x;
+    const dy = pageY - cropStartPos.y;
+    const minSize = 50;
+    const maxWidth = SCREEN_WIDTH - 40;
+    const maxHeight = 350;
+
+    if (activeCropHandle === 'move') {
+      setCropBox({
+        ...cropBox,
+        x: Math.max(0, Math.min(maxWidth - cropBox.width, cropStartBox.x + dx)),
+        y: Math.max(0, Math.min(maxHeight - cropBox.height, cropStartBox.y + dy)),
+      });
+    } else if (activeCropHandle === 'br') {
+      // Bottom-right corner
+      setCropBox({
+        ...cropBox,
+        width: Math.max(minSize, Math.min(maxWidth - cropBox.x, cropStartBox.width + dx)),
+        height: Math.max(minSize, Math.min(maxHeight - cropBox.y, cropStartBox.height + dy)),
+      });
+    } else if (activeCropHandle === 'bl') {
+      // Bottom-left corner
+      const newWidth = Math.max(minSize, cropStartBox.width - dx);
+      const newX = cropStartBox.x + (cropStartBox.width - newWidth);
+      if (newX >= 0) {
+        setCropBox({
+          ...cropBox,
+          x: newX,
+          width: newWidth,
+          height: Math.max(minSize, Math.min(maxHeight - cropBox.y, cropStartBox.height + dy)),
+        });
+      }
+    } else if (activeCropHandle === 'tr') {
+      // Top-right corner
+      const newHeight = Math.max(minSize, cropStartBox.height - dy);
+      const newY = cropStartBox.y + (cropStartBox.height - newHeight);
+      if (newY >= 0) {
+        setCropBox({
+          ...cropBox,
+          y: newY,
+          width: Math.max(minSize, Math.min(maxWidth - cropBox.x, cropStartBox.width + dx)),
+          height: newHeight,
+        });
+      }
+    } else if (activeCropHandle === 'tl') {
+      // Top-left corner
+      const newWidth = Math.max(minSize, cropStartBox.width - dx);
+      const newHeight = Math.max(minSize, cropStartBox.height - dy);
+      const newX = cropStartBox.x + (cropStartBox.width - newWidth);
+      const newY = cropStartBox.y + (cropStartBox.height - newHeight);
+      if (newX >= 0 && newY >= 0) {
+        setCropBox({
+          x: newX,
+          y: newY,
+          width: newWidth,
+          height: newHeight,
+        });
+      }
+    }
+  };
+
+  const handleCropTouchEnd = () => {
+    setActiveCropHandle(null);
+  };
+
+  // Apply the crop
+  const applyCrop = async () => {
+    if (!originalImage) return;
+
+    try {
+      // Calculate the crop region in actual image coordinates
+      const displayWidth = SCREEN_WIDTH - 40;
+      const displayHeight = 350;
+      
+      // Scale factors
+      const scaleX = cropImageSize.width / displayWidth;
+      const scaleY = cropImageSize.height / displayHeight;
+      
+      const cropRegion = {
+        originX: Math.round(cropBox.x * scaleX),
+        originY: Math.round(cropBox.y * scaleY),
+        width: Math.round(cropBox.width * scaleX),
+        height: Math.round(cropBox.height * scaleY),
+      };
+
+      // Ensure crop region is within bounds
+      cropRegion.originX = Math.max(0, Math.min(cropRegion.originX, cropImageSize.width - 10));
+      cropRegion.originY = Math.max(0, Math.min(cropRegion.originY, cropImageSize.height - 10));
+      cropRegion.width = Math.min(cropRegion.width, cropImageSize.width - cropRegion.originX);
+      cropRegion.height = Math.min(cropRegion.height, cropImageSize.height - cropRegion.originY);
+
+      const result = await ImageManipulator.manipulateAsync(
+        originalImage,
+        [{ crop: cropRegion }],
+        { compress: 0.8, format: ImageManipulator.SaveFormat.PNG, base64: true }
+      );
+
+      if (result.base64) {
+        setOriginalImage(`data:image/png;base64,${result.base64}`);
         setStencilImage(null);
         setHasGeneratedOnce(false);
+        setShowCropModal(false);
+        Alert.alert('Success', 'Image cropped successfully!');
       }
     } catch (error) {
-      console.error('Error cropping image:', error);
+      console.error('Error applying crop:', error);
       Alert.alert('Error', 'Failed to crop image. Please try again.');
     }
   };
