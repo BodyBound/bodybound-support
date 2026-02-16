@@ -426,7 +426,7 @@ export default function Index() {
           image_base64: originalImage,
           style: 'tattoo',
           line_color: lineColor,
-          shading_detail: 60,
+          shading_detail: 30,
           solid_fill: 0,
         }),
       });
@@ -436,7 +436,7 @@ export default function Index() {
         setStencilVersions({ ...versions });
       }
 
-      // Generate Heavy version - Texture AND solid black (toned down)
+      // Generate Heavy version - Texture AND solid black (moderate)
       setGenerationProgress(3);
       const heavyResponse = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
@@ -445,8 +445,8 @@ export default function Index() {
           image_base64: originalImage,
           style: 'tattoo',
           line_color: lineColor,
-          shading_detail: 70,
-          solid_fill: 45,
+          shading_detail: 50,
+          solid_fill: 30,
         }),
       });
       if (heavyResponse.ok) {
