@@ -1422,7 +1422,7 @@ export default function Index() {
               setPreviewScale(1);
             }}
           >
-            <Ionicons name="close-circle" size={36} color="#fff" />
+            <Text style={styles.modalCloseIcon}>✕</Text>
           </TouchableOpacity>
           
           {/* Zoom controls */}
@@ -1431,14 +1431,14 @@ export default function Index() {
               style={styles.zoomButton}
               onPress={() => setPreviewScale(Math.max(0.5, previewScale - 0.5))}
             >
-              <Ionicons name="remove" size={24} color="#fff" />
+              <Text style={styles.zoomButtonText}>−</Text>
             </TouchableOpacity>
             <Text style={styles.zoomText}>{Math.round(previewScale * 100)}%</Text>
             <TouchableOpacity 
               style={styles.zoomButton}
               onPress={() => setPreviewScale(Math.min(3, previewScale + 0.5))}
             >
-              <Ionicons name="add" size={24} color="#fff" />
+              <Text style={styles.zoomButtonText}>+</Text>
             </TouchableOpacity>
           </View>
           
@@ -1465,11 +1465,7 @@ export default function Index() {
             style={[styles.previewCompareButton, previewShowingOriginal && styles.previewCompareButtonActive]}
             onPress={() => setPreviewShowingOriginal(!previewShowingOriginal)}
           >
-            <Ionicons 
-              name={previewShowingOriginal ? "eye" : "eye-outline"} 
-              size={20} 
-              color={previewShowingOriginal ? "#fff" : "#8B5CF6"} 
-            />
+            <Text style={styles.previewCompareIcon}>{previewShowingOriginal ? '👁️' : '👁️‍🗨️'}</Text>
             <Text style={[styles.previewCompareButtonText, previewShowingOriginal && styles.previewCompareButtonTextActive]}>
               {previewShowingOriginal ? 'Showing Original' : 'Compare with Original'}
             </Text>
@@ -1477,15 +1473,15 @@ export default function Index() {
           
           <View style={styles.previewModalActions}>
             <TouchableOpacity style={styles.previewActionButton} onPress={saveToDevice}>
-              <Ionicons name="download-outline" size={24} color="#10B981" />
+              <Text style={styles.previewActionIcon}>💾</Text>
               <Text style={styles.previewActionText}>Save</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.previewActionButton} onPress={printStencil}>
-              <Ionicons name="print-outline" size={24} color="#3B82F6" />
+              <Text style={styles.previewActionIcon}>🖨️</Text>
               <Text style={styles.previewActionText}>Print</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.previewActionButton} onPress={shareStencil}>
-              <Ionicons name="share-outline" size={24} color="#F59E0B" />
+              <Text style={styles.previewActionIcon}>📤</Text>
               <Text style={styles.previewActionText}>Share</Text>
             </TouchableOpacity>
           </View>
