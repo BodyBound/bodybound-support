@@ -12,13 +12,16 @@ import {
   KeyboardAvoidingView,
   TextInput,
   Modal,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface StencilSettings {
   clarity: number;
@@ -36,6 +39,13 @@ interface SavedStencil {
   name: string | null;
 }
 
+interface CropRegion {
+  originX: number;
+  originY: number;
+  width: number;
+  height: number;
+}
+
 export default function Index() {
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
@@ -48,6 +58,13 @@ export default function Index() {
   const [stencilName, setStencilName] = useState('');
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false);
+  
+  // New states for crop and background removal
+  const [isRemovingBackground, setIsRemovingBackground] = useState(false);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [cropRegion, setCropRegion] = useState<CropRegion>({ originX: 0, originY: 0, width: 100, height: 100 });
   
   // Refs for debouncing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
