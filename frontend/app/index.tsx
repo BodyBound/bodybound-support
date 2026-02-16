@@ -1146,7 +1146,7 @@ export default function Index() {
       {renderGalleryModal()}
       {renderSaveModal()}
       
-      {/* Crop Modal with Sliders */}
+      {/* Crop Modal with Visual Drag Corners */}
       <Modal
         visible={showCropModal}
         animationType="slide"
@@ -1155,98 +1155,85 @@ export default function Index() {
       >
         <SafeAreaView style={styles.cropModalContainer}>
           <View style={styles.cropModalHeader}>
-            <TouchableOpacity onPress={() => setShowCropModal(false)}>
+            <TouchableOpacity onPress={() => setShowCropModal(false)} style={styles.cropHeaderButton}>
               <Ionicons name="close" size={28} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.cropModalTitle}>Crop Image</Text>
-            <TouchableOpacity onPress={applyCrop}>
-              <Ionicons name="checkmark" size={28} color="#10B981" />
+            <TouchableOpacity onPress={applyCrop} style={styles.cropHeaderButton}>
+              <Text style={styles.cropApplyText}>Apply</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Image Preview with Crop Box Overlay */}
-          <View style={styles.cropPreviewArea}>
+          {/* Crop Area with Draggable Box */}
+          <View 
+            style={styles.cropAreaContainer}
+            onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
+            onResponderGrant={(e) => {
+              const { locationX, locationY } = e.nativeEvent;
+              // Check if touch is inside crop box for move, or near edges for resize
+              const box = cropBox;
+              const margin = 30;
+              
+              // Check corners first (30px radius)
+              if (locationX >= box.x - margin && locationX <= box.x + margin &&
+                  locationY >= box.y - margin && locationY <= box.y + margin) {
+                handleCropTouchStart('tl', e);
+              } else if (locationX >= box.x + box.width - margin && locationX <= box.x + box.width + margin &&
+                         locationY >= box.y - margin && locationY <= box.y + margin) {
+                handleCropTouchStart('tr', e);
+              } else if (locationX >= box.x - margin && locationX <= box.x + margin &&
+                         locationY >= box.y + box.height - margin && locationY <= box.y + box.height + margin) {
+                handleCropTouchStart('bl', e);
+              } else if (locationX >= box.x + box.width - margin && locationX <= box.x + box.width + margin &&
+                         locationY >= box.y + box.height - margin && locationY <= box.y + box.height + margin) {
+                handleCropTouchStart('br', e);
+              } else if (locationX >= box.x && locationX <= box.x + box.width &&
+                         locationY >= box.y && locationY <= box.y + box.height) {
+                handleCropTouchStart('move', e);
+              }
+            }}
+            onResponderMove={handleCropTouchMove}
+            onResponderRelease={handleCropTouchEnd}
+          >
+            {/* Full Image */}
             {originalImage && (
               <Image
                 source={{ uri: originalImage }}
-                style={styles.cropBackgroundImage}
+                style={styles.cropFullImage}
                 resizeMode="contain"
               />
             )}
             
-            {/* Visual crop indicator overlay */}
-            <View 
-              style={[styles.cropIndicator, {
-                left: `${(cropBox.x / (SCREEN_WIDTH - 40)) * 100}%`,
-                top: `${(cropBox.y / 300) * 100}%`,
-                width: `${(cropBox.width / (SCREEN_WIDTH - 40)) * 100}%`,
-                height: `${(cropBox.height / 300) * 100}%`,
-              }]}
-              pointerEvents="none"
-            />
+            {/* Dark overlay outside crop area */}
+            <View style={[styles.cropDarkOverlay, { top: 0, left: 0, right: 0, height: cropBox.y }]} />
+            <View style={[styles.cropDarkOverlay, { top: cropBox.y, left: 0, width: cropBox.x, height: cropBox.height }]} />
+            <View style={[styles.cropDarkOverlay, { top: cropBox.y, left: cropBox.x + cropBox.width, right: 0, height: cropBox.height }]} />
+            <View style={[styles.cropDarkOverlay, { top: cropBox.y + cropBox.height, left: 0, right: 0, bottom: 0 }]} />
+            
+            {/* Crop Box Border */}
+            <View style={[styles.cropBoxBorder, {
+              left: cropBox.x,
+              top: cropBox.y,
+              width: cropBox.width,
+              height: cropBox.height,
+            }]}>
+              {/* Grid lines */}
+              <View style={[styles.cropGridLineH, { top: '33%' }]} />
+              <View style={[styles.cropGridLineH, { top: '66%' }]} />
+              <View style={[styles.cropGridLineV, { left: '33%' }]} />
+              <View style={[styles.cropGridLineV, { left: '66%' }]} />
+            </View>
+            
+            {/* Corner Handles */}
+            <View style={[styles.cropCornerHandle, styles.cropCornerTL, { left: cropBox.x - 12, top: cropBox.y - 12 }]} />
+            <View style={[styles.cropCornerHandle, styles.cropCornerTR, { left: cropBox.x + cropBox.width - 12, top: cropBox.y - 12 }]} />
+            <View style={[styles.cropCornerHandle, styles.cropCornerBL, { left: cropBox.x - 12, top: cropBox.y + cropBox.height - 12 }]} />
+            <View style={[styles.cropCornerHandle, styles.cropCornerBR, { left: cropBox.x + cropBox.width - 12, top: cropBox.y + cropBox.height - 12 }]} />
           </View>
 
-          {/* Crop Sliders */}
-          <View style={styles.cropSliders}>
-            <View style={styles.cropSliderRow}>
-              <Text style={styles.cropSliderLabel}>Left Position</Text>
-              <Slider
-                style={styles.cropSlider}
-                minimumValue={0}
-                maximumValue={SCREEN_WIDTH - 100}
-                value={cropBox.x}
-                onValueChange={(val) => setCropBox(prev => ({ ...prev, x: val }))}
-                minimumTrackTintColor="#8B5CF6"
-                maximumTrackTintColor="#374151"
-                thumbTintColor="#8B5CF6"
-              />
-            </View>
-            
-            <View style={styles.cropSliderRow}>
-              <Text style={styles.cropSliderLabel}>Top Position</Text>
-              <Slider
-                style={styles.cropSlider}
-                minimumValue={0}
-                maximumValue={200}
-                value={cropBox.y}
-                onValueChange={(val) => setCropBox(prev => ({ ...prev, y: val }))}
-                minimumTrackTintColor="#8B5CF6"
-                maximumTrackTintColor="#374151"
-                thumbTintColor="#8B5CF6"
-              />
-            </View>
-            
-            <View style={styles.cropSliderRow}>
-              <Text style={styles.cropSliderLabel}>Width</Text>
-              <Slider
-                style={styles.cropSlider}
-                minimumValue={50}
-                maximumValue={SCREEN_WIDTH - 40}
-                value={cropBox.width}
-                onValueChange={(val) => setCropBox(prev => ({ ...prev, width: val }))}
-                minimumTrackTintColor="#8B5CF6"
-                maximumTrackTintColor="#374151"
-                thumbTintColor="#8B5CF6"
-              />
-            </View>
-            
-            <View style={styles.cropSliderRow}>
-              <Text style={styles.cropSliderLabel}>Height</Text>
-              <Slider
-                style={styles.cropSlider}
-                minimumValue={50}
-                maximumValue={300}
-                value={cropBox.height}
-                onValueChange={(val) => setCropBox(prev => ({ ...prev, height: val }))}
-                minimumTrackTintColor="#8B5CF6"
-                maximumTrackTintColor="#374151"
-                thumbTintColor="#8B5CF6"
-              />
-            </View>
-          </View>
-
-          <View style={styles.cropInstructions}>
-            <Text style={styles.cropInstructionsText}>Use sliders to adjust crop area</Text>
+          <View style={styles.cropBottomInfo}>
+            <Text style={styles.cropInstructionsText}>Drag corners to resize • Drag inside to move</Text>
           </View>
         </SafeAreaView>
       </Modal>
