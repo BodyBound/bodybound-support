@@ -127,6 +127,79 @@ def process_image_to_stencil(img: np.ndarray, settings: StencilSettings) -> np.n
     
     return stencil_rgb
 
+def remove_background(img: np.ndarray, method: str = "auto") -> np.ndarray:
+    """Remove background from image using various methods"""
+    
+    height, width = img.shape[:2]
+    
+    if method == "grabcut":
+        # GrabCut algorithm - good for complex backgrounds
+        mask = np.zeros((height, width), np.uint8)
+        bgd_model = np.zeros((1, 65), np.float64)
+        fgd_model = np.zeros((1, 65), np.float64)
+        
+        # Define rectangle containing foreground (with margin)
+        margin = int(min(height, width) * 0.05)
+        rect = (margin, margin, width - 2*margin, height - 2*margin)
+        
+        # Apply GrabCut
+        cv2.grabCut(img, mask, rect, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_RECT)
+        
+        # Create mask where sure/probable foreground is 1
+        mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+        
+    elif method == "threshold":
+        # Simple threshold-based removal - good for light backgrounds
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        _, mask2 = cv2.threshold(gray, 240, 255, cv2.THRESH_BINARY_INV)
+        mask2 = mask2 // 255
+        
+    else:  # "auto" - combine methods for best results
+        # Convert to grayscale
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        # Apply edge detection to find subject
+        edges = cv2.Canny(gray, 30, 100)
+        
+        # Dilate edges to connect them
+        kernel = np.ones((5, 5), np.uint8)
+        dilated = cv2.dilate(edges, kernel, iterations=2)
+        
+        # Find contours
+        contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Create mask from largest contours
+        mask2 = np.zeros((height, width), np.uint8)
+        if contours:
+            # Sort by area and take the largest ones
+            contours = sorted(contours, key=cv2.contourArea, reverse=True)
+            # Fill the largest contours
+            for contour in contours[:min(5, len(contours))]:
+                if cv2.contourArea(contour) > (height * width * 0.01):  # At least 1% of image
+                    cv2.drawContours(mask2, [contour], -1, 1, -1)
+        
+        # If mask is mostly empty, try GrabCut
+        if np.sum(mask2) < (height * width * 0.1):
+            mask = np.zeros((height, width), np.uint8)
+            bgd_model = np.zeros((1, 65), np.float64)
+            fgd_model = np.zeros((1, 65), np.float64)
+            margin = int(min(height, width) * 0.05)
+            rect = (margin, margin, width - 2*margin, height - 2*margin)
+            cv2.grabCut(img, mask, rect, bgd_model, fgd_model, 3, cv2.GC_INIT_WITH_RECT)
+            mask2 = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+    
+    # Create output with transparent background (BGRA)
+    result = cv2.cvtColor(img, cv2.COLOR_BGR2BGRA)
+    result[:, :, 3] = mask2 * 255
+    
+    return result
+
+def cv2_to_base64_png(img: np.ndarray) -> str:
+    """Convert OpenCV image to base64 PNG (supports transparency)"""
+    _, buffer = cv2.imencode('.png', img)
+    base64_string = base64.b64encode(buffer).decode('utf-8')
+    return f"data:image/png;base64,{base64_string}"
+
 # API Routes
 @api_router.get("/")
 async def root():
