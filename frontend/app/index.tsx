@@ -313,41 +313,33 @@ export default function Index() {
     }
   };
 
-  // Open crop modal with visual crop box
-  const openCropModal = async () => {
+  // Crop using the native image picker with built-in cropping UI
+  const cropImage = async () => {
     if (!originalImage) {
       Alert.alert('No Image', 'Please select an image first.');
       return;
     }
 
-    // Get image dimensions
-    Image.getSize(originalImage, (width, height) => {
-      setImageSize({ width, height });
-      // Initialize crop box at center with 80% of display area
-      const displayWidth = SCREEN_WIDTH - 40;
-      const displayHeight = SCREEN_HEIGHT * 0.5;
-      const boxWidth = displayWidth * 0.7;
-      const boxHeight = displayHeight * 0.7;
-      setCropBoxPosition({
-        x: (displayWidth - boxWidth) / 2,
-        y: (displayHeight - boxHeight) / 2,
+    try {
+      // Re-open image picker with the current image for cropping
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true, // This enables the native crop UI
+        quality: 0.8,
+        base64: true,
       });
-      setCropBoxSize({ width: boxWidth, height: boxHeight });
-      setCropImage(originalImage);
-      setShowCropModal(true);
-    }, (error) => {
-      console.error('Error getting image size:', error);
-      // Default values
-      setImageSize({ width: 1000, height: 1000 });
-      setCropBoxPosition({ x: 50, y: 50 });
-      setCropBoxSize({ width: 200, height: 200 });
-      setCropImage(originalImage);
-      setShowCropModal(true);
-    });
-  };
 
-  // Apply crop using visual crop box coordinates
-  const applyCrop = async () => {
+      if (!result.canceled && result.assets[0].base64) {
+        const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+        setOriginalImage(base64Image);
+        setStencilImage(null);
+        setHasGeneratedOnce(false);
+      }
+    } catch (error) {
+      console.error('Error cropping image:', error);
+      Alert.alert('Error', 'Failed to crop image. Please try again.');
+    }
+  };
     if (!cropImage || displayImageSize.width === 0) return;
 
     try {
