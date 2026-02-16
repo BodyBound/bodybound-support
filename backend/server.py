@@ -515,29 +515,28 @@ async def generate_ai_stencil(request: AIStencilRequest):
         }
         line_color = color_map.get(request.line_color, "purple/violet")
         
-        # Create the prompt for professional tattoo stencil with MORE DETAIL
-        prompt = f"""Transform this image into a professional tattoo stencil drawing with RICH DETAIL.
+        # Create the prompt for EXACT tracing - not creative interpretation
+        prompt = f"""TRACE this exact image into a tattoo stencil. Do NOT create a new design or interpretation.
 
-CRITICAL REQUIREMENTS:
-1. Create clean, smooth, continuous lines - NO noise or scattered marks
-2. Use {line_color} colored lines on a pure white background
-3. Draw like a skilled tattoo artist would hand-draw a detailed stencil:
-   - Bold main outline contours defining the primary shapes
-   - Medium-weight inner detail lines for secondary features (facial features, petals, textures)
-   - Fine detail lines for intricate elements (hair strands, feathers, leaf veins, skin texture)
-   - Use dotted or dashed lines to indicate shading/contour areas and depth
-4. CAPTURE MORE DETAIL than a simple outline:
-   - Include inner structures and forms
-   - Show depth through layered line work
-   - Add contour lines that follow the form's curves
-   - Include fine details that make the subject recognizable
-5. Lines should be bold enough to transfer clearly to skin
-6. The output should look like a DETAILED professional tattoo stencil/blueprint
-7. NO grayscale shading - only line work of varying weights
-8. Ensure all lines are connected and flowing, not broken or pixelated
-9. Think like a realism tattoo artist - capture the essence with lines
+STRICT REQUIREMENTS:
+1. TRACE THE EXACT IMAGE PROVIDED - every shape, every detail, every element in the SAME position
+2. This is a DIRECT CONVERSION, not a creative reinterpretation
+3. The stencil must match the input image EXACTLY - same composition, same poses, same proportions
+4. Use {line_color} colored lines on a pure white background
+5. Convert the image by:
+   - Tracing the outer contours/edges exactly as they appear
+   - Tracing all internal details and features in their exact positions
+   - Maintaining the exact same layout and composition
+   - Keeping all elements in their original positions
+6. Line work should be clean and suitable for tattoo transfer:
+   - Bold outlines for main shapes
+   - Medium lines for secondary details
+   - Fine lines for intricate details
+7. NO grayscale shading - only line work
+8. DO NOT add, remove, or move any elements from the original image
+9. The output should be a LINE TRACING of the input, not a new artwork
 
-Style: Professional DETAILED tattoo stencil suitable for thermal transfer paper - similar to what a skilled tattoo artist would hand-draw"""
+This is like putting tracing paper over the image and drawing the lines - EXACT same composition and positioning."""
 
         # Send the image with prompt
         msg = UserMessage(
