@@ -562,6 +562,104 @@ export default function Index() {
     </Modal>
   );
 
+  // Crop Modal - Simple crop with sliders
+  const renderCropModal = () => (
+    <Modal
+      visible={showCropModal}
+      animationType="slide"
+      transparent={false}
+      onRequestClose={() => setShowCropModal(false)}
+    >
+      <SafeAreaView style={styles.cropModalContainer}>
+        <View style={styles.cropModalHeader}>
+          <TouchableOpacity onPress={() => setShowCropModal(false)}>
+            <Ionicons name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.cropModalTitle}>Crop Image</Text>
+          <TouchableOpacity onPress={applyCrop}>
+            <Ionicons name="checkmark" size={28} color="#10B981" />
+          </TouchableOpacity>
+        </View>
+
+        {cropImage && (
+          <View style={styles.cropPreviewContainer}>
+            <Image
+              source={{ uri: cropImage }}
+              style={styles.cropPreviewImage}
+              resizeMode="contain"
+            />
+          </View>
+        )}
+
+        <View style={styles.cropControls}>
+          <Text style={styles.cropControlsTitle}>Adjust Crop Region</Text>
+          
+          <View style={styles.cropSliderRow}>
+            <Text style={styles.cropSliderLabel}>X Position</Text>
+            <Slider
+              style={styles.cropSlider}
+              minimumValue={0}
+              maximumValue={imageSize.width * 0.5}
+              value={cropRegion.originX}
+              onValueChange={(val) => setCropRegion(prev => ({ ...prev, originX: val }))}
+              minimumTrackTintColor="#8B5CF6"
+              maximumTrackTintColor="#374151"
+              thumbTintColor="#8B5CF6"
+            />
+          </View>
+
+          <View style={styles.cropSliderRow}>
+            <Text style={styles.cropSliderLabel}>Y Position</Text>
+            <Slider
+              style={styles.cropSlider}
+              minimumValue={0}
+              maximumValue={imageSize.height * 0.5}
+              value={cropRegion.originY}
+              onValueChange={(val) => setCropRegion(prev => ({ ...prev, originY: val }))}
+              minimumTrackTintColor="#8B5CF6"
+              maximumTrackTintColor="#374151"
+              thumbTintColor="#8B5CF6"
+            />
+          </View>
+
+          <View style={styles.cropSliderRow}>
+            <Text style={styles.cropSliderLabel}>Width</Text>
+            <Slider
+              style={styles.cropSlider}
+              minimumValue={imageSize.width * 0.2}
+              maximumValue={imageSize.width}
+              value={cropRegion.width}
+              onValueChange={(val) => setCropRegion(prev => ({ ...prev, width: val }))}
+              minimumTrackTintColor="#8B5CF6"
+              maximumTrackTintColor="#374151"
+              thumbTintColor="#8B5CF6"
+            />
+          </View>
+
+          <View style={styles.cropSliderRow}>
+            <Text style={styles.cropSliderLabel}>Height</Text>
+            <Slider
+              style={styles.cropSlider}
+              minimumValue={imageSize.height * 0.2}
+              maximumValue={imageSize.height}
+              value={cropRegion.height}
+              onValueChange={(val) => setCropRegion(prev => ({ ...prev, height: val }))}
+              minimumTrackTintColor="#8B5CF6"
+              maximumTrackTintColor="#374151"
+              thumbTintColor="#8B5CF6"
+            />
+          </View>
+
+          <View style={styles.cropInfoRow}>
+            <Text style={styles.cropInfoText}>
+              Crop: {Math.round(cropRegion.originX)}, {Math.round(cropRegion.originY)} - {Math.round(cropRegion.width)}x{Math.round(cropRegion.height)}
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    </Modal>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
