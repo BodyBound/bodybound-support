@@ -756,79 +756,108 @@ export default function Index() {
         </View>
 
         {cropImage && (
-          <View style={styles.cropPreviewContainer}>
+          <View 
+            style={styles.cropAreaContainer}
+            onLayout={(event) => {
+              const { width, height } = event.nativeEvent.layout;
+              setDisplayImageSize({ width, height });
+            }}
+          >
+            {/* Background Image (darkened) */}
             <Image
               source={{ uri: cropImage }}
-              style={styles.cropPreviewImage}
+              style={styles.cropBackgroundImage}
               resizeMode="contain"
             />
+            
+            {/* Dark overlay with crop cutout */}
+            <View style={styles.cropOverlay}>
+              {/* Top dark area */}
+              <View style={[styles.cropDarkArea, { 
+                top: 0, 
+                left: 0, 
+                right: 0, 
+                height: cropBoxPosition.y 
+              }]} />
+              
+              {/* Left dark area */}
+              <View style={[styles.cropDarkArea, { 
+                top: cropBoxPosition.y, 
+                left: 0, 
+                width: cropBoxPosition.x,
+                height: cropBoxSize.height 
+              }]} />
+              
+              {/* Right dark area */}
+              <View style={[styles.cropDarkArea, { 
+                top: cropBoxPosition.y, 
+                right: 0, 
+                left: cropBoxPosition.x + cropBoxSize.width,
+                height: cropBoxSize.height 
+              }]} />
+              
+              {/* Bottom dark area */}
+              <View style={[styles.cropDarkArea, { 
+                bottom: 0, 
+                left: 0, 
+                right: 0, 
+                top: cropBoxPosition.y + cropBoxSize.height 
+              }]} />
+              
+              {/* Crop box border */}
+              <View 
+                style={[styles.cropBox, {
+                  left: cropBoxPosition.x,
+                  top: cropBoxPosition.y,
+                  width: cropBoxSize.width,
+                  height: cropBoxSize.height,
+                }]}
+                {...panResponderMove.panHandlers}
+              >
+                {/* Grid lines */}
+                <View style={[styles.cropGridLine, styles.cropGridLineHorizontal, { top: '33%' }]} />
+                <View style={[styles.cropGridLine, styles.cropGridLineHorizontal, { top: '66%' }]} />
+                <View style={[styles.cropGridLine, styles.cropGridLineVertical, { left: '33%' }]} />
+                <View style={[styles.cropGridLine, styles.cropGridLineVertical, { left: '66%' }]} />
+              </View>
+              
+              {/* Corner handles */}
+              <View 
+                style={[styles.cropHandle, styles.cropHandleTopLeft, {
+                  left: cropBoxPosition.x - 12,
+                  top: cropBoxPosition.y - 12,
+                }]}
+                {...panResponderTopLeft.panHandlers}
+              />
+              <View 
+                style={[styles.cropHandle, styles.cropHandleTopRight, {
+                  left: cropBoxPosition.x + cropBoxSize.width - 12,
+                  top: cropBoxPosition.y - 12,
+                }]}
+                {...panResponderTopRight.panHandlers}
+              />
+              <View 
+                style={[styles.cropHandle, styles.cropHandleBottomLeft, {
+                  left: cropBoxPosition.x - 12,
+                  top: cropBoxPosition.y + cropBoxSize.height - 12,
+                }]}
+                {...panResponderBottomLeft.panHandlers}
+              />
+              <View 
+                style={[styles.cropHandle, styles.cropHandleBottomRight, {
+                  left: cropBoxPosition.x + cropBoxSize.width - 12,
+                  top: cropBoxPosition.y + cropBoxSize.height - 12,
+                }]}
+                {...panResponderBottomRight.panHandlers}
+              />
+            </View>
           </View>
         )}
 
-        <View style={styles.cropControls}>
-          <Text style={styles.cropControlsTitle}>Adjust Crop Region</Text>
-          
-          <View style={styles.cropSliderRow}>
-            <Text style={styles.cropSliderLabel}>X Position</Text>
-            <Slider
-              style={styles.cropSlider}
-              minimumValue={0}
-              maximumValue={imageSize.width * 0.5}
-              value={cropRegion.originX}
-              onValueChange={(val) => setCropRegion(prev => ({ ...prev, originX: val }))}
-              minimumTrackTintColor="#8B5CF6"
-              maximumTrackTintColor="#374151"
-              thumbTintColor="#8B5CF6"
-            />
-          </View>
-
-          <View style={styles.cropSliderRow}>
-            <Text style={styles.cropSliderLabel}>Y Position</Text>
-            <Slider
-              style={styles.cropSlider}
-              minimumValue={0}
-              maximumValue={imageSize.height * 0.5}
-              value={cropRegion.originY}
-              onValueChange={(val) => setCropRegion(prev => ({ ...prev, originY: val }))}
-              minimumTrackTintColor="#8B5CF6"
-              maximumTrackTintColor="#374151"
-              thumbTintColor="#8B5CF6"
-            />
-          </View>
-
-          <View style={styles.cropSliderRow}>
-            <Text style={styles.cropSliderLabel}>Width</Text>
-            <Slider
-              style={styles.cropSlider}
-              minimumValue={imageSize.width * 0.2}
-              maximumValue={imageSize.width}
-              value={cropRegion.width}
-              onValueChange={(val) => setCropRegion(prev => ({ ...prev, width: val }))}
-              minimumTrackTintColor="#8B5CF6"
-              maximumTrackTintColor="#374151"
-              thumbTintColor="#8B5CF6"
-            />
-          </View>
-
-          <View style={styles.cropSliderRow}>
-            <Text style={styles.cropSliderLabel}>Height</Text>
-            <Slider
-              style={styles.cropSlider}
-              minimumValue={imageSize.height * 0.2}
-              maximumValue={imageSize.height}
-              value={cropRegion.height}
-              onValueChange={(val) => setCropRegion(prev => ({ ...prev, height: val }))}
-              minimumTrackTintColor="#8B5CF6"
-              maximumTrackTintColor="#374151"
-              thumbTintColor="#8B5CF6"
-            />
-          </View>
-
-          <View style={styles.cropInfoRow}>
-            <Text style={styles.cropInfoText}>
-              Crop: {Math.round(cropRegion.originX)}, {Math.round(cropRegion.originY)} - {Math.round(cropRegion.width)}x{Math.round(cropRegion.height)}
-            </Text>
-          </View>
+        <View style={styles.cropBottomBar}>
+          <Text style={styles.cropInstructions}>
+            Drag corners to resize • Drag center to move
+          </Text>
         </View>
       </SafeAreaView>
     </Modal>
