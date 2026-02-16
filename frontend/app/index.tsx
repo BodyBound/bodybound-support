@@ -1360,6 +1360,136 @@ export default function Index() {
                 </View>
               </View>
             )}
+
+            {/* AI Generation Preferences (Pre-Generation Sliders) */}
+            {stencilMode === 'ai' && (
+              <View style={styles.aiPreferencesSection}>
+                <Text style={styles.aiPreferencesTitle}>🎨 Generation Settings</Text>
+                <Text style={styles.aiPreferencesSubtitle}>Adjust before generating</Text>
+                
+                {/* Shading Detail Slider */}
+                <View style={styles.aiSliderContainer}>
+                  <View style={styles.aiSliderHeader}>
+                    <Text style={styles.aiSliderLabel}>Shading Detail</Text>
+                    <Text style={styles.aiSliderValue}>
+                      {aiShadingDetail < 33 ? 'Light' : aiShadingDetail < 66 ? 'Medium' : 'Heavy'}
+                    </Text>
+                  </View>
+                  <Slider
+                    style={styles.aiSlider}
+                    value={aiShadingDetail}
+                    onValueChange={setAiShadingDetail}
+                    minimumValue={0}
+                    maximumValue={100}
+                    minimumTrackTintColor="#8B5CF6"
+                    maximumTrackTintColor="#374151"
+                    thumbTintColor="#8B5CF6"
+                  />
+                  <View style={styles.aiSliderLabels}>
+                    <Text style={styles.aiSliderMinMax}>Minimal</Text>
+                    <Text style={styles.aiSliderMinMax}>Heavy Cross-Hatch</Text>
+                  </View>
+                </View>
+
+                {/* Solid Fill Slider */}
+                <View style={styles.aiSliderContainer}>
+                  <View style={styles.aiSliderHeader}>
+                    <Text style={styles.aiSliderLabel}>Solid Fill</Text>
+                    <Text style={styles.aiSliderValue}>
+                      {aiSolidFill < 33 ? 'None' : aiSolidFill < 66 ? 'Some' : 'Heavy'}
+                    </Text>
+                  </View>
+                  <Slider
+                    style={styles.aiSlider}
+                    value={aiSolidFill}
+                    onValueChange={setAiSolidFill}
+                    minimumValue={0}
+                    maximumValue={100}
+                    minimumTrackTintColor="#8B5CF6"
+                    maximumTrackTintColor="#374151"
+                    thumbTintColor="#8B5CF6"
+                  />
+                  <View style={styles.aiSliderLabels}>
+                    <Text style={styles.aiSliderMinMax}>Lines Only</Text>
+                    <Text style={styles.aiSliderMinMax}>Solid Black Areas</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* Post-Processing Adjustments (After Generation - Real-Time) */}
+            {stencilMode === 'ai' && stencilImage && (
+              <View style={styles.postProcessSection}>
+                <Text style={styles.postProcessTitle}>🔧 Fine-Tune (Live)</Text>
+                <Text style={styles.postProcessSubtitle}>Adjust in real-time</Text>
+                
+                {/* Contrast Slider */}
+                <View style={styles.postSliderContainer}>
+                  <View style={styles.postSliderHeader}>
+                    <Text style={styles.postSliderLabel}>Line Contrast</Text>
+                    <Text style={styles.postSliderValue}>{Math.round(postContrast)}%</Text>
+                  </View>
+                  <Slider
+                    style={styles.postSlider}
+                    value={postContrast}
+                    onValueChange={setPostContrast}
+                    minimumValue={50}
+                    maximumValue={150}
+                    minimumTrackTintColor="#10B981"
+                    maximumTrackTintColor="#374151"
+                    thumbTintColor="#10B981"
+                  />
+                </View>
+
+                {/* Brightness Slider */}
+                <View style={styles.postSliderContainer}>
+                  <View style={styles.postSliderHeader}>
+                    <Text style={styles.postSliderLabel}>Brightness</Text>
+                    <Text style={styles.postSliderValue}>{Math.round(postBrightness)}%</Text>
+                  </View>
+                  <Slider
+                    style={styles.postSlider}
+                    value={postBrightness}
+                    onValueChange={setPostBrightness}
+                    minimumValue={50}
+                    maximumValue={150}
+                    minimumTrackTintColor="#10B981"
+                    maximumTrackTintColor="#374151"
+                    thumbTintColor="#10B981"
+                  />
+                </View>
+
+                {/* Detail/Sharpness Slider */}
+                <View style={styles.postSliderContainer}>
+                  <View style={styles.postSliderHeader}>
+                    <Text style={styles.postSliderLabel}>Sharpness</Text>
+                    <Text style={styles.postSliderValue}>{Math.round(postDetail)}%</Text>
+                  </View>
+                  <Slider
+                    style={styles.postSlider}
+                    value={postDetail}
+                    onValueChange={setPostDetail}
+                    minimumValue={50}
+                    maximumValue={150}
+                    minimumTrackTintColor="#10B981"
+                    maximumTrackTintColor="#374151"
+                    thumbTintColor="#10B981"
+                  />
+                </View>
+
+                {/* Reset Button */}
+                <TouchableOpacity
+                  style={styles.resetPostProcessButton}
+                  onPress={() => {
+                    setPostContrast(100);
+                    setPostBrightness(100);
+                    setPostDetail(100);
+                  }}
+                >
+                  <Text style={styles.resetPostProcessText}>Reset Adjustments</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
         )}
 
