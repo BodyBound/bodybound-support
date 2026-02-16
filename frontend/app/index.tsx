@@ -1758,6 +1758,71 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#fff',
   },
+  // Visual Crop Styles
+  cropAreaContainer: {
+    flex: 1,
+    margin: 20,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  cropBackgroundImage: {
+    width: '100%',
+    height: '100%',
+  },
+  cropOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  cropDarkArea: {
+    position: 'absolute',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  },
+  cropBox: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: '#8B5CF6',
+    backgroundColor: 'transparent',
+  },
+  cropGridLine: {
+    position: 'absolute',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  cropGridLineHorizontal: {
+    left: 0,
+    right: 0,
+    height: 1,
+  },
+  cropGridLineVertical: {
+    top: 0,
+    bottom: 0,
+    width: 1,
+  },
+  cropHandle: {
+    position: 'absolute',
+    width: 24,
+    height: 24,
+    backgroundColor: '#8B5CF6',
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: '#fff',
+  },
+  cropHandleTopLeft: {},
+  cropHandleTopRight: {},
+  cropHandleBottomLeft: {},
+  cropHandleBottomRight: {},
+  cropBottomBar: {
+    padding: 16,
+    alignItems: 'center',
+    backgroundColor: '#1A1A1A',
+  },
+  cropInstructions: {
+    color: '#9CA3AF',
+    fontSize: 14,
+  },
+  // Legacy crop styles (keep for compatibility)
   cropPreviewContainer: {
     flex: 1,
     padding: 20,
