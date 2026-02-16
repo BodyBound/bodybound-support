@@ -1924,7 +1924,6 @@ const styles = StyleSheet.create({
   saveButtonsRow: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 12,
   },
   processButton: {
     flex: 1,
