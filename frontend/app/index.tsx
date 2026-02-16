@@ -854,25 +854,34 @@ export default function Index() {
                   {stencilImage && (
                     <View style={styles.holdHintContainer}>
                       <Ionicons name="finger-print-outline" size={14} color="#8B5CF6" />
-                      <Text style={styles.holdHintText}>Hold to compare</Text>
+                      <Text style={styles.holdHintText}>Tap Compare button</Text>
                     </View>
                   )}
                 </View>
                 
-                {/* Pressable image for comparison */}
-                <TouchableOpacity
-                  activeOpacity={1}
-                  onPressIn={() => setShowingOriginal(true)}
-                  onPressOut={() => setShowingOriginal(false)}
-                  onLongPress={() => setShowingOriginal(true)}
-                  delayLongPress={100}
-                >
-                  <Image
-                    source={{ uri: stencilImage && !showingOriginal ? stencilImage : originalImage }}
-                    style={styles.previewImage}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
+                {/* Image display */}
+                <Image
+                  source={{ uri: stencilImage && !showingOriginal ? stencilImage : originalImage }}
+                  style={styles.previewImage}
+                  resizeMode="contain"
+                />
+                
+                {/* Compare toggle button - shows when stencil exists */}
+                {stencilImage && (
+                  <TouchableOpacity
+                    style={[styles.compareButton, showingOriginal && styles.compareButtonActive]}
+                    onPress={() => setShowingOriginal(!showingOriginal)}
+                  >
+                    <Ionicons 
+                      name={showingOriginal ? "eye" : "eye-outline"} 
+                      size={18} 
+                      color={showingOriginal ? "#fff" : "#8B5CF6"} 
+                    />
+                    <Text style={[styles.compareButtonText, showingOriginal && styles.compareButtonTextActive]}>
+                      {showingOriginal ? "Showing Original" : "Compare"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
 
                 {/* Export buttons below main image when stencil exists */}
                 {stencilImage && (
