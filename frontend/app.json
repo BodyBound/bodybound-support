@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Take photos to convert to stencils",
-        "NSPhotoLibraryUsageDescription": "Select photos to convert to stencils"
+        "NSPhotoLibraryUsageDescription": "Select photos to convert to stencils",
+        "NSPhotoLibraryAddUsageDescription": "Save stencils to your photo library"
       }
     },
     "android": {
@@ -24,7 +25,8 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES"
       ]
     },
     "web": {
@@ -48,6 +50,13 @@
         {
           "photosPermission": "Select photos to convert to stencils",
           "cameraPermission": "Take photos to convert to stencils"
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Save stencils to your photo library",
+          "savePhotosPermission": "Save stencils to your photo library"
         }
       ]
     ],
