@@ -66,6 +66,11 @@ export default function Index() {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [cropRegion, setCropRegion] = useState<CropRegion>({ originX: 0, originY: 0, width: 100, height: 100 });
   
+  // AI Stencil states
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [stencilMode, setStencilMode] = useState<'basic' | 'ai'>('ai'); // Default to AI mode
+  const [lineColor, setLineColor] = useState<'purple' | 'blue' | 'black'>('purple');
+  
   // Refs for debouncing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
