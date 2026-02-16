@@ -332,6 +332,99 @@ async def remove_background_endpoint(request: RemoveBackgroundRequest):
         logger.error(f"Error removing background: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error removing background: {str(e)}")
 
+# AI-Powered Stencil Generation
+class AIStencilRequest(BaseModel):
+    image_base64: str
+    style: str = Field(default="tattoo")  # "tattoo", "clean", "detailed"
+    line_color: str = Field(default="purple")  # "purple", "blue", "black"
+
+class AIStencilResponse(BaseModel):
+    stencil_base64: str
+    processing_time_ms: float
+
+@api_router.post("/ai-stencil", response_model=AIStencilResponse)
+async def generate_ai_stencil(request: AIStencilRequest):
+    """Generate a professional tattoo stencil using AI"""
+    try:
+        import time
+        start_time = time.time()
+        
+        if not EMERGENT_LLM_KEY:
+            raise HTTPException(status_code=500, detail="AI API key not configured")
+        
+        # Extract base64 data (remove data URL prefix if present)
+        image_data = request.image_base64
+        if ',' in image_data:
+            image_data = image_data.split(',')[1]
+        
+        # Create chat instance with Gemini image model
+        chat = LlmChat(
+            api_key=EMERGENT_LLM_KEY, 
+            session_id=f"stencil-{uuid.uuid4()}", 
+            system_message="You are an expert tattoo stencil artist. You create clean, professional tattoo stencils from reference images."
+        )
+        chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["image", "text"])
+        
+        # Define line color based on request
+        color_map = {
+            "purple": "purple/violet",
+            "blue": "blue/indigo", 
+            "black": "black"
+        }
+        line_color = color_map.get(request.line_color, "purple/violet")
+        
+        # Create the prompt for professional tattoo stencil
+        prompt = f"""Transform this image into a professional tattoo stencil drawing.
+
+CRITICAL REQUIREMENTS:
+1. Create clean, smooth, continuous lines - NO noise or scattered marks
+2. Use {line_color} colored lines on a pure white background
+3. Draw like a skilled tattoo artist would hand-draw a stencil:
+   - Main outline contours with solid, confident lines
+   - Inner detail lines for important features
+   - Use dotted or dashed lines to indicate shading/contour areas where the tattoo artist would add shading
+4. Simplify the image - remove unnecessary details, keep only the essential form
+5. Lines should be bold enough to transfer clearly to skin
+6. The output should look like a professional tattoo stencil/blueprint
+7. NO grayscale shading - only line work
+8. Ensure all lines are connected and flowing, not broken or pixelated
+
+Style: Professional tattoo stencil suitable for thermal transfer paper"""
+
+        # Send the image with prompt
+        msg = UserMessage(
+            text=prompt,
+            file_contents=[ImageContent(image_data)]
+        )
+        
+        text_response, images = await chat.send_message_multimodal_response(msg)
+        
+        if not images or len(images) == 0:
+            raise HTTPException(status_code=500, detail="AI failed to generate stencil image")
+        
+        # Get the generated image
+        generated_image = images[0]
+        image_base64 = generated_image['data']
+        mime_type = generated_image.get('mime_type', 'image/png')
+        
+        # Format as data URL
+        stencil_base64 = f"data:{mime_type};base64,{image_base64}"
+        
+        processing_time = (time.time() - start_time) * 1000
+        
+        logger.info(f"AI stencil generated in {processing_time:.2f}ms")
+        
+        return AIStencilResponse(
+            stencil_base64=stencil_base64,
+            processing_time_ms=round(processing_time, 2)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating AI stencil: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error generating AI stencil: {str(e)}")
+
 @api_router.post("/stencils", response_model=SavedStencil)
 async def save_stencil(request: SaveStencilRequest):
     """Save a stencil to the database"""
