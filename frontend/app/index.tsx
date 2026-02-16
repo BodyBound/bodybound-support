@@ -308,21 +308,25 @@ export default function Index() {
   const renderSlider = (
     label: string,
     value: number,
-    onValueChange: (val: number) => void,
+    settingKey: keyof StencilSettings,
     icon: string
   ) => (
     <View style={styles.sliderContainer}>
       <View style={styles.sliderHeader}>
         <Ionicons name={icon as any} size={18} color="#8B5CF6" />
         <Text style={styles.sliderLabel}>{label}</Text>
-        <Text style={styles.sliderValue}>{Math.round(value)}%</Text>
+        <View style={styles.sliderValueContainer}>
+          {isLiveUpdating && <ActivityIndicator size="small" color="#8B5CF6" style={styles.miniLoader} />}
+          <Text style={styles.sliderValue}>{Math.round(value)}%</Text>
+        </View>
       </View>
       <Slider
         style={styles.slider}
         minimumValue={0}
         maximumValue={100}
         value={value}
-        onValueChange={onValueChange}
+        onValueChange={(val) => setSettings(prev => ({ ...prev, [settingKey]: val }))}
+        onSlidingComplete={(val) => handleSettingsChange({ ...settings, [settingKey]: val })}
         minimumTrackTintColor="#8B5CF6"
         maximumTrackTintColor="#374151"
         thumbTintColor="#8B5CF6"
