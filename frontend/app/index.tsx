@@ -74,7 +74,7 @@ export default function Index() {
   // Background removal state
   const [isRemovingBackground, setIsRemovingBackground] = useState(false);
   
-  // AI Stencil states
+  // Handmade Stencil states
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [stencilMode, setStencilMode] = useState<'basic' | 'ai'>('ai'); // Default to AI mode
   const [lineColor, setLineColor] = useState<'purple' | 'blue' | 'black'>('purple');
