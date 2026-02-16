@@ -1955,6 +1955,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  cropCancelText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '400',
+  },
   // Visual Crop Styles
   cropAreaContainer: {
     flex: 1,
