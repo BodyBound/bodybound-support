@@ -484,23 +484,62 @@ Style: Professional DETAILED tattoo stencil suitable for thermal transfer paper 
 
 @api_router.post("/stencils", response_model=SavedStencil)
 async def save_stencil(request: SaveStencilRequest):
-    """Save a stencil to the database"""
+    """Save a stencil to the database with auto-generated thumbnail"""
     try:
+        # Generate thumbnail from stencil image for gallery preview
+        thumbnail = generate_thumbnail(request.stencil_image, max_size=150)
+        
         stencil = SavedStencil(
             original_image=request.original_image,
             stencil_image=request.stencil_image,
+            stencil_thumbnail=thumbnail,
             settings=request.settings,
             name=request.name
         )
         await db.stencils.insert_one(stencil.dict())
+        logger.info(f"Stencil saved with thumbnail (size: {len(thumbnail)} bytes)")
         return stencil
     except Exception as e:
         logger.error(f"Error saving stencil: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error saving stencil: {str(e)}")
 
+@api_router.get("/stencils/list", response_model=List[StencilListItem])
+async def get_stencils_list():
+    """Get lightweight list of stencils for gallery view (thumbnails only, no full images)"""
+    try:
+        # Only fetch fields needed for gallery display
+        projection = {
+            "id": 1,
+            "stencil_thumbnail": 1,
+            "stencil_image": 1,  # Fallback if no thumbnail
+            "created_at": 1,
+            "name": 1,
+            "_id": 0
+        }
+        stencils = await db.stencils.find({}, projection).sort("created_at", -1).to_list(100)
+        
+        result = []
+        for stencil in stencils:
+            # Use thumbnail if available, otherwise generate one from full image
+            thumbnail = stencil.get("stencil_thumbnail")
+            if not thumbnail and stencil.get("stencil_image"):
+                thumbnail = generate_thumbnail(stencil["stencil_image"], max_size=150)
+            
+            result.append(StencilListItem(
+                id=stencil["id"],
+                stencil_thumbnail=thumbnail,
+                created_at=stencil["created_at"],
+                name=stencil.get("name")
+            ))
+        
+        return result
+    except Exception as e:
+        logger.error(f"Error fetching stencils list: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching stencils list: {str(e)}")
+
 @api_router.get("/stencils", response_model=List[SavedStencil])
 async def get_stencils():
-    """Get all saved stencils"""
+    """Get all saved stencils with full images (use /stencils/list for gallery view)"""
     try:
         stencils = await db.stencils.find().sort("created_at", -1).to_list(100)
         return [SavedStencil(**stencil) for stencil in stencils]
