@@ -92,10 +92,6 @@ export default function Index() {
 
   // Live update function with debouncing - ONLY for basic mode
   const processImageLive = useCallback(async (currentSettings: StencilSettings) => {
-  ).current;
-
-  // Live update function with debouncing - ONLY for basic mode
-  const processImageLive = useCallback(async (currentSettings: StencilSettings) => {
     // Only process in basic mode with live updates enabled
     if (!originalImage || !hasGeneratedOnce || stencilMode !== 'basic') return;
 
