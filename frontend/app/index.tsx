@@ -137,7 +137,7 @@ export default function Index() {
         const dy = gestureState.dy;
         const minSize = 60;
         const containerWidth = SCREEN_WIDTH - 40;
-        const containerHeight = SCREEN_HEIGHT - 250;
+        const containerHeight = SCREEN_HEIGHT - 150; // More space for the crop area
 
         let newBox = { ...startBox };
 
