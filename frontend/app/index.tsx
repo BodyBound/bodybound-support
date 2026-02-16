@@ -878,7 +878,10 @@ export default function Index() {
             <View style={styles.modeToggle}>
               <TouchableOpacity
                 style={[styles.modeButton, stencilMode === 'ai' && styles.modeButtonActive]}
-                onPress={() => setStencilMode('ai')}
+                onPress={() => {
+                  setStencilMode('ai');
+                  setHasGeneratedOnce(false); // Reset to prevent basic mode auto-updates
+                }}
               >
                 <Ionicons name="sparkles" size={18} color={stencilMode === 'ai' ? '#fff' : '#8B5CF6'} />
                 <Text style={[styles.modeButtonText, stencilMode === 'ai' && styles.modeButtonTextActive]}>
@@ -887,7 +890,10 @@ export default function Index() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modeButton, stencilMode === 'basic' && styles.modeButtonActive]}
-                onPress={() => setStencilMode('basic')}
+                onPress={() => {
+                  setStencilMode('basic');
+                  setHasGeneratedOnce(false); // Reset when switching modes
+                }}
               >
                 <Ionicons name="options" size={18} color={stencilMode === 'basic' ? '#fff' : '#8B5CF6'} />
                 <Text style={[styles.modeButtonText, stencilMode === 'basic' && styles.modeButtonTextActive]}>
