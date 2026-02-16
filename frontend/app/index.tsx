@@ -1550,27 +1550,15 @@ export default function Index() {
               )}
             </View>
 
-            {/* Save Buttons - Only visible when stencil exists */}
+            {/* Save Button - Only visible when stencil exists */}
             {stencilImage && (
               <View style={styles.saveButtonsRow}>
-                <TouchableOpacity
-                  style={styles.saveToDeviceButton}
-                  onPress={saveToDevice}
-                  disabled={isSavingToDevice}
-                >
-                  {isSavingToDevice ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.saveIcon}>📱</Text>
-                  )}
-                  <Text style={styles.saveToDeviceButtonText}>To Phone</Text>
-                </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.saveButton}
                   onPress={() => setShowSaveModal(true)}
                 >
-                  <Text style={styles.saveIcon}>📁</Text>
-                  <Text style={styles.saveButtonText}>Save to App</Text>
+                  <Text style={styles.saveIcon}>💾</Text>
+                  <Text style={styles.saveButtonText}>Save Stencil</Text>
                 </TouchableOpacity>
               </View>
             )}
