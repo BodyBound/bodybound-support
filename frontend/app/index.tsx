@@ -417,9 +417,9 @@ export default function Index() {
     setStencilImage(null);
     setHasGeneratedOnce(false);
     setSettings({
-      clarity: 50,
-      line_weight: 50,
-      noise_reduction: 50,
+      clarity: 30,
+      line_weight: 40,
+      noise_reduction: 30,
       invert: true,
     });
   };
