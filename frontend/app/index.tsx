@@ -1104,7 +1104,6 @@ export default function Index() {
 
       {renderGalleryModal()}
       {renderSaveModal()}
-      {renderCropModal()}
       
       {/* Full-Size Preview Modal */}
       <Modal
