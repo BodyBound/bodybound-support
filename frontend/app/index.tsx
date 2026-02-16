@@ -1283,7 +1283,7 @@ export default function Index() {
                   </>
                 ) : (
                   <>
-                    <Ionicons name="sparkles" size={22} color="#fff" />
+                    <Text style={styles.generateIcon}>✨</Text>
                     <Text style={styles.aiButtonText}>Generate AI Stencil</Text>
                   </>
                 )}
@@ -1303,7 +1303,7 @@ export default function Index() {
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <>
-                    <Ionicons name="flash" size={22} color="#fff" />
+                    <Text style={styles.generateIcon}>⚡</Text>
                     <Text style={styles.processButtonText}>Generate Stencil</Text>
                   </>
                 )}
@@ -1315,7 +1315,7 @@ export default function Index() {
                 style={styles.saveButton}
                 onPress={() => setShowSaveModal(true)}
               >
-                <Ionicons name="save-outline" size={22} color="#8B5CF6" />
+                <Text style={styles.saveIcon}>💾</Text>
                 <Text style={styles.saveButtonText}>Save</Text>
               </TouchableOpacity>
             )}
