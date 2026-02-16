@@ -927,7 +927,7 @@ export default function Index() {
             <View style={styles.editToolsRow}>
               <TouchableOpacity 
                 style={styles.editToolButton} 
-                onPress={cropImage}
+                onPress={openCropModal}
               >
                 <Ionicons name="crop-outline" size={22} color="#8B5CF6" />
                 <Text style={styles.editToolButtonText}>Crop</Text>
