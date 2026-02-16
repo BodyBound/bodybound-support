@@ -476,6 +476,8 @@ class AIStencilRequest(BaseModel):
     image_base64: str
     style: str = Field(default="tattoo")  # "tattoo", "clean", "detailed"
     line_color: str = Field(default="purple")  # "purple", "blue", "black"
+    shading_detail: int = Field(default=50, ge=0, le=100)  # 0-100: how much cross-hatching
+    solid_fill: int = Field(default=30, ge=0, le=100)  # 0-100: how much solid black fill
 
 class AIStencilResponse(BaseModel):
     stencil_base64: str
