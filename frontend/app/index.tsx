@@ -66,11 +66,22 @@ export default function Index() {
   const [stencilMode, setStencilMode] = useState<'basic' | 'ai'>('ai'); // Default to AI mode
   const [lineColor, setLineColor] = useState<'purple' | 'blue' | 'black'>('purple');
   
-  // Full-size preview state
+  // Full-size preview state with zoom
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewShowingOriginal, setPreviewShowingOriginal] = useState(false);
+  const [previewScale, setPreviewScale] = useState(1);
+  const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
   
   // Hold to compare - shows original when pressing down
   const [showingOriginal, setShowingOriginal] = useState(false);
+  
+  // Crop modal state
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [cropImageSize, setCropImageSize] = useState({ width: 0, height: 0 });
+  const [cropBox, setCropBox] = useState({ x: 50, y: 50, width: 200, height: 200 });
+  const [activeCropHandle, setActiveCropHandle] = useState<string | null>(null);
+  const [cropStartPos, setCropStartPos] = useState({ x: 0, y: 0 });
+  const [cropStartBox, setCropStartBox] = useState({ x: 0, y: 0, width: 0, height: 0 });
   
   // Refs for debouncing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
