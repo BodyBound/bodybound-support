@@ -2398,7 +2398,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 14,
     borderRadius: 12,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#C9A227',
     alignItems: 'center',
   },
   saveModalSaveText: {
@@ -2436,7 +2436,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   editToolButtonText: {
-    color: '#8B5CF6',
+    color: '#C9A227',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -2492,7 +2492,7 @@ const styles = StyleSheet.create({
   cropBoxBorder: {
     position: 'absolute',
     borderWidth: 2,
-    borderColor: '#8B5CF6',
+    borderColor: '#C9A227',
     backgroundColor: 'transparent',
   },
   cropGridLineH: {
@@ -2513,7 +2513,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 24,
     height: 24,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#C9A227',
     borderRadius: 12,
     borderWidth: 3,
     borderColor: '#fff',
