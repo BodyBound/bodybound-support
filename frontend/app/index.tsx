@@ -2157,7 +2157,7 @@ const styles = StyleSheet.create({
   },
   saveToDeviceButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
   },
   saveButtonText: {
