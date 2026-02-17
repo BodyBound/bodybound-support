@@ -840,54 +840,15 @@ export default function Index() {
     }
   };
 
-  // Share stencil
+  // Share stencil - saves to gallery directly
   const shareStencil = async () => {
     if (!stencilImage) {
       Alert.alert('Error', 'No stencil to share.');
       return;
     }
 
-    try {
-      // Extract base64 data
-      const base64Data = stencilImage.includes(',') ? stencilImage.split(',')[1] : stencilImage;
-      
-      // Save to document directory (always writable)
-      const filename = `stencil_${Date.now()}.png`;
-      const fileUri = FileSystem.documentDirectory + filename;
-      
-      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      // Get content URI for the file
-      const contentUri = await FileSystem.getContentUriAsync(fileUri);
-      
-      // Open with Android's native image viewer using Intent
-      await IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
-        data: contentUri,
-        flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
-        type: 'image/png',
-      });
-    } catch (error) {
-      console.error('Error sharing:', error);
-      // Fallback: try expo-sharing
-      try {
-        const base64Data = stencilImage.includes(',') ? stencilImage.split(',')[1] : stencilImage;
-        const filename = `stencil_${Date.now()}.png`;
-        const fileUri = FileSystem.cacheDirectory + filename;
-        
-        await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-        
-        await Sharing.shareAsync(fileUri, {
-          mimeType: 'image/png',
-        });
-      } catch (fallbackError) {
-        console.error('Fallback share also failed:', fallbackError);
-        Alert.alert('Error', 'Failed to share. Please try again.');
-      }
-    }
+    // Use the save to gallery function directly
+    await saveToPhotoGallery(stencilImage, 'body_bound_stencil');
   };
 
   const loadGallery = async () => {
