@@ -888,54 +888,24 @@ export default function Index() {
     }
 
     try {
-      // Extract base64 data
-      const base64Data = stencilImage.includes(',') ? stencilImage.split(',')[1] : stencilImage;
-      
-      // Create a temporary file with proper path
-      const filename = `stencil_${Date.now()}.png`;
-      const fileUri = FileSystem.cacheDirectory + filename;
-      
-      // Write file
-      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      
-      // Verify file was created
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
-      if (!fileInfo.exists) {
-        throw new Error('Failed to create file');
+      // Get base64 data
+      let base64Data = stencilImage;
+      if (stencilImage.includes(',')) {
+        base64Data = stencilImage.split(',')[1];
       }
 
-      // Check if sharing is available
-      const isAvailable = await Sharing.isAvailableAsync();
-      if (!isAvailable) {
-        // Fallback: offer to save to folder instead
-        Alert.alert(
-          'Sharing Unavailable', 
-          'Would you like to save to a folder instead?',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Save to Folder', onPress: () => saveToDevice() }
-          ]
-        );
+      // Use react-native-share
+      await Share.open({
+        url: `data:image/png;base64,${base64Data}`,
+        type: 'image/png',
+        title: 'Share Tattoo Stencil',
+      });
+    } catch (error: any) {
+      // User cancelled is not an error
+      if (error.message && error.message.includes('User did not share')) {
         return;
       }
-
-      await Sharing.shareAsync(fileUri, {
-        mimeType: 'image/png',
-        dialogTitle: 'Share Tattoo Stencil',
-      });
-    } catch (error) {
       console.error('Error sharing:', error);
-      // Offer alternative
-      Alert.alert(
-        'Share Failed', 
-        'Would you like to save to a folder instead?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Save to Folder', onPress: () => saveToDevice() }
-        ]
-      );
     }
   };
 
