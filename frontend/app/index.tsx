@@ -1041,7 +1041,7 @@ export default function Index() {
         onValueChange={(val) => setSettings(prev => ({ ...prev, [settingKey]: val }))}
         onSlidingComplete={(val) => handleSettingsChange({ ...settings, [settingKey]: val })}
         minimumTrackTintColor="#C9A227"
-        maximumTrackTintColor="#374151"
+        maximumTrackTintColor="#3D3428"
         thumbTintColor="#C9A227"
       />
     </View>
