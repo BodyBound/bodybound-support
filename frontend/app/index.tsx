@@ -1423,50 +1423,28 @@ export default function Index() {
           <View style={styles.actionButtonsContainer}>
             {/* Generate Button - Always visible when image is selected */}
             <View style={styles.generateButtonRow}>
-              {stencilMode === 'ai' ? (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.aiButton,
-                    isGeneratingAI && styles.buttonDisabled,
-                    pressed && !isGeneratingAI && styles.buttonPressed
-                  ]}
-                  onPress={generateAIStencil}
-                  disabled={isGeneratingAI}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  {isGeneratingAI ? (
-                    <>
-                      <ActivityIndicator size="small" color="#fff" />
-                      <Text style={styles.aiButtonText}>Creating Stencil...</Text>
-                    </>
-                  ) : (
-                    <>
-                      <Text style={styles.generateIcon}>✨</Text>
-                      <Text style={styles.aiButtonText}>Generate Handmade Stencil</Text>
-                    </>
-                  )}
-                </Pressable>
-              ) : (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.processButton,
-                    isProcessing && styles.buttonDisabled,
-                    pressed && !isProcessing && styles.buttonPressed
-                  ]}
-                  onPress={processImage}
-                  disabled={isProcessing}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  {isProcessing ? (
+              <Pressable
+                style={({ pressed }) => [
+                  styles.aiButton,
+                  isGeneratingAI && styles.buttonDisabled,
+                  pressed && !isGeneratingAI && styles.buttonPressed
+                ]}
+                onPress={generateAIStencil}
+                disabled={isGeneratingAI}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                {isGeneratingAI ? (
+                  <>
                     <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <>
-                      <Text style={styles.generateIcon}>⚡</Text>
-                      <Text style={styles.processButtonText}>Generate Basic Stencil</Text>
-                    </>
-                  )}
-                </Pressable>
-              )}
+                    <Text style={styles.aiButtonText}>Creating Stencil...</Text>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.generateIcon}>✨</Text>
+                    <Text style={styles.aiButtonText}>Generate Stencil</Text>
+                  </>
+                )}
+              </Pressable>
             </View>
 
             {/* Save Button - Only visible when stencil exists */}
