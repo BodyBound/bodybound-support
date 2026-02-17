@@ -1,5 +1,4 @@
-Absolutely! I can create a support page that matches your app's dark luxury branding. Let me create a standalone HTML file you can host on GitHub Pages:
-Action: file_editor create /app/support-page/index.html --file-text "<!DOCTYPE html>
+"<!DOCTYPE html>
 <html lang=\"en\">
 <head>
     <meta charset=\"UTF-8\">
