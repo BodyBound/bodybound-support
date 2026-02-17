@@ -788,7 +788,7 @@ export default function Index() {
       }
       const stencilData = await response.json();
       
-      await exportStencilToFolder(stencilData.stencil_image, stencilData.name || 'stencil');
+      await saveToPhotoGallery(stencilData.stencil_image, stencilData.name || 'stencil');
     } catch (error) {
       console.error('Error exporting stencil:', error);
       Alert.alert('Error', 'Failed to load stencil data.');
