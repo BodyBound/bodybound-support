@@ -756,17 +756,17 @@ export default function Index() {
       
       // Create temp file path
       const tempFilename = `${filename}_${Date.now()}.png`;
-      const fileUri = cacheDirectory + tempFilename;
+      const fileUri = FileSystem.cacheDirectory + tempFilename;
       
       console.log('[SaveToGallery] Writing PNG to temp file:', fileUri);
       
-      // Write base64 PNG data to file using direct imports
-      await writeAsStringAsync(fileUri, base64Data, {
-        encoding: EncodingType.Base64,
+      // Write base64 PNG data to file - use string 'base64' directly to avoid enum issues
+      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+        encoding: 'base64',
       });
 
       // Verify file was written
-      const fileInfo = await getInfoAsync(fileUri);
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
       console.log('[SaveToGallery] File info:', JSON.stringify(fileInfo));
       
       if (!fileInfo.exists) {
