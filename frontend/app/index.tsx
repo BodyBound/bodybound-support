@@ -2914,7 +2914,7 @@ const styles = StyleSheet.create({
   cropIndicator: {
     position: 'absolute',
     borderWidth: 2,
-    borderColor: '#8B5CF6',
+    borderColor: '#C9A227',
     backgroundColor: 'transparent',
   },
   cropSliders: {
