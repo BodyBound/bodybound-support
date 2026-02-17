@@ -2147,10 +2147,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#10B981',
+    backgroundColor: '#2D5A3D',
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#4A9B5C',
     gap: 8,
   },
   saveToDeviceButtonText: {
