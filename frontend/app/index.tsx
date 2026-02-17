@@ -1331,65 +1331,6 @@ export default function Index() {
           </View>
         )}
 
-        {/* Settings Controls - Only show for Basic Edge mode */}
-        {originalImage && stencilMode === 'basic' && (
-          <View style={styles.settingsSection}>
-            <View style={styles.sectionTitleRow}>
-              <Text style={styles.sectionTitle}>Stencil Settings</Text>
-              {hasGeneratedOnce && (
-                <Text style={styles.liveUpdateHint}>Live updates enabled</Text>
-              )}
-            </View>
-
-            {renderSlider(
-              'Clarity',
-              settings.clarity,
-              'clarity',
-              'contrast-outline'
-            )}
-
-            {renderSlider(
-              'Line Weight',
-              settings.line_weight,
-              'line_weight',
-              'pencil-outline'
-            )}
-
-            {renderSlider(
-              'Noise Reduction',
-              settings.noise_reduction,
-              'noise_reduction',
-              'sparkles-outline'
-            )}
-
-            {/* Invert Toggle */}
-            <TouchableOpacity
-              style={styles.invertToggle}
-              onPress={() => {
-                const newSettings = { ...settings, invert: !settings.invert };
-                setSettings(newSettings);
-                if (hasGeneratedOnce) {
-                  handleSettingsChange(newSettings);
-                }
-              }}
-            >
-              <View style={styles.invertToggleLeft}>
-                <Text style={styles.invertIcon}>🎨</Text>
-                <Text style={styles.invertToggleLabel}>Invert Colors</Text>
-              </View>
-              <View style={[
-                styles.toggleSwitch,
-                settings.invert && styles.toggleSwitchActive
-              ]}>
-                <View style={[
-                  styles.toggleKnob,
-                  settings.invert && styles.toggleKnobActive
-                ]} />
-              </View>
-            </TouchableOpacity>
-          </View>
-        )}
-
         {/* Generation Mode Selection and AI Options */}
         {originalImage && (
           <View style={styles.modeSection}>
