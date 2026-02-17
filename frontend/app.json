@@ -13,7 +13,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Take photos to convert to stencils",
         "NSPhotoLibraryUsageDescription": "Select photos to convert to stencils"
-      }
+      },
+      "bundleIdentifier": "com.anonymous.bodyboundstencil"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,8 +26,14 @@
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO",
-        "android.permission.ACCESS_MEDIA_LOCATION"
-      ]
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.READ_MEDIA_AUDIO"
+      ],
+      "package": "com.anonymous.bodyboundstencil"
     },
     "web": {
       "bundler": "metro",
