@@ -762,7 +762,7 @@ export default function Index() {
       
       // Write base64 PNG data to file
       await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64', // Use string instead of enum for native compatibility
       });
 
       // Verify file was written
