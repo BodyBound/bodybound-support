@@ -2006,9 +2006,11 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#C9A227',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   sectionTitleRow: {
     flexDirection: 'row',
@@ -2017,9 +2019,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   liveUpdateHint: {
-    fontSize: 12,
-    color: '#10B981',
-    fontWeight: '500',
+    fontSize: 11,
+    color: '#C9A227',
+    fontWeight: '600',
   },
   sliderContainer: {
     marginBottom: 20,
@@ -2030,8 +2032,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   sliderLabel: {
-    color: '#D1D5DB',
-    fontSize: 15,
+    color: '#A89060',
+    fontSize: 14,
     fontWeight: '500',
     marginLeft: 8,
     flex: 1,
@@ -2044,9 +2046,9 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   sliderValue: {
-    color: '#8B5CF6',
+    color: '#C9A227',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   slider: {
     width: '100%',
@@ -2063,8 +2065,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   invertToggleLabel: {
-    color: '#D1D5DB',
-    fontSize: 15,
+    color: '#A89060',
+    fontSize: 14,
     fontWeight: '500',
     marginLeft: 8,
   },
