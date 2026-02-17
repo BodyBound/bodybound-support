@@ -2818,4 +2818,11 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     letterSpacing: 0.5,
   },
+  welcomeVersion: {
+    fontSize: 10,
+    color: '#4A4A4A',
+    textAlign: 'center',
+    marginTop: 20,
+    fontFamily: 'monospace',
+  },
 });
