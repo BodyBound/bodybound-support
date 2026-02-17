@@ -1135,6 +1135,9 @@ export default function Index() {
         <Text style={styles.welcomeFooter}>
           for tattoo artists • developed by a tattoo artist
         </Text>
+        
+        {/* Version Number */}
+        <Text style={styles.welcomeVersion}>v1.1.1</Text>
       </View>
     </SafeAreaView>
   );
