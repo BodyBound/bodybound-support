@@ -1393,65 +1393,10 @@ export default function Index() {
         {/* Generation Mode Selection and AI Options */}
         {originalImage && (
           <View style={styles.modeSection}>
-            <Text style={styles.modeSectionTitle}>Generation Mode</Text>
+            <Text style={styles.modeSectionTitle}>Handmade Stencil</Text>
             
-            {/* Mode Toggle */}
-            <View style={styles.modeToggle}>
-              <TouchableOpacity
-                style={[styles.modeButton, stencilMode === 'ai' && styles.modeButtonActive]}
-                onPress={() => {
-                  setStencilMode('ai');
-                  setHasGeneratedOnce(false); // Reset to prevent basic mode auto-updates
-                }}
-              >
-                <Text style={styles.modeIcon}>✨</Text>
-                <Text style={[styles.modeButtonText, stencilMode === 'ai' && styles.modeButtonTextActive]}>
-                  Handmade Stencil
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modeButton, stencilMode === 'basic' && styles.modeButtonActive]}
-                onPress={() => {
-                  setStencilMode('basic');
-                  setHasGeneratedOnce(false); // Reset when switching modes
-                }}
-              >
-                <Text style={styles.modeIcon}>⚙️</Text>
-                <Text style={[styles.modeButtonText, stencilMode === 'basic' && styles.modeButtonTextActive]}>
-                  Basic Edge
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Line Color Selection (AI Mode Only) */}
-            {stencilMode === 'ai' && (
-              <View style={styles.colorSection}>
-                <Text style={styles.colorSectionTitle}>Stencil Line Color</Text>
-                <View style={styles.colorOptions}>
-                  {(['gold', 'blue', 'black'] as const).map((color) => (
-                    <TouchableOpacity
-                      key={color}
-                      style={[
-                        styles.colorOption,
-                        lineColor === color && styles.colorOptionActive,
-                        { borderColor: color === 'gold' ? '#C9A227' : color === 'blue' ? '#3B82F6' : '#000' }
-                      ]}
-                      onPress={() => setLineColor(color)}
-                    >
-                      <View style={[
-                        styles.colorDot,
-                        { backgroundColor: color === 'gold' ? '#C9A227' : color === 'blue' ? '#3B82F6' : '#000' }
-                      ]} />
-                      <Text style={styles.colorOptionText}>{color.charAt(0).toUpperCase() + color.slice(1)}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* AI Generation Preferences (Pre-Generation Sliders) */}
             {/* Version Selector - Show after generating 3 versions */}
-            {stencilMode === 'ai' && (stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
+            {(stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
               <View style={styles.versionSelectorSection}>
                 <Text style={styles.versionSelectorTitle}>🎨 Choose Your Style</Text>
                 <Text style={styles.versionSelectorSubtitle}>Tap to compare versions</Text>
