@@ -2168,10 +2168,10 @@ const styles = StyleSheet.create({
   bottomSpacer: {
     height: 40,
   },
-  // Gallery Modal Styles
+  // Gallery Modal Styles - Luxury Theme
   galleryContainer: {
     flex: 1,
-    backgroundColor: '#0F0F0F',
+    backgroundColor: '#0A0A0A',
   },
   galleryHeader: {
     flexDirection: 'row',
@@ -2179,13 +2179,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1F1F1F',
+    borderBottomWidth: 2,
+    borderBottomColor: '#C9A227',
+    backgroundColor: '#0D0D0D',
   },
   galleryTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#fff',
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#C9A227',
+    letterSpacing: 1,
   },
   closeButton: {
     padding: 4,
