@@ -773,43 +773,43 @@ export default function Index() {
     }
   };
 
-  // Export stencil using Share sheet (works without media permissions)
-  const exportStencilViaShare = async (imageBase64: string, filename: string = 'stencil') => {
+  // Export stencil to user-selected folder using Storage Access Framework
+  const exportStencilToFolder = async (imageBase64: string, filename: string = 'stencil') => {
     try {
       // Extract base64 data
       const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
       
-      // Create a temporary file
-      const tempFilename = `${filename}_${Date.now()}.png`;
-      const fileUri = `${FileSystem.cacheDirectory}${tempFilename}`;
+      // Request permission to access a directory
+      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
       
+      if (!permissions.granted) {
+        Alert.alert('Cancelled', 'No folder selected.');
+        return false;
+      }
+
+      // Create file in the selected directory
+      const fileName = `${filename}_${Date.now()}.png`;
+      const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
+        permissions.directoryUri,
+        fileName,
+        'image/png'
+      );
+
+      // Write the base64 data to the file
       await FileSystem.writeAsStringAsync(fileUri, base64Data, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      // Check if sharing is available
-      const isAvailable = await Sharing.isAvailableAsync();
-      if (!isAvailable) {
-        Alert.alert('Error', 'Sharing is not available on this device.');
-        return false;
-      }
-
-      // Open share sheet - user can save to photos from here
-      await Sharing.shareAsync(fileUri, {
-        mimeType: 'image/png',
-        dialogTitle: 'Save Stencil',
-        UTI: 'public.png',
-      });
-      
+      Alert.alert('Saved!', `Stencil saved as ${fileName}`);
       return true;
     } catch (error) {
-      console.error('Error sharing stencil:', error);
-      Alert.alert('Error', 'Failed to export stencil. Please try again.');
+      console.error('Error exporting stencil:', error);
+      Alert.alert('Error', 'Failed to save stencil. Please try again.');
       return false;
     }
   };
 
-  // Export current stencil to device (via share sheet)
+  // Export current stencil to device
   const saveToDevice = async () => {
     if (!stencilImage) {
       Alert.alert('Error', 'No stencil to save.');
@@ -817,11 +817,11 @@ export default function Index() {
     }
 
     setIsSavingToDevice(true);
-    await exportStencilViaShare(stencilImage, 'body_bound_stencil');
+    await exportStencilToFolder(stencilImage, 'body_bound_stencil');
     setIsSavingToDevice(false);
   };
 
-  // Export saved stencil from gallery to device (via share sheet)
+  // Export saved stencil from gallery to device
   const [exportingStencilId, setExportingStencilId] = useState<string | null>(null);
   
   const exportStencilToDevice = async (stencilId: string) => {
@@ -834,7 +834,7 @@ export default function Index() {
       }
       const stencilData = await response.json();
       
-      await exportStencilViaShare(stencilData.stencil_image, stencilData.name || 'stencil');
+      await exportStencilToFolder(stencilData.stencil_image, stencilData.name || 'stencil');
     } catch (error) {
       console.error('Error exporting stencil:', error);
       Alert.alert('Error', 'Failed to export stencil. Please try again.');
