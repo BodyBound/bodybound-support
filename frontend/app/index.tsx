@@ -715,6 +715,15 @@ export default function Index() {
     try {
       console.log('[SaveToGallery] Starting save process...');
       
+      // Validate input
+      if (!imageBase64) {
+        console.log('[SaveToGallery] ERROR: imageBase64 is undefined or empty');
+        Alert.alert('Error', 'No image data to save.');
+        return false;
+      }
+      
+      console.log('[SaveToGallery] Image data length:', imageBase64.length);
+      
       // Request MediaLibrary permissions (uses MediaStore API internally for Android 10+)
       const permissionResult = await MediaLibrary.requestPermissionsAsync();
       console.log('[SaveToGallery] Permission result:', JSON.stringify(permissionResult));
@@ -731,8 +740,19 @@ export default function Index() {
 
       console.log('[SaveToGallery] Permission granted, processing image...');
       
-      // Ensure we have clean base64 data
-      const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+      // Ensure we have clean base64 data (remove data URI prefix if present)
+      let base64Data = imageBase64;
+      if (imageBase64.includes(',')) {
+        base64Data = imageBase64.split(',')[1];
+      }
+      // Also handle if it starts with data: but no comma
+      if (base64Data.startsWith('data:')) {
+        console.log('[SaveToGallery] WARNING: Malformed base64 data URI');
+        Alert.alert('Error', 'Image data format error.');
+        return false;
+      }
+      
+      console.log('[SaveToGallery] Base64 data length after cleanup:', base64Data.length);
       
       // Create temp file path
       const tempFilename = `${filename}_${Date.now()}.png`;
@@ -740,7 +760,7 @@ export default function Index() {
       
       console.log('[SaveToGallery] Writing PNG to temp file:', fileUri);
       
-      // Write base64 PNG data to file (preserves original PNG quality)
+      // Write base64 PNG data to file
       await FileSystem.writeAsStringAsync(fileUri, base64Data, {
         encoding: FileSystem.EncodingType.Base64,
       });
@@ -755,20 +775,9 @@ export default function Index() {
 
       console.log('[SaveToGallery] File written successfully, size:', fileInfo.size, 'bytes');
 
-      // Use ImageManipulator to ensure PNG format with maximum quality for line art clarity
-      const manipResult = await ImageManipulator.manipulateAsync(
-        fileUri,
-        [], // No transformations - just ensure format
-        { 
-          compress: 1, // Maximum quality (no compression loss)
-          format: ImageManipulator.SaveFormat.PNG // PNG preserves sharp lines
-        }
-      );
-      
-      console.log('[SaveToGallery] Image processed, creating asset from:', manipResult.uri);
-
-      // Save to photo gallery using MediaLibrary (uses MediaStore API on Android 10+)
-      const asset = await MediaLibrary.createAssetAsync(manipResult.uri);
+      // Save directly to photo gallery using MediaLibrary (uses MediaStore API on Android 10+)
+      // Skip ImageManipulator to avoid potential issues - base64 is already PNG
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
       console.log('[SaveToGallery] Asset created:', asset.id, 'filename:', asset.filename);
       
       // Try to create/use album, but don't fail if it doesn't work
@@ -788,10 +797,9 @@ export default function Index() {
         // Album creation is optional, image is already saved to gallery
       }
 
-      // Clean up temp files
+      // Clean up temp file
       try {
         await FileSystem.deleteAsync(fileUri, { idempotent: true });
-        await FileSystem.deleteAsync(manipResult.uri, { idempotent: true });
       } catch (cleanupError) {
         console.log('[SaveToGallery] Cleanup failed (non-critical):', cleanupError);
       }
