@@ -1137,7 +1137,7 @@ export default function Index() {
         </Text>
         
         {/* Version Number */}
-        <Text style={styles.welcomeVersion}>v1.1.1</Text>
+        <Text style={styles.welcomeVersion}>v1.2.0</Text>
       </View>
     </SafeAreaView>
   );
