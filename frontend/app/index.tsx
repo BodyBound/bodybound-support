@@ -772,31 +772,37 @@ export default function Index() {
     }
   };
 
-  // Export stencil using react-native-share (more reliable)
+  // Export stencil to files using expo-sharing
   const exportStencilToFolder = async (imageBase64: string, filename: string = 'stencil') => {
     try {
-      // Get base64 data with proper format for react-native-share
-      let base64Data = imageBase64;
-      if (imageBase64.includes(',')) {
-        base64Data = imageBase64.split(',')[1];
-      }
+      // Extract base64 data
+      const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
       
-      // Use react-native-share with base64 directly
-      await Share.open({
-        url: `data:image/png;base64,${base64Data}`,
-        filename: `${filename}_${Date.now()}`,
-        type: 'image/png',
-        saveToFiles: true, // This prompts to save to files on Android
+      // Create temp file
+      const tempFilename = `${filename}_${Date.now()}.png`;
+      const fileUri = FileSystem.cacheDirectory + tempFilename;
+      
+      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Check if sharing is available
+      const isAvailable = await Sharing.isAvailableAsync();
+      if (!isAvailable) {
+        Alert.alert('Error', 'Sharing is not available on this device.');
+        return false;
+      }
+
+      // Open share sheet
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'image/png',
+        dialogTitle: 'Save Stencil',
       });
       
       return true;
     } catch (error: any) {
-      // User cancelled is not an error
-      if (error.message && error.message.includes('User did not share')) {
-        return false;
-      }
       console.error('Error exporting stencil:', error);
-      Alert.alert('Export', 'Use the share options to save the image to your files or gallery.');
+      Alert.alert('Error', 'Failed to export stencil. Please try again.');
       return false;
     }
   };
