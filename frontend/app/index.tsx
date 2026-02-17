@@ -1755,18 +1755,20 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({
+  // LUXURY DARK THEME - Brass Filigree & Black Leather
   container: {
     flex: 1,
-    backgroundColor: '#0F0F0F',
+    backgroundColor: '#0A0A0A',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1F1F1F',
+    paddingVertical: 14,
+    borderBottomWidth: 2,
+    borderBottomColor: '#C9A227',
+    backgroundColor: '#0D0D0D',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -1774,9 +1776,11 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   headerLogo: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#C9A227',
   },
   headerTitleContainer: {
     flexDirection: 'column',
@@ -1784,17 +1788,21 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: '#fff',
-    letterSpacing: 1,
+    color: '#C9A227',
+    letterSpacing: 2,
   },
   headerSubtitle: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#8B5CF6',
-    letterSpacing: 0.5,
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#8B7355',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   galleryButton: {
     padding: 8,
+    borderWidth: 1,
+    borderColor: '#C9A227',
+    borderRadius: 8,
   },
   iconText: {
     fontSize: 22,
@@ -1815,7 +1823,7 @@ const styles = StyleSheet.create({
   },
   closeIcon: {
     fontSize: 24,
-    color: '#fff',
+    color: '#C9A227',
     fontWeight: '300',
   },
   emptyIcon: {
@@ -1847,7 +1855,7 @@ const styles = StyleSheet.create({
   },
   modalCloseIcon: {
     fontSize: 28,
-    color: '#fff',
+    color: '#C9A227',
     fontWeight: '300',
     backgroundColor: 'rgba(0,0,0,0.5)',
     width: 36,
