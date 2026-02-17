@@ -1808,7 +1808,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   deleteIcon: {
-    fontSize: 20,
+    fontSize: 16,
   },
   invertIcon: {
     fontSize: 16,
