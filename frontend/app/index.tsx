@@ -1428,19 +1428,19 @@ export default function Index() {
               <View style={styles.colorSection}>
                 <Text style={styles.colorSectionTitle}>Stencil Line Color</Text>
                 <View style={styles.colorOptions}>
-                  {(['purple', 'blue', 'black'] as const).map((color) => (
+                  {(['gold', 'blue', 'black'] as const).map((color) => (
                     <TouchableOpacity
                       key={color}
                       style={[
                         styles.colorOption,
                         lineColor === color && styles.colorOptionActive,
-                        { borderColor: color === 'purple' ? '#8B5CF6' : color === 'blue' ? '#3B82F6' : '#000' }
+                        { borderColor: color === 'gold' ? '#C9A227' : color === 'blue' ? '#3B82F6' : '#000' }
                       ]}
                       onPress={() => setLineColor(color)}
                     >
                       <View style={[
                         styles.colorDot,
-                        { backgroundColor: color === 'purple' ? '#8B5CF6' : color === 'blue' ? '#3B82F6' : '#000' }
+                        { backgroundColor: color === 'gold' ? '#C9A227' : color === 'blue' ? '#3B82F6' : '#000' }
                       ]} />
                       <Text style={styles.colorOptionText}>{color.charAt(0).toUpperCase() + color.slice(1)}</Text>
                     </TouchableOpacity>
