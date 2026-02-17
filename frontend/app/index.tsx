@@ -222,75 +222,13 @@ export default function Index() {
     })
   ).current;
   
-  // Settings state - defaults optimized for detailed stencils
+  // Settings state - defaults optimized for detailed stencils (kept for potential future use)
   const [settings, setSettings] = useState<StencilSettings>({
     clarity: 30,  // Lower = more detail captured
     line_weight: 40,  // Medium line weight
     noise_reduction: 30,  // Lower = more detail preserved
     invert: true,
   });
-
-  // Live update function with debouncing - ONLY for basic mode
-  const processImageLive = useCallback(async (currentSettings: StencilSettings) => {
-    // Only process in basic mode with live updates enabled
-    if (!originalImage || !hasGeneratedOnce || stencilMode !== 'basic') return;
-
-    // Cancel any pending request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // Create new abort controller
-    abortControllerRef.current = new AbortController();
-
-    setIsLiveUpdating(true);
-    try {
-      const response = await fetch(`${API_URL}/api/process`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          image_base64: originalImage,
-          settings: currentSettings,
-        }),
-        signal: abortControllerRef.current.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to process image');
-      }
-
-      const data = await response.json();
-      setStencilImage(data.stencil_base64);
-    } catch (error: any) {
-      if (error.name !== 'AbortError') {
-        console.error('Error processing image:', error);
-      }
-    } finally {
-      setIsLiveUpdating(false);
-    }
-  }, [originalImage, hasGeneratedOnce, stencilMode]);
-
-  // Debounced settings change handler - ONLY for basic mode
-  const handleSettingsChange = useCallback((newSettings: StencilSettings) => {
-    setSettings(newSettings);
-    
-    // Only trigger live update in basic mode
-    if (stencilMode !== 'basic') return;
-    // Only trigger live update if we've generated at least once
-    if (hasGeneratedOnce && originalImage) {
-      // Clear existing timer
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-      
-      // Set new debounced timer (300ms delay)
-      debounceTimerRef.current = setTimeout(() => {
-        processImageLive(newSettings);
-      }, 300);
-    }
-  }, [hasGeneratedOnce, originalImage, processImageLive]);
 
   // Cleanup on unmount
   useEffect(() => {
