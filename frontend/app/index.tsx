@@ -710,12 +710,12 @@ export default function Index() {
     }
   };
 
-  // Save stencil to device photo gallery using MediaLibrary
+  // Save stencil to device photo gallery using MediaLibrary with proper PNG quality
   const saveToPhotoGallery = async (imageBase64: string, filename: string = 'stencil'): Promise<boolean> => {
     try {
       console.log('[SaveToGallery] Starting save process...');
       
-      // Request MediaLibrary permissions with granular permissions for Android 13+
+      // Request MediaLibrary permissions (uses MediaStore API internally for Android 10+)
       const permissionResult = await MediaLibrary.requestPermissionsAsync();
       console.log('[SaveToGallery] Permission result:', JSON.stringify(permissionResult));
       
@@ -729,27 +729,47 @@ export default function Index() {
         return false;
       }
 
-      console.log('[SaveToGallery] Permission granted, extracting base64...');
+      console.log('[SaveToGallery] Permission granted, processing image...');
       
-      // Extract base64 data
+      // Ensure we have clean base64 data
       const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
       
-      // Create temp file in cache directory
+      // Create temp file path
       const tempFilename = `${filename}_${Date.now()}.png`;
       const fileUri = FileSystem.cacheDirectory + tempFilename;
       
-      console.log('[SaveToGallery] Writing to temp file:', fileUri);
+      console.log('[SaveToGallery] Writing PNG to temp file:', fileUri);
       
-      // Write base64 to file
+      // Write base64 PNG data to file (preserves original PNG quality)
       await FileSystem.writeAsStringAsync(fileUri, base64Data, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      console.log('[SaveToGallery] File written, creating asset...');
+      // Verify file was written
+      const fileInfo = await FileSystem.getInfoAsync(fileUri);
+      console.log('[SaveToGallery] File info:', JSON.stringify(fileInfo));
+      
+      if (!fileInfo.exists) {
+        throw new Error('Failed to write temp file');
+      }
 
-      // Save to photo gallery using MediaLibrary
-      const asset = await MediaLibrary.createAssetAsync(fileUri);
-      console.log('[SaveToGallery] Asset created:', asset.id);
+      console.log('[SaveToGallery] File written successfully, size:', fileInfo.size, 'bytes');
+
+      // Use ImageManipulator to ensure PNG format with maximum quality for line art clarity
+      const manipResult = await ImageManipulator.manipulateAsync(
+        fileUri,
+        [], // No transformations - just ensure format
+        { 
+          compress: 1, // Maximum quality (no compression loss)
+          format: ImageManipulator.SaveFormat.PNG // PNG preserves sharp lines
+        }
+      );
+      
+      console.log('[SaveToGallery] Image processed, creating asset from:', manipResult.uri);
+
+      // Save to photo gallery using MediaLibrary (uses MediaStore API on Android 10+)
+      const asset = await MediaLibrary.createAssetAsync(manipResult.uri);
+      console.log('[SaveToGallery] Asset created:', asset.id, 'filename:', asset.filename);
       
       // Try to create/use album, but don't fail if it doesn't work
       try {
@@ -765,12 +785,13 @@ export default function Index() {
         }
       } catch (albumError) {
         console.log('[SaveToGallery] Album operation failed (non-critical):', albumError);
-        // Album creation is optional, image is already saved
+        // Album creation is optional, image is already saved to gallery
       }
 
-      // Clean up temp file
+      // Clean up temp files
       try {
         await FileSystem.deleteAsync(fileUri, { idempotent: true });
+        await FileSystem.deleteAsync(manipResult.uri, { idempotent: true });
       } catch (cleanupError) {
         console.log('[SaveToGallery] Cleanup failed (non-critical):', cleanupError);
       }
