@@ -2198,10 +2198,12 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   galleryItemContainer: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#0D0D0D',
     borderRadius: 12,
     marginBottom: 12,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#3D3428',
   },
   galleryItem: {
     flexDirection: 'row',
@@ -2212,26 +2214,30 @@ const styles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 8,
-    backgroundColor: '#0F0F0F',
+    backgroundColor: '#1A1510',
+    borderWidth: 1,
+    borderColor: '#C9A227',
   },
   galleryItemInfo: {
     flex: 1,
     marginLeft: 12,
   },
   galleryItemName: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
+    color: '#C9A227',
+    fontSize: 14,
+    fontWeight: '700',
   },
   galleryItemDate: {
-    color: '#6B7280',
-    fontSize: 12,
+    color: '#6B5D48',
+    fontSize: 11,
     marginTop: 4,
   },
   deleteButton: {
     padding: 10,
-    backgroundColor: '#EF4444',
+    backgroundColor: '#5C1F1F',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#8B3A3A',
   },
   // Version Selector Styles - Luxury Theme
   versionSelectorSection: {
