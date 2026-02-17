@@ -2550,7 +2550,7 @@ const styles = StyleSheet.create({
   cropBox: {
     position: 'absolute',
     borderWidth: 2,
-    borderColor: '#8B5CF6',
+    borderColor: '#C9A227',
     backgroundColor: 'transparent',
   },
   cropGridLine: {
@@ -2571,7 +2571,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 24,
     height: 24,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#C9A227',
     borderRadius: 12,
     borderWidth: 3,
     borderColor: '#fff',
@@ -2659,15 +2659,15 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#8B5CF6',
+    borderColor: '#C9A227',
     backgroundColor: 'transparent',
     gap: 8,
   },
   modeButtonActive: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#C9A227',
   },
   modeButtonText: {
-    color: '#8B5CF6',
+    color: '#C9A227',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -2700,7 +2700,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   colorOptionActive: {
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    backgroundColor: 'rgba(201, 162, 39, 0.15)',
   },
   colorDot: {
     width: 14,
