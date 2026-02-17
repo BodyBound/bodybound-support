@@ -799,7 +799,7 @@ export default function Index() {
 
       // Clean up temp file
       try {
-        await deleteAsync(fileUri, { idempotent: true });
+        await FileSystem.deleteAsync(fileUri, { idempotent: true });
       } catch (cleanupError) {
         console.log('[SaveToGallery] Cleanup failed (non-critical):', cleanupError);
       }
