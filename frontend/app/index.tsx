@@ -1167,7 +1167,7 @@ export default function Index() {
         
         {/* Tagline */}
         <Text style={styles.welcomeTagline}>
-          Transform photos into tattoo stencils{'\n'}as good as handmade
+          Transform photos into{'\n'}tattoo stencils as good as handmade
         </Text>
         
         {/* Get Started Button */}
@@ -1182,7 +1182,7 @@ export default function Index() {
         
         {/* Footer Note */}
         <Text style={styles.welcomeFooter}>
-          for tattoo artists{'\n'}developed by a tattoo artist
+          for tattoo artists • developed by a tattoo artist
         </Text>
       </View>
     </SafeAreaView>
