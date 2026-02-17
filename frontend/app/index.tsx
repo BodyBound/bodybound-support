@@ -76,8 +76,8 @@ export default function Index() {
   
   // Handmade Stencil states
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
-  const [stencilMode, setStencilMode] = useState<'basic' | 'ai'>('ai'); // Default to AI mode
-  const [lineColor, setLineColor] = useState<'gold' | 'blue' | 'black'>('black');
+  // Simplified: Only Handmade Stencil mode with black lines
+  const lineColor = 'black'; // Fixed to black
   
   // 3-Version Stencil Generation
   const [stencilVersions, setStencilVersions] = useState<{
