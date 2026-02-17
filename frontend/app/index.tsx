@@ -2110,10 +2110,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#1A1510',
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8,
+    borderWidth: 2,
+    borderColor: '#C9A227',
   },
   buttonDisabled: {
     opacity: 0.6,
