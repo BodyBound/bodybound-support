@@ -774,38 +774,31 @@ export default function Index() {
     }
   };
 
-  // Export stencil to user-selected folder using Storage Access Framework
+  // Export stencil using react-native-share (more reliable)
   const exportStencilToFolder = async (imageBase64: string, filename: string = 'stencil') => {
     try {
-      // Extract base64 data
-      const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+      // Get base64 data with proper format for react-native-share
+      let base64Data = imageBase64;
+      if (imageBase64.includes(',')) {
+        base64Data = imageBase64.split(',')[1];
+      }
       
-      // Request permission to access a directory
-      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      // Use react-native-share with base64 directly
+      await Share.open({
+        url: `data:image/png;base64,${base64Data}`,
+        filename: `${filename}_${Date.now()}`,
+        type: 'image/png',
+        saveToFiles: true, // This prompts to save to files on Android
+      });
       
-      if (!permissions.granted) {
-        Alert.alert('Cancelled', 'No folder selected.');
+      return true;
+    } catch (error: any) {
+      // User cancelled is not an error
+      if (error.message && error.message.includes('User did not share')) {
         return false;
       }
-
-      // Create file in the selected directory
-      const fileName = `${filename}_${Date.now()}.png`;
-      const fileUri = await FileSystem.StorageAccessFramework.createFileAsync(
-        permissions.directoryUri,
-        fileName,
-        'image/png'
-      );
-
-      // Write the base64 data to the file
-      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-
-      Alert.alert('Saved!', `Stencil saved as ${fileName}`);
-      return true;
-    } catch (error) {
       console.error('Error exporting stencil:', error);
-      Alert.alert('Error', 'Failed to save stencil. Please try again.');
+      Alert.alert('Export', 'Use the share options to save the image to your files or gallery.');
       return false;
     }
   };
@@ -838,7 +831,7 @@ export default function Index() {
       await exportStencilToFolder(stencilData.stencil_image, stencilData.name || 'stencil');
     } catch (error) {
       console.error('Error exporting stencil:', error);
-      Alert.alert('Error', 'Failed to export stencil. Please try again.');
+      Alert.alert('Error', 'Failed to load stencil data.');
     } finally {
       setExportingStencilId(null);
     }
