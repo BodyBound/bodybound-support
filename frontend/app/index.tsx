@@ -1029,7 +1029,7 @@ export default function Index() {
         <Text style={styles.sliderIcon}>{getSliderIcon(settingKey as string)}</Text>
         <Text style={styles.sliderLabel}>{label}</Text>
         <View style={styles.sliderValueContainer}>
-          {isLiveUpdating && <ActivityIndicator size="small" color="#8B5CF6" style={styles.miniLoader} />}
+          {isLiveUpdating && <ActivityIndicator size="small" color="#C9A227" style={styles.miniLoader} />}
           <Text style={styles.sliderValue}>{Math.round(value)}%</Text>
         </View>
       </View>
@@ -1040,9 +1040,9 @@ export default function Index() {
         value={value}
         onValueChange={(val) => setSettings(prev => ({ ...prev, [settingKey]: val }))}
         onSlidingComplete={(val) => handleSettingsChange({ ...settings, [settingKey]: val })}
-        minimumTrackTintColor="#8B5CF6"
+        minimumTrackTintColor="#C9A227"
         maximumTrackTintColor="#374151"
-        thumbTintColor="#8B5CF6"
+        thumbTintColor="#C9A227"
       />
     </View>
   );
@@ -1067,7 +1067,7 @@ export default function Index() {
         </View>
 
         {loadingGallery ? (
-          <ActivityIndicator size="large" color="#8B5CF6" style={styles.loader} />
+          <ActivityIndicator size="large" color="#C9A227" style={styles.loader} />
         ) : savedStencils.length === 0 ? (
           <View style={styles.emptyGallery}>
             <Text style={styles.emptyIcon}>🖼️</Text>
