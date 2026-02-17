@@ -711,37 +711,54 @@ export default function Index() {
     }
   };
 
-  // Export stencil to files using expo-sharing
-  const exportStencilToFolder = async (imageBase64: string, filename: string = 'stencil') => {
+  // Save stencil to device photo gallery using MediaLibrary
+  const saveToPhotoGallery = async (imageBase64: string, filename: string = 'stencil'): Promise<boolean> => {
     try {
+      // Request MediaLibrary permissions
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please allow access to your photo library to save stencils.',
+          [{ text: 'OK' }]
+        );
+        return false;
+      }
+
       // Extract base64 data
       const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
       
-      // Create temp file
+      // Create temp file in cache directory
       const tempFilename = `${filename}_${Date.now()}.png`;
       const fileUri = FileSystem.cacheDirectory + tempFilename;
       
+      // Write base64 to file
       await FileSystem.writeAsStringAsync(fileUri, base64Data, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      // Check if sharing is available
-      const isAvailable = await Sharing.isAvailableAsync();
-      if (!isAvailable) {
-        Alert.alert('Error', 'Sharing is not available on this device.');
-        return false;
+      // Save to photo gallery using MediaLibrary
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      
+      // Optionally create an album for Body Bound stencils
+      const albumName = 'Body Bound Stencils';
+      let album = await MediaLibrary.getAlbumAsync(albumName);
+      
+      if (album === null) {
+        await MediaLibrary.createAlbumAsync(albumName, asset, false);
+      } else {
+        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
       }
 
-      // Open share sheet
-      await Sharing.shareAsync(fileUri, {
-        mimeType: 'image/png',
-        dialogTitle: 'Save Stencil',
-      });
-      
+      // Clean up temp file
+      await FileSystem.deleteAsync(fileUri, { idempotent: true });
+
+      Alert.alert('Saved!', 'Stencil saved to your photo gallery in "Body Bound Stencils" album.');
       return true;
     } catch (error: any) {
-      console.error('Error exporting stencil:', error);
-      Alert.alert('Error', 'Failed to export stencil. Please try again.');
+      console.error('Error saving to gallery:', error);
+      Alert.alert('Error', 'Failed to save stencil. Please try again.');
       return false;
     }
   };
@@ -754,7 +771,7 @@ export default function Index() {
     }
 
     setIsSavingToDevice(true);
-    await exportStencilToFolder(stencilImage, 'body_bound_stencil');
+    await saveToPhotoGallery(stencilImage, 'body_bound_stencil');
     setIsSavingToDevice(false);
   };
 
