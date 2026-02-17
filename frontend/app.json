@@ -50,6 +50,14 @@
           "photosPermission": "Select photos to convert to stencils",
           "cameraPermission": "Take photos to convert to stencils"
         }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Save stencils to your photo gallery",
+          "savePhotosPermission": "Save stencils to your photo gallery",
+          "isAccessMediaLocationEnabled": true
+        }
       ]
     ],
     "experiments": {
