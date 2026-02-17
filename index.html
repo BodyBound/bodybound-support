@@ -1,47 +1,41 @@
 <!DOCTYPE html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-    <meta charset=\"UTF-8\">
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Body Bound Stencil Generator - Support</title>
-    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">
-    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>
-    <link href=\"https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap\" rel=\"stylesheet\">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(180deg, #0A0A0A 0%, #0D0D0D 50%, #0A0A0A 100%);
+            font-family: 'Inter', sans-serif;
+            background: #0A0A0A;
             color: #E8E8E8;
             min-height: 100vh;
             line-height: 1.6;
         }
-
         .container {
             max-width: 800px;
             margin: 0 auto;
             padding: 40px 24px;
         }
-
         .header {
             text-align: center;
             padding: 60px 0 40px;
             border-bottom: 1px solid rgba(201, 162, 39, 0.2);
             margin-bottom: 50px;
         }
-
         .logo-image {
             width: 100px;
             height: auto;
             margin-bottom: 20px;
             border-radius: 12px;
+            filter: invert(1);
         }
-
         .logo-text {
             font-family: 'Playfair Display', serif;
             font-size: 42px;
@@ -50,15 +44,12 @@
             letter-spacing: 4px;
             margin-bottom: 8px;
         }
-
         .tagline {
             font-family: 'Playfair Display', serif;
             font-size: 18px;
             color: #A89060;
             font-style: italic;
-            letter-spacing: 1px;
         }
-
         h1 {
             font-family: 'Playfair Display', serif;
             font-size: 32px;
@@ -66,7 +57,6 @@
             margin-bottom: 24px;
             text-align: center;
         }
-
         h2 {
             font-family: 'Playfair Display', serif;
             font-size: 24px;
@@ -75,39 +65,31 @@
             padding-bottom: 8px;
             border-bottom: 1px solid rgba(201, 162, 39, 0.3);
         }
-
         p {
             color: #B8B8B8;
             margin-bottom: 16px;
             font-size: 16px;
         }
-
         .intro {
             text-align: center;
             font-size: 18px;
             color: #9CA3AF;
             margin-bottom: 50px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
         }
-
         .contact-card {
-            background: linear-gradient(145deg, #1A1510 0%, #0D0D0D 100%);
+            background: #1A1510;
             border: 1px solid rgba(201, 162, 39, 0.3);
             border-radius: 16px;
             padding: 32px;
             margin: 30px 0;
             text-align: center;
         }
-
         .contact-card h3 {
             font-family: 'Playfair Display', serif;
             color: #C9A227;
             font-size: 20px;
             margin-bottom: 16px;
         }
-
         .contact-email {
             display: inline-block;
             background: #C9A227;
@@ -117,15 +99,10 @@
             text-decoration: none;
             font-weight: 600;
             font-size: 16px;
-            transition: all 0.3s ease;
         }
-
         .contact-email:hover {
             background: #D4AF37;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(201, 162, 39, 0.3);
         }
-
         .faq-item {
             background: rgba(26, 21, 16, 0.5);
             border: 1px solid rgba(201, 162, 39, 0.15);
@@ -133,259 +110,105 @@
             padding: 24px;
             margin-bottom: 16px;
         }
-
         .faq-question {
             font-weight: 600;
             color: #E8E8E8;
             margin-bottom: 12px;
             font-size: 17px;
         }
-
         .faq-answer {
             color: #9CA3AF;
             font-size: 15px;
             margin: 0;
         }
-
         .footer {
             text-align: center;
             padding: 50px 0 30px;
             margin-top: 60px;
             border-top: 1px solid rgba(201, 162, 39, 0.2);
         }
-
         .footer-brand {
             font-family: 'Playfair Display', serif;
             color: #C9A227;
             font-size: 18px;
             margin-bottom: 8px;
         }
-
         .footer-tagline {
             font-size: 13px;
             color: #6B5D48;
             font-style: italic;
         }
-
         .footer-copy {
             font-size: 12px;
             color: #4A4A4A;
             margin-top: 20px;
         }
-
         .divider {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            text-align: center;
             margin: 40px 0;
-        }
-
-        .divider-line {
-            height: 1px;
-            width: 60px;
-            background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.5), transparent);
-        }
-
-        .divider-icon {
             color: #C9A227;
-            margin: 0 16px;
-            font-size: 14px;
-        }
-
-        @media (max-width: 600px) {
-            .logo-text {
-                font-size: 32px;
-                letter-spacing: 2px;
-            }
-            .tagline {
-                font-size: 16px;
-            }
-            h1 {
-                font-size: 26px;
-            }
-            h2 {
-                font-size: 20px;
-            }
-            .container {
-                padding: 24px 16px;
-            }
-            .contact-card {
-                padding: 24px 16px;
-            }
         }
     </style>
 </head>
 <body>
-    <div class=\"container\">
-        <header class=\"header\">
-            <img src=\"logo.png\" alt=\"Body Bound Logo\" class=\"logo-image\">
-            <div class=\"logo-text\">BODY BOUND</div>
-            <div class=\"tagline\">Stencil Generator</div>
+    <div class="container">
+        <header class="header">
+            <img src="logo.png" alt="Body Bound Logo" class="logo-image">
+            <div class="logo-text">BODY BOUND</div>
+            <div class="tagline">Stencil Generator</div>
         </header>
 
         <main>
             <h1>Support Center</h1>
-            <p class=\"intro\">
-                Transform photos into tattoo stencils as good as handmade. 
-                We're here to help you create the perfect stencil for your art.
-            </p>
+            <p class="intro">Transform photos into tattoo stencils as good as handmade. We're here to help you create the perfect stencil for your art.</p>
 
-            <div class=\"contact-card\">
+            <div class="contact-card">
                 <h3>Need Help?</h3>
-                <p style=\"margin-bottom: 20px;\">Our support team is ready to assist you with any questions or issues.</p>
-                <a href=\"mailto:support@bodybound.app\" class=\"contact-email\">support@bodybound.app</a>
+                <p>Our support team is ready to assist you with any questions or issues.</p>
+                <a href="mailto:support@bodybound.app" class="contact-email">support@bodybound.app</a>
             </div>
 
-            <div class=\"divider\">
-                <span class=\"divider-line\"></span>
-                <span class=\"divider-icon\">✦</span>
-                <span class=\"divider-line\"></span>
-            </div>
+            <div class="divider">✦</div>
 
             <h2>Frequently Asked Questions</h2>
 
-            <div class=\"faq-item\">
-                <div class=\"faq-question\">How do I save my stencil to my device?</div>
-                <p class=\"faq-answer\">After generating your stencil, tap the \"Share\" button. On iOS, you'll be prompted to allow photo library access. Once granted, your stencil will be saved directly to your Photos app, ready to export to Procreate or print.</p>
+            <div class="faq-item">
+                <div class="faq-question">How do I save my stencil to my device?</div>
+                <p class="faq-answer">After generating your stencil, tap the "Share" button. On iOS, you'll be prompted to allow photo library access. Once granted, your stencil will be saved directly to your Photos app, ready to export to Procreate or print.</p>
             </div>
 
-            <div class=\"faq-item\">
-                <div class=\"faq-question\">What's the difference between Light, Medium, and Heavy stencils?</div>
-                <p class=\"faq-answer\"><strong>Light:</strong> Clean outlines only, perfect for simple designs. <strong>Medium:</strong> Adds texture and contour lines using cross-hatching and stippling. <strong>Heavy:</strong> Includes shading with solid black fills for maximum depth and contrast.</p>
+            <div class="faq-item">
+                <div class="faq-question">What's the difference between Light, Medium, and Heavy stencils?</div>
+                <p class="faq-answer"><strong>Light:</strong> Clean outlines only, perfect for simple designs. <strong>Medium:</strong> Adds texture and contour lines using cross-hatching and stippling. <strong>Heavy:</strong> Includes shading with solid black fills for maximum depth and contrast.</p>
             </div>
 
-            <div class=\"faq-item\">
-                <div class=\"faq-question\">Can I use this app on my iPad?</div>
-                <p class=\"faq-answer\">Yes! Body Bound is fully optimized for iPad. Generate stencils and export them directly to Procreate or your favorite design app.</p>
+            <div class="faq-item">
+                <div class="faq-question">Can I use this app on my iPad?</div>
+                <p class="faq-answer">Yes! Body Bound is fully optimized for iPad. Generate stencils and export them directly to Procreate or your favorite design app.</p>
             </div>
 
-            <div class=\"faq-item\">
-                <div class=\"faq-question\">Why does my stencil look different from the original photo?</div>
-                <p class=\"faq-answer\">Our AI converts realistic photos into line art suitable for tattooing. The stencil maintains the exact proportions and composition while simplifying details into clean lines that transfer well to skin.</p>
+            <div class="faq-item">
+                <div class="faq-question">Why does my stencil look different from the original photo?</div>
+                <p class="faq-answer">Our AI converts realistic photos into line art suitable for tattooing. The stencil maintains the exact proportions and composition while simplifying details into clean lines that transfer well to skin.</p>
             </div>
 
-            <div class=\"faq-item\">
-                <div class=\"faq-question\">Is my photo data stored or shared?</div>
-                <p class=\"faq-answer\">Your privacy is important to us. Photos are processed securely and are not stored permanently on our servers. We do not share your images with third parties.</p>
+            <div class="faq-item">
+                <div class="faq-question">Is my photo data stored or shared?</div>
+                <p class="faq-answer">Your privacy is important to us. Photos are processed securely and are not stored permanently on our servers. We do not share your images with third parties.</p>
             </div>
 
-            <div class=\"divider\">
-                <span class=\"divider-line\"></span>
-                <span class=\"divider-icon\">✦</span>
-                <span class=\"divider-line\"></span>
-            </div>
+            <div class="divider">✦</div>
 
             <h2>About Body Bound</h2>
             <p>Body Bound Stencil Generator was developed by a tattoo artist, for tattoo artists. We understand the importance of accurate, high-quality stencils in creating exceptional tattoo work.</p>
             <p>Our AI-powered technology traces your reference images with precision, maintaining exact proportions while converting them into clean, transferable line art.</p>
-
         </main>
 
-        <footer class=\"footer\">
-            <div class=\"footer-brand\">BODY BOUND</div>
-            <div class=\"footer-tagline\">for tattoo artists • developed by a tattoo artist</div>
-            <div class=\"footer-copy\">© 2025 Body Bound. All rights reserved.</div>
+        <footer class="footer">
+            <div class="footer-brand">BODY BOUND</div>
+            <div class="footer-tagline">for tattoo artists • developed by a tattoo artist</div>
+            <div class="footer-copy">© 2025 Body Bound. All rights reserved.</div>
         </footer>
     </div>
 </body>
 </html>
-"
-Observation: Create successful: /app/support-page/index-clean.html
-
-Fetching debug logs for expo
-
-==> /var/log/supervisor/expo.err.log <==
-The following packages should be updated for best compatibility with the installed expo version:
-  @react-native-community/slider@5.1.2 - expected version: 5.0.1
-  react-native-gesture-handler@2.30.0 - expected version: ~2.28.0
-Your project may not work correctly until you install the expected versions of the packages.
-CommandError: ngrok tunnel took too long to connect.
-error Command failed with exit code 1.
-CommandError: ngrok tunnel took too long to connect.
-error Command failed with exit code 1.
-CommandError: ngrok tunnel took too long to connect.
-error Command failed with exit code 1.
-CommandError: ngrok tunnel took too long to connect.
-error Command failed with exit code 1.
-CommandError: ngrok tunnel took too long to connect.
-error Command failed with exit code 1.
-CommandError: ngrok tunnel took too long to connect.
-error Command failed with exit code 1.
-The following packages should be updated for best compatibility with the installed expo version:
-  @react-native-community/slider@5.1.2 - expected version: 5.0.1
-  react-native-gesture-handler@2.30.0 - expected version: ~2.28.0
-Your project may not work correctly until you install the expected versions of the packages.
-
-==> /var/log/supervisor/expo.out.log <==
-$ /app/frontend/node_modules/.bin/expo start --tunnel --port 3000
-env: load .env
-env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PACKAGER_PROXY_URL EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT
-Starting project at /app/frontend
-Fast resolver is enabled.
-Metro is running in CI mode, reloads are disabled. Remove CI=true to enable watch mode.
-Starting Metro Bundler
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.
-yarn run v1.22.22
-$ /app/frontend/node_modules/.bin/expo start --tunnel --port 3000
-env: load .env
-env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PACKAGER_PROXY_URL EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT
-Starting project at /app/frontend
-Fast resolver is enabled.
-Metro is running in CI mode, reloads are disabled. Remove CI=true to enable watch mode.
-Starting Metro Bundler
-Tunnel connected.
-Tunnel ready.
-Waiting on http://localhost:3000
-Logs for your project will appear below.
-
-
-Fetching debug logs for backend
-
-==> /var/log/supervisor/backend.err.log <==
-[92m18:14:21 - LiteLLM:INFO[0m: utils.py:1307 - Wrapper: Completed Call, calling success_handler
-2026-02-17 18:14:21,461 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
-2026-02-17 18:14:21,462 - server - INFO - AI response - text: None..., images count: 1
-2026-02-17 18:14:21,464 - server - INFO - Generated image keys: dict_keys(['mime_type', 'data'])
-2026-02-17 18:14:21,464 - server - INFO - AI stencil generated in 20506.88ms
-[92m18:14:23 - LiteLLM:INFO[0m: utils.py:3427 - 
-LiteLLM completion() model= gemini/gemini-3-pro-image-preview; provider = openai
-2026-02-17 18:14:23,721 - LiteLLM - INFO - 
-LiteLLM completion() model= gemini/gemini-3-pro-image-preview; provider = openai
-[92m18:14:43 - LiteLLM:INFO[0m: utils.py:1307 - Wrapper: Completed Call, calling success_handler
-2026-02-17 18:14:43,636 - LiteLLM - INFO - Wrapper: Completed Call, calling success_handler
-2026-02-17 18:14:43,638 - server - INFO - AI response - text: None..., images count: 1
-2026-02-17 18:14:43,639 - server - INFO - Generated image keys: dict_keys(['mime_type', 'data'])
-2026-02-17 18:14:43,639 - server - INFO - AI stencil generated in 19930.63ms
-INFO:     Will watch for changes in these directories: ['/app/backend']
-INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [92] using WatchFiles
-INFO:     Started server process [129]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-
-==> /var/log/supervisor/backend.out.log <==
-INFO:     10.49.143.194:53374 - "POST /api/ai-stencil HTTP/1.1" 200 OK
-INFO:     10.49.140.13:53954 - "GET /api/stencils/list HTTP/1.1" 200 OK
-INFO:     10.49.139.133:37320 - "GET /api/stencils/997ae9d3-652f-4ba4-a65f-7849ce0f3a30 HTTP/1.1" 200 OK
-INFO:     10.49.140.13:46574 - "POST /api/ai-stencil HTTP/1.1" 200 OK
-INFO:     10.49.139.133:56362 - "POST /api/ai-stencil HTTP/1.1" 200 OK
-INFO:     10.49.140.13:56844 - "POST /api/ai-stencil HTTP/1.1" 200 OK
-INFO:     10.49.140.13:54696 - "GET /api/stencils/list HTTP/1.1" 200 OK
-INFO:     10.49.139.133:39190 - "GET /api/stencils/f0b5d02d-801b-4658-a06a-04bf82b0e44c HTTP/1.1" 200 OK
-INFO:     10.49.139.133:50950 - "GET /api/stencils/list HTTP/1.1" 200 OK
-INFO:     10.49.139.133:50950 - "GET /api/stencils/3ae07f9e-1325-47c6-a3b2-47982c9c0bae HTTP/1.1" 200 OK
-INFO:     10.49.140.13:55770 - "GET /api/stencils/list HTTP/1.1" 200 OK
-INFO:     10.49.139.133:54910 - "GET /api/stencils/3ae07f9e-1325-47c6-a3b2-47982c9c0bae HTTP/1.1" 200 OK
-INFO:     10.49.139.133:54910 - "POST /api/ai-stencil HTTP/1.1" 200 OK
-INFO:     10.49.139.133:58832 - "GET /api/stencils/list HTTP/1.1" 200 OK
-INFO:     10.49.139.133:58832 - "POST /api/ai-stencil HTTP/1.1" 200 OK
-INFO:     10.49.139.133:54910 - "GET /api/stencils/3ae07f9e-1325-47c6-a3b2-47982c9c0bae HTTP/1.1" 200 OK
-INFO:     10.49.139.133:59870 - "GET /api/stencils/3ae07f9e-1325-47c6-a3b2-47982c9c0bae HTTP/1.1" 200 OK
-INFO:     10.49.140.13:40816 - "GET /api/stencils/list HTTP/1.1" 200 OK
-INFO:     10.49.140.13:40802 - "GET /api/stencils/3ae07f9e-1325-47c6-a3b2-47982c9c0bae HTTP/1.1" 200 OK
-INFO:     10.49.140.13:40802 - "POST /api/ai-stencil HTTP/1.1" 200 OK
-
-
-Fetching debug logs for mongodb
-
-tail: cannot open '/var/log/supervisor/mongodb*.log' for reading: No such file or directory
