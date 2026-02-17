@@ -2125,8 +2125,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
   },
   processButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#C9A227',
+    fontSize: 15,
     fontWeight: '700',
   },
   saveButton: {
