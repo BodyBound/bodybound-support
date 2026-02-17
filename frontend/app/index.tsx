@@ -2240,24 +2240,25 @@ const styles = StyleSheet.create({
   },
   versionSelectorTitle: {
     color: '#fff',
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     marginBottom: 4,
   },
   versionSelectorSubtitle: {
     color: '#9CA3AF',
-    fontSize: 13,
-    marginBottom: 16,
+    fontSize: 12,
+    marginBottom: 12,
   },
   versionButtonsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   versionButton: {
     flex: 1,
     backgroundColor: '#2A2A2A',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 6,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'transparent',
@@ -2270,12 +2271,12 @@ const styles = StyleSheet.create({
     opacity: 0.4,
   },
   versionButtonEmoji: {
-    fontSize: 24,
-    marginBottom: 8,
+    fontSize: 20,
+    marginBottom: 4,
   },
   versionButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '700',
   },
   versionButtonTextSelected: {
@@ -2283,8 +2284,9 @@ const styles = StyleSheet.create({
   },
   versionButtonDesc: {
     color: '#6B7280',
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 10,
+    marginTop: 2,
+    textAlign: 'center',
   },
   // Generation Progress Styles
   generationProgressSection: {
