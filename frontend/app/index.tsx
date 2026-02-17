@@ -713,18 +713,24 @@ export default function Index() {
   // Save stencil to device photo gallery using MediaLibrary
   const saveToPhotoGallery = async (imageBase64: string, filename: string = 'stencil'): Promise<boolean> => {
     try {
-      // Request MediaLibrary permissions
-      const { status } = await MediaLibrary.requestPermissionsAsync();
+      console.log('[SaveToGallery] Starting save process...');
       
-      if (status !== 'granted') {
+      // Request MediaLibrary permissions with granular permissions for Android 13+
+      const permissionResult = await MediaLibrary.requestPermissionsAsync();
+      console.log('[SaveToGallery] Permission result:', JSON.stringify(permissionResult));
+      
+      if (permissionResult.status !== 'granted') {
+        console.log('[SaveToGallery] Permission denied');
         Alert.alert(
           'Permission Required',
-          'Please allow access to your photo library to save stencils.',
+          'Please allow access to your photo library to save stencils. Go to Settings > Apps > Body Bound > Permissions > Photos and videos.',
           [{ text: 'OK' }]
         );
         return false;
       }
 
+      console.log('[SaveToGallery] Permission granted, extracting base64...');
+      
       // Extract base64 data
       const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
       
@@ -732,32 +738,52 @@ export default function Index() {
       const tempFilename = `${filename}_${Date.now()}.png`;
       const fileUri = FileSystem.cacheDirectory + tempFilename;
       
+      console.log('[SaveToGallery] Writing to temp file:', fileUri);
+      
       // Write base64 to file
       await FileSystem.writeAsStringAsync(fileUri, base64Data, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
+      console.log('[SaveToGallery] File written, creating asset...');
+
       // Save to photo gallery using MediaLibrary
       const asset = await MediaLibrary.createAssetAsync(fileUri);
+      console.log('[SaveToGallery] Asset created:', asset.id);
       
-      // Optionally create an album for Body Bound stencils
-      const albumName = 'Body Bound Stencils';
-      let album = await MediaLibrary.getAlbumAsync(albumName);
-      
-      if (album === null) {
-        await MediaLibrary.createAlbumAsync(albumName, asset, false);
-      } else {
-        await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+      // Try to create/use album, but don't fail if it doesn't work
+      try {
+        const albumName = 'Body Bound Stencils';
+        let album = await MediaLibrary.getAlbumAsync(albumName);
+        
+        if (album === null) {
+          await MediaLibrary.createAlbumAsync(albumName, asset, false);
+          console.log('[SaveToGallery] Album created');
+        } else {
+          await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+          console.log('[SaveToGallery] Added to existing album');
+        }
+      } catch (albumError) {
+        console.log('[SaveToGallery] Album operation failed (non-critical):', albumError);
+        // Album creation is optional, image is already saved
       }
 
       // Clean up temp file
-      await FileSystem.deleteAsync(fileUri, { idempotent: true });
+      try {
+        await FileSystem.deleteAsync(fileUri, { idempotent: true });
+      } catch (cleanupError) {
+        console.log('[SaveToGallery] Cleanup failed (non-critical):', cleanupError);
+      }
 
-      Alert.alert('Saved!', 'Stencil saved to your photo gallery in "Body Bound Stencils" album.');
+      console.log('[SaveToGallery] SUCCESS!');
+      Alert.alert('Saved!', 'Stencil saved to your photo gallery.');
       return true;
     } catch (error: any) {
-      console.error('Error saving to gallery:', error);
-      Alert.alert('Error', 'Failed to save stencil. Please try again.');
+      console.error('[SaveToGallery] ERROR:', error?.message || error);
+      Alert.alert(
+        'Save Failed', 
+        `Could not save stencil: ${error?.message || 'Unknown error'}. Please check app permissions.`
+      );
       return false;
     }
   };
