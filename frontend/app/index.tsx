@@ -1922,14 +1922,14 @@ const styles = StyleSheet.create({
   holdHintContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    backgroundColor: 'rgba(201, 162, 39, 0.15)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4,
   },
   holdHintText: {
-    color: '#8B5CF6',
+    color: '#C9A227',
     fontSize: 11,
     fontWeight: '500',
   },
@@ -1942,13 +1942,13 @@ const styles = StyleSheet.create({
   updatingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    backgroundColor: 'rgba(201, 162, 39, 0.2)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
   },
   updatingText: {
-    color: '#8B5CF6',
+    color: '#C9A227',
     fontSize: 12,
     fontWeight: '500',
     marginLeft: 6,
@@ -2078,7 +2078,7 @@ const styles = StyleSheet.create({
     padding: 3,
   },
   toggleSwitchActive: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#C9A227',
   },
   toggleKnob: {
     width: 22,
@@ -2327,7 +2327,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#374151',
   },
   progressDotComplete: {
-    backgroundColor: '#8B5CF6',
+    backgroundColor: '#C9A227',
   },
   generationProgressLabel: {
     color: '#9CA3AF',
