@@ -2161,8 +2161,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   saveButtonText: {
-    color: '#8B5CF6',
-    fontSize: 16,
+    color: '#C9A227',
+    fontSize: 15,
     fontWeight: '700',
   },
   bottomSpacer: {
