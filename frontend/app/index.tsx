@@ -1079,23 +1079,6 @@ export default function Index() {
                       {new Date(stencil.created_at).toLocaleDateString()}
                     </Text>
                   </View>
-                </TouchableOpacity>
-                <View style={styles.galleryItemActions}>
-                  <TouchableOpacity
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      exportStencilToDevice(stencil.id);
-                    }}
-                    style={styles.exportButton}
-                    disabled={exportingStencilId === stencil.id}
-                  >
-                    {exportingStencilId === stencil.id ? (
-                      <ActivityIndicator size="small" color="#10B981" />
-                    ) : (
-                      <Text style={styles.exportIcon}>📱</Text>
-                    )}
-                    <Text style={styles.exportButtonText}>Export</Text>
-                  </TouchableOpacity>
                   <TouchableOpacity
                     onPress={(e) => {
                       e.stopPropagation();
@@ -1105,7 +1088,7 @@ export default function Index() {
                   >
                     <Text style={styles.deleteIcon}>🗑️</Text>
                   </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               </View>
             ))}
           </ScrollView>
