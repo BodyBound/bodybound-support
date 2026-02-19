@@ -423,9 +423,24 @@ export default function Index() {
       return;
     }
 
-    // Validate image data before sending
+    // Validate image data before sending - check for proper base64 format
     console.log('[GenerateAI] Original image length:', originalImage.length);
     console.log('[GenerateAI] Image prefix:', originalImage.substring(0, 50));
+    
+    // Validate the base64 data is properly formatted
+    if (!originalImage.startsWith('data:image/')) {
+      console.error('[GenerateAI] Invalid image format - missing data URI prefix');
+      Alert.alert('Invalid Image', 'The selected image format is not valid. Please select a different photo.');
+      return;
+    }
+    
+    // Check that the base64 portion isn't too short (indicating corruption)
+    const base64Part = originalImage.split(',')[1];
+    if (!base64Part || base64Part.length < 1000) {
+      console.error('[GenerateAI] Base64 data appears corrupted or too short:', base64Part?.length);
+      Alert.alert('Image Error', 'The image data appears corrupted. Please select a different photo.');
+      return;
+    }
 
     setIsGeneratingAI(true);
     setIsGeneratingVersions(true);
@@ -441,7 +456,7 @@ export default function Index() {
     try {
       // Generate Light version - Clean lines only, no texture, no black
       setGenerationProgress(1);
-      console.log('[GenerateAI] Starting Light version...');
+      console.log('[GenerateAI] Starting Light version, sending base64 length:', base64Part.length);
       const lightResponse = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
