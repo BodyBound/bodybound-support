@@ -105,6 +105,13 @@ export default function Index() {
   const [cropStartPos, setCropStartPos] = useState({ x: 0, y: 0 });
   const [cropStartBox, setCropStartBox] = useState({ x: 0, y: 0, width: 0, height: 0 });
   
+  // Photo library grid state (Instagram-style selector)
+  const [photoLibrary, setPhotoLibrary] = useState<MediaLibrary.Asset[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const [hasPhotoPermission, setHasPhotoPermission] = useState(false);
+  const [photoLibraryEndCursor, setPhotoLibraryEndCursor] = useState<string | undefined>(undefined);
+  const [hasMorePhotos, setHasMorePhotos] = useState(true);
+  
   // Refs for debouncing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
