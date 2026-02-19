@@ -886,7 +886,7 @@ export default function Index() {
         console.log('[SaveToGallery] Permission denied');
         Alert.alert(
           'Permission Required',
-          'Please allow access to your photo library to save stencils. Go to Settings > Apps > Body Bound > Permissions > Photos and videos.',
+          'Please allow access to your photo library to save stencils. Go to Settings > Body Bound > Photos.',
           [{ text: 'OK' }]
         );
         return false;
@@ -908,29 +908,35 @@ export default function Index() {
       
       console.log('[SaveToGallery] Base64 data length after cleanup:', base64Data.length);
       
-      // Create temp file path
+      // Create temp file path using the new Expo SDK 54 File API
       const tempFilename = `${filename}_${Date.now()}.png`;
       const fileUri = FileSystem.cacheDirectory + tempFilename;
       
       console.log('[SaveToGallery] Writing PNG to temp file:', fileUri);
       
-      // Write base64 PNG data to file - use string 'base64' directly to avoid enum issues
-      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-        encoding: 'base64',
-      });
-
-      // Verify file was written
-      const fileInfo = await FileSystem.getInfoAsync(fileUri);
-      console.log('[SaveToGallery] File info:', JSON.stringify(fileInfo));
+      // Decode base64 to binary and write using new File API (Expo SDK 54+)
+      // Convert base64 string to Uint8Array for binary write
+      const binaryString = atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
       
-      if (!fileInfo.exists) {
+      // Use the new File class from Expo SDK 54
+      const file = new FileSystem.File(fileUri);
+      await file.write(bytes);
+      
+      // Verify file was written using the new API
+      const fileExists = await file.exists();
+      console.log('[SaveToGallery] File exists:', fileExists);
+      
+      if (!fileExists) {
         throw new Error('Failed to write temp file');
       }
 
-      console.log('[SaveToGallery] File written successfully, size:', fileInfo.size, 'bytes');
+      console.log('[SaveToGallery] File written successfully');
 
       // Save directly to photo gallery using MediaLibrary (uses MediaStore API on Android 10+)
-      // Skip ImageManipulator to avoid potential issues - base64 is already PNG
       const asset = await MediaLibrary.createAssetAsync(fileUri);
       console.log('[SaveToGallery] Asset created:', asset.id, 'filename:', asset.filename);
       
@@ -951,9 +957,9 @@ export default function Index() {
         // Album creation is optional, image is already saved to gallery
       }
 
-      // Clean up temp file
+      // Clean up temp file using new API
       try {
-        await FileSystem.deleteAsync(fileUri, { idempotent: true });
+        await file.delete();
       } catch (cleanupError) {
         console.log('[SaveToGallery] Cleanup failed (non-critical):', cleanupError);
       }
