@@ -3539,7 +3539,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  // Share & Review Section Styles
+  // Minimal Share Row Styles (compact)
+  minimalShareRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 16,
+    gap: 8,
+  },
+  minimalShareButton: {
+    padding: 8,
+  },
+  minimalShareIcon: {
+    fontSize: 18,
+  },
+  minimalShareDivider: {
+    color: '#444',
+    fontSize: 14,
+  },
+  minimalShareText: {
+    color: '#666',
+    fontSize: 12,
+    marginLeft: 4,
+  },
+  // Share & Review Section Styles (legacy - keeping for reference)
   shareReviewSection: {
     marginTop: 30,
     backgroundColor: '#1A1510',
