@@ -297,7 +297,11 @@ def main():
     process_success, stencil_image = test_image_processing()
     results['process'] = process_success
     
-    # Test 3: Save Stencil (only if processing worked)
+    # Test 3: AI Stencil Generation
+    ai_success, ai_stencil_image = test_ai_stencil()
+    results['ai_stencil'] = ai_success
+    
+    # Test 4: Save Stencil (only if processing worked)
     if process_success and stencil_image:
         original_image = create_test_image()
         save_success, stencil_id = test_save_stencil(original_image, stencil_image)
@@ -307,11 +311,11 @@ def main():
         results['save'] = False
         stencil_id = None
     
-    # Test 4: Get Stencils
+    # Test 5: Get Stencils
     get_success, stencils_data = test_get_stencils()
     results['get'] = get_success
     
-    # Test 5: Delete Stencil (only if we have an ID)
+    # Test 6: Delete Stencil (only if we have an ID)
     if stencil_id:
         results['delete'] = test_delete_stencil(stencil_id)
     else:
