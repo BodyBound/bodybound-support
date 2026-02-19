@@ -2274,7 +2274,7 @@ const styles = StyleSheet.create({
   },
   previewImage: {
     width: '100%',
-    height: 500,
+    height: 650,
     borderRadius: 12,
     backgroundColor: '#0F0F0F',
   },
