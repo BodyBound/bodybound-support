@@ -1966,6 +1966,163 @@ export default function Index() {
           </View>
         </View>
       </Modal>
+
+      {/* Edit Mode Modal - Overlay + Drawing */}
+      <Modal
+        visible={showEditModal}
+        animationType="slide"
+        transparent={false}
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <SafeAreaView style={styles.editModalContainer}>
+          {/* Header */}
+          <View style={styles.editModalHeader}>
+            <TouchableOpacity onPress={() => setShowEditModal(false)}>
+              <Text style={styles.editModalCloseText}>Cancel</Text>
+            </TouchableOpacity>
+            <Text style={styles.editModalTitle}>Edit Stencil</Text>
+            <TouchableOpacity onPress={saveEditedStencil}>
+              <Text style={styles.editModalSaveText}>Done</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Drawing Canvas Area */}
+          <View 
+            ref={editCanvasRef}
+            style={styles.editCanvasContainer}
+            onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
+            onResponderGrant={handleDrawStart}
+            onResponderMove={handleDrawMove}
+            onResponderRelease={handleDrawEnd}
+          >
+            {/* Original image as background */}
+            {originalImage && (
+              <Image
+                source={{ uri: originalImage }}
+                style={styles.editBackgroundImage}
+                resizeMode="contain"
+              />
+            )}
+            
+            {/* Stencil overlay with adjustable opacity */}
+            {stencilImage && (
+              <Image
+                source={{ uri: stencilImage }}
+                style={[styles.editStencilOverlay, { opacity: editOpacity }]}
+                resizeMode="contain"
+              />
+            )}
+            
+            {/* SVG Drawing Layer */}
+            <Svg style={styles.editDrawingLayer}>
+              {/* Existing paths */}
+              {drawingPaths.map((path, index) => {
+                const isEraserPath = path.startsWith('ERASER:');
+                const actualPath = isEraserPath ? path.replace('ERASER:', '') : path;
+                return (
+                  <Path
+                    key={index}
+                    d={actualPath}
+                    stroke={isEraserPath ? '#FFFFFF' : '#000000'}
+                    strokeWidth={isEraserPath ? brushSize * 3 : brushSize}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                );
+              })}
+              {/* Current drawing path */}
+              {currentPath && (
+                <Path
+                  d={currentPath}
+                  stroke={isEraser ? '#FFFFFF' : '#000000'}
+                  strokeWidth={isEraser ? brushSize * 3 : brushSize}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              )}
+            </Svg>
+          </View>
+
+          {/* Controls */}
+          <View style={styles.editControlsContainer}>
+            {/* Opacity Slider */}
+            <View style={styles.editSliderRow}>
+              <Text style={styles.editSliderLabel}>Stencil Opacity</Text>
+              <Slider
+                style={styles.editSlider}
+                minimumValue={0}
+                maximumValue={1}
+                value={editOpacity}
+                onValueChange={setEditOpacity}
+                minimumTrackTintColor="#C9A227"
+                maximumTrackTintColor="#333"
+                thumbTintColor="#C9A227"
+              />
+              <Text style={styles.editSliderValue}>{Math.round(editOpacity * 100)}%</Text>
+            </View>
+
+            {/* Brush Size Slider */}
+            <View style={styles.editSliderRow}>
+              <Text style={styles.editSliderLabel}>Brush Size</Text>
+              <Slider
+                style={styles.editSlider}
+                minimumValue={1}
+                maximumValue={15}
+                value={brushSize}
+                onValueChange={setBrushSize}
+                minimumTrackTintColor="#C9A227"
+                maximumTrackTintColor="#333"
+                thumbTintColor="#C9A227"
+              />
+              <Text style={styles.editSliderValue}>{Math.round(brushSize)}px</Text>
+            </View>
+
+            {/* Tool Buttons */}
+            <View style={styles.editToolsRow}>
+              <TouchableOpacity 
+                style={[styles.editToolButton, !isEraser && styles.editToolButtonActive]}
+                onPress={() => setIsEraser(false)}
+              >
+                <Text style={styles.editToolIcon}>✏️</Text>
+                <Text style={[styles.editToolText, !isEraser && styles.editToolTextActive]}>Draw</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.editToolButton, isEraser && styles.editToolButtonActive]}
+                onPress={() => setIsEraser(true)}
+              >
+                <Text style={styles.editToolIcon}>🧹</Text>
+                <Text style={[styles.editToolText, isEraser && styles.editToolTextActive]}>Eraser</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.editToolButton}
+                onPress={undoLastStroke}
+              >
+                <Text style={styles.editToolIcon}>↩️</Text>
+                <Text style={styles.editToolText}>Undo</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.editToolButton}
+                onPress={clearAllDrawings}
+              >
+                <Text style={styles.editToolIcon}>🗑️</Text>
+                <Text style={styles.editToolText}>Clear</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Save to Gallery Button */}
+            <TouchableOpacity style={styles.editSaveToGalleryButton} onPress={saveEditedToGallery}>
+              <Text style={styles.editSaveToGalleryIcon}>📤</Text>
+              <Text style={styles.editSaveToGalleryText}>Save to Photos</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
