@@ -3021,4 +3021,106 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontFamily: 'monospace',
   },
+  // Photo Library Grid Styles
+  photoLibraryContainer: {
+    flex: 1,
+    minHeight: 400,
+  },
+  photoLibraryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  photoLibraryTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#C9A227',
+  },
+  cameraButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1A1510',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C9A227',
+    gap: 6,
+  },
+  cameraButtonIcon: {
+    fontSize: 16,
+  },
+  cameraButtonText: {
+    color: '#C9A227',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  loadingPhotosContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 300,
+  },
+  loadingPhotosText: {
+    color: '#9CA3AF',
+    marginTop: 12,
+    fontSize: 14,
+  },
+  noPhotosContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 300,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+  },
+  noPhotosIcon: {
+    fontSize: 40,
+    marginBottom: 12,
+  },
+  noPhotosText: {
+    color: '#9CA3AF',
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  grantAccessButton: {
+    backgroundColor: '#C9A227',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  grantAccessButtonText: {
+    color: '#0A0A0A',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  photoGrid: {
+    flex: 1,
+  },
+  photoGridInner: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+  },
+  photoGridItem: {
+    width: (SCREEN_WIDTH - 40 - 8) / 3,
+    aspectRatio: 1,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  photoGridImage: {
+    width: '100%',
+    height: '100%',
+  },
+  loadMoreButton: {
+    alignItems: 'center',
+    paddingVertical: 16,
+    marginTop: 8,
+  },
+  loadMoreText: {
+    color: '#C9A227',
+    fontSize: 14,
+    fontWeight: '500',
+  },
 });
