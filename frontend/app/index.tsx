@@ -116,6 +116,16 @@ export default function Index() {
   const [photoLibraryEndCursor, setPhotoLibraryEndCursor] = useState<string | undefined>(undefined);
   const [hasMorePhotos, setHasMorePhotos] = useState(true);
   
+  // Edit Mode state - Overlay + Apple Pencil Drawing
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editOpacity, setEditOpacity] = useState(0.5); // Stencil opacity over original
+  const [drawingPaths, setDrawingPaths] = useState<string[]>([]); // SVG path strings
+  const [currentPath, setCurrentPath] = useState<string>(''); // Current drawing path
+  const [brushSize, setBrushSize] = useState(3); // Brush size in pixels
+  const [isEraser, setIsEraser] = useState(false); // Eraser mode
+  const [editedStencil, setEditedStencil] = useState<string | null>(null); // Saved edited version
+  const editCanvasRef = useRef<View>(null); // Ref for capturing the canvas
+  
   // Refs for debouncing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
