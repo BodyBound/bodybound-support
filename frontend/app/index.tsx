@@ -1831,8 +1831,8 @@ const styles = StyleSheet.create({
   },
   sourceButtons: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 20,
+    gap: 10,
+    marginTop: 12,
   },
   sourceButton: {
     flex: 1,
@@ -1840,19 +1840,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#1A1510',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 6,
     borderWidth: 1,
     borderColor: '#3D3428',
   },
   sourceButtonText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
   },
   buttonIcon: {
-    fontSize: 20,
+    fontSize: 16,
   },
   toolIcon: {
     fontSize: 18,
