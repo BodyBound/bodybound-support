@@ -1011,6 +1011,43 @@ export default function Index() {
     await saveToPhotoGallery(stencilImage, 'body_bound_stencil');
   };
 
+  // Request App Store review
+  const requestAppReview = async () => {
+    try {
+      const isAvailable = await StoreReview.isAvailableAsync();
+      if (isAvailable) {
+        await StoreReview.requestReview();
+      } else {
+        // Fallback: open App Store directly
+        // Replace with your actual App Store URL once published
+        Alert.alert(
+          'Thank You! 🙏',
+          'We appreciate your support! The review prompt will be available after you\'ve used the app a bit more.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('Error requesting review:', error);
+    }
+  };
+
+  // Share app with friends
+  const shareAppWithFriends = async () => {
+    try {
+      const result = await RNShare.share({
+        message: 'Check out Body Bound Stencil Generator! Transform photos into tattoo stencils as good as handmade. 🎨✨',
+        // Add your App Store URL here once published:
+        // url: 'https://apps.apple.com/app/body-bound-stencil-generator/id6741930631',
+      });
+      
+      if (result.action === RNShare.sharedAction) {
+        console.log('App shared successfully');
+      }
+    } catch (error) {
+      console.error('Error sharing app:', error);
+    }
+  };
+
   const loadGallery = async () => {
     setLoadingGallery(true);
     try {
