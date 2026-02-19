@@ -1096,6 +1096,113 @@ export default function Index() {
     }
   };
 
+  // ============ EDIT MODE FUNCTIONS ============
+  
+  // Open edit modal and reset drawing state
+  const openEditMode = () => {
+    setDrawingPaths([]);
+    setCurrentPath('');
+    setEditOpacity(0.5);
+    setBrushSize(3);
+    setIsEraser(false);
+    setShowEditModal(true);
+  };
+
+  // Handle touch start for drawing
+  const handleDrawStart = (event: GestureResponderEvent) => {
+    const { locationX, locationY } = event.nativeEvent;
+    setCurrentPath(`M${locationX},${locationY}`);
+  };
+
+  // Handle touch move for drawing
+  const handleDrawMove = (event: GestureResponderEvent) => {
+    const { locationX, locationY } = event.nativeEvent;
+    if (currentPath) {
+      setCurrentPath(prev => `${prev} L${locationX},${locationY}`);
+    }
+  };
+
+  // Handle touch end for drawing
+  const handleDrawEnd = () => {
+    if (currentPath) {
+      if (isEraser) {
+        // For eraser, we'll mark the path with a special prefix
+        setDrawingPaths(prev => [...prev, `ERASER:${currentPath}`]);
+      } else {
+        setDrawingPaths(prev => [...prev, currentPath]);
+      }
+      setCurrentPath('');
+    }
+  };
+
+  // Undo last drawing stroke
+  const undoLastStroke = () => {
+    setDrawingPaths(prev => prev.slice(0, -1));
+  };
+
+  // Clear all drawings
+  const clearAllDrawings = () => {
+    Alert.alert(
+      'Clear All Drawings',
+      'Are you sure you want to remove all your drawings?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear', style: 'destructive', onPress: () => setDrawingPaths([]) }
+      ]
+    );
+  };
+
+  // Save the edited stencil
+  const saveEditedStencil = async () => {
+    if (!editCanvasRef.current) {
+      Alert.alert('Error', 'Could not capture the edited image.');
+      return;
+    }
+
+    try {
+      // Capture the canvas as an image
+      const uri = await captureRef(editCanvasRef, {
+        format: 'png',
+        quality: 1,
+        result: 'base64',
+      });
+      
+      const editedImage = `data:image/png;base64,${uri}`;
+      setEditedStencil(editedImage);
+      setStencilImage(editedImage);
+      setShowEditModal(false);
+      
+      Alert.alert('Success', 'Your edited stencil has been saved!');
+    } catch (error: any) {
+      console.error('Error saving edited stencil:', error);
+      Alert.alert('Error', 'Failed to save the edited stencil. Please try again.');
+    }
+  };
+
+  // Save edited stencil to gallery
+  const saveEditedToGallery = async () => {
+    if (!editCanvasRef.current) {
+      Alert.alert('Error', 'Could not capture the edited image.');
+      return;
+    }
+
+    try {
+      // Capture the canvas as an image
+      const uri = await captureRef(editCanvasRef, {
+        format: 'png',
+        quality: 1,
+        result: 'base64',
+      });
+      
+      await saveToPhotoGallery(`data:image/png;base64,${uri}`, 'body_bound_edited_stencil');
+    } catch (error: any) {
+      console.error('Error saving to gallery:', error);
+      Alert.alert('Error', 'Failed to save to gallery. Please try again.');
+    }
+  };
+
+  // ============ END EDIT MODE FUNCTIONS ============
+
   const loadGallery = async () => {
     setLoadingGallery(true);
     try {
