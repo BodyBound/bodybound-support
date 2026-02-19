@@ -878,7 +878,7 @@ export default function Index() {
       
       console.log('[SaveToGallery] Image data length:', imageBase64.length);
       
-      // Request MediaLibrary permissions (uses MediaStore API internally for Android 10+)
+      // Request MediaLibrary permissions
       const permissionResult = await MediaLibrary.requestPermissionsAsync();
       console.log('[SaveToGallery] Permission result:', JSON.stringify(permissionResult));
       
@@ -894,50 +894,21 @@ export default function Index() {
 
       console.log('[SaveToGallery] Permission granted, processing image...');
       
-      // Ensure we have clean base64 data (remove data URI prefix if present)
-      let base64Data = imageBase64;
-      if (imageBase64.includes(',')) {
-        base64Data = imageBase64.split(',')[1];
-      }
-      // Also handle if it starts with data: but no comma
-      if (base64Data.startsWith('data:')) {
-        console.log('[SaveToGallery] WARNING: Malformed base64 data URI');
-        Alert.alert('Error', 'Image data format error.');
-        return false;
-      }
+      // Use ImageManipulator to convert base64 to a file URI
+      // This is the most reliable method for Expo SDK 54
+      const manipulatedImage = await ImageManipulator.manipulateAsync(
+        imageBase64,
+        [], // No transformations needed
+        { 
+          format: ImageManipulator.SaveFormat.PNG,
+          compress: 1, // Full quality for stencils
+        }
+      );
       
-      console.log('[SaveToGallery] Base64 data length after cleanup:', base64Data.length);
-      
-      // Create temp file path using the new Expo SDK 54 File API
-      const tempFilename = `${filename}_${Date.now()}.png`;
-      const fileUri = FileSystem.cacheDirectory + tempFilename;
-      
-      console.log('[SaveToGallery] Writing PNG to temp file:', fileUri);
-      
-      // Decode base64 to binary and write using new File API (Expo SDK 54+)
-      // Convert base64 string to Uint8Array for binary write
-      const binaryString = atob(base64Data);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      
-      // Use the new File class from Expo SDK 54
-      const file = new FileSystem.File(fileUri);
-      await file.write(bytes);
-      
-      // Verify file was written using the new API
-      const fileExists = await file.exists();
-      console.log('[SaveToGallery] File exists:', fileExists);
-      
-      if (!fileExists) {
-        throw new Error('Failed to write temp file');
-      }
+      console.log('[SaveToGallery] Image manipulated, URI:', manipulatedImage.uri);
 
-      console.log('[SaveToGallery] File written successfully');
-
-      // Save directly to photo gallery using MediaLibrary (uses MediaStore API on Android 10+)
-      const asset = await MediaLibrary.createAssetAsync(fileUri);
+      // Save directly to photo gallery using MediaLibrary
+      const asset = await MediaLibrary.createAssetAsync(manipulatedImage.uri);
       console.log('[SaveToGallery] Asset created:', asset.id, 'filename:', asset.filename);
       
       // Try to create/use album, but don't fail if it doesn't work
@@ -955,13 +926,6 @@ export default function Index() {
       } catch (albumError) {
         console.log('[SaveToGallery] Album operation failed (non-critical):', albumError);
         // Album creation is optional, image is already saved to gallery
-      }
-
-      // Clean up temp file using new API
-      try {
-        await file.delete();
-      } catch (cleanupError) {
-        console.log('[SaveToGallery] Cleanup failed (non-critical):', cleanupError);
       }
 
       console.log('[SaveToGallery] SUCCESS!');
