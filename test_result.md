@@ -135,6 +135,21 @@ backend:
         agent: "testing"
         comment: "Tested POST /api/process with test image and settings. Successfully processes images to stencils using OpenCV Canny edge detection. Processing time ~1.77ms. Returns valid base64 stencil image. Error handling works for invalid base64 data."
 
+  - task: "AI stencil generation endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "AI-powered stencil generation using Emergent LLM API with Gemini model"
+      - working: true
+        agent: "testing"
+        comment: "Tested POST /api/ai-stencil with various parameter combinations. Successfully generates AI stencils with processing time ~15s. Supports different shading_detail (0-100), solid_fill (0-100), and line_color options (black, blue, purple). Properly validates input parameters and rejects invalid base64 data. AI API key is configured and working correctly."
+
   - task: "Save stencil endpoint"
     implemented: true
     working: true
