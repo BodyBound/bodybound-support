@@ -1613,6 +1613,10 @@ export default function Index() {
                       <Text style={styles.exportIconText}>🔍</Text>
                       <Text style={styles.exportButtonText}>Full View</Text>
                     </TouchableOpacity>
+                    <TouchableOpacity style={styles.exportButton} onPress={openEditMode}>
+                      <Text style={[styles.exportIconText, { color: '#10B981' }]}>✏️</Text>
+                      <Text style={styles.exportButtonText}>Edit</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity style={styles.exportButton} onPress={printStencil}>
                       <Text style={[styles.exportIconText, { color: '#3B82F6' }]}>🖨️</Text>
                       <Text style={styles.exportButtonText}>Print</Text>
