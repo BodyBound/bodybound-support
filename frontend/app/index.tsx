@@ -26,7 +26,9 @@ import * as FileSystem from 'expo-file-system';
 import * as StoreReview from 'expo-store-review';
 import { Share as RNShare } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { Ionicons } from '@expo/vector-icons'; // Keep import for potential future use
+import { Ionicons } from '@expo/vector-icons';
+import Svg, { Path } from 'react-native-svg';
+import { captureRef } from 'react-native-view-shot';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
