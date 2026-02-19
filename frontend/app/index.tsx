@@ -1743,16 +1743,18 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   previewSection: {
-    marginTop: 20,
-    minHeight: 200,
+    marginTop: 12,
+    flex: 1,
+    minHeight: 300,
   },
   placeholderContainer: {
-    height: 200,
+    flex: 1,
+    minHeight: 350,
     backgroundColor: '#1A1A1A',
-    borderRadius: 16,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -1765,12 +1767,14 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   imagesContainer: {
-    gap: 16,
+    flex: 1,
+    gap: 12,
   },
   imageWrapper: {
+    flex: 1,
     backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: 12,
+    padding: 10,
   },
   imageLabelRow: {
     flexDirection: 'row',
