@@ -547,7 +547,7 @@ async def generate_ai_stencil(request: AIStencilRequest):
         
         # Create chat instance with Gemini image model
         chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY, 
+            api_key=AI_API_KEY, 
             session_id=f"stencil-{uuid.uuid4()}", 
             system_message="You are an expert tattoo stencil artist. You create clean, professional tattoo stencils from reference images."
         )
