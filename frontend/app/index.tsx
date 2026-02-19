@@ -1619,140 +1619,114 @@ export default function Index() {
           )}
         </View>
 
-        {/* Edit Tools - Crop */}
+        {/* Compact Tools Row - Crop + Generate side by side */}
         {originalImage && (
-          <View style={styles.editToolsSection}>
-            <Text style={styles.editToolsTitle}>Edit Tools</Text>
-            <View style={styles.editToolsRow}>
-              <TouchableOpacity 
-                style={styles.editToolButton} 
-                onPress={openCropModal}
+          <View style={styles.compactToolsContainer}>
+            {/* Crop Button - Compact */}
+            <TouchableOpacity 
+              style={styles.compactCropButton} 
+              onPress={openCropModal}
+            >
+              <Text style={styles.compactToolIcon}>✂️</Text>
+              <Text style={styles.compactToolText}>Crop</Text>
+            </TouchableOpacity>
+
+            {/* Generate Button - Takes most space */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.compactGenerateButton,
+                isGeneratingAI && styles.buttonDisabled,
+                pressed && !isGeneratingAI && styles.buttonPressed
+              ]}
+              onPress={generateAIStencil}
+              disabled={isGeneratingAI}
+            >
+              {isGeneratingAI ? (
+                <>
+                  <ActivityIndicator size="small" color="#0A0A0A" />
+                  <Text style={styles.compactGenerateText}>Creating...</Text>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.compactGenerateIcon}>✨</Text>
+                  <Text style={styles.compactGenerateText}>Generate Stencil</Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+        )}
+
+        {/* Compact Version Selector - Only shows after generation */}
+        {originalImage && (stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
+          <View style={styles.compactVersionSection}>
+            <View style={styles.compactVersionRow}>
+              <TouchableOpacity
+                style={[
+                  styles.compactVersionButton,
+                  selectedVersion === 'light' && styles.compactVersionSelected,
+                  !stencilVersions.light && styles.compactVersionDisabled
+                ]}
+                onPress={() => stencilVersions.light && selectVersion('light')}
+                disabled={!stencilVersions.light}
               >
-                <Text style={styles.toolIcon}>✂️</Text>
-                <Text style={styles.editToolButtonText}>Crop Image</Text>
+                <Text style={styles.compactVersionEmoji}>✏️</Text>
+                <Text style={[
+                  styles.compactVersionText,
+                  selectedVersion === 'light' && styles.compactVersionTextSelected
+                ]}>Light</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.compactVersionButton,
+                  selectedVersion === 'medium' && styles.compactVersionSelected,
+                  !stencilVersions.medium && styles.compactVersionDisabled
+                ]}
+                onPress={() => stencilVersions.medium && selectVersion('medium')}
+                disabled={!stencilVersions.medium}
+              >
+                <Text style={styles.compactVersionEmoji}>🖊️</Text>
+                <Text style={[
+                  styles.compactVersionText,
+                  selectedVersion === 'medium' && styles.compactVersionTextSelected
+                ]}>Medium</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.compactVersionButton,
+                  selectedVersion === 'heavy' && styles.compactVersionSelected,
+                  !stencilVersions.heavy && styles.compactVersionDisabled
+                ]}
+                onPress={() => stencilVersions.heavy && selectVersion('heavy')}
+                disabled={!stencilVersions.heavy}
+              >
+                <Text style={styles.compactVersionEmoji}>🖋️</Text>
+                <Text style={[
+                  styles.compactVersionText,
+                  selectedVersion === 'heavy' && styles.compactVersionTextSelected
+                ]}>Heavy</Text>
               </TouchableOpacity>
             </View>
           </View>
         )}
 
-        {/* Generation Mode Selection and AI Options */}
-        {originalImage && (
-          <View style={styles.modeSection}>
-            <Text style={styles.modeSectionTitle}>Handmade Stencil</Text>
-            
-            {/* Version Selector - Show after generating 3 versions */}
-            {(stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
-              <View style={styles.versionSelectorSection}>
-                <Text style={styles.versionSelectorTitle}>🎨 Choose Your Style</Text>
-                <Text style={styles.versionSelectorSubtitle}>Tap to compare versions</Text>
-                
-                <View style={styles.versionButtonsRow}>
-                  <TouchableOpacity
-                    style={[
-                      styles.versionButton,
-                      selectedVersion === 'light' && styles.versionButtonSelected,
-                      !stencilVersions.light && styles.versionButtonDisabled
-                    ]}
-                    onPress={() => stencilVersions.light && selectVersion('light')}
-                    disabled={!stencilVersions.light}
-                  >
-                    <Text style={styles.versionButtonEmoji}>✏️</Text>
-                    <Text style={[
-                      styles.versionButtonText,
-                      selectedVersion === 'light' && styles.versionButtonTextSelected
-                    ]}>Light</Text>
-                    <Text style={styles.versionButtonDesc}>Clean lines only</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[
-                      styles.versionButton,
-                      selectedVersion === 'medium' && styles.versionButtonSelected,
-                      !stencilVersions.medium && styles.versionButtonDisabled
-                    ]}
-                    onPress={() => stencilVersions.medium && selectVersion('medium')}
-                    disabled={!stencilVersions.medium}
-                  >
-                    <Text style={styles.versionButtonEmoji}>🖊️</Text>
-                    <Text style={[
-                      styles.versionButtonText,
-                      selectedVersion === 'medium' && styles.versionButtonTextSelected
-                    ]}>Medium</Text>
-                    <Text style={styles.versionButtonDesc}>Lines + texture</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[
-                      styles.versionButton,
-                      selectedVersion === 'heavy' && styles.versionButtonSelected,
-                      !stencilVersions.heavy && styles.versionButtonDisabled
-                    ]}
-                    onPress={() => stencilVersions.heavy && selectVersion('heavy')}
-                    disabled={!stencilVersions.heavy}
-                  >
-                    <Text style={styles.versionButtonEmoji}>🖋️</Text>
-                    <Text style={[
-                      styles.versionButtonText,
-                      selectedVersion === 'heavy' && styles.versionButtonTextSelected
-                    ]}>Heavy</Text>
-                    <Text style={styles.versionButtonDesc}>Texture + black</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-
-            {/* Generation Progress Indicator */}
-            {isGeneratingVersions && (
-              <View style={styles.generationProgressSection}>
-                <Text style={styles.generationProgressTitle}>
-                  Generating {generationProgress}/3 versions...
-                </Text>
-                <View style={styles.progressDotsRow}>
-                  <View style={[styles.progressDot, generationProgress >= 1 && styles.progressDotComplete]} />
-                  <View style={[styles.progressDot, generationProgress >= 2 && styles.progressDotComplete]} />
-                  <View style={[styles.progressDot, generationProgress >= 3 && styles.progressDotComplete]} />
-                </View>
-                <Text style={styles.generationProgressLabel}>
-                  {generationProgress === 1 ? 'Light version...' : 
-                   generationProgress === 2 ? 'Medium version...' : 
-                   generationProgress === 3 ? 'Heavy version...' : 'Starting...'}
-                </Text>
-              </View>
-            )}
+        {/* Generation Progress - Compact */}
+        {isGeneratingVersions && (
+          <View style={styles.compactProgressSection}>
+            <Text style={styles.compactProgressText}>
+              Generating {generationProgress}/3: {generationProgress === 1 ? 'Light' : generationProgress === 2 ? 'Medium' : generationProgress === 3 ? 'Heavy' : '...'}
+            </Text>
+            <View style={styles.compactProgressDots}>
+              <View style={[styles.compactDot, generationProgress >= 1 && styles.compactDotComplete]} />
+              <View style={[styles.compactDot, generationProgress >= 2 && styles.compactDotComplete]} />
+              <View style={[styles.compactDot, generationProgress >= 3 && styles.compactDotComplete]} />
+            </View>
           </View>
         )}
 
-        {/* Action Buttons */}
-        {originalImage && (
-          <View style={styles.actionButtonsContainer}>
-            {/* Generate Button - Always visible when image is selected */}
-            <View style={styles.generateButtonRow}>
-              <Pressable
-                style={({ pressed }) => [
-                  styles.aiButton,
-                  isGeneratingAI && styles.buttonDisabled,
-                  pressed && !isGeneratingAI && styles.buttonPressed
-                ]}
-                onPress={generateAIStencil}
-                disabled={isGeneratingAI}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-              >
-                {isGeneratingAI ? (
-                  <>
-                    <ActivityIndicator size="small" color="#fff" />
-                    <Text style={styles.aiButtonText}>Creating Stencil...</Text>
-                  </>
-                ) : (
-                  <>
-                    <Text style={styles.generateIcon}>✨</Text>
-                    <Text style={styles.aiButtonText}>Generate Stencil</Text>
-                  </>
-                )}
-              </Pressable>
-            </View>
-
-            {/* Save Button - Only visible when stencil exists */}
-            {stencilImage && (
+        {/* Save Button - Only visible when stencil exists */}
+        {originalImage && stencilImage && (
               <View style={styles.saveButtonsRow}>
                 <TouchableOpacity
                   style={styles.saveButton}
