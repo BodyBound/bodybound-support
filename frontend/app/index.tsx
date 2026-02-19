@@ -2735,7 +2735,114 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  // Edit Tools Styles
+  // NEW COMPACT UI STYLES
+  compactToolsContainer: {
+    flexDirection: 'row',
+    marginTop: 12,
+    gap: 10,
+    alignItems: 'center',
+  },
+  compactCropButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1A1A1A',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: '#333',
+    gap: 6,
+  },
+  compactToolIcon: {
+    fontSize: 16,
+  },
+  compactToolText: {
+    color: '#9CA3AF',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  compactGenerateButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#C9A227',
+    paddingVertical: 14,
+    borderRadius: 25,
+    gap: 8,
+  },
+  compactGenerateIcon: {
+    fontSize: 18,
+  },
+  compactGenerateText: {
+    color: '#0A0A0A',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  compactVersionSection: {
+    marginTop: 10,
+  },
+  compactVersionRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  compactVersionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#1A1A1A',
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#333',
+    gap: 4,
+  },
+  compactVersionSelected: {
+    backgroundColor: '#C9A227',
+    borderColor: '#C9A227',
+  },
+  compactVersionDisabled: {
+    opacity: 0.4,
+  },
+  compactVersionEmoji: {
+    fontSize: 14,
+  },
+  compactVersionText: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  compactVersionTextSelected: {
+    color: '#0A0A0A',
+  },
+  compactProgressSection: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  compactProgressText: {
+    color: '#C9A227',
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  compactProgressDots: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  compactDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#333',
+  },
+  compactDotComplete: {
+    backgroundColor: '#C9A227',
+  },
+  // Edit Tools Styles (legacy - keeping for reference)
   editToolsSection: {
     marginTop: 16,
     backgroundColor: '#1A1A1A',
