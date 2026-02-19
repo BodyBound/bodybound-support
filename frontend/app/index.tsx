@@ -1733,27 +1733,21 @@ export default function Index() {
               onPress={() => setShowSaveModal(true)}
             >
               <Text style={styles.saveIcon}>💾</Text>
-              <Text style={styles.saveButtonText}>Save Stencil</Text>
+              <Text style={styles.saveButtonText}>Save</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Share & Review Section */}
-        <View style={styles.shareReviewSection}>
-          <Text style={styles.shareReviewTitle}>Enjoying Body Bound? ✨</Text>
-          <Text style={styles.shareReviewSubtitle}>Help us grow the tattoo artist community!</Text>
-          
-          <View style={styles.shareReviewButtons}>
-            <TouchableOpacity style={styles.reviewButton} onPress={requestAppReview}>
-              <Text style={styles.reviewButtonIcon}>⭐</Text>
-              <Text style={styles.reviewButtonText}>Rate Us</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.shareAppButton} onPress={shareAppWithFriends}>
-              <Text style={styles.shareAppButtonIcon}>🔗</Text>
-              <Text style={styles.shareAppButtonText}>Share App</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Minimal Share Section - Just icons */}
+        <View style={styles.minimalShareRow}>
+          <TouchableOpacity style={styles.minimalShareButton} onPress={requestAppReview}>
+            <Text style={styles.minimalShareIcon}>⭐</Text>
+          </TouchableOpacity>
+          <Text style={styles.minimalShareDivider}>|</Text>
+          <TouchableOpacity style={styles.minimalShareButton} onPress={shareAppWithFriends}>
+            <Text style={styles.minimalShareIcon}>🔗</Text>
+          </TouchableOpacity>
+          <Text style={styles.minimalShareText}>Rate & Share</Text>
         </View>
 
         <View style={styles.bottomSpacer} />
