@@ -1310,10 +1310,69 @@ export default function Index() {
         {/* Image Preview Area - Stencil overlays Original with hold-to-compare */}
         <View style={styles.previewSection}>
           {!originalImage ? (
-            <View style={styles.placeholderContainer}>
-              <Text style={styles.placeholderIcon}>🖼️</Text>
-              <Text style={styles.placeholderText}>Select or capture a photo</Text>
-            </View>
+            <>
+              {/* Photo Library Grid - Instagram style */}
+              <View style={styles.photoLibraryContainer}>
+                <View style={styles.photoLibraryHeader}>
+                  <Text style={styles.photoLibraryTitle}>Select a Photo</Text>
+                  <TouchableOpacity style={styles.cameraButton} onPress={takePhoto}>
+                    <Text style={styles.cameraButtonIcon}>📷</Text>
+                    <Text style={styles.cameraButtonText}>Camera</Text>
+                  </TouchableOpacity>
+                </View>
+                
+                {loadingPhotos && photoLibrary.length === 0 ? (
+                  <View style={styles.loadingPhotosContainer}>
+                    <ActivityIndicator size="large" color="#C9A227" />
+                    <Text style={styles.loadingPhotosText}>Loading photos...</Text>
+                  </View>
+                ) : !hasPhotoPermission && photoLibrary.length === 0 ? (
+                  <View style={styles.noPhotosContainer}>
+                    <Text style={styles.noPhotosIcon}>🔒</Text>
+                    <Text style={styles.noPhotosText}>Photo access required</Text>
+                    <TouchableOpacity style={styles.grantAccessButton} onPress={loadPhotoLibrary}>
+                      <Text style={styles.grantAccessButtonText}>Grant Access</Text>
+                    </TouchableOpacity>
+                  </View>
+                ) : (
+                  <ScrollView 
+                    horizontal={false}
+                    showsVerticalScrollIndicator={false}
+                    style={styles.photoGrid}
+                    onScrollEndDrag={() => {
+                      if (hasMorePhotos && !loadingPhotos) {
+                        loadPhotoLibrary(true);
+                      }
+                    }}
+                  >
+                    <View style={styles.photoGridInner}>
+                      {photoLibrary.map((asset, index) => (
+                        <TouchableOpacity
+                          key={asset.id}
+                          style={styles.photoGridItem}
+                          onPress={() => selectPhotoFromLibrary(asset)}
+                          activeOpacity={0.7}
+                        >
+                          <Image
+                            source={{ uri: asset.uri }}
+                            style={styles.photoGridImage}
+                            resizeMode="cover"
+                          />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    {loadingPhotos && photoLibrary.length > 0 && (
+                      <ActivityIndicator size="small" color="#C9A227" style={{ marginVertical: 10 }} />
+                    )}
+                    {hasMorePhotos && !loadingPhotos && (
+                      <TouchableOpacity style={styles.loadMoreButton} onPress={() => loadPhotoLibrary(true)}>
+                        <Text style={styles.loadMoreText}>Load More Photos</Text>
+                      </TouchableOpacity>
+                    )}
+                  </ScrollView>
+                )}
+              </View>
+            </>
           ) : (
             <View style={styles.imagesContainer}>
               {/* Main Image Display - Shows Stencil, hold to see Original */}
