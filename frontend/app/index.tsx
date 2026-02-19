@@ -323,6 +323,10 @@ export default function Index() {
       return;
     }
 
+    // Validate image data before sending
+    console.log('[GenerateAI] Original image length:', originalImage.length);
+    console.log('[GenerateAI] Image prefix:', originalImage.substring(0, 50));
+
     setIsGeneratingAI(true);
     setIsGeneratingVersions(true);
     setGenerationProgress(0);
@@ -337,6 +341,7 @@ export default function Index() {
     try {
       // Generate Light version - Clean lines only, no texture, no black
       setGenerationProgress(1);
+      console.log('[GenerateAI] Starting Light version...');
       const lightResponse = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -348,14 +353,20 @@ export default function Index() {
           solid_fill: 0,
         }),
       });
+      console.log('[GenerateAI] Light response status:', lightResponse.status);
       if (lightResponse.ok) {
         const lightData = await lightResponse.json();
         versions.light = lightData.stencil_base64;
         setStencilVersions({ ...versions });
+        console.log('[GenerateAI] Light version received, length:', lightData.stencil_base64?.length);
+      } else {
+        const errorText = await lightResponse.text();
+        console.log('[GenerateAI] Light version error:', errorText);
       }
 
       // Generate Medium version - Clean lines + texture/contour, NO black fill
       setGenerationProgress(2);
+      console.log('[GenerateAI] Starting Medium version...');
       const mediumResponse = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -367,14 +378,20 @@ export default function Index() {
           solid_fill: 0,
         }),
       });
+      console.log('[GenerateAI] Medium response status:', mediumResponse.status);
       if (mediumResponse.ok) {
         const mediumData = await mediumResponse.json();
         versions.medium = mediumData.stencil_base64;
         setStencilVersions({ ...versions });
+        console.log('[GenerateAI] Medium version received, length:', mediumData.stencil_base64?.length);
+      } else {
+        const errorText = await mediumResponse.text();
+        console.log('[GenerateAI] Medium version error:', errorText);
       }
 
       // Generate Heavy version - Texture AND solid black (moderate)
       setGenerationProgress(3);
+      console.log('[GenerateAI] Starting Heavy version...');
       const heavyResponse = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -386,10 +403,15 @@ export default function Index() {
           solid_fill: 30,
         }),
       });
+      console.log('[GenerateAI] Heavy response status:', heavyResponse.status);
       if (heavyResponse.ok) {
         const heavyData = await heavyResponse.json();
         versions.heavy = heavyData.stencil_base64;
         setStencilVersions({ ...versions });
+        console.log('[GenerateAI] Heavy version received, length:', heavyData.stencil_base64?.length);
+      } else {
+        const errorText = await heavyResponse.text();
+        console.log('[GenerateAI] Heavy version error:', errorText);
       }
 
       // Set the medium version as default selected
@@ -402,6 +424,11 @@ export default function Index() {
       } else if (versions.heavy) {
         setStencilImage(versions.heavy);
         setSelectedVersion('heavy');
+      }
+      
+      // Show error if no versions generated
+      if (!versions.light && !versions.medium && !versions.heavy) {
+        Alert.alert('Generation Failed', 'Could not generate stencils. Please try again or use a different image.');
       }
       
       setHasGeneratedOnce(true);
