@@ -1637,6 +1637,24 @@ export default function Index() {
           </View>
         )}
 
+        {/* Share & Review Section */}
+        <View style={styles.shareReviewSection}>
+          <Text style={styles.shareReviewTitle}>Enjoying Body Bound? ✨</Text>
+          <Text style={styles.shareReviewSubtitle}>Help us grow the tattoo artist community!</Text>
+          
+          <View style={styles.shareReviewButtons}>
+            <TouchableOpacity style={styles.reviewButton} onPress={requestAppReview}>
+              <Text style={styles.reviewButtonIcon}>⭐</Text>
+              <Text style={styles.reviewButtonText}>Rate Us</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.shareAppButton} onPress={shareAppWithFriends}>
+              <Text style={styles.shareAppButtonIcon}>🔗</Text>
+              <Text style={styles.shareAppButtonText}>Share App</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
