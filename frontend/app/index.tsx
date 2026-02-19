@@ -2510,16 +2510,16 @@ const styles = StyleSheet.create({
   },
   // Mode Selection Styles
   modeSection: {
-    marginTop: 20,
+    marginTop: 12,
     backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 12,
+    padding: 12,
   },
   modeSectionTitle: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '600',
     color: '#fff',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   modeToggle: {
     flexDirection: 'row',
