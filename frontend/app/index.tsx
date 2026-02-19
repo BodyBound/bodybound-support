@@ -248,6 +248,74 @@ export default function Index() {
     };
   }, []);
 
+  // Load photo library on mount (after welcome screen)
+  useEffect(() => {
+    if (!showWelcome) {
+      loadPhotoLibrary();
+    }
+  }, [showWelcome]);
+
+  // Function to load photos from device library
+  const loadPhotoLibrary = async (loadMore = false) => {
+    if (loadingPhotos) return;
+    if (loadMore && !hasMorePhotos) return;
+
+    setLoadingPhotos(true);
+    try {
+      const { status } = await MediaLibrary.requestPermissionsAsync();
+      if (status !== 'granted') {
+        setHasPhotoPermission(false);
+        Alert.alert('Permission Required', 'Please allow access to your photo library to browse photos.');
+        return;
+      }
+      setHasPhotoPermission(true);
+
+      const mediaResult = await MediaLibrary.getAssetsAsync({
+        mediaType: 'photo',
+        first: 50,
+        after: loadMore ? photoLibraryEndCursor : undefined,
+        sortBy: [MediaLibrary.SortBy.creationTime],
+      });
+
+      if (loadMore) {
+        setPhotoLibrary(prev => [...prev, ...mediaResult.assets]);
+      } else {
+        setPhotoLibrary(mediaResult.assets);
+      }
+      
+      setPhotoLibraryEndCursor(mediaResult.endCursor);
+      setHasMorePhotos(mediaResult.hasNextPage);
+    } catch (error) {
+      console.error('Error loading photo library:', error);
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
+  // Select a photo from the library grid
+  const selectPhotoFromLibrary = async (asset: MediaLibrary.Asset) => {
+    try {
+      // Get the asset info with local URI
+      const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+      
+      if (assetInfo.localUri) {
+        // Read the file and convert to base64
+        const base64 = await FileSystem.readAsStringAsync(assetInfo.localUri, {
+          encoding: 'base64',
+        });
+        const base64Image = `data:image/jpeg;base64,${base64}`;
+        setOriginalImage(base64Image);
+        setStencilImage(null);
+        setStencilVersions({ light: null, medium: null, heavy: null });
+        setHasGeneratedOnce(false);
+      }
+    } catch (error) {
+      console.error('Error selecting photo:', error);
+      Alert.alert('Error', 'Could not load the selected photo. Please try another.');
+    }
+  };
+
+  // Legacy pickImage function (fallback)
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -257,7 +325,7 @@ export default function Index() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
-      allowsEditing: true,
+      allowsEditing: false,
       quality: 0.8,
       base64: true,
     });
@@ -266,6 +334,8 @@ export default function Index() {
       const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
       setOriginalImage(base64Image);
       setStencilImage(null);
+      setStencilVersions({ light: null, medium: null, heavy: null });
+      setHasGeneratedOnce(false);
     }
   };
 
