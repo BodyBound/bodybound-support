@@ -1961,19 +1961,19 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
+    gap: 10,
+    marginTop: 16,
   },
   actionButtonsContainer: {
-    marginTop: 24,
+    marginTop: 16,
   },
   generateButtonRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   saveButtonsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 10,
   },
   processButton: {
     flex: 1,
@@ -1981,9 +1981,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#1A1510',
-    paddingVertical: 16,
-    borderRadius: 12,
-    gap: 8,
+    paddingVertical: 12,
+    borderRadius: 10,
+    gap: 6,
     borderWidth: 2,
     borderColor: '#C9A227',
   },
