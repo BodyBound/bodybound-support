@@ -27,8 +27,13 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Get AI API key
+# Get AI API key - prefer user's own Google API key, fallback to Emergent
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', '')
 EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
+
+# Use Google API key if available, otherwise Emergent
+AI_API_KEY = GOOGLE_API_KEY if GOOGLE_API_KEY else EMERGENT_LLM_KEY
+USE_GOOGLE_DIRECT = bool(GOOGLE_API_KEY)
 
 # Create the main app without a prefix
 app = FastAPI()
