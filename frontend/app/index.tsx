@@ -1727,16 +1727,14 @@ export default function Index() {
 
         {/* Save Button - Only visible when stencil exists */}
         {originalImage && stencilImage && (
-              <View style={styles.saveButtonsRow}>
-                <TouchableOpacity
-                  style={styles.saveButton}
-                  onPress={() => setShowSaveModal(true)}
-                >
-                  <Text style={styles.saveIcon}>💾</Text>
-                  <Text style={styles.saveButtonText}>Save Stencil</Text>
-                </TouchableOpacity>
-              </View>
-            )}
+          <View style={styles.saveButtonsRow}>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onPress={() => setShowSaveModal(true)}
+            >
+              <Text style={styles.saveIcon}>💾</Text>
+              <Text style={styles.saveButtonText}>Save Stencil</Text>
+            </TouchableOpacity>
           </View>
         )}
 
