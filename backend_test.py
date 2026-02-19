@@ -192,6 +192,67 @@ def test_get_stencils():
         print(f"❌ Get stencils FAILED - Error: {str(e)}")
         return False, None
 
+def test_ai_stencil():
+    """Test the AI stencil generation endpoint"""
+    print("\n=== Testing AI Stencil Generation ===")
+    try:
+        # Create test image
+        test_image_b64 = create_test_image()
+        
+        # Test data with the expected parameters
+        payload = {
+            "image_base64": test_image_b64,
+            "shading_detail": 50,
+            "solid_fill": 30,
+            "line_color": "black"
+        }
+        
+        print("Sending AI stencil generation request...")
+        response = requests.post(
+            f"{API_BASE}/ai-stencil", 
+            json=payload,
+            headers={'Content-Type': 'application/json'},
+            timeout=60  # AI processing might take longer
+        )
+        
+        print(f"Status Code: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Processing time: {data.get('processing_time_ms', 'N/A')} ms")
+            
+            # Check if we got a stencil back
+            if 'stencil_base64' in data and data['stencil_base64']:
+                stencil_data = data['stencil_base64']
+                if stencil_data.startswith('data:image/'):
+                    print("✅ AI stencil generation PASSED - Got valid AI-generated stencil")
+                    return True, stencil_data
+                else:
+                    print("❌ AI stencil generation FAILED - Invalid stencil format")
+                    return False, None
+            else:
+                print("❌ AI stencil generation FAILED - No stencil in response")
+                return False, None
+        elif response.status_code == 500:
+            print(f"❌ AI stencil generation FAILED - Server error: {response.text}")
+            # Check if it's an API key or quota issue
+            response_text = response.text.lower()
+            if 'api key' in response_text or 'key not configured' in response_text:
+                print("🔑 Issue: AI API key not configured or invalid")
+            elif 'quota' in response_text or 'limit' in response_text or 'budget' in response_text:
+                print("💰 Issue: API quota/budget exceeded")
+            elif 'timeout' in response_text:
+                print("⏱️ Issue: AI processing timeout")
+            return False, None
+        else:
+            print(f"❌ AI stencil generation FAILED - Status code: {response.status_code}")
+            print(f"Response: {response.text}")
+            return False, None
+            
+    except Exception as e:
+        print(f"❌ AI stencil generation FAILED - Error: {str(e)}")
+        return False, None
+
 def test_delete_stencil(stencil_id):
     """Test deleting a stencil"""
     print("\n=== Testing Delete Stencil ===")
