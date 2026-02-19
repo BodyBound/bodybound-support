@@ -297,23 +297,44 @@ export default function Index() {
   // Select a photo from the library grid
   const selectPhotoFromLibrary = async (asset: MediaLibrary.Asset) => {
     try {
+      console.log('[SelectPhoto] Starting photo selection for asset:', asset.id);
+      
       // Get the asset info with local URI
       const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+      console.log('[SelectPhoto] Asset info received, localUri exists:', !!assetInfo.localUri);
       
       if (assetInfo.localUri) {
-        // Read the file and convert to base64
-        const base64 = await FileSystem.readAsStringAsync(assetInfo.localUri, {
-          encoding: 'base64',
-        });
-        const base64Image = `data:image/jpeg;base64,${base64}`;
-        setOriginalImage(base64Image);
-        setStencilImage(null);
-        setStencilVersions({ light: null, medium: null, heavy: null });
-        setHasGeneratedOnce(false);
+        // Use ImageManipulator to ensure consistent image handling across platforms
+        // This handles HEIC conversion, proper encoding, and prevents iOS-specific issues
+        console.log('[SelectPhoto] Processing image with ImageManipulator...');
+        const manipulatedImage = await ImageManipulator.manipulateAsync(
+          assetInfo.localUri,
+          [{ resize: { width: 1500 } }], // Resize for optimal AI processing
+          { 
+            compress: 0.85, 
+            format: ImageManipulator.SaveFormat.JPEG, 
+            base64: true 
+          }
+        );
+        
+        if (manipulatedImage.base64) {
+          console.log('[SelectPhoto] Image processed successfully, base64 length:', manipulatedImage.base64.length);
+          const base64Image = `data:image/jpeg;base64,${manipulatedImage.base64}`;
+          setOriginalImage(base64Image);
+          setStencilImage(null);
+          setStencilVersions({ light: null, medium: null, heavy: null });
+          setHasGeneratedOnce(false);
+        } else {
+          console.error('[SelectPhoto] ImageManipulator did not return base64 data');
+          Alert.alert('Error', 'Could not process the selected photo. Please try another.');
+        }
+      } else {
+        console.error('[SelectPhoto] No localUri available for asset');
+        Alert.alert('Error', 'Could not access the selected photo. Please try another.');
       }
-    } catch (error) {
-      console.error('Error selecting photo:', error);
-      Alert.alert('Error', 'Could not load the selected photo. Please try another.');
+    } catch (error: any) {
+      console.error('[SelectPhoto] Error selecting photo:', error);
+      Alert.alert('Error', `Could not load the selected photo: ${error.message || 'Unknown error'}`);
     }
   };
 
