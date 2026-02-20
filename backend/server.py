@@ -749,7 +749,8 @@ Generate the stencil now."""
         return AIStencilResponse(
             stencil_base64=stencil_base64,
             processing_time_ms=round(processing_time, 2),
-            provider=provider_used
+            provider=provider_used,
+            regenerated_style=request.regenerate_style
         )
         
     except HTTPException:
