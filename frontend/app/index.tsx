@@ -1218,6 +1218,21 @@ export default function Index() {
     }
     
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
+    const now = Date.now();
+    
+    // Double-tap detection for undo (within 300ms)
+    if (now - lastTapTimeRef.current < 300) {
+      // Double tap detected - undo last stroke
+      setDrawingPaths(prev => prev.slice(0, -1));
+      lastTapTimeRef.current = 0; // Reset to prevent triple-tap
+      return;
+    }
+    lastTapTimeRef.current = now;
+    
+    // Hide the hint after first interaction
+    if (showEditHint) {
+      setShowEditHint(false);
+    }
     
     if (isDrawMode) {
       // DRAW MODE - single touch draws
@@ -1255,9 +1270,12 @@ export default function Index() {
       return;
     }
     
-    const { locationX, locationY, pageX, pageY } = event.nativeEvent;
-    
-    if (isDrawMode && !isPinching) {
+    // In draw mode, ONLY draw - never pan with single touch
+    if (isDrawMode) {
+      if (isPinching) return; // Don't draw while pinching
+      
+      const { locationX, locationY } = event.nativeEvent;
+      
       // DRAW MODE - continue drawing
       if (currentPoints.length > 0) {
         // Transform coordinates to account for zoom and pan
@@ -1269,8 +1287,9 @@ export default function Index() {
         const smoothPath = createSmoothPath(newPoints);
         setCurrentPath(smoothPath);
       }
-    } else if (!isDrawMode && !isPinching) {
+    } else if (!isPinching) {
       // NAVIGATE MODE - pan the canvas
+      const { pageX, pageY } = event.nativeEvent;
       const deltaX = pageX - lastPanX;
       const deltaY = pageY - lastPanY;
       setEditTranslateX(prev => prev + deltaX);
