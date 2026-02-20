@@ -1122,34 +1122,23 @@ export default function Index() {
     );
   };
 
-  // Save the edited stencil
-  const saveEditedStencil = async () => {
-    if (!editCanvasRef.current) {
-      Alert.alert('Error', 'Could not capture the edited image.');
-      return;
-    }
-
-    try {
-      // Capture the canvas as an image
-      const uri = await captureRef(editCanvasRef, {
-        format: 'png',
-        quality: 1,
-        result: 'base64',
-      });
-      
-      const editedImage = `data:image/png;base64,${uri}`;
-      setEditedStencil(editedImage);
-      setStencilImage(editedImage);
-      setShowEditModal(false);
-      
-      Alert.alert('Success', 'Your edited stencil has been saved!');
-    } catch (error: any) {
-      console.error('Error saving edited stencil:', error);
-      Alert.alert('Error', 'Failed to save the edited stencil. Please try again.');
+  // Save edited stencil - just close the modal (drawings are preserved in state)
+  const saveEditedStencil = () => {
+    // Simply close the modal - drawings remain in drawingPaths state
+    // The opacity slider is just for visual comparison, not for saving
+    setShowEditModal(false);
+    
+    // If there are drawings, notify user they can save to photos
+    if (drawingPaths.length > 0) {
+      Alert.alert(
+        'Drawings Saved', 
+        'Your drawings have been saved. Use "Share" to export the final stencil with your additions.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
-  // Save edited stencil to gallery
+  // Save edited stencil to gallery - captures stencil + drawings at full opacity
   const saveEditedToGallery = async () => {
     if (!editCanvasRef.current) {
       Alert.alert('Error', 'Could not capture the edited image.');
@@ -1157,12 +1146,22 @@ export default function Index() {
     }
 
     try {
+      // Temporarily set opacity to 1 for capture, hide original image
+      const originalOpacity = editOpacity;
+      setEditOpacity(1);
+      
+      // Small delay to let the UI update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Capture the canvas as an image
       const uri = await captureRef(editCanvasRef, {
         format: 'png',
         quality: 1,
         result: 'base64',
       });
+      
+      // Restore opacity
+      setEditOpacity(originalOpacity);
       
       await saveToPhotoGallery(`data:image/png;base64,${uri}`, 'body_bound_edited_stencil');
     } catch (error: any) {
