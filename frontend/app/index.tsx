@@ -1205,10 +1205,13 @@ export default function Index() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // Handle touch start - Procreate style: 2 fingers = zoom/pan, 1 finger = pan, Apple Pencil = draw
+  // Handle touch start - Procreate style: 2 fingers = zoom/pan, 1 finger = pan (iPad) or draw (iPhone), Apple Pencil = draw
   const handleDrawStart = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     const nativeEvent = event.nativeEvent as any;
+    
+    // Check if running on iPad
+    const isIPad = Platform.OS === 'ios' && Platform.isPad;
     
     // Two fingers = zoom/pan
     if (touches && touches.length === 2) {
@@ -1245,15 +1248,20 @@ export default function Index() {
       setTimeout(() => setShowEditHint(false), 3000);
     }
     
-    if (isApplePencil) {
-      // Apple Pencil = draw
+    // Determine if this touch should draw
+    // On iPad: only Apple Pencil draws, finger pans
+    // On iPhone/other: finger draws
+    const shouldDraw = isIPad ? isApplePencil : true;
+    
+    if (shouldDraw) {
+      // Draw
       const canvasX = (locationX - editTranslateX) / editScale;
       const canvasY = (locationY - editTranslateY) / editScale;
       
       setCurrentPoints([{ x: canvasX, y: canvasY }]);
       setCurrentPath(`M${canvasX},${canvasY}`);
     } else {
-      // Single finger = pan (not draw)
+      // Pan (iPad with finger)
       setLastPanX(pageX);
       setLastPanY(pageY);
     }
@@ -1263,6 +1271,9 @@ export default function Index() {
   const handleDrawMove = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     const nativeEvent = event.nativeEvent as any;
+    
+    // Check if running on iPad
+    const isIPad = Platform.OS === 'ios' && Platform.isPad;
     
     // Two fingers = zoom and pan simultaneously
     if (touches && touches.length === 2) {
@@ -1300,8 +1311,13 @@ export default function Index() {
                           nativeEvent.force > 0 ||
                           (nativeEvent.altitudeAngle !== undefined && nativeEvent.altitudeAngle < Math.PI / 2);
     
-    if (isApplePencil && currentPoints.length > 0) {
-      // Apple Pencil = continue drawing
+    // Determine if this touch should draw
+    // On iPad: only Apple Pencil draws, finger pans
+    // On iPhone/other: finger draws
+    const shouldDraw = isIPad ? isApplePencil : true;
+    
+    if (shouldDraw && currentPoints.length > 0) {
+      // Continue drawing
       const canvasX = (locationX - editTranslateX) / editScale;
       const canvasY = (locationY - editTranslateY) / editScale;
       
@@ -1309,8 +1325,8 @@ export default function Index() {
       setCurrentPoints(newPoints);
       const smoothPath = createSmoothPath(newPoints);
       setCurrentPath(smoothPath);
-    } else if (!isApplePencil) {
-      // Single finger = pan
+    } else if (!shouldDraw) {
+      // Pan (iPad with finger only)
       const deltaX = pageX - lastPanX;
       const deltaY = pageY - lastPanY;
       setEditTranslateX(prev => prev + deltaX);
