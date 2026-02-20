@@ -2242,6 +2242,7 @@ export default function Index() {
                 />
               )}
             </Svg>
+            </View>
           </View>
 
           {/* Controls */}
