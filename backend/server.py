@@ -15,6 +15,7 @@ import base64
 from io import BytesIO
 from PIL import Image
 import asyncio
+import base64
 
 # For AI-powered stencil generation
 from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
