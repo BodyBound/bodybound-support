@@ -2216,6 +2216,13 @@ export default function Index() {
             </View>
           )}
 
+          {/* Double-tap hint tooltip */}
+          {showEditHint && (
+            <View style={styles.editHintContainer}>
+              <Text style={styles.editHintText}>💡 Double-tap to undo</Text>
+            </View>
+          )}
+
           {/* Drawing Canvas Area with zoom transform */}
           <View 
             ref={editCanvasRef}
