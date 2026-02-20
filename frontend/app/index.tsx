@@ -430,42 +430,25 @@ export default function Index() {
     }
   }, [originalImage, settings]);
 
-  // Helper function to make API calls with retry logic
-  const fetchWithRetry = async (url: string, options: RequestInit, maxRetries: number = 2): Promise<Response> => {
-    let lastError: Error | null = null;
+  // Helper function to make API calls with timeout (no retry - keep it simple and fast)
+  const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs: number = 45000): Promise<Response> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-      try {
-        // Create an AbortController for timeout (90 seconds for AI generation)
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 90000);
-        
-        const response = await fetch(url, {
-          ...options,
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId);
-        return response;
-      } catch (error: any) {
-        lastError = error;
-        console.log(`[FetchWithRetry] Attempt ${attempt + 1} failed:`, error.message);
-        
-        // If it's an abort error (timeout), don't retry immediately
-        if (error.name === 'AbortError') {
-          console.log('[FetchWithRetry] Request timed out');
-        }
-        
-        // Wait before retrying (exponential backoff)
-        if (attempt < maxRetries) {
-          const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
-          console.log(`[FetchWithRetry] Waiting ${delay}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.');
       }
+      throw error;
     }
-    
-    throw lastError || new Error('Network request failed after retries');
   };
 
   // AI-Powered Stencil Generation - Generate 3 versions
