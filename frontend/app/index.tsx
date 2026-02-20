@@ -1206,16 +1206,12 @@ export default function Index() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // Handle touch start - Procreate style: 2 fingers = zoom/pan, 1 finger = pan (iPad) or draw (iPhone), Apple Pencil = draw
+  // Handle touch start - Manual mode toggle: Pencil Mode = draw, Touch Mode = pan
   const handleDrawStart = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     const touchCount = touches ? touches.length : 1;
-    const nativeEvent = event.nativeEvent as any;
     
-    // Check if running on iPad (for native builds)
-    const isIPad = Platform.OS === 'ios' && Platform.isPad;
-    
-    // Two or more fingers = zoom/pan mode
+    // Two or more fingers = zoom/pan mode (always, regardless of mode)
     if (touchCount >= 2) {
       setIsPinching(true);
       if (touches) {
@@ -1233,11 +1229,6 @@ export default function Index() {
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     const now = Date.now();
     
-    // Apple Pencil detection - check multiple properties
-    // On native iOS, stylus touches have touchType === 'stylus' or type === 'stylus'
-    const touchType = nativeEvent.touchType || nativeEvent.type || '';
-    const isApplePencil = touchType === 'stylus' || touchType === 'pencil';
-    
     // Double-tap detection for undo (within 300ms)
     if (now - lastTapTimeRef.current < 300) {
       setDrawingPaths(prev => prev.slice(0, -1));
@@ -1246,36 +1237,27 @@ export default function Index() {
     }
     lastTapTimeRef.current = now;
     
-    // Hide hint after 3 seconds
+    // Hide hint after 5 seconds
     if (showEditHint) {
-      setTimeout(() => setShowEditHint(false), 3000);
+      setTimeout(() => setShowEditHint(false), 5000);
     }
     
-    // On iPad: Apple Pencil draws, finger pans
-    // On iPhone/Android: finger draws
-    // If we can't detect pencil reliably, default to drawing for single touch
-    const shouldDraw = isIPad ? isApplePencil : true;
-    
-    if (shouldDraw || !isIPad) {
-      // Always allow drawing on non-iPad, or when pencil detected on iPad
-      // For now, let's allow drawing on single touch regardless (can refine later)
+    // Use manual toggle: isPencilMode = draw, !isPencilMode = pan
+    if (isPencilMode) {
+      // Pencil Mode - single touch draws
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
     } else {
-      // iPad with finger - pan
+      // Touch Mode - single touch pans
       setLastPanX(pageX);
       setLastPanY(pageY);
     }
   };
 
-  // Handle touch move - Procreate style
+  // Handle touch move - Manual mode toggle
   const handleDrawMove = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     const touchCount = touches ? touches.length : 1;
-    const nativeEvent = event.nativeEvent as any;
-    
-    // Check if running on iPad
-    const isIPad = Platform.OS === 'ios' && Platform.isPad;
     
     // Two or more fingers = zoom and pan simultaneously
     if (touchCount >= 2 && touches) {
@@ -1313,21 +1295,15 @@ export default function Index() {
     
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     
-    // Apple Pencil detection
-    const touchType = nativeEvent.touchType || nativeEvent.type || '';
-    const isApplePencil = touchType === 'stylus' || touchType === 'pencil';
-    
-    // Determine drawing behavior
-    const shouldDraw = isIPad ? isApplePencil : true;
-    
-    if ((shouldDraw || !isIPad) && currentPoints.length > 0) {
-      // Continue drawing
+    // Use manual toggle
+    if (isPencilMode && currentPoints.length > 0) {
+      // Pencil Mode - continue drawing
       const newPoints = [...currentPoints, { x: locationX, y: locationY }];
       setCurrentPoints(newPoints);
       const smoothPath = createSmoothPath(newPoints);
       setCurrentPath(smoothPath);
-    } else if (!shouldDraw && isIPad) {
-      // iPad finger pan
+    } else if (!isPencilMode) {
+      // Touch Mode - pan
       const deltaX = pageX - lastPanX;
       const deltaY = pageY - lastPanY;
       setEditTranslateX(prev => prev + deltaX);
