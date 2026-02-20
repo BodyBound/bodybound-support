@@ -2191,6 +2191,8 @@ export default function Index() {
               styles.editCanvasInner,
               { 
                 transform: [
+                  { translateX: editTranslateX },
+                  { translateY: editTranslateY },
                   { scale: editScale }
                 ]
               }
