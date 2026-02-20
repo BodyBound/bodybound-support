@@ -3751,8 +3751,32 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#4A4A4A',
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 12,
     fontFamily: 'monospace',
+  },
+  disclaimerContainer: {
+    backgroundColor: 'rgba(201, 162, 39, 0.08)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    marginHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(201, 162, 39, 0.2)',
+  },
+  disclaimerTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#C9A227',
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  disclaimerText: {
+    fontSize: 11,
+    color: '#8B7355',
+    lineHeight: 18,
+    textAlign: 'left',
   },
   // Photo Library Grid Styles
   photoLibraryContainer: {
