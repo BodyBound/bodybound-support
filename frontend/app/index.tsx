@@ -1662,13 +1662,24 @@ export default function Index() {
           <Text style={styles.welcomeButtonArrow}>→</Text>
         </TouchableOpacity>
         
+        {/* Disclaimer */}
+        <View style={styles.disclaimerContainer}>
+          <Text style={styles.disclaimerTitle}>Please Note</Text>
+          <Text style={styles.disclaimerText}>
+            • WiFi connection required to generate stencils{'\n'}
+            • This app uses AI services for stencil generation{'\n'}
+            • AI servers may occasionally be unavailable{'\n'}
+            • Results may sometimes vary — if you notice any inconsistencies, simply tap "Generate" again
+          </Text>
+        </View>
+        
         {/* Footer Note */}
         <Text style={styles.welcomeFooter}>
           for tattoo artists • developed by a tattoo artist
         </Text>
         
         {/* Version Number */}
-        <Text style={styles.welcomeVersion}>v1.4.1</Text>
+        <Text style={styles.welcomeVersion}>v1.7.5</Text>
       </View>
     </SafeAreaView>
   );
