@@ -1152,24 +1152,27 @@ export default function Index() {
 
   // Save edited stencil - captures stencil + drawings and shows on main screen (no auto-save to gallery)
   const saveEditedStencil = async () => {
-    if (!editCanvasRef.current) {
-      // No drawings made, just close
-      setShowEditModal(false);
-      return;
-    }
-
     // If no drawings, just close
     if (drawingPaths.length === 0) {
       setShowEditModal(false);
       return;
     }
 
+    // If ref not available, just close with message
+    if (!editCanvasRef.current) {
+      console.log('[SaveEdit] Canvas ref not available, closing modal');
+      setShowEditModal(false);
+      return;
+    }
+
     try {
+      console.log('[SaveEdit] Starting capture...');
+      
       // Set capture mode - hides original photo, shows stencil at full opacity
       setIsCapturingForExport(true);
       
       // Small delay to let the UI update
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       // Capture the canvas as an image (stencil + drawings on white bg)
       const uri = await captureRef(editCanvasRef, {
@@ -1178,20 +1181,34 @@ export default function Index() {
         result: 'base64',
       });
       
+      console.log('[SaveEdit] Capture successful, uri length:', uri?.length);
+      
       // Reset capture mode
       setIsCapturingForExport(false);
       
-      // Set the edited image as the main stencil (shown on main screen)
-      const editedImage = `data:image/png;base64,${uri}`;
-      setEditedStencil(editedImage);
-      setStencilImage(editedImage);
+      if (uri) {
+        // Set the edited image as the main stencil (shown on main screen)
+        const editedImage = `data:image/png;base64,${uri}`;
+        setEditedStencil(editedImage);
+        setStencilImage(editedImage);
+        console.log('[SaveEdit] Stencil updated with edits');
+      }
       
-      // Close modal - user can now Share from main screen
+      // Close modal
       setShowEditModal(false);
     } catch (error: any) {
+      console.error('[SaveEdit] Error capturing:', error);
       setIsCapturingForExport(false);
-      console.error('Error capturing edited stencil:', error);
-      Alert.alert('Error', 'Failed to save edits. Please try again.');
+      
+      // Still close the modal even if capture fails - don't leave user stuck
+      setShowEditModal(false);
+      
+      // Notify user that edits couldn't be saved but they can try Share in edit mode
+      Alert.alert(
+        'Note', 
+        'Could not apply edits to preview. You can still save your work using "Save to Photos" in Edit mode.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
