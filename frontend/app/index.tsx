@@ -4213,6 +4213,20 @@ const styles = StyleSheet.create({
   modeToggleTextActive: {
     color: '#0A0A0A',
   },
+  resetZoomInlineButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 25,
+    backgroundColor: '#8B7355',
+    gap: 6,
+  },
+  resetZoomInlineText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   editSaveToGalleryButton: {
     flexDirection: 'row',
     alignItems: 'center',
