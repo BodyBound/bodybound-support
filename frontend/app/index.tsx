@@ -1270,27 +1270,27 @@ export default function Index() {
   // Handle touch move - Procreate style
   const handleDrawMove = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
+    const touchCount = touches ? touches.length : 1;
     const nativeEvent = event.nativeEvent as any;
     
     // Check if running on iPad
     const isIPad = Platform.OS === 'ios' && Platform.isPad;
     
-    // Two fingers = zoom and pan simultaneously
-    if (touches && touches.length === 2) {
+    // Two or more fingers = zoom and pan simultaneously
+    if (touchCount >= 2 && touches) {
       setIsPinching(true);
       
-      // Zoom - with reduced sensitivity
+      // Zoom with damping
       const newDistance = getDistance(Array.from(touches));
       if (lastDistance > 0) {
         const scaleFactor = newDistance / lastDistance;
-        // Reduce zoom sensitivity by interpolating towards 1
         const dampedScale = 1 + (scaleFactor - 1) * 0.5;
         const newScale = Math.min(Math.max(editScale * dampedScale, 0.5), 3);
         setEditScale(newScale);
       }
       setLastDistance(newDistance);
       
-      // Pan (using midpoint of two fingers)
+      // Pan using midpoint
       const midX = (touches[0].pageX + touches[1].pageX) / 2;
       const midY = (touches[0].pageY + touches[1].pageY) / 2;
       const deltaX = midX - lastPanX;
@@ -1303,27 +1303,30 @@ export default function Index() {
       return;
     }
     
-    // If we were pinching and now single touch, don't do anything yet
-    if (isPinching) return;
+    // If transitioning from pinch to single touch, reset
+    if (isPinching && touchCount === 1) {
+      setIsPinching(false);
+      setLastDistance(0);
+      return;
+    }
     
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     
-    // Check if this is Apple Pencil - ONLY use touchType
-    const isApplePencil = nativeEvent.touchType === 'stylus';
+    // Apple Pencil detection
+    const touchType = nativeEvent.touchType || nativeEvent.type || '';
+    const isApplePencil = touchType === 'stylus' || touchType === 'pencil';
     
-    // Determine if this touch should draw
-    // On iPad: only Apple Pencil draws, finger pans
-    // On iPhone/other: finger draws
+    // Determine drawing behavior
     const shouldDraw = isIPad ? isApplePencil : true;
     
-    if (shouldDraw && currentPoints.length > 0) {
-      // Continue drawing - use raw coordinates
+    if ((shouldDraw || !isIPad) && currentPoints.length > 0) {
+      // Continue drawing
       const newPoints = [...currentPoints, { x: locationX, y: locationY }];
       setCurrentPoints(newPoints);
       const smoothPath = createSmoothPath(newPoints);
       setCurrentPath(smoothPath);
-    } else if (!shouldDraw) {
-      // Pan (iPad with finger only)
+    } else if (!shouldDraw && isIPad) {
+      // iPad finger pan
       const deltaX = pageX - lastPanX;
       const deltaY = pageY - lastPanY;
       setEditTranslateX(prev => prev + deltaX);
