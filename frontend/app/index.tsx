@@ -638,6 +638,70 @@ export default function Index() {
     }
   };
 
+  // Regenerate a single style (Light, Medium, or Heavy)
+  const regenerateSingleStyle = async (style: 'light' | 'medium' | 'heavy') => {
+    if (!originalImage || regeneratingStyle) return;
+    
+    try {
+      setRegeneratingStyle(style);
+      
+      // Get base64 from original image
+      let imageBase64 = originalImage;
+      if (!imageBase64.startsWith('data:')) {
+        const base64Data = await FileSystem.readAsStringAsync(imageBase64, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        imageBase64 = `data:image/jpeg;base64,${base64Data}`;
+      }
+      
+      const base64Part = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+      
+      console.log(`[RegenerateSingle] Regenerating ${style} version...`);
+      
+      const response = await fetch(`${API_URL}/api/ai-stencil`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_base64: base64Part,
+          style: 'tattoo',
+          line_color: 'black',
+          shading_detail: 0,
+          solid_fill: 0,
+          regenerate_style: style, // Tell backend to only generate this style
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`[RegenerateSingle] ${style} version regenerated successfully`);
+        
+        // Update only this style in stencilVersions
+        setStencilVersions(prev => ({
+          ...prev,
+          [style]: data.stencil_base64
+        }));
+        
+        // If this was the selected version, update the displayed stencil
+        if (selectedVersion === style) {
+          setStencilImage(data.stencil_base64);
+        }
+        
+        // Auto-select the regenerated style
+        setSelectedVersion(style);
+        setStencilImage(data.stencil_base64);
+      } else {
+        const errorText = await response.text();
+        console.error(`[RegenerateSingle] ${style} version error:`, errorText);
+        Alert.alert('Regeneration Failed', `Could not regenerate ${style} version. Please try again.`);
+      }
+    } catch (error: any) {
+      console.error(`Error regenerating ${style} version:`, error);
+      Alert.alert('Connection Issue', 'Failed to regenerate. Please check your internet connection.');
+    } finally {
+      setRegeneratingStyle(null);
+    }
+  };
+
   // Remove background function
   const removeBackground = async () => {
     if (!originalImage) {
