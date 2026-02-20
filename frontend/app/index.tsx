@@ -1205,97 +1205,93 @@ export default function Index() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // Handle touch start - behavior depends on Draw/Navigate mode
+  // Handle touch start - Procreate style: 2 fingers = zoom/pan, 1 finger = draw
   const handleDrawStart = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     
-    // Two fingers = always pinch zoom (in both modes)
+    // Two fingers = zoom/pan
     if (touches && touches.length === 2) {
       setIsPinching(true);
       setLastDistance(getDistance(Array.from(touches)));
+      // Calculate midpoint for panning
+      const midX = (touches[0].pageX + touches[1].pageX) / 2;
+      const midY = (touches[0].pageY + touches[1].pageY) / 2;
+      setLastPanX(midX);
+      setLastPanY(midY);
       setCurrentPath('');
       setCurrentPoints([]);
       return;
     }
     
-    const { locationX, locationY, pageX, pageY } = event.nativeEvent;
+    const { locationX, locationY } = event.nativeEvent;
     const now = Date.now();
     
     // Double-tap detection for undo (within 300ms)
     if (now - lastTapTimeRef.current < 300) {
-      // Double tap detected - undo last stroke
       setDrawingPaths(prev => prev.slice(0, -1));
-      lastTapTimeRef.current = 0; // Reset to prevent triple-tap
+      lastTapTimeRef.current = 0;
       return;
     }
     lastTapTimeRef.current = now;
     
-    // Hide the hint after first interaction
+    // Hide hint after first interaction
     if (showEditHint) {
-      setShowEditHint(false);
+      setTimeout(() => setShowEditHint(false), 3000);
     }
     
-    if (isDrawMode) {
-      // DRAW MODE - single touch draws
-      // Simple coordinate transform: reverse the scale and translate
-      // Touch location is in container space, we need canvas space
-      const canvasX = (locationX - editTranslateX) / editScale;
-      const canvasY = (locationY - editTranslateY) / editScale;
-      
-      setCurrentPoints([{ x: canvasX, y: canvasY }]);
-      setCurrentPath(`M${canvasX},${canvasY}`);
-    } else {
-      // NAVIGATE MODE - single touch starts pan
-      setLastPanX(pageX);
-      setLastPanY(pageY);
-    }
+    // Single touch = draw
+    // Transform coordinates to canvas space
+    const canvasX = (locationX - editTranslateX) / editScale;
+    const canvasY = (locationY - editTranslateY) / editScale;
+    
+    setCurrentPoints([{ x: canvasX, y: canvasY }]);
+    setCurrentPath(`M${canvasX},${canvasY}`);
   };
 
-  // Handle touch move - behavior depends on Draw/Navigate mode
+  // Handle touch move - Procreate style
   const handleDrawMove = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     
-    // Two fingers = pinch zoom (in both modes)
+    // Two fingers = zoom and pan simultaneously
     if (touches && touches.length === 2) {
       setIsPinching(true);
-      const newDistance = getDistance(Array.from(touches));
       
+      // Zoom
+      const newDistance = getDistance(Array.from(touches));
       if (lastDistance > 0) {
         const scaleFactor = newDistance / lastDistance;
-        const newScale = Math.min(Math.max(editScale * scaleFactor, 0.5), 4);
+        const newScale = Math.min(Math.max(editScale * scaleFactor, 0.3), 5);
         setEditScale(newScale);
       }
-      
       setLastDistance(newDistance);
+      
+      // Pan (using midpoint of two fingers)
+      const midX = (touches[0].pageX + touches[1].pageX) / 2;
+      const midY = (touches[0].pageY + touches[1].pageY) / 2;
+      const deltaX = midX - lastPanX;
+      const deltaY = midY - lastPanY;
+      setEditTranslateX(prev => prev + deltaX);
+      setEditTranslateY(prev => prev + deltaY);
+      setLastPanX(midX);
+      setLastPanY(midY);
+      
       return;
     }
     
-    // In draw mode, ONLY draw - never pan with single touch
-    if (isDrawMode) {
-      if (isPinching) return; // Don't draw while pinching
+    // If we were pinching and now single finger, don't draw
+    if (isPinching) return;
+    
+    const { locationX, locationY } = event.nativeEvent;
+    
+    // Single touch = continue drawing
+    if (currentPoints.length > 0) {
+      const canvasX = (locationX - editTranslateX) / editScale;
+      const canvasY = (locationY - editTranslateY) / editScale;
       
-      const { locationX, locationY } = event.nativeEvent;
-      
-      // DRAW MODE - continue drawing
-      if (currentPoints.length > 0) {
-        // Simple coordinate transform
-        const canvasX = (locationX - editTranslateX) / editScale;
-        const canvasY = (locationY - editTranslateY) / editScale;
-        
-        const newPoints = [...currentPoints, { x: canvasX, y: canvasY }];
-        setCurrentPoints(newPoints);
-        const smoothPath = createSmoothPath(newPoints);
-        setCurrentPath(smoothPath);
-      }
-    } else if (!isPinching) {
-      // NAVIGATE MODE - pan the canvas
-      const { pageX, pageY } = event.nativeEvent;
-      const deltaX = pageX - lastPanX;
-      const deltaY = pageY - lastPanY;
-      setEditTranslateX(prev => prev + deltaX);
-      setEditTranslateY(prev => prev + deltaY);
-      setLastPanX(pageX);
-      setLastPanY(pageY);
+      const newPoints = [...currentPoints, { x: canvasX, y: canvasY }];
+      setCurrentPoints(newPoints);
+      const smoothPath = createSmoothPath(newPoints);
+      setCurrentPath(smoothPath);
     }
   };
 
