@@ -4093,6 +4093,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  editHintContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 16,
+    backgroundColor: 'rgba(201, 162, 39, 0.9)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 100,
+  },
+  editHintText: {
+    color: '#0A0A0A',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   editBackgroundImage: {
     position: 'absolute',
     top: 0,
