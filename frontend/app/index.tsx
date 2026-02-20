@@ -121,12 +121,20 @@ export default function Index() {
   const [editOpacity, setEditOpacity] = useState(0.5); // Stencil opacity over original
   const [drawingPaths, setDrawingPaths] = useState<string[]>([]); // SVG path strings
   const [currentPath, setCurrentPath] = useState<string>(''); // Current drawing path
+  const [currentPoints, setCurrentPoints] = useState<{x: number, y: number}[]>([]); // Points for smooth curve
   const [brushSize, setBrushSize] = useState(3); // Brush size in pixels
   const [isEraser, setIsEraser] = useState(false); // Eraser mode
   const [editedStencil, setEditedStencil] = useState<string | null>(null); // Saved edited version
   const [originalAIStencil, setOriginalAIStencil] = useState<string | null>(null); // Original AI stencil (for revert)
   const [isCapturingForExport, setIsCapturingForExport] = useState(false); // Hide original when saving
   const editCanvasRef = useRef<View>(null); // Ref for capturing the canvas
+  
+  // Zoom and pan state for Edit mode
+  const [editScale, setEditScale] = useState(1);
+  const [editTranslateX, setEditTranslateX] = useState(0);
+  const [editTranslateY, setEditTranslateY] = useState(0);
+  const [lastDistance, setLastDistance] = useState(0);
+  const [isPinching, setIsPinching] = useState(false);
   
   // Refs for debouncing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
