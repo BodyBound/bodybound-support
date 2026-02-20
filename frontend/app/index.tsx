@@ -1271,12 +1271,13 @@ export default function Index() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // Handle touch start - Manual mode toggle: Pencil Mode = draw, Touch Mode = pan
+  // Handle touch start - iPad: ONLY Apple Pencil draws, finger does zoom/pan/undo
   const handleDrawStart = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     const touchCount = touches ? touches.length : 1;
+    const nativeEvent = event.nativeEvent as any;
     
-    // Two or more fingers = zoom/pan mode (always, regardless of mode)
+    // Two or more fingers = zoom/pan mode
     if (touchCount >= 2) {
       setIsPinching(true);
       if (touches) {
@@ -1294,7 +1295,10 @@ export default function Index() {
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     const now = Date.now();
     
-    // Double-tap detection for undo (within 300ms)
+    // Check if this is Apple Pencil
+    const isApplePencil = nativeEvent.touchType === 'stylus';
+    
+    // Double-tap detection for undo (within 300ms) - works for any touch
     if (now - lastTapTimeRef.current < 300) {
       setDrawingPaths(prev => prev.slice(0, -1));
       lastTapTimeRef.current = 0;
@@ -1307,40 +1311,39 @@ export default function Index() {
       setTimeout(() => setShowEditHint(false), 5000);
     }
     
-    // Use manual toggle: isPencilMode = draw, !isPencilMode = pan
-    if (isPencilMode) {
-      // Pencil Mode - single touch draws
+    // ONLY Apple Pencil can draw - finger just sets up for potential pan
+    if (isApplePencil) {
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
     } else {
-      // Touch Mode - single touch pans
+      // Finger touch - prepare for pan (in case user drags)
       setLastPanX(pageX);
       setLastPanY(pageY);
     }
   };
 
-  // Handle touch move - Manual mode toggle
+  // Handle touch move - iPad: ONLY Apple Pencil draws
   const handleDrawMove = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     const touchCount = touches ? touches.length : 1;
+    const nativeEvent = event.nativeEvent as any;
     
-    // IMPROVED: Detect second finger joining at ANY time during the gesture
-    // This makes two-finger zoom much easier to trigger
+    // Two or more fingers = zoom and pan simultaneously
     if (touchCount >= 2 && touches) {
-      // Immediately switch to pinch mode when second finger detected
+      // Cancel any drawing in progress
+      if (currentPoints.length > 0) {
+        setCurrentPath('');
+        setCurrentPoints([]);
+      }
+      
       if (!isPinching) {
-        // First time detecting 2 fingers - initialize
         setIsPinching(true);
         setLastDistance(getDistance(Array.from(touches)));
         const midX = (touches[0].pageX + touches[1].pageX) / 2;
         const midY = (touches[0].pageY + touches[1].pageY) / 2;
         setLastPanX(midX);
         setLastPanY(midY);
-        // Cancel any drawing in progress
-        setCurrentPath('');
-        setCurrentPoints([]);
       } else {
-        // Continue pinch gesture
         // Zoom with damping
         const newDistance = getDistance(Array.from(touches));
         if (lastDistance > 0) {
@@ -1364,7 +1367,7 @@ export default function Index() {
       return;
     }
     
-    // If transitioning from pinch to single touch, reset and wait
+    // Reset pinching state when back to single touch
     if (isPinching && touchCount === 1) {
       setIsPinching(false);
       setLastDistance(0);
@@ -1373,15 +1376,17 @@ export default function Index() {
     
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     
-    // Use manual toggle
-    if (isPencilMode && currentPoints.length > 0) {
-      // Pencil Mode - continue drawing
+    // Check if this is Apple Pencil
+    const isApplePencil = nativeEvent.touchType === 'stylus';
+    
+    if (isApplePencil && currentPoints.length > 0) {
+      // Apple Pencil - continue drawing
       const newPoints = [...currentPoints, { x: locationX, y: locationY }];
       setCurrentPoints(newPoints);
       const smoothPath = createSmoothPath(newPoints);
       setCurrentPath(smoothPath);
-    } else if (!isPencilMode) {
-      // Touch Mode - pan
+    } else if (!isApplePencil) {
+      // Finger - pan the canvas
       const deltaX = pageX - lastPanX;
       const deltaY = pageY - lastPanY;
       setEditTranslateX(prev => prev + deltaX);
