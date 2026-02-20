@@ -2379,14 +2379,31 @@ export default function Index() {
             </TouchableOpacity>
           </View>
 
-          {/* Hint Toast */}
-          {showEditHint && (
-            <View style={styles.procreateHint}>
-              <Text style={styles.procreateHintText}>
-                Finger: pan • Two fingers: zoom • Pencil: draw • Double-tap: undo
-              </Text>
+          {/* Mode Toggle + Hint at top */}
+          <View style={styles.procreateTopHintBar} pointerEvents="box-none">
+            {/* Pencil/Touch Mode Toggle */}
+            <View style={styles.modeToggleContainer}>
+              <TouchableOpacity
+                style={[styles.modeToggleBtn, isPencilMode && styles.modeToggleBtnActive]}
+                onPress={() => setIsPencilMode(true)}
+              >
+                <Text style={styles.modeToggleBtnText}>✏️ Pencil</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modeToggleBtn, !isPencilMode && styles.modeToggleBtnActive]}
+                onPress={() => setIsPencilMode(false)}
+              >
+                <Text style={styles.modeToggleBtnText}>👆 Touch</Text>
+              </TouchableOpacity>
             </View>
-          )}
+            
+            {/* Hint Text */}
+            <Text style={styles.procreateHintText}>
+              {isPencilMode 
+                ? 'Pencil Mode: Touch to draw • Two fingers: zoom/pan • Double-tap: undo'
+                : 'Touch Mode: Touch to pan • Two fingers: zoom • Double-tap: undo'}
+            </Text>
+          </View>
         </View>
       </Modal>
     </SafeAreaView>
