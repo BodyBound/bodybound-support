@@ -1150,19 +1150,48 @@ export default function Index() {
     );
   };
 
-  // Save edited stencil - just close the modal (drawings are preserved in state)
-  const saveEditedStencil = () => {
-    // Simply close the modal - drawings remain in drawingPaths state
-    // The opacity slider is just for visual comparison, not for saving
-    setShowEditModal(false);
-    
-    // If there are drawings, notify user they can save to photos
-    if (drawingPaths.length > 0) {
-      Alert.alert(
-        'Drawings Saved', 
-        'Your drawings have been saved. Use "Share" to export the final stencil with your additions.',
-        [{ text: 'OK' }]
-      );
+  // Save edited stencil - captures stencil + drawings and shows on main screen (no auto-save to gallery)
+  const saveEditedStencil = async () => {
+    if (!editCanvasRef.current) {
+      // No drawings made, just close
+      setShowEditModal(false);
+      return;
+    }
+
+    // If no drawings, just close
+    if (drawingPaths.length === 0) {
+      setShowEditModal(false);
+      return;
+    }
+
+    try {
+      // Set capture mode - hides original photo, shows stencil at full opacity
+      setIsCapturingForExport(true);
+      
+      // Small delay to let the UI update
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
+      // Capture the canvas as an image (stencil + drawings on white bg)
+      const uri = await captureRef(editCanvasRef, {
+        format: 'png',
+        quality: 1,
+        result: 'base64',
+      });
+      
+      // Reset capture mode
+      setIsCapturingForExport(false);
+      
+      // Set the edited image as the main stencil (shown on main screen)
+      const editedImage = `data:image/png;base64,${uri}`;
+      setEditedStencil(editedImage);
+      setStencilImage(editedImage);
+      
+      // Close modal - user can now Share from main screen
+      setShowEditModal(false);
+    } catch (error: any) {
+      setIsCapturingForExport(false);
+      console.error('Error capturing edited stencil:', error);
+      Alert.alert('Error', 'Failed to save edits. Please try again.');
     }
   };
 
