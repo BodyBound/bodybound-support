@@ -594,13 +594,13 @@ Style: Clean black line art on pure white background. No colors, no shading - ju
 
 @api_router.post("/ai-stencil", response_model=AIStencilResponse)
 async def generate_ai_stencil(request: AIStencilRequest):
-    """Generate a professional tattoo stencil using AI"""
+    """Generate a professional tattoo stencil using AI with fallback providers"""
     try:
         import time
         start_time = time.time()
         
-        if not EMERGENT_LLM_KEY:
-            raise HTTPException(status_code=500, detail="AI API key not configured")
+        if not EMERGENT_LLM_KEY and not AI_API_KEY:
+            raise HTTPException(status_code=500, detail="AI API key not configured. Please check your internet connection and try again.")
         
         # Auto-resize image if too large to prevent AI failures
         resized_image = resize_image_if_needed(request.image_base64, max_dimension=2000, max_file_size_mb=4.0)
@@ -609,14 +609,6 @@ async def generate_ai_stencil(request: AIStencilRequest):
         image_data = resized_image
         if ',' in image_data:
             image_data = image_data.split(',')[1]
-        
-        # Create chat instance with Gemini image model
-        chat = LlmChat(
-            api_key=AI_API_KEY, 
-            session_id=f"stencil-{uuid.uuid4()}", 
-            system_message="You are an expert tattoo stencil artist. You create clean, professional tattoo stencils from reference images."
-        )
-        chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["image", "text"])
         
         # Define line color based on request
         color_map = {
