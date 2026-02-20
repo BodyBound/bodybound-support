@@ -128,7 +128,9 @@ export default function Index() {
   const [editedStencil, setEditedStencil] = useState<string | null>(null); // Saved edited version
   const [originalAIStencil, setOriginalAIStencil] = useState<string | null>(null); // Original AI stencil (for revert)
   const [isCapturingForExport, setIsCapturingForExport] = useState(false); // Hide original when saving
+  const [showEditHint, setShowEditHint] = useState(true); // Show double-tap hint on first entry
   const editCanvasRef = useRef<View>(null); // Ref for capturing the canvas
+  const lastTapTimeRef = useRef<number>(0); // For double-tap detection
   
   // Zoom and pan state for Edit mode
   const [editScale, setEditScale] = useState(1);
