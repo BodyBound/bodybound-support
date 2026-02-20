@@ -143,6 +143,15 @@ export default function Index() {
   const [lastDistance, setLastDistance] = useState(0);
   const [isPinching, setIsPinching] = useState(false);
   
+  // Enhanced gesture refs for better two-finger detection
+  const gestureStartTimeRef = useRef<number>(0);
+  const isPinchingRef = useRef(false);
+  const lastDistanceRef = useRef(0);
+  const lastPanRef = useRef({ x: 0, y: 0 });
+  const pendingDrawRef = useRef(false); // Track if we're waiting to see if second finger joins
+  const drawStartTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const touchCountRef = useRef(0);
+  
   // Refs for debouncing
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
