@@ -1286,13 +1286,28 @@ export default function Index() {
     const touchCount = touches ? touches.length : 1;
     const nativeEvent = event.nativeEvent as any;
     
-    // Two or more fingers = zoom/pan mode
+    // Clear any pending draw timeout
+    if (drawStartTimeoutRef.current) {
+      clearTimeout(drawStartTimeoutRef.current);
+      drawStartTimeoutRef.current = null;
+    }
+    
+    // Track touch count
+    touchCountRef.current = touchCount;
+    gestureStartTimeRef.current = Date.now();
+    
+    // Two or more fingers = immediately enter zoom/pan mode
     if (touchCount >= 2) {
+      isPinchingRef.current = true;
       setIsPinching(true);
+      pendingDrawRef.current = false;
       if (touches) {
-        setLastDistance(getDistance(Array.from(touches)));
+        const dist = getDistance(Array.from(touches));
+        lastDistanceRef.current = dist;
+        setLastDistance(dist);
         const midX = (touches[0].pageX + touches[1].pageX) / 2;
         const midY = (touches[0].pageY + touches[1].pageY) / 2;
+        lastPanRef.current = { x: midX, y: midY };
         setLastPanX(midX);
         setLastPanY(midY);
       }
@@ -1311,6 +1326,7 @@ export default function Index() {
     if (now - lastTapTimeRef.current < 300) {
       setDrawingPaths(prev => prev.slice(0, -1));
       lastTapTimeRef.current = 0;
+      pendingDrawRef.current = false;
       return;
     }
     lastTapTimeRef.current = now;
@@ -1320,14 +1336,20 @@ export default function Index() {
       setTimeout(() => setShowEditHint(false), 5000);
     }
     
-    // ONLY Apple Pencil can draw - finger just sets up for potential pan
+    // Store position for potential pan
+    lastPanRef.current = { x: pageX, y: pageY };
+    setLastPanX(pageX);
+    setLastPanY(pageY);
+    
+    // ONLY Apple Pencil can draw immediately
     if (isApplePencil) {
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
+      pendingDrawRef.current = false;
     } else {
-      // Finger touch - prepare for pan (in case user drags)
-      setLastPanX(pageX);
-      setLastPanY(pageY);
+      // For finger touch, wait briefly to see if second finger joins
+      // This makes two-finger gestures much easier to trigger
+      pendingDrawRef.current = false; // Finger never draws, so no pending state needed
     }
   };
 
@@ -1337,49 +1359,70 @@ export default function Index() {
     const touchCount = touches ? touches.length : 1;
     const nativeEvent = event.nativeEvent as any;
     
+    // Update touch count
+    touchCountRef.current = touchCount;
+    
     // Two or more fingers = zoom and pan simultaneously
+    // This check is done FIRST so a second finger joining triggers pinch mode immediately
     if (touchCount >= 2 && touches) {
-      // Cancel any drawing in progress
+      // Cancel any drawing in progress - second finger joined
       if (currentPoints.length > 0) {
         setCurrentPath('');
         setCurrentPoints([]);
       }
+      pendingDrawRef.current = false;
       
-      if (!isPinching) {
+      // Transition to pinch mode if not already
+      if (!isPinchingRef.current) {
+        isPinchingRef.current = true;
         setIsPinching(true);
-        setLastDistance(getDistance(Array.from(touches)));
+        const dist = getDistance(Array.from(touches));
+        lastDistanceRef.current = dist;
+        setLastDistance(dist);
         const midX = (touches[0].pageX + touches[1].pageX) / 2;
         const midY = (touches[0].pageY + touches[1].pageY) / 2;
+        lastPanRef.current = { x: midX, y: midY };
         setLastPanX(midX);
         setLastPanY(midY);
-      } else {
-        // Zoom with damping
-        const newDistance = getDistance(Array.from(touches));
-        if (lastDistance > 0) {
-          const scaleFactor = newDistance / lastDistance;
-          const dampedScale = 1 + (scaleFactor - 1) * 0.5;
-          const newScale = Math.min(Math.max(editScale * dampedScale, 0.5), 3);
-          setEditScale(newScale);
-        }
-        setLastDistance(newDistance);
-        
-        // Pan using midpoint
-        const midX = (touches[0].pageX + touches[1].pageX) / 2;
-        const midY = (touches[0].pageY + touches[1].pageY) / 2;
-        const deltaX = midX - lastPanX;
-        const deltaY = midY - lastPanY;
-        setEditTranslateX(prev => prev + deltaX);
-        setEditTranslateY(prev => prev + deltaY);
-        setLastPanX(midX);
-        setLastPanY(midY);
+        return;
       }
+      
+      // Calculate zoom with improved sensitivity
+      const newDistance = getDistance(Array.from(touches));
+      if (lastDistanceRef.current > 0) {
+        const scaleFactor = newDistance / lastDistanceRef.current;
+        // Increased sensitivity - less damping for more responsive zoom
+        const dampedScale = 1 + (scaleFactor - 1) * 0.7;
+        const newScale = Math.min(Math.max(editScale * dampedScale, 0.3), 5);
+        setEditScale(newScale);
+      }
+      lastDistanceRef.current = newDistance;
+      setLastDistance(newDistance);
+      
+      // Pan using midpoint with improved responsiveness
+      const midX = (touches[0].pageX + touches[1].pageX) / 2;
+      const midY = (touches[0].pageY + touches[1].pageY) / 2;
+      const deltaX = midX - lastPanRef.current.x;
+      const deltaY = midY - lastPanRef.current.y;
+      setEditTranslateX(prev => prev + deltaX);
+      setEditTranslateY(prev => prev + deltaY);
+      lastPanRef.current = { x: midX, y: midY };
+      setLastPanX(midX);
+      setLastPanY(midY);
       return;
     }
     
     // Reset pinching state when back to single touch
-    if (isPinching && touchCount === 1) {
+    if (isPinchingRef.current && touchCount === 1) {
+      isPinchingRef.current = false;
       setIsPinching(false);
+      lastDistanceRef.current = 0;
       setLastDistance(0);
+      // Re-establish pan position for single finger
+      const { pageX, pageY } = event.nativeEvent;
+      lastPanRef.current = { x: pageX, y: pageY };
+      setLastPanX(pageX);
+      setLastPanY(pageY);
       return;
     }
     
@@ -1394,12 +1437,13 @@ export default function Index() {
       setCurrentPoints(newPoints);
       const smoothPath = createSmoothPath(newPoints);
       setCurrentPath(smoothPath);
-    } else if (!isApplePencil) {
-      // Finger - pan the canvas
-      const deltaX = pageX - lastPanX;
-      const deltaY = pageY - lastPanY;
+    } else if (!isApplePencil && !isPinchingRef.current) {
+      // Single finger - pan the canvas
+      const deltaX = pageX - lastPanRef.current.x;
+      const deltaY = pageY - lastPanRef.current.y;
       setEditTranslateX(prev => prev + deltaX);
       setEditTranslateY(prev => prev + deltaY);
+      lastPanRef.current = { x: pageX, y: pageY };
       setLastPanX(pageX);
       setLastPanY(pageY);
     }
@@ -1407,8 +1451,18 @@ export default function Index() {
 
   // Handle touch end for drawing
   const handleDrawEnd = () => {
+    // Clear any pending timeout
+    if (drawStartTimeoutRef.current) {
+      clearTimeout(drawStartTimeoutRef.current);
+      drawStartTimeoutRef.current = null;
+    }
+    
+    isPinchingRef.current = false;
     setIsPinching(false);
+    lastDistanceRef.current = 0;
     setLastDistance(0);
+    pendingDrawRef.current = false;
+    touchCountRef.current = 0;
     
     if (currentPath && currentPoints.length > 1) {
       // Create final smooth path
