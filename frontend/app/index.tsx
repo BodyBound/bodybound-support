@@ -2389,7 +2389,7 @@ export default function Index() {
           {/* Hint Toast */}
           {showEditHint && (
             <View style={styles.procreateHint}>
-              <Text style={styles.procreateHintText}>Two fingers: zoom/pan • One finger: draw • Double-tap: undo</Text>
+              <Text style={styles.procreateHintText}>Finger: pan • Two fingers: zoom • Pencil: draw • Double-tap: undo</Text>
             </View>
           )}
         </View>
