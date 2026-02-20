@@ -2398,7 +2398,7 @@ export default function Index() {
           {showEditHint && (
             <View style={styles.procreateHint}>
               <Text style={styles.procreateHintText}>
-                {Platform.OS === 'ios' && Platform.isPad 
+                {Platform.OS === 'ios'
                   ? 'Finger: pan • Two fingers: zoom • Pencil: draw • Double-tap: undo'
                   : 'Two fingers: zoom/pan • One finger: draw • Double-tap: undo'}
               </Text>
