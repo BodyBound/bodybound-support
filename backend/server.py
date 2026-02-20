@@ -690,44 +690,44 @@ Generate the stencil now."""
         
         image_base64 = None
         mime_type = 'image/png'
-        provider_used = "google"
+        provider_used = "openai"
         last_error = None
         
-        # Try Google Gemini first
-        if AI_API_KEY:
+        # Try OpenAI first (more reliable currently)
+        if EMERGENT_LLM_KEY:
             try:
-                logger.info("Attempting stencil generation with Google Gemini...")
-                image_base64, mime_type = await asyncio.wait_for(
-                    generate_with_gemini(image_data, prompt),
-                    timeout=60.0  # 60 second timeout
-                )
-                provider_used = "google"
-                logger.info("Successfully generated with Google Gemini")
-            except asyncio.TimeoutError:
-                last_error = "Google Gemini timed out"
-                logger.warning(f"Google Gemini timed out, trying OpenAI fallback...")
-            except Exception as e:
-                last_error = str(e)
-                logger.warning(f"Google Gemini failed: {e}, trying OpenAI fallback...")
-        
-        # Fallback to OpenAI if Gemini failed
-        if not image_base64 and EMERGENT_LLM_KEY:
-            try:
-                logger.info("Attempting stencil generation with OpenAI fallback...")
+                logger.info("Attempting stencil generation with OpenAI gpt-image-1...")
                 image_base64, mime_type = await asyncio.wait_for(
                     generate_with_openai(prompt),
                     timeout=90.0  # 90 second timeout for OpenAI
                 )
                 provider_used = "openai"
-                logger.info("Successfully generated with OpenAI fallback")
+                logger.info("Successfully generated with OpenAI")
             except asyncio.TimeoutError:
-                logger.error("OpenAI also timed out")
+                last_error = "OpenAI timed out"
+                logger.warning(f"OpenAI timed out, trying Gemini fallback...")
+            except Exception as e:
+                last_error = str(e)
+                logger.warning(f"OpenAI failed: {e}, trying Gemini fallback...")
+        
+        # Fallback to Google Gemini if OpenAI failed
+        if not image_base64 and AI_API_KEY:
+            try:
+                logger.info("Attempting stencil generation with Google Gemini fallback...")
+                image_base64, mime_type = await asyncio.wait_for(
+                    generate_with_gemini(image_data, prompt),
+                    timeout=60.0  # 60 second timeout
+                )
+                provider_used = "google"
+                logger.info("Successfully generated with Google Gemini fallback")
+            except asyncio.TimeoutError:
+                logger.error("Gemini also timed out")
                 raise HTTPException(
                     status_code=503, 
                     detail="AI services are currently slow or unavailable. Please check your internet connection and try again in a few moments."
                 )
             except Exception as e:
-                logger.error(f"OpenAI fallback also failed: {e}")
+                logger.error(f"Gemini fallback also failed: {e}")
                 raise HTTPException(
                     status_code=503, 
                     detail=f"AI services are currently unavailable. Please check your internet connection and try again later. (Error: {last_error or str(e)})"
