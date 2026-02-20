@@ -591,7 +591,6 @@ Style: Clean black line art on pure white background. No colors, no shading - ju
     # Convert bytes to base64
     image_base64 = base64.b64encode(images[0]).decode('utf-8')
     return image_base64, 'image/png'
-    provider: str = "google"  # Track which provider was used
 
 @api_router.post("/ai-stencil", response_model=AIStencilResponse)
 async def generate_ai_stencil(request: AIStencilRequest):
