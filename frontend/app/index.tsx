@@ -124,6 +124,7 @@ export default function Index() {
   const [brushSize, setBrushSize] = useState(3); // Brush size in pixels
   const [isEraser, setIsEraser] = useState(false); // Eraser mode
   const [editedStencil, setEditedStencil] = useState<string | null>(null); // Saved edited version
+  const [originalAIStencil, setOriginalAIStencil] = useState<string | null>(null); // Original AI stencil (for revert)
   const [isCapturingForExport, setIsCapturingForExport] = useState(false); // Hide original when saving
   const editCanvasRef = useRef<View>(null); // Ref for capturing the canvas
   
