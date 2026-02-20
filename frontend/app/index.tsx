@@ -1925,15 +1925,18 @@ export default function Index() {
           {/* Drawing Canvas Area */}
           <View 
             ref={editCanvasRef}
-            style={styles.editCanvasContainer}
+            style={[
+              styles.editCanvasContainer,
+              isCapturingForExport && { backgroundColor: '#FFFFFF' }
+            ]}
             onStartShouldSetResponder={() => true}
             onMoveShouldSetResponder={() => true}
             onResponderGrant={handleDrawStart}
             onResponderMove={handleDrawMove}
             onResponderRelease={handleDrawEnd}
           >
-            {/* Original image as background */}
-            {originalImage && (
+            {/* Original image as background - hidden during export capture */}
+            {originalImage && !isCapturingForExport && (
               <Image
                 source={{ uri: originalImage }}
                 style={styles.editBackgroundImage}
@@ -1941,11 +1944,14 @@ export default function Index() {
               />
             )}
             
-            {/* Stencil overlay with adjustable opacity */}
+            {/* Stencil overlay - full opacity during export capture */}
             {stencilImage && (
               <Image
                 source={{ uri: stencilImage }}
-                style={[styles.editStencilOverlay, { opacity: editOpacity }]}
+                style={[
+                  styles.editStencilOverlay, 
+                  { opacity: isCapturingForExport ? 1 : editOpacity }
+                ]}
                 resizeMode="contain"
               />
             )}
