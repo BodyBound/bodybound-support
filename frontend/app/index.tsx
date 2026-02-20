@@ -1171,12 +1171,6 @@ export default function Index() {
       const curr = points[i];
       const next = points[i + 1];
       
-      // Calculate control points for smooth curve
-      const cp1x = curr.x - (next.x - prev.x) / 6;
-      const cp1y = curr.y - (next.y - prev.y) / 6;
-      const cp2x = curr.x + (next.x - prev.x) / 6;
-      const cp2y = curr.y + (next.y - prev.y) / 6;
-      
       // Use quadratic bezier for smoother strokes
       const midX = (prev.x + curr.x) / 2;
       const midY = (prev.y + curr.y) / 2;
@@ -1205,19 +1199,36 @@ export default function Index() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
+  // Check if touch is from Apple Pencil/Stylus
+  const isStylusTouch = (event: GestureResponderEvent): boolean => {
+    const nativeEvent = event.nativeEvent as any;
+    // Check for stylus touch type (iOS Apple Pencil)
+    if (nativeEvent.touchType === 'stylus') return true;
+    // Check for force touch (Apple Pencil has force, fingers typically don't report high precision)
+    if (nativeEvent.force && nativeEvent.force > 0) return true;
+    // Check altitudeAngle (only stylus has this)
+    if (nativeEvent.altitudeAngle !== undefined && nativeEvent.altitudeAngle < 1.5) return true;
+    return false;
+  };
+
   // Handle touch start for drawing (with zoom support)
   const handleDrawStart = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     
-    // If two fingers, start pinch zoom
+    // If two fingers, start pinch zoom (fingers only)
     if (touches && touches.length === 2) {
       setIsPinching(true);
       setLastDistance(getDistance(Array.from(touches)));
+      setCurrentPath('');
+      setCurrentPoints([]);
       return;
     }
     
-    // Single finger - start drawing
-    if (!isPinching) {
+    // Check if it's Apple Pencil - only draw with stylus
+    const isStylus = isStylusTouch(event);
+    
+    if (isStylus && !isPinching) {
+      // Stylus touch - START DRAWING
       const { locationX, locationY } = event.nativeEvent;
       // Adjust for current zoom/pan
       const adjustedX = (locationX - editTranslateX) / editScale;
@@ -1225,13 +1236,14 @@ export default function Index() {
       setCurrentPoints([{ x: adjustedX, y: adjustedY }]);
       setCurrentPath(`M${adjustedX},${adjustedY}`);
     }
+    // Single finger touch without stylus = do nothing (let it be used for pan later if needed)
   };
 
   // Handle touch move for drawing (with zoom support)
   const handleDrawMove = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     
-    // Handle pinch zoom
+    // Handle pinch zoom with two fingers
     if (touches && touches.length === 2) {
       setIsPinching(true);
       const newDistance = getDistance(Array.from(touches));
@@ -1246,8 +1258,11 @@ export default function Index() {
       return;
     }
     
-    // Single finger - continue drawing
-    if (!isPinching && currentPoints.length > 0) {
+    // Check if it's Apple Pencil - only draw with stylus
+    const isStylus = isStylusTouch(event);
+    
+    // Stylus touch - CONTINUE DRAWING
+    if (isStylus && !isPinching && currentPoints.length > 0) {
       const { locationX, locationY } = event.nativeEvent;
       // Adjust for current zoom/pan
       const adjustedX = (locationX - editTranslateX) / editScale;
