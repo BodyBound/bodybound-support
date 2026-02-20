@@ -2330,12 +2330,12 @@ export default function Index() {
               <View style={styles.procreateBrushSliderWrapper}>
                 <Slider
                   style={styles.procreateBrushSlider}
-                  minimumValue={0}
-                  maximumValue={1}
+                  minimumValue={1}
+                  maximumValue={0}
                   value={editOpacity}
                   onValueChange={setEditOpacity}
-                  minimumTrackTintColor="#C9A227"
-                  maximumTrackTintColor="#555"
+                  minimumTrackTintColor="#555"
+                  maximumTrackTintColor="#C9A227"
                   thumbTintColor="#C9A227"
                 />
               </View>
