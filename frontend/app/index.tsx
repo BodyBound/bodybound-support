@@ -1230,13 +1230,10 @@ export default function Index() {
     if (isStylus && !isPinching) {
       // Stylus touch - START DRAWING
       const { locationX, locationY } = event.nativeEvent;
-      // Adjust for current zoom/pan
-      const adjustedX = (locationX - editTranslateX) / editScale;
-      const adjustedY = (locationY - editTranslateY) / editScale;
-      setCurrentPoints([{ x: adjustedX, y: adjustedY }]);
-      setCurrentPath(`M${adjustedX},${adjustedY}`);
+      // Use raw coordinates - the SVG is in the same coordinate space
+      setCurrentPoints([{ x: locationX, y: locationY }]);
+      setCurrentPath(`M${locationX},${locationY}`);
     }
-    // Single finger touch without stylus = do nothing (let it be used for pan later if needed)
   };
 
   // Handle touch move for drawing (with zoom support)
@@ -1264,11 +1261,8 @@ export default function Index() {
     // Stylus touch - CONTINUE DRAWING
     if (isStylus && !isPinching && currentPoints.length > 0) {
       const { locationX, locationY } = event.nativeEvent;
-      // Adjust for current zoom/pan
-      const adjustedX = (locationX - editTranslateX) / editScale;
-      const adjustedY = (locationY - editTranslateY) / editScale;
-      
-      const newPoints = [...currentPoints, { x: adjustedX, y: adjustedY }];
+      // Use raw coordinates
+      const newPoints = [...currentPoints, { x: locationX, y: locationY }];
       setCurrentPoints(newPoints);
       
       // Update path with smooth curve
