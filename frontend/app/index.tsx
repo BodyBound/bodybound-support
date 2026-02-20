@@ -1301,10 +1301,8 @@ export default function Index() {
     
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     
-    // Check if this is Apple Pencil
-    const isApplePencil = nativeEvent.touchType === 'stylus' || 
-                          nativeEvent.force > 0 ||
-                          (nativeEvent.altitudeAngle !== undefined && nativeEvent.altitudeAngle < Math.PI / 2);
+    // Check if this is Apple Pencil - ONLY use touchType
+    const isApplePencil = nativeEvent.touchType === 'stylus';
     
     // Determine if this touch should draw
     // On iPad: only Apple Pencil draws, finger pans
