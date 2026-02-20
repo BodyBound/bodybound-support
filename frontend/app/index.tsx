@@ -1310,11 +1310,8 @@ export default function Index() {
     const shouldDraw = isIPad ? isApplePencil : true;
     
     if (shouldDraw && currentPoints.length > 0) {
-      // Continue drawing
-      const canvasX = (locationX - editTranslateX) / editScale;
-      const canvasY = (locationY - editTranslateY) / editScale;
-      
-      const newPoints = [...currentPoints, { x: canvasX, y: canvasY }];
+      // Continue drawing - use raw coordinates
+      const newPoints = [...currentPoints, { x: locationX, y: locationY }];
       setCurrentPoints(newPoints);
       const smoothPath = createSmoothPath(newPoints);
       setCurrentPath(smoothPath);
