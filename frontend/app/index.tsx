@@ -4091,6 +4091,39 @@ const styles = StyleSheet.create({
     color: '#0A0A0A',
     fontWeight: '700',
   },
+  // Mode Toggle - Draw vs Navigate
+  modeToggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: 12,
+    gap: 12,
+  },
+  modeToggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    backgroundColor: '#1A1A1A',
+    borderWidth: 2,
+    borderColor: '#333',
+    gap: 8,
+  },
+  modeToggleActive: {
+    backgroundColor: '#C9A227',
+    borderColor: '#C9A227',
+  },
+  modeToggleIcon: {
+    fontSize: 16,
+  },
+  modeToggleText: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modeToggleTextActive: {
+    color: '#0A0A0A',
+  },
   editSaveToGalleryButton: {
     flexDirection: 'row',
     alignItems: 'center',
