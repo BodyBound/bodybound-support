@@ -3249,6 +3249,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '500',
   },
+  // Revert to original button
+  revertButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+    paddingVertical: 8,
+    gap: 6,
+  },
+  revertButtonIcon: {
+    fontSize: 14,
+  },
+  revertButtonText: {
+    color: '#EF4444',
+    fontSize: 12,
+    fontWeight: '500',
+  },
   // Expand button
   expandButton: {
     flexDirection: 'row',
