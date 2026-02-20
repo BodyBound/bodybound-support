@@ -2312,12 +2312,12 @@ export default function Index() {
               <View style={styles.procreateBrushSliderWrapper}>
                 <Slider
                   style={styles.procreateBrushSlider}
-                  minimumValue={1}
-                  maximumValue={20}
+                  minimumValue={20}
+                  maximumValue={1}
                   value={brushSize}
                   onValueChange={setBrushSize}
-                  minimumTrackTintColor="#C9A227"
-                  maximumTrackTintColor="#555"
+                  minimumTrackTintColor="#555"
+                  maximumTrackTintColor="#C9A227"
                   thumbTintColor="#C9A227"
                 />
               </View>
