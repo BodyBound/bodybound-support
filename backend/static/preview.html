@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edge Detection Stencil Preview</title>
+    <style>
+        body { 
+            background: #1a1a1a; 
+            color: white; 
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        h1 { color: #C9A227; text-align: center; }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 20px; 
+            max-width: 1200px; 
+            margin: 0 auto;
+        }
+        .card {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .card img { 
+            max-width: 100%; 
+            border-radius: 8px;
+            border: 2px solid #444;
+        }
+        .card h3 { color: #C9A227; margin: 10px 0 5px; }
+        .card p { color: #888; font-size: 14px; margin: 5px 0; }
+        .original { 
+            grid-column: span 2; 
+            max-width: 400px; 
+            margin: 0 auto 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Offline Edge Detection Preview</h1>
+    <p style="text-align:center; color:#888;">These are generated WITHOUT AI - 100% on-device, instant, works offline</p>
+    
+    <div class="card original">
+        <h3>Original Photo</h3>
+        <img src="/api/preview-image/original" alt="Original">
+    </div>
+    
+    <div class="grid">
+        <div class="card">
+            <h3>Method 1: Canny Edge</h3>
+            <img src="/api/preview-image/canny" alt="Canny">
+            <p>Clean outline detection - captures main edges</p>
+        </div>
+        <div class="card">
+            <h3>Method 2: Adaptive Threshold</h3>
+            <img src="/api/preview-image/adaptive" alt="Adaptive">
+            <p>More detailed - captures subtle features</p>
+        </div>
+        <div class="card">
+            <h3>Method 3: Pencil Sketch</h3>
+            <img src="/api/preview-image/sketch" alt="Sketch">
+            <p>Soft pencil drawing style</p>
+        </div>
+        <div class="card">
+            <h3>Method 4: Clean Combined</h3>
+            <img src="/api/preview-image/clean" alt="Clean">
+            <p>Denoised + clean edges</p>
+        </div>
+    </div>
+</body>
+</html>
