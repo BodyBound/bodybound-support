@@ -1208,20 +1208,22 @@ export default function Index() {
   // Handle touch start - Procreate style: 2 fingers = zoom/pan, 1 finger = pan (iPad) or draw (iPhone), Apple Pencil = draw
   const handleDrawStart = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
+    const touchCount = touches ? touches.length : 1;
     const nativeEvent = event.nativeEvent as any;
     
-    // Check if running on iPad
+    // Check if running on iPad (for native builds)
     const isIPad = Platform.OS === 'ios' && Platform.isPad;
     
-    // Two fingers = zoom/pan
-    if (touches && touches.length === 2) {
+    // Two or more fingers = zoom/pan mode
+    if (touchCount >= 2) {
       setIsPinching(true);
-      setLastDistance(getDistance(Array.from(touches)));
-      // Calculate midpoint for panning
-      const midX = (touches[0].pageX + touches[1].pageX) / 2;
-      const midY = (touches[0].pageY + touches[1].pageY) / 2;
-      setLastPanX(midX);
-      setLastPanY(midY);
+      if (touches) {
+        setLastDistance(getDistance(Array.from(touches)));
+        const midX = (touches[0].pageX + touches[1].pageX) / 2;
+        const midY = (touches[0].pageY + touches[1].pageY) / 2;
+        setLastPanX(midX);
+        setLastPanY(midY);
+      }
       setCurrentPath('');
       setCurrentPoints([]);
       return;
@@ -1230,8 +1232,10 @@ export default function Index() {
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     const now = Date.now();
     
-    // Check if this is Apple Pencil - ONLY use touchType, no fallbacks
-    const isApplePencil = nativeEvent.touchType === 'stylus';
+    // Apple Pencil detection - check multiple properties
+    // On native iOS, stylus touches have touchType === 'stylus' or type === 'stylus'
+    const touchType = nativeEvent.touchType || nativeEvent.type || '';
+    const isApplePencil = touchType === 'stylus' || touchType === 'pencil';
     
     // Double-tap detection for undo (within 300ms)
     if (now - lastTapTimeRef.current < 300) {
@@ -1241,22 +1245,23 @@ export default function Index() {
     }
     lastTapTimeRef.current = now;
     
-    // Hide hint after first interaction
+    // Hide hint after 3 seconds
     if (showEditHint) {
       setTimeout(() => setShowEditHint(false), 3000);
     }
     
-    // Determine if this touch should draw
-    // On iPad: only Apple Pencil draws, finger pans
-    // On iPhone/other: finger draws
+    // On iPad: Apple Pencil draws, finger pans
+    // On iPhone/Android: finger draws
+    // If we can't detect pencil reliably, default to drawing for single touch
     const shouldDraw = isIPad ? isApplePencil : true;
     
-    if (shouldDraw) {
-      // Draw - use raw coordinates (no transform for now to debug)
+    if (shouldDraw || !isIPad) {
+      // Always allow drawing on non-iPad, or when pencil detected on iPad
+      // For now, let's allow drawing on single touch regardless (can refine later)
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
     } else {
-      // Pan (iPad with finger)
+      // iPad with finger - pan
       setLastPanX(pageX);
       setLastPanY(pageY);
     }
