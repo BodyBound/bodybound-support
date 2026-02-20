@@ -1571,7 +1571,7 @@ export default function Index() {
         maximumValue={100}
         value={value}
         onValueChange={(val) => setSettings(prev => ({ ...prev, [settingKey]: val }))}
-        onSlidingComplete={(val) => handleSettingsChange({ ...settings, [settingKey]: val })}
+        onSlidingComplete={(val) => setSettings(prev => ({ ...prev, [settingKey]: val }))}
         minimumTrackTintColor="#C9A227"
         maximumTrackTintColor="#3D3428"
         thumbTintColor="#C9A227"
