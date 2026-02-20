@@ -1258,7 +1258,11 @@ export default function Index() {
     if (isDrawMode && !isPinching) {
       // DRAW MODE - continue drawing
       if (currentPoints.length > 0) {
-        const newPoints = [...currentPoints, { x: locationX, y: locationY }];
+        // Transform coordinates to account for zoom and pan
+        const canvasX = (locationX - editTranslateX) / editScale;
+        const canvasY = (locationY - editTranslateY) / editScale;
+        
+        const newPoints = [...currentPoints, { x: canvasX, y: canvasY }];
         setCurrentPoints(newPoints);
         const smoothPath = createSmoothPath(newPoints);
         setCurrentPath(smoothPath);
