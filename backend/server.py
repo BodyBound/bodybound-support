@@ -532,6 +532,7 @@ class AIStencilRequest(BaseModel):
 class AIStencilResponse(BaseModel):
     stencil_base64: str
     processing_time_ms: float
+    provider: str = "google"  # Track which provider was used
 
 @api_router.post("/ai-stencil", response_model=AIStencilResponse)
 async def generate_ai_stencil(request: AIStencilRequest):
