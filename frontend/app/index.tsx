@@ -1653,6 +1653,14 @@ export default function Index() {
                     </TouchableOpacity>
                   </View>
                 )}
+                
+                {/* Revert button - only show if user has edited the stencil */}
+                {editedStencil && originalAIStencil && (
+                  <TouchableOpacity style={styles.revertButton} onPress={revertToOriginal}>
+                    <Text style={styles.revertButtonIcon}>↩️</Text>
+                    <Text style={styles.revertButtonText}>Revert to Original AI Stencil</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           )}
