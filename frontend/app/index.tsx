@@ -2158,7 +2158,17 @@ export default function Index() {
             </TouchableOpacity>
           </View>
 
-          {/* Drawing Canvas Area */}
+          {/* Zoom indicator */}
+          {editScale !== 1 && (
+            <View style={styles.zoomIndicator}>
+              <Text style={styles.zoomIndicatorText}>{Math.round(editScale * 100)}%</Text>
+              <TouchableOpacity onPress={resetZoom} style={styles.resetZoomButton}>
+                <Text style={styles.resetZoomText}>Reset</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Drawing Canvas Area with zoom transform */}
           <View 
             ref={editCanvasRef}
             style={[
@@ -2171,43 +2181,53 @@ export default function Index() {
             onResponderMove={handleDrawMove}
             onResponderRelease={handleDrawEnd}
           >
-            {/* Original image as background - hidden during export capture */}
-            {originalImage && !isCapturingForExport && (
-              <Image
-                source={{ uri: originalImage }}
-                style={styles.editBackgroundImage}
-                resizeMode="contain"
-              />
-            )}
-            
-            {/* Stencil overlay - full opacity during export capture */}
-            {stencilImage && (
-              <Image
-                source={{ uri: stencilImage }}
-                style={[
-                  styles.editStencilOverlay, 
-                  { opacity: isCapturingForExport ? 1 : editOpacity }
-                ]}
-                resizeMode="contain"
-              />
-            )}
-            
-            {/* SVG Drawing Layer */}
-            <Svg style={styles.editDrawingLayer}>
-              {/* Existing paths */}
-              {drawingPaths.map((path, index) => {
-                const isEraserPath = path.startsWith('ERASER:');
-                const actualPath = isEraserPath ? path.replace('ERASER:', '') : path;
-                return (
-                  <Path
-                    key={index}
-                    d={actualPath}
-                    stroke={isEraserPath ? '#FFFFFF' : '#000000'}
-                    strokeWidth={isEraserPath ? brushSize * 3 : brushSize}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+            <View style={[
+              styles.editCanvasInner,
+              { 
+                transform: [
+                  { scale: editScale },
+                  { translateX: editTranslateX },
+                  { translateY: editTranslateY }
+                ]
+              }
+            ]}>
+              {/* Original image as background - hidden during export capture */}
+              {originalImage && !isCapturingForExport && (
+                <Image
+                  source={{ uri: originalImage }}
+                  style={styles.editBackgroundImage}
+                  resizeMode="contain"
+                />
+              )}
+              
+              {/* Stencil overlay - full opacity during export capture */}
+              {stencilImage && (
+                <Image
+                  source={{ uri: stencilImage }}
+                  style={[
+                    styles.editStencilOverlay, 
+                    { opacity: isCapturingForExport ? 1 : editOpacity }
+                  ]}
+                  resizeMode="contain"
+                />
+              )}
+              
+              {/* SVG Drawing Layer */}
+              <Svg style={styles.editDrawingLayer}>
+                {/* Existing paths */}
+                {drawingPaths.map((path, index) => {
+                  const isEraserPath = path.startsWith('ERASER:');
+                  const actualPath = isEraserPath ? path.replace('ERASER:', '') : path;
+                  return (
+                    <Path
+                      key={index}
+                      d={actualPath}
+                      stroke={isEraserPath ? '#FFFFFF' : '#000000'}
+                      strokeWidth={isEraserPath ? brushSize * 3 : brushSize}
+                      fill="none"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                 );
               })}
               {/* Current drawing path */}
