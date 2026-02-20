@@ -2392,6 +2392,17 @@ export default function Index() {
                 <Text style={styles.modeToggleIcon}>🔍</Text>
                 <Text style={[styles.modeToggleText, !isDrawMode && styles.modeToggleTextActive]}>Navigate</Text>
               </TouchableOpacity>
+              
+              {/* Reset Zoom - only shows when zoomed */}
+              {editScale !== 1 && (
+                <TouchableOpacity 
+                  style={styles.resetZoomInlineButton}
+                  onPress={resetZoom}
+                >
+                  <Text style={styles.modeToggleIcon}>↺</Text>
+                  <Text style={styles.resetZoomInlineText}>Reset</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Save to Gallery Button */}
