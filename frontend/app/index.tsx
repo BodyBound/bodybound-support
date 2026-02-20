@@ -1274,11 +1274,13 @@ export default function Index() {
     if (touches && touches.length === 2) {
       setIsPinching(true);
       
-      // Zoom
+      // Zoom - with reduced sensitivity
       const newDistance = getDistance(Array.from(touches));
       if (lastDistance > 0) {
         const scaleFactor = newDistance / lastDistance;
-        const newScale = Math.min(Math.max(editScale * scaleFactor, 0.3), 5);
+        // Reduce zoom sensitivity by interpolating towards 1
+        const dampedScale = 1 + (scaleFactor - 1) * 0.5;
+        const newScale = Math.min(Math.max(editScale * dampedScale, 0.5), 3);
         setEditScale(newScale);
       }
       setLastDistance(newDistance);
