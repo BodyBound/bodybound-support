@@ -616,7 +616,7 @@ async def generate_ai_stencil(request: AIStencilRequest):
             "blue": "blue/indigo", 
             "black": "black"
         }
-        line_color = color_map.get(request.line_color, "purple/violet")
+        line_color = color_map.get(request.line_color, "black")
         
         # Convert shading_detail and solid_fill to descriptive levels
         shading_level = "minimal" if request.shading_detail < 20 else "light" if request.shading_detail < 40 else "moderate" if request.shading_detail < 60 else "heavy"
