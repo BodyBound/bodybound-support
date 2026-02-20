@@ -670,56 +670,79 @@ VERIFICATION CHECKLIST:
 
 Generate the stencil now."""
 
-        # Send the image with prompt
-        msg = UserMessage(
-            text=prompt,
-            file_contents=[ImageContent(image_data)]
-        )
         
-        text_response, images = await chat.send_message_multimodal_response(msg)
+        image_base64 = None
+        mime_type = 'image/png'
+        provider_used = "google"
+        last_error = None
         
-        logger.info(f"AI response - text: {text_response[:100] if text_response else 'None'}..., images count: {len(images) if images else 0}")
+        # Try Google Gemini first
+        if AI_API_KEY:
+            try:
+                logger.info("Attempting stencil generation with Google Gemini...")
+                image_base64, mime_type = await asyncio.wait_for(
+                    generate_with_gemini(image_data, prompt),
+                    timeout=60.0  # 60 second timeout
+                )
+                provider_used = "google"
+                logger.info("Successfully generated with Google Gemini")
+            except asyncio.TimeoutError:
+                last_error = "Google Gemini timed out"
+                logger.warning(f"Google Gemini timed out, trying OpenAI fallback...")
+            except Exception as e:
+                last_error = str(e)
+                logger.warning(f"Google Gemini failed: {e}, trying OpenAI fallback...")
         
-        if not images or len(images) == 0:
-            logger.error(f"AI did not return any images. Text response: {text_response}")
-            raise HTTPException(status_code=500, detail="AI failed to generate stencil image - no image returned")
-        
-        # Get the generated image
-        generated_image = images[0]
-        logger.info(f"Generated image keys: {generated_image.keys() if isinstance(generated_image, dict) else type(generated_image)}")
-        
-        # Handle different response formats
-        if isinstance(generated_image, dict):
-            image_base64 = generated_image.get('data') or generated_image.get('b64_json') or generated_image.get('base64')
-            mime_type = generated_image.get('mime_type', 'image/png')
-        elif isinstance(generated_image, str):
-            image_base64 = generated_image
-            mime_type = 'image/png'
-        else:
-            logger.error(f"Unexpected image format: {type(generated_image)}")
-            raise HTTPException(status_code=500, detail="Unexpected image format from AI")
+        # Fallback to OpenAI if Gemini failed
+        if not image_base64 and EMERGENT_LLM_KEY:
+            try:
+                logger.info("Attempting stencil generation with OpenAI fallback...")
+                image_base64, mime_type = await asyncio.wait_for(
+                    generate_with_openai(prompt),
+                    timeout=90.0  # 90 second timeout for OpenAI
+                )
+                provider_used = "openai"
+                logger.info("Successfully generated with OpenAI fallback")
+            except asyncio.TimeoutError:
+                logger.error("OpenAI also timed out")
+                raise HTTPException(
+                    status_code=503, 
+                    detail="AI services are currently slow or unavailable. Please check your internet connection and try again in a few moments."
+                )
+            except Exception as e:
+                logger.error(f"OpenAI fallback also failed: {e}")
+                raise HTTPException(
+                    status_code=503, 
+                    detail=f"AI services are currently unavailable. Please check your internet connection and try again later. (Error: {last_error or str(e)})"
+                )
         
         if not image_base64:
-            logger.error(f"No image data found in response: {generated_image}")
-            raise HTTPException(status_code=500, detail="AI returned empty image data")
+            raise HTTPException(
+                status_code=503, 
+                detail="Unable to generate stencil. AI services may be experiencing issues. Please check your internet connection and try again."
+            )
         
         # Format as data URL
         stencil_base64 = f"data:{mime_type};base64,{image_base64}"
         
         processing_time = (time.time() - start_time) * 1000
         
-        logger.info(f"AI stencil generated in {processing_time:.2f}ms")
+        logger.info(f"AI stencil generated in {processing_time:.2f}ms using {provider_used}")
         
         return AIStencilResponse(
             stencil_base64=stencil_base64,
-            processing_time_ms=round(processing_time, 2)
+            processing_time_ms=round(processing_time, 2),
+            provider=provider_used
         )
         
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error generating AI stencil: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating AI stencil: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Error generating stencil. Please check your internet connection and try again. If the problem persists, AI services may be temporarily unavailable."
+        )
 
 @api_router.post("/stencils", response_model=SavedStencil)
 async def save_stencil(request: SaveStencilRequest):
