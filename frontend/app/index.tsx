@@ -2224,8 +2224,10 @@ export default function Index() {
 
           {/* Double-tap hint tooltip */}
           {showEditHint && (
-            <View style={styles.editHintContainer}>
-              <Text style={styles.editHintText}>💡 Double-tap to undo</Text>
+            <View style={styles.editHintWrapper}>
+              <View style={styles.editHintContainer}>
+                <Text style={styles.editHintText}>💡 Double-tap to undo</Text>
+              </View>
             </View>
           )}
 
