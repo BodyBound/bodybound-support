@@ -2222,16 +2222,6 @@ export default function Index() {
             </TouchableOpacity>
           </View>
 
-          {/* Zoom indicator */}
-          {editScale !== 1 && (
-            <View style={styles.zoomIndicator}>
-              <Text style={styles.zoomIndicatorText}>{Math.round(editScale * 100)}%</Text>
-              <TouchableOpacity onPress={resetZoom} style={styles.resetZoomButton}>
-                <Text style={styles.resetZoomText}>Reset</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-
           {/* Double-tap hint tooltip */}
           {showEditHint && (
             <View style={styles.editHintContainer}>
