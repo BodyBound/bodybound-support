@@ -4419,11 +4419,40 @@ const styles = StyleSheet.create({
   procreateHintText: {
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     color: '#C9A227',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    paddingVertical: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 15,
+    overflow: 'hidden',
+    textAlign: 'center',
+  },
+  procreateTopHintBar: {
+    position: 'absolute',
+    top: 100,
+    left: 16,
+    right: 16,
+    alignItems: 'center',
+    gap: 10,
+  },
+  modeToggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    borderRadius: 25,
+    padding: 4,
+    gap: 4,
+  },
+  modeToggleBtn: {
+    paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
-    overflow: 'hidden',
+  },
+  modeToggleBtnActive: {
+    backgroundColor: '#C9A227',
+  },
+  modeToggleBtnText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
