@@ -542,7 +542,7 @@ export default function Index() {
       // Generate Heavy version - Texture AND solid black (moderate)
       setGenerationProgress(3);
       console.log('[GenerateAI] Starting Heavy version...');
-      const heavyResponse = await fetchWithRetry(`${API_URL}/api/ai-stencil`, {
+      const heavyResponse = await fetchWithTimeout(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
