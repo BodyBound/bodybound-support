@@ -1137,6 +1137,7 @@ export default function Index() {
     setEditOpacity(0.5);
     setBrushSize(3);
     setIsEraser(false);
+    setShowEditHint(true); // Show hint each time edit mode opens
     setShowEditModal(true);
   };
 
