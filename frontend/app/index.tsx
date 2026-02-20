@@ -1072,12 +1072,38 @@ export default function Index() {
   
   // Open edit modal and reset drawing state
   const openEditMode = () => {
-    setDrawingPaths([]);
+    // Store the original AI stencil if not already stored (for revert functionality)
+    if (!originalAIStencil && stencilImage) {
+      setOriginalAIStencil(stencilImage);
+    }
+    // Don't reset drawings - preserve them for continued editing
     setCurrentPath('');
     setEditOpacity(0.5);
     setBrushSize(3);
     setIsEraser(false);
     setShowEditModal(true);
+  };
+
+  // Revert to original AI stencil (removes all edits)
+  const revertToOriginal = () => {
+    Alert.alert(
+      'Revert to Original',
+      'This will remove all your drawings and restore the original AI stencil. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Revert', 
+          style: 'destructive',
+          onPress: () => {
+            if (originalAIStencil) {
+              setStencilImage(originalAIStencil);
+              setDrawingPaths([]);
+              setEditedStencil(null);
+            }
+          }
+        }
+      ]
+    );
   };
 
   // Handle touch start for drawing
