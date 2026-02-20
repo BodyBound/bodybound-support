@@ -2394,13 +2394,11 @@ export default function Index() {
             </TouchableOpacity>
           </View>
 
-          {/* Hint Toast - different for iPad vs iPhone */}
+          {/* Hint Toast */}
           {showEditHint && (
             <View style={styles.procreateHint}>
               <Text style={styles.procreateHintText}>
-                {Platform.OS === 'ios'
-                  ? 'Finger: pan • Two fingers: zoom • Pencil: draw • Double-tap: undo'
-                  : 'Two fingers: zoom/pan • One finger: draw • Double-tap: undo'}
+                Finger: pan • Two fingers: zoom • Pencil: draw • Double-tap: undo
               </Text>
             </View>
           )}
