@@ -1219,8 +1219,14 @@ export default function Index() {
     
     if (isDrawMode) {
       // DRAW MODE - single touch draws
-      setCurrentPoints([{ x: locationX, y: locationY }]);
-      setCurrentPath(`M${locationX},${locationY}`);
+      // Transform coordinates to account for zoom and pan
+      // The canvas is transformed with: translateX, translateY, then scale
+      // So we need to reverse this: subtract translation, then divide by scale
+      const canvasX = (locationX - editTranslateX) / editScale;
+      const canvasY = (locationY - editTranslateY) / editScale;
+      
+      setCurrentPoints([{ x: canvasX, y: canvasY }]);
+      setCurrentPath(`M${canvasX},${canvasY}`);
     } else {
       // NAVIGATE MODE - single touch starts pan
       setLastPanX(pageX);
