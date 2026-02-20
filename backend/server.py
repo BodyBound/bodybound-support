@@ -595,7 +595,11 @@ Style: Clean black line art on pure white background. No colors, no shading - ju
 
 @api_router.post("/ai-stencil", response_model=AIStencilResponse)
 async def generate_ai_stencil(request: AIStencilRequest):
-    """Generate a professional tattoo stencil using AI with fallback providers"""
+    """Generate a professional tattoo stencil using AI with fallback providers
+    
+    If regenerate_style is specified (light/medium/heavy), only that style is generated.
+    Otherwise, this endpoint is called 3 times by the frontend for all styles.
+    """
     try:
         import time
         start_time = time.time()
@@ -619,8 +623,20 @@ async def generate_ai_stencil(request: AIStencilRequest):
         }
         line_color = color_map.get(request.line_color, "black")
         
-        # Convert shading_detail and solid_fill to descriptive levels
-        shading_level = "minimal" if request.shading_detail < 20 else "light" if request.shading_detail < 40 else "moderate" if request.shading_detail < 60 else "heavy"
+        # Determine shading level - if regenerate_style is set, use that specific style
+        if request.regenerate_style:
+            # Map regenerate_style to shading_level
+            style_to_shading = {
+                "light": "minimal",
+                "medium": "light", 
+                "heavy": "moderate"
+            }
+            shading_level = style_to_shading.get(request.regenerate_style.lower(), "light")
+            logger.info(f"Regenerating single style: {request.regenerate_style} (shading: {shading_level})")
+        else:
+            # Use shading_detail from request
+            shading_level = "minimal" if request.shading_detail < 20 else "light" if request.shading_detail < 40 else "moderate" if request.shading_detail < 60 else "heavy"
+        
         fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
         
         # Create the prompt for EXACT tracing - ULTRA STRICT for tattoo stencils
