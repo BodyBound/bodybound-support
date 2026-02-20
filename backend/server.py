@@ -532,6 +532,65 @@ class AIStencilRequest(BaseModel):
 class AIStencilResponse(BaseModel):
     stencil_base64: str
     processing_time_ms: float
+    
+async def generate_with_gemini(image_data: str, prompt: str) -> tuple[str, str]:
+    """Try to generate stencil with Google Gemini"""
+    chat = LlmChat(
+        api_key=AI_API_KEY, 
+        session_id=f"stencil-{uuid.uuid4()}", 
+        system_message="You are an expert tattoo stencil artist. You create clean, professional tattoo stencils from reference images."
+    )
+    chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["image", "text"])
+    
+    msg = UserMessage(
+        text=prompt,
+        file_contents=[ImageContent(image_data)]
+    )
+    
+    text_response, images = await chat.send_message_multimodal_response(msg)
+    
+    if not images or len(images) == 0:
+        raise Exception("Gemini did not return any images")
+    
+    generated_image = images[0]
+    
+    if isinstance(generated_image, dict):
+        image_base64 = generated_image.get('data') or generated_image.get('b64_json') or generated_image.get('base64')
+        mime_type = generated_image.get('mime_type', 'image/png')
+    elif isinstance(generated_image, str):
+        image_base64 = generated_image
+        mime_type = 'image/png'
+    else:
+        raise Exception(f"Unexpected image format: {type(generated_image)}")
+    
+    if not image_base64:
+        raise Exception("Gemini returned empty image data")
+    
+    return image_base64, mime_type
+
+async def generate_with_openai(prompt: str) -> tuple[str, str]:
+    """Fallback: Generate stencil with OpenAI gpt-image-1"""
+    image_gen = OpenAIImageGeneration(api_key=EMERGENT_LLM_KEY)
+    
+    # OpenAI prompt (text-only, describes the desired stencil)
+    openai_prompt = f"""Create a professional tattoo stencil line drawing.
+
+{prompt}
+
+Style: Clean black line art on pure white background. No colors, no shading - just black outlines suitable for tattoo transfer paper."""
+    
+    images = await image_gen.generate_images(
+        prompt=openai_prompt,
+        model="gpt-image-1",
+        number_of_images=1
+    )
+    
+    if not images or len(images) == 0:
+        raise Exception("OpenAI did not return any images")
+    
+    # Convert bytes to base64
+    image_base64 = base64.b64encode(images[0]).decode('utf-8')
+    return image_base64, 'image/png'
     provider: str = "google"  # Track which provider was used
 
 @api_router.post("/ai-stencil", response_model=AIStencilResponse)
