@@ -1202,23 +1202,11 @@ export default function Index() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // Check if touch is from Apple Pencil/Stylus
-  const isStylusTouch = (event: GestureResponderEvent): boolean => {
-    const nativeEvent = event.nativeEvent as any;
-    // Check for stylus touch type (iOS Apple Pencil)
-    if (nativeEvent.touchType === 'stylus') return true;
-    // Check for force touch (Apple Pencil has force, fingers typically don't report high precision)
-    if (nativeEvent.force && nativeEvent.force > 0) return true;
-    // Check altitudeAngle (only stylus has this)
-    if (nativeEvent.altitudeAngle !== undefined && nativeEvent.altitudeAngle < 1.5) return true;
-    return false;
-  };
-
-  // Handle touch start for drawing (with zoom support)
+  // Handle touch start - behavior depends on Draw/Navigate mode
   const handleDrawStart = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     
-    // If two fingers, start pinch zoom (fingers only)
+    // Two fingers = always pinch zoom (in both modes)
     if (touches && touches.length === 2) {
       setIsPinching(true);
       setLastDistance(getDistance(Array.from(touches)));
@@ -1227,30 +1215,31 @@ export default function Index() {
       return;
     }
     
-    // Check if it's Apple Pencil - only draw with stylus
-    const isStylus = isStylusTouch(event);
+    const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     
-    if (isStylus && !isPinching) {
-      // Stylus touch - START DRAWING
-      const { locationX, locationY } = event.nativeEvent;
-      // Use raw coordinates - the SVG is in the same coordinate space
+    if (isDrawMode) {
+      // DRAW MODE - single touch draws
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
+    } else {
+      // NAVIGATE MODE - single touch starts pan
+      setLastPanX(pageX);
+      setLastPanY(pageY);
     }
   };
 
-  // Handle touch move for drawing (with zoom support)
+  // Handle touch move - behavior depends on Draw/Navigate mode
   const handleDrawMove = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
     
-    // Handle pinch zoom with two fingers
+    // Two fingers = pinch zoom (in both modes)
     if (touches && touches.length === 2) {
       setIsPinching(true);
       const newDistance = getDistance(Array.from(touches));
       
       if (lastDistance > 0) {
         const scaleFactor = newDistance / lastDistance;
-        const newScale = Math.min(Math.max(editScale * scaleFactor, 0.5), 4); // Limit zoom 0.5x to 4x
+        const newScale = Math.min(Math.max(editScale * scaleFactor, 0.5), 4);
         setEditScale(newScale);
       }
       
@@ -1258,19 +1247,24 @@ export default function Index() {
       return;
     }
     
-    // Check if it's Apple Pencil - only draw with stylus
-    const isStylus = isStylusTouch(event);
+    const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     
-    // Stylus touch - CONTINUE DRAWING
-    if (isStylus && !isPinching && currentPoints.length > 0) {
-      const { locationX, locationY } = event.nativeEvent;
-      // Use raw coordinates
-      const newPoints = [...currentPoints, { x: locationX, y: locationY }];
-      setCurrentPoints(newPoints);
-      
-      // Update path with smooth curve
-      const smoothPath = createSmoothPath(newPoints);
-      setCurrentPath(smoothPath);
+    if (isDrawMode && !isPinching) {
+      // DRAW MODE - continue drawing
+      if (currentPoints.length > 0) {
+        const newPoints = [...currentPoints, { x: locationX, y: locationY }];
+        setCurrentPoints(newPoints);
+        const smoothPath = createSmoothPath(newPoints);
+        setCurrentPath(smoothPath);
+      }
+    } else if (!isDrawMode && !isPinching) {
+      // NAVIGATE MODE - pan the canvas
+      const deltaX = pageX - lastPanX;
+      const deltaY = pageY - lastPanY;
+      setEditTranslateX(prev => prev + deltaX);
+      setEditTranslateY(prev => prev + deltaY);
+      setLastPanX(pageX);
+      setLastPanY(pageY);
     }
   };
 
