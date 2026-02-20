@@ -492,7 +492,7 @@ export default function Index() {
       // Generate Light version - Clean lines only, no texture, no black
       setGenerationProgress(1);
       console.log('[GenerateAI] Starting Light version, sending base64 length:', base64Part.length);
-      const lightResponse = await fetchWithRetry(`${API_URL}/api/ai-stencil`, {
+      const lightResponse = await fetchWithTimeout(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -517,7 +517,7 @@ export default function Index() {
       // Generate Medium version - Clean lines + texture/contour, NO black fill
       setGenerationProgress(2);
       console.log('[GenerateAI] Starting Medium version...');
-      const mediumResponse = await fetchWithRetry(`${API_URL}/api/ai-stencil`, {
+      const mediumResponse = await fetchWithTimeout(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
