@@ -2050,6 +2050,20 @@ export default function Index() {
                   styles.compactVersionText,
                   selectedVersion === 'light' && styles.compactVersionTextSelected
                 ]}>Light</Text>
+                {stencilVersions.light && (
+                  <TouchableOpacity
+                    style={styles.regenButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      regenerateSingleStyle('light');
+                    }}
+                    disabled={!!regeneratingStyle}
+                  >
+                    <Text style={styles.regenButtonText}>
+                      {regeneratingStyle === 'light' ? '⏳' : '🔄'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -2066,6 +2080,20 @@ export default function Index() {
                   styles.compactVersionText,
                   selectedVersion === 'medium' && styles.compactVersionTextSelected
                 ]}>Medium</Text>
+                {stencilVersions.medium && (
+                  <TouchableOpacity
+                    style={styles.regenButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      regenerateSingleStyle('medium');
+                    }}
+                    disabled={!!regeneratingStyle}
+                  >
+                    <Text style={styles.regenButtonText}>
+                      {regeneratingStyle === 'medium' ? '⏳' : '🔄'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -2082,6 +2110,20 @@ export default function Index() {
                   styles.compactVersionText,
                   selectedVersion === 'heavy' && styles.compactVersionTextSelected
                 ]}>Heavy</Text>
+                {stencilVersions.heavy && (
+                  <TouchableOpacity
+                    style={styles.regenButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      regenerateSingleStyle('heavy');
+                    }}
+                    disabled={!!regeneratingStyle}
+                  >
+                    <Text style={styles.regenButtonText}>
+                      {regeneratingStyle === 'heavy' ? '⏳' : '🔄'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </TouchableOpacity>
             </View>
           </View>
