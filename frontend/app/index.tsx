@@ -2318,6 +2318,25 @@ export default function Index() {
               </TouchableOpacity>
             </View>
 
+            {/* Mode Toggle - Draw vs Navigate */}
+            <View style={styles.modeToggleRow}>
+              <TouchableOpacity 
+                style={[styles.modeToggleButton, isDrawMode && styles.modeToggleActive]}
+                onPress={() => setIsDrawMode(true)}
+              >
+                <Text style={styles.modeToggleIcon}>✏️</Text>
+                <Text style={[styles.modeToggleText, isDrawMode && styles.modeToggleTextActive]}>Draw Mode</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modeToggleButton, !isDrawMode && styles.modeToggleActive]}
+                onPress={() => setIsDrawMode(false)}
+              >
+                <Text style={styles.modeToggleIcon}>🔍</Text>
+                <Text style={[styles.modeToggleText, !isDrawMode && styles.modeToggleTextActive]}>Navigate</Text>
+              </TouchableOpacity>
+            </View>
+
             {/* Save to Gallery Button */}
             <TouchableOpacity style={styles.editSaveToGalleryButton} onPress={saveEditedToGallery}>
               <Text style={styles.editSaveToGalleryIcon}>📤</Text>
