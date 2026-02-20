@@ -564,44 +564,38 @@ async def generate_ai_stencil(request: AIStencilRequest):
         shading_level = "minimal" if request.shading_detail < 20 else "light" if request.shading_detail < 40 else "moderate" if request.shading_detail < 60 else "heavy"
         fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
         
-        # Create the prompt for EXACT tracing - very strict
-        prompt = f"""IMPORTANT: Convert THIS EXACT input image to a line art stencil. DO NOT create a different image.
+        # Create the prompt for EXACT tracing - very strict with professional tattoo stencil style
+        prompt = f"""CRITICAL: This is a TRACING task. Convert THIS EXACT input image to a professional tattoo stencil.
 
-ABSOLUTE RULES - VIOLATION IS FAILURE:
-1. The output MUST show the EXACT SAME subject as the input
-2. The output MUST have the EXACT SAME composition as the input
-3. The output MUST have the EXACT SAME pose/position as the input
-4. If input shows a face, output must show THAT SAME face in SAME position
-5. If input shows an object, output must show THAT SAME object in SAME position
-6. DO NOT create your own version or interpretation
-7. DO NOT draw a "similar" subject - draw THIS subject
+ABSOLUTE REQUIREMENTS - MUST FOLLOW EXACTLY:
+1. TRACE the input image EXACTLY - same subject, same composition, same pose, same proportions
+2. This is NOT creative interpretation - it is PRECISE TRACING like a photocopier
+3. Every feature must be in the EXACT same position as the input photo
+4. DO NOT add, remove, or reposition ANY elements
+5. If input shows a face at 3/4 angle, output must show THAT SAME face at THAT SAME angle
+6. Match all proportions precisely - measure twice, draw once
 
-TASK: Photo-to-line-art conversion (NOT creative generation)
-- Input: The photo I'm providing
-- Output: A line drawing of EXACTLY what's in that photo
-- Think of this as TRACING, not drawing from imagination
-
-TECHNICAL SPECS:
+OUTPUT STYLE - PROFESSIONAL TATTOO STENCIL:
 - Use {line_color} colored lines on pure white background
-- NO gradients, NO soft shading, NO gray tones
-- All shading via line techniques only (cross-hatch, dots, parallel lines)
+- Clean, confident line work like hand-drawn stencils
+- NO gradients, NO soft shading, NO gray tones, NO watercolor effects
 
-SHADING AMOUNT: {shading_level.upper()}
+SHADING TECHNIQUE: {shading_level.upper()}
 {
-"- Outlines only, minimal internal detail" if shading_level == "minimal" else
-"- Light cross-hatching/dots in shadow areas" if shading_level == "light" else
-"- Moderate cross-hatching and stippling throughout" if shading_level == "moderate" else
-"- Heavy detailed line work"
+"- Clean outlines only, no internal shading lines" if shading_level == "minimal" else
+"- Use DOTTED/DASHED lines to indicate contour, shadows and lighting areas (like tattoo placement guides). NO cross-hatching. Dots and dashes only for shading guidance." if shading_level == "light" else
+"- Use dotted lines and light stippling (dots) for contour guidance. Some parallel lines for texture. Keep it clean, not busy." if shading_level == "moderate" else
+"- Detailed stippling and parallel lines for texture and depth"
 }
 
 BLACK FILLS: {fill_level.upper()}
 {
-"- None - lines only" if fill_level == "none" else
-"- Minimal in darkest areas" if fill_level == "minimal" else
-"- Moderate in shadows"
+"- NO solid black fills - lines and dots only" if fill_level == "none" else
+"- Minimal solid black in only the darkest shadow areas" if fill_level == "minimal" else
+"- Moderate solid black fills in shadow areas"
 }
 
-VERIFY: Before outputting, check that your stencil matches the input image exactly."""
+FINAL CHECK: Your output must be recognizable as the EXACT SAME subject from the input photo. If someone compared them side-by-side, they should match perfectly in composition and pose."""
 
         # Send the image with prompt
         msg = UserMessage(
