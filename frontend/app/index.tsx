@@ -1139,7 +1139,7 @@ export default function Index() {
     }
   };
 
-  // Save edited stencil to gallery - captures stencil + drawings at full opacity
+  // Save edited stencil to gallery - captures stencil + drawings at full opacity (no original photo)
   const saveEditedToGallery = async () => {
     if (!editCanvasRef.current) {
       Alert.alert('Error', 'Could not capture the edited image.');
@@ -1147,25 +1147,25 @@ export default function Index() {
     }
 
     try {
-      // Temporarily set opacity to 1 for capture, hide original image
-      const originalOpacity = editOpacity;
-      setEditOpacity(1);
+      // Set capture mode - hides original photo, shows stencil at full opacity
+      setIsCapturingForExport(true);
       
       // Small delay to let the UI update
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 150));
       
-      // Capture the canvas as an image
+      // Capture the canvas as an image (now only shows stencil + drawings on white bg)
       const uri = await captureRef(editCanvasRef, {
         format: 'png',
         quality: 1,
         result: 'base64',
       });
       
-      // Restore opacity
-      setEditOpacity(originalOpacity);
+      // Reset capture mode
+      setIsCapturingForExport(false);
       
       await saveToPhotoGallery(`data:image/png;base64,${uri}`, 'body_bound_edited_stencil');
     } catch (error: any) {
+      setIsCapturingForExport(false);
       console.error('Error saving to gallery:', error);
       Alert.alert('Error', 'Failed to save to gallery. Please try again.');
     }
