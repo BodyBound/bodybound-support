@@ -1237,21 +1237,10 @@ export default function Index() {
     
     if (isDrawMode) {
       // DRAW MODE - single touch draws
-      // The inner canvas is transformed with scale and translate
-      // locationX/Y is relative to the touch container
-      // We need to find where this point would be on the untransformed canvas
-      
-      // Get container center (the transform origin)
-      const containerWidth = SCREEN_WIDTH;
-      const containerHeight = SCREEN_HEIGHT - 300; // Approximate canvas height
-      const centerX = containerWidth / 2;
-      const centerY = containerHeight / 2;
-      
-      // Transform coordinates: account for translate, then scale around center
-      // Point on screen = (canvasPoint - center) * scale + center + translate
-      // Reverse: canvasPoint = ((screenPoint - translate - center) / scale) + center
-      const canvasX = ((locationX - editTranslateX - centerX) / editScale) + centerX;
-      const canvasY = ((locationY - editTranslateY - centerY) / editScale) + centerY;
+      // Simple coordinate transform: reverse the scale and translate
+      // Touch location is in container space, we need canvas space
+      const canvasX = (locationX - editTranslateX) / editScale;
+      const canvasY = (locationY - editTranslateY) / editScale;
       
       setCurrentPoints([{ x: canvasX, y: canvasY }]);
       setCurrentPath(`M${canvasX},${canvasY}`);
@@ -1289,14 +1278,9 @@ export default function Index() {
       
       // DRAW MODE - continue drawing
       if (currentPoints.length > 0) {
-        // Same transform as handleDrawStart
-        const containerWidth = SCREEN_WIDTH;
-        const containerHeight = SCREEN_HEIGHT - 300;
-        const centerX = containerWidth / 2;
-        const centerY = containerHeight / 2;
-        
-        const canvasX = ((locationX - editTranslateX - centerX) / editScale) + centerX;
-        const canvasY = ((locationY - editTranslateY - centerY) / editScale) + centerY;
+        // Simple coordinate transform
+        const canvasX = (locationX - editTranslateX) / editScale;
+        const canvasY = (locationY - editTranslateY) / editScale;
         
         const newPoints = [...currentPoints, { x: canvasX, y: canvasY }];
         setCurrentPoints(newPoints);
