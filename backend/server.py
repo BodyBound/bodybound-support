@@ -596,19 +596,15 @@ OUTPUT SPECIFICATIONS:
 - Clean, confident strokes suitable for tattoo transfer
 - Resolution and size matching input image proportions
 
-SHADING STYLE: {shading_level.upper()}
-{
-"- Outlines only. No internal detail lines. Just the outer edges of each feature." if shading_level == "minimal" else
-"- Outlines plus DOTTED or DASHED black lines to show contour/shadow areas. Like tattoo placement guides. NO solid fills." if shading_level == "light" else
-"- Outlines plus stippling (small black dots) for shading. Some parallel lines for texture. Still NO solid color fills." if shading_level == "moderate" else
-"- Heavy stippling and cross-hatching with black lines for deep shadows and texture."
-}
+DETAIL LEVEL: {shading_level.upper()}
 
-SOLID BLACK FILLS: {fill_level.upper()}
+ALL VERSIONS START WITH THE SAME CLEAN OUTLINES. The only difference is how much contour detail is added:
+
 {
-"- NONE. No solid black areas. Lines and dots only." if fill_level == "none" else
-"- Minimal. Only the deepest shadow areas get solid black." if fill_level == "minimal" else
-"- Moderate solid black in shadow areas."
+"LIGHT VERSION - Clean outlines only. Draw the basic outline of every feature (face shape, eyes, nose, lips, hair outline, ears, clothing edges). NO internal shading lines. NO dots. NO texture. Just the clean outer edges that define each shape. Think: a simple coloring book outline." if shading_level == "minimal" else
+"MEDIUM VERSION - Same clean outlines as Light, PLUS add DOTTED or DASHED lines to indicate contour and lighting. These dotted lines show where shadows fall and help with placement. Use small dashes (---) or dots (...) along cheekbones, under the nose, around eye sockets, jawline shadows. Keep the dots/dashes subtle - they are reference guides, not heavy shading." if shading_level == "light" else
+"HEAVY VERSION - Same clean outlines as Light, PLUS more detailed contour markings. Add stippling (clusters of small dots) in shadow areas. Use parallel hatching lines for texture in hair or clothing. More dots and dashes than Medium version to show depth. Still NO solid black fills unless absolutely necessary for the darkest shadows." if shading_level == "moderate" else
+"MAXIMUM DETAIL - Full stippling, cross-hatching, and detailed texture work."
 }
 
 VERIFICATION CHECKLIST:
@@ -616,6 +612,7 @@ VERIFICATION CHECKLIST:
 ✓ Does it match the EXACT face/body proportions from the input?
 ✓ Are the features in the SAME positions as the input photo?
 ✓ Would someone recognize THIS SPECIFIC PERSON from the stencil?
+✓ Are the base outlines clean and consistent?
 
 Generate the stencil now."""
 
