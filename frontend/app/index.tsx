@@ -1230,10 +1230,8 @@ export default function Index() {
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     const now = Date.now();
     
-    // Check if this is Apple Pencil (stylus) touch
-    const isApplePencil = nativeEvent.touchType === 'stylus' || 
-                          nativeEvent.force > 0 ||
-                          (nativeEvent.altitudeAngle !== undefined && nativeEvent.altitudeAngle < Math.PI / 2);
+    // Check if this is Apple Pencil - ONLY use touchType, no fallbacks
+    const isApplePencil = nativeEvent.touchType === 'stylus';
     
     // Double-tap detection for undo (within 300ms)
     if (now - lastTapTimeRef.current < 300) {
