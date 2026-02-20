@@ -1157,31 +1157,135 @@ export default function Index() {
     );
   };
 
-  // Handle touch start for drawing
-  const handleDrawStart = (event: GestureResponderEvent) => {
-    const { locationX, locationY } = event.nativeEvent;
-    setCurrentPath(`M${locationX},${locationY}`);
+  // Helper: Create smooth bezier curve from points
+  const createSmoothPath = (points: {x: number, y: number}[]): string => {
+    if (points.length < 2) return '';
+    if (points.length === 2) {
+      return `M${points[0].x},${points[0].y} L${points[1].x},${points[1].y}`;
+    }
+    
+    let path = `M${points[0].x},${points[0].y}`;
+    
+    for (let i = 1; i < points.length - 1; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      const next = points[i + 1];
+      
+      // Calculate control points for smooth curve
+      const cp1x = curr.x - (next.x - prev.x) / 6;
+      const cp1y = curr.y - (next.y - prev.y) / 6;
+      const cp2x = curr.x + (next.x - prev.x) / 6;
+      const cp2y = curr.y + (next.y - prev.y) / 6;
+      
+      // Use quadratic bezier for smoother strokes
+      const midX = (prev.x + curr.x) / 2;
+      const midY = (prev.y + curr.y) / 2;
+      
+      if (i === 1) {
+        path += ` Q${prev.x},${prev.y} ${midX},${midY}`;
+      }
+      
+      const nextMidX = (curr.x + next.x) / 2;
+      const nextMidY = (curr.y + next.y) / 2;
+      path += ` Q${curr.x},${curr.y} ${nextMidX},${nextMidY}`;
+    }
+    
+    // End at the last point
+    const last = points[points.length - 1];
+    path += ` L${last.x},${last.y}`;
+    
+    return path;
   };
 
-  // Handle touch move for drawing
+  // Calculate distance between two touch points (for pinch zoom)
+  const getDistance = (touches: any[]): number => {
+    if (touches.length < 2) return 0;
+    const dx = touches[0].pageX - touches[1].pageX;
+    const dy = touches[0].pageY - touches[1].pageY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  // Handle touch start for drawing (with zoom support)
+  const handleDrawStart = (event: GestureResponderEvent) => {
+    const touches = event.nativeEvent.touches;
+    
+    // If two fingers, start pinch zoom
+    if (touches && touches.length === 2) {
+      setIsPinching(true);
+      setLastDistance(getDistance(Array.from(touches)));
+      return;
+    }
+    
+    // Single finger - start drawing
+    if (!isPinching) {
+      const { locationX, locationY } = event.nativeEvent;
+      // Adjust for current zoom/pan
+      const adjustedX = (locationX - editTranslateX) / editScale;
+      const adjustedY = (locationY - editTranslateY) / editScale;
+      setCurrentPoints([{ x: adjustedX, y: adjustedY }]);
+      setCurrentPath(`M${adjustedX},${adjustedY}`);
+    }
+  };
+
+  // Handle touch move for drawing (with zoom support)
   const handleDrawMove = (event: GestureResponderEvent) => {
-    const { locationX, locationY } = event.nativeEvent;
-    if (currentPath) {
-      setCurrentPath(prev => `${prev} L${locationX},${locationY}`);
+    const touches = event.nativeEvent.touches;
+    
+    // Handle pinch zoom
+    if (touches && touches.length === 2) {
+      setIsPinching(true);
+      const newDistance = getDistance(Array.from(touches));
+      
+      if (lastDistance > 0) {
+        const scaleFactor = newDistance / lastDistance;
+        const newScale = Math.min(Math.max(editScale * scaleFactor, 0.5), 4); // Limit zoom 0.5x to 4x
+        setEditScale(newScale);
+      }
+      
+      setLastDistance(newDistance);
+      return;
+    }
+    
+    // Single finger - continue drawing
+    if (!isPinching && currentPoints.length > 0) {
+      const { locationX, locationY } = event.nativeEvent;
+      // Adjust for current zoom/pan
+      const adjustedX = (locationX - editTranslateX) / editScale;
+      const adjustedY = (locationY - editTranslateY) / editScale;
+      
+      const newPoints = [...currentPoints, { x: adjustedX, y: adjustedY }];
+      setCurrentPoints(newPoints);
+      
+      // Update path with smooth curve
+      const smoothPath = createSmoothPath(newPoints);
+      setCurrentPath(smoothPath);
     }
   };
 
   // Handle touch end for drawing
   const handleDrawEnd = () => {
-    if (currentPath) {
+    setIsPinching(false);
+    setLastDistance(0);
+    
+    if (currentPath && currentPoints.length > 1) {
+      // Create final smooth path
+      const smoothPath = createSmoothPath(currentPoints);
+      
       if (isEraser) {
-        // For eraser, we'll mark the path with a special prefix
-        setDrawingPaths(prev => [...prev, `ERASER:${currentPath}`]);
+        setDrawingPaths(prev => [...prev, `ERASER:${smoothPath}`]);
       } else {
-        setDrawingPaths(prev => [...prev, currentPath]);
+        setDrawingPaths(prev => [...prev, smoothPath]);
       }
-      setCurrentPath('');
     }
+    setCurrentPath('');
+    setCurrentPoints([]);
+  };
+
+  // Reset zoom to default
+  const resetZoom = () => {
+    setEditScale(1);
+    setEditTranslateX(0);
+    setEditTranslateY(0);
   };
 
   // Undo last drawing stroke
