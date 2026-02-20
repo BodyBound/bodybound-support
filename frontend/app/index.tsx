@@ -3278,6 +3278,22 @@ const styles = StyleSheet.create({
   compactVersionTextSelected: {
     color: '#0A0A0A',
   },
+  regenButton: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#333',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#C9A227',
+  },
+  regenButtonText: {
+    fontSize: 10,
+  },
   compactProgressSection: {
     marginTop: 10,
     flexDirection: 'row',
