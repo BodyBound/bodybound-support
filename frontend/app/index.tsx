@@ -1252,12 +1252,9 @@ export default function Index() {
     const shouldDraw = isIPad ? isApplePencil : true;
     
     if (shouldDraw) {
-      // Draw
-      const canvasX = (locationX - editTranslateX) / editScale;
-      const canvasY = (locationY - editTranslateY) / editScale;
-      
-      setCurrentPoints([{ x: canvasX, y: canvasY }]);
-      setCurrentPath(`M${canvasX},${canvasY}`);
+      // Draw - use raw coordinates (no transform for now to debug)
+      setCurrentPoints([{ x: locationX, y: locationY }]);
+      setCurrentPath(`M${locationX},${locationY}`);
     } else {
       // Pan (iPad with finger)
       setLastPanX(pageX);
