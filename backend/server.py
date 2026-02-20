@@ -760,6 +760,33 @@ async def delete_stencil(stencil_id: str):
         logger.error(f"Error deleting stencil: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting stencil: {str(e)}")
 
+# Preview endpoints for edge detection samples
+from fastapi.responses import FileResponse, HTMLResponse
+
+@api_router.get("/preview-image/{method}")
+async def get_preview_image(method: str):
+    """Serve preview stencil images"""
+    file_map = {
+        "original": "/tmp/sample_portrait.jpg",
+        "canny": "/tmp/stencil_method1_canny.png",
+        "adaptive": "/tmp/stencil_method2_adaptive.png",
+        "sketch": "/tmp/stencil_method3_sketch.png",
+        "clean": "/tmp/stencil_method4_clean.png",
+    }
+    file_path = file_map.get(method)
+    if file_path and os.path.exists(file_path):
+        return FileResponse(file_path)
+    raise HTTPException(status_code=404, detail="Image not found")
+
+@api_router.get("/stencil-preview")
+async def stencil_preview_page():
+    """Serve the preview HTML page"""
+    html_path = "/app/backend/static/preview.html"
+    if os.path.exists(html_path):
+        with open(html_path, 'r') as f:
+            return HTMLResponse(content=f.read())
+    raise HTTPException(status_code=404, detail="Preview page not found")
+
 # Include the router in the main app
 app.include_router(api_router)
 
