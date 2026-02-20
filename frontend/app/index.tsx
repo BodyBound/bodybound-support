@@ -1205,9 +1205,10 @@ export default function Index() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
-  // Handle touch start - Procreate style: 2 fingers = zoom/pan, 1 finger = draw
+  // Handle touch start - Procreate style: 2 fingers = zoom/pan, 1 finger = pan, Apple Pencil = draw
   const handleDrawStart = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
+    const nativeEvent = event.nativeEvent as any;
     
     // Two fingers = zoom/pan
     if (touches && touches.length === 2) {
@@ -1223,8 +1224,13 @@ export default function Index() {
       return;
     }
     
-    const { locationX, locationY } = event.nativeEvent;
+    const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     const now = Date.now();
+    
+    // Check if this is Apple Pencil (stylus) touch
+    const isApplePencil = nativeEvent.touchType === 'stylus' || 
+                          nativeEvent.force > 0 ||
+                          (nativeEvent.altitudeAngle !== undefined && nativeEvent.altitudeAngle < Math.PI / 2);
     
     // Double-tap detection for undo (within 300ms)
     if (now - lastTapTimeRef.current < 300) {
@@ -1239,18 +1245,24 @@ export default function Index() {
       setTimeout(() => setShowEditHint(false), 3000);
     }
     
-    // Single touch = draw
-    // Transform coordinates to canvas space
-    const canvasX = (locationX - editTranslateX) / editScale;
-    const canvasY = (locationY - editTranslateY) / editScale;
-    
-    setCurrentPoints([{ x: canvasX, y: canvasY }]);
-    setCurrentPath(`M${canvasX},${canvasY}`);
+    if (isApplePencil) {
+      // Apple Pencil = draw
+      const canvasX = (locationX - editTranslateX) / editScale;
+      const canvasY = (locationY - editTranslateY) / editScale;
+      
+      setCurrentPoints([{ x: canvasX, y: canvasY }]);
+      setCurrentPath(`M${canvasX},${canvasY}`);
+    } else {
+      // Single finger = pan (not draw)
+      setLastPanX(pageX);
+      setLastPanY(pageY);
+    }
   };
 
   // Handle touch move - Procreate style
   const handleDrawMove = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
+    const nativeEvent = event.nativeEvent as any;
     
     // Two fingers = zoom and pan simultaneously
     if (touches && touches.length === 2) {
@@ -1278,13 +1290,18 @@ export default function Index() {
       return;
     }
     
-    // If we were pinching and now single finger, don't draw
+    // If we were pinching and now single touch, don't do anything yet
     if (isPinching) return;
     
-    const { locationX, locationY } = event.nativeEvent;
+    const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     
-    // Single touch = continue drawing
-    if (currentPoints.length > 0) {
+    // Check if this is Apple Pencil
+    const isApplePencil = nativeEvent.touchType === 'stylus' || 
+                          nativeEvent.force > 0 ||
+                          (nativeEvent.altitudeAngle !== undefined && nativeEvent.altitudeAngle < Math.PI / 2);
+    
+    if (isApplePencil && currentPoints.length > 0) {
+      // Apple Pencil = continue drawing
       const canvasX = (locationX - editTranslateX) / editScale;
       const canvasY = (locationY - editTranslateY) / editScale;
       
@@ -1292,6 +1309,14 @@ export default function Index() {
       setCurrentPoints(newPoints);
       const smoothPath = createSmoothPath(newPoints);
       setCurrentPath(smoothPath);
+    } else if (!isApplePencil) {
+      // Single finger = pan
+      const deltaX = pageX - lastPanX;
+      const deltaY = pageY - lastPanY;
+      setEditTranslateX(prev => prev + deltaX);
+      setEditTranslateY(prev => prev + deltaY);
+      setLastPanX(pageX);
+      setLastPanY(pageY);
     }
   };
 
