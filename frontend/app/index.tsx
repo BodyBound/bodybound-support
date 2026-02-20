@@ -91,6 +91,7 @@ export default function Index() {
   const [selectedVersion, setSelectedVersion] = useState<'light' | 'medium' | 'heavy'>('medium');
   const [isGeneratingVersions, setIsGeneratingVersions] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0); // 0, 1, 2, 3 for progress
+  const [regeneratingStyle, setRegeneratingStyle] = useState<string | null>(null); // Which single style is being regenerated
   
   // Full-size preview state with zoom
   const [showPreviewModal, setShowPreviewModal] = useState(false);
