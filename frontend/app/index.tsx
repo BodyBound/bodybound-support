@@ -2187,41 +2187,19 @@ export default function Index() {
         </View>
       </Modal>
 
-      {/* Edit Mode Modal - Overlay + Drawing */}
+      {/* Edit Mode Modal - Full Screen Procreate-Style Editor */}
       <Modal
         visible={showEditModal}
-        animationType="slide"
+        animationType="fade"
         transparent={false}
+        statusBarTranslucent={true}
         onRequestClose={() => setShowEditModal(false)}
       >
-        <SafeAreaView style={styles.editModalContainer}>
-          {/* Header */}
-          <View style={styles.editModalHeader}>
-            <TouchableOpacity onPress={() => setShowEditModal(false)}>
-              <Text style={styles.editModalCloseText}>Cancel</Text>
-            </TouchableOpacity>
-            <Text style={styles.editModalTitle}>Edit Stencil</Text>
-            <TouchableOpacity onPress={saveEditedStencil}>
-              <Text style={styles.editModalSaveText}>Done</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Double-tap hint tooltip */}
-          {showEditHint && (
-            <View style={styles.editHintWrapper}>
-              <View style={styles.editHintContainer}>
-                <Text style={styles.editHintText}>💡 Double-tap to undo</Text>
-              </View>
-            </View>
-          )}
-
-          {/* Drawing Canvas Area with zoom transform */}
+        <View style={styles.procreateContainer}>
+          {/* Full Screen Canvas */}
           <View 
             ref={editCanvasRef}
-            style={[
-              styles.editCanvasContainer,
-              isCapturingForExport && { backgroundColor: '#FFFFFF' }
-            ]}
+            style={styles.procreateCanvas}
             onStartShouldSetResponder={() => true}
             onMoveShouldSetResponder={() => true}
             onResponderGrant={handleDrawStart}
@@ -2229,7 +2207,7 @@ export default function Index() {
             onResponderRelease={handleDrawEnd}
           >
             <View style={[
-              styles.editCanvasInner,
+              styles.procreateCanvasInner,
               { 
                 transform: [
                   { translateX: editTranslateX },
@@ -2238,21 +2216,21 @@ export default function Index() {
                 ]
               }
             ]}>
-              {/* Original image as background - hidden during export capture */}
+              {/* Original image as background */}
               {originalImage && !isCapturingForExport && (
                 <Image
                   source={{ uri: originalImage }}
-                  style={styles.editBackgroundImage}
+                  style={styles.procreateBackgroundImage}
                   resizeMode="contain"
                 />
               )}
               
-              {/* Stencil overlay - full opacity during export capture */}
+              {/* Stencil overlay */}
               {stencilImage && (
                 <Image
                   source={{ uri: stencilImage }}
                   style={[
-                    styles.editStencilOverlay, 
+                    styles.procreateStencilImage, 
                     { opacity: isCapturingForExport ? 1 : editOpacity }
                   ]}
                   resizeMode="contain"
@@ -2260,8 +2238,7 @@ export default function Index() {
               )}
               
               {/* SVG Drawing Layer */}
-              <Svg style={styles.editDrawingLayer}>
-                {/* Existing paths */}
+              <Svg style={styles.procreateDrawingLayer}>
                 {drawingPaths.map((path, index) => {
                   const isEraserPath = path.startsWith('ERASER:');
                   const actualPath = isEraserPath ? path.replace('ERASER:', '') : path;
@@ -2275,129 +2252,126 @@ export default function Index() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
-                );
-              })}
-              {/* Current drawing path */}
-              {currentPath && (
-                <Path
-                  d={currentPath}
-                  stroke={isEraser ? '#FFFFFF' : '#000000'}
-                  strokeWidth={isEraser ? brushSize * 3 : brushSize}
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              )}
-            </Svg>
+                  );
+                })}
+                {currentPath && (
+                  <Path
+                    d={currentPath}
+                    stroke={isEraser ? '#FFFFFF' : '#000000'}
+                    strokeWidth={isEraser ? brushSize * 3 : brushSize}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
+              </Svg>
             </View>
           </View>
 
-          {/* Controls */}
-          <View style={styles.editControlsContainer}>
+          {/* Left Side - Vertical Brush Size Slider */}
+          <View style={styles.procreateLeftBar} pointerEvents="box-none">
+            <View style={styles.procreateBrushSliderContainer}>
+              <Text style={styles.procreateBrushLabel}>Size</Text>
+              <View style={styles.procreateBrushSliderWrapper}>
+                <Slider
+                  style={styles.procreateBrushSlider}
+                  minimumValue={1}
+                  maximumValue={20}
+                  value={brushSize}
+                  onValueChange={setBrushSize}
+                  minimumTrackTintColor="#C9A227"
+                  maximumTrackTintColor="#555"
+                  thumbTintColor="#C9A227"
+                />
+              </View>
+              <Text style={styles.procreateBrushValue}>{Math.round(brushSize)}</Text>
+            </View>
+            
             {/* Opacity Slider */}
-            <View style={styles.editSliderRow}>
-              <Text style={styles.editSliderLabel}>Stencil Opacity</Text>
-              <Slider
-                style={styles.editSlider}
-                minimumValue={0}
-                maximumValue={1}
-                value={editOpacity}
-                onValueChange={setEditOpacity}
-                minimumTrackTintColor="#C9A227"
-                maximumTrackTintColor="#333"
-                thumbTintColor="#C9A227"
-              />
-              <Text style={styles.editSliderValue}>{Math.round(editOpacity * 100)}%</Text>
+            <View style={styles.procreateBrushSliderContainer}>
+              <Text style={styles.procreateBrushLabel}>Opacity</Text>
+              <View style={styles.procreateBrushSliderWrapper}>
+                <Slider
+                  style={styles.procreateBrushSlider}
+                  minimumValue={0}
+                  maximumValue={1}
+                  value={editOpacity}
+                  onValueChange={setEditOpacity}
+                  minimumTrackTintColor="#C9A227"
+                  maximumTrackTintColor="#555"
+                  thumbTintColor="#C9A227"
+                />
+              </View>
+              <Text style={styles.procreateBrushValue}>{Math.round(editOpacity * 100)}%</Text>
             </View>
+          </View>
 
-            {/* Brush Size Slider */}
-            <View style={styles.editSliderRow}>
-              <Text style={styles.editSliderLabel}>Brush Size</Text>
-              <Slider
-                style={styles.editSlider}
-                minimumValue={1}
-                maximumValue={15}
-                value={brushSize}
-                onValueChange={setBrushSize}
-                minimumTrackTintColor="#C9A227"
-                maximumTrackTintColor="#333"
-                thumbTintColor="#C9A227"
-              />
-              <Text style={styles.editSliderValue}>{Math.round(brushSize)}px</Text>
-            </View>
-
-            {/* Tool Buttons */}
-            <View style={styles.editToolsRow}>
-              <TouchableOpacity 
-                style={[styles.editToolButton, !isEraser && styles.editToolButtonActive]}
-                onPress={() => setIsEraser(false)}
-              >
-                <Text style={styles.editToolIcon}>✏️</Text>
-                <Text style={[styles.editToolText, !isEraser && styles.editToolTextActive]}>Draw</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.editToolButton, isEraser && styles.editToolButtonActive]}
-                onPress={() => setIsEraser(true)}
-              >
-                <Text style={styles.editToolIcon}>🧹</Text>
-                <Text style={[styles.editToolText, isEraser && styles.editToolTextActive]}>Eraser</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.editToolButton}
-                onPress={undoLastStroke}
-              >
-                <Text style={styles.editToolIcon}>↩️</Text>
-                <Text style={styles.editToolText}>Undo</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.editToolButton}
-                onPress={clearAllDrawings}
-              >
-                <Text style={styles.editToolIcon}>🗑️</Text>
-                <Text style={styles.editToolText}>Clear</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Mode Toggle - Draw vs Navigate */}
-            <View style={styles.modeToggleRow}>
-              <TouchableOpacity 
-                style={[styles.modeToggleButton, isDrawMode && styles.modeToggleActive]}
-                onPress={() => setIsDrawMode(true)}
-              >
-                <Text style={styles.modeToggleIcon}>✏️</Text>
-                <Text style={[styles.modeToggleText, isDrawMode && styles.modeToggleTextActive]}>Draw Mode</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.modeToggleButton, !isDrawMode && styles.modeToggleActive]}
-                onPress={() => setIsDrawMode(false)}
-              >
-                <Text style={styles.modeToggleIcon}>🔍</Text>
-                <Text style={[styles.modeToggleText, !isDrawMode && styles.modeToggleTextActive]}>Navigate</Text>
-              </TouchableOpacity>
-              
-              {/* Reset Zoom - only shows when zoomed */}
-              {editScale !== 1 && (
-                <TouchableOpacity 
-                  style={styles.resetZoomInlineButton}
-                  onPress={resetZoom}
-                >
-                  <Text style={styles.modeToggleIcon}>↺</Text>
-                  <Text style={styles.resetZoomInlineText}>Reset</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-
-            {/* Save to Gallery Button */}
-            <TouchableOpacity style={styles.editSaveToGalleryButton} onPress={saveEditedToGallery}>
-              <Text style={styles.editSaveToGalleryIcon}>📤</Text>
-              <Text style={styles.editSaveToGalleryText}>Save to Photos</Text>
+          {/* Top Bar - Done/Cancel */}
+          <View style={styles.procreateTopBar} pointerEvents="box-none">
+            <TouchableOpacity 
+              style={styles.procreateTopButton}
+              onPress={() => setShowEditModal(false)}
+            >
+              <Text style={styles.procreateTopButtonText}>✕</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.procreateTopButton, styles.procreateTopButtonDone]}
+              onPress={saveEditedStencil}
+            >
+              <Text style={styles.procreateTopButtonTextDone}>Done</Text>
             </TouchableOpacity>
           </View>
-        </SafeAreaView>
+
+          {/* Right Side - Tools */}
+          <View style={styles.procreateRightBar} pointerEvents="box-none">
+            <TouchableOpacity 
+              style={[styles.procreateToolButton, !isEraser && styles.procreateToolActive]}
+              onPress={() => setIsEraser(false)}
+            >
+              <Text style={styles.procreateToolIcon}>✏️</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.procreateToolButton, isEraser && styles.procreateToolActive]}
+              onPress={() => setIsEraser(true)}
+            >
+              <Text style={styles.procreateToolIcon}>🧹</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.procreateToolButton}
+              onPress={() => setDrawingPaths(prev => prev.slice(0, -1))}
+            >
+              <Text style={styles.procreateToolIcon}>↩️</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.procreateToolButton}
+              onPress={resetZoom}
+            >
+              <Text style={styles.procreateToolIcon}>⟲</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Bottom - Save to Photos */}
+          <View style={styles.procreateBottomBar} pointerEvents="box-none">
+            <TouchableOpacity 
+              style={styles.procreateSaveButton}
+              onPress={saveEditedToGallery}
+            >
+              <Text style={styles.procreateSaveIcon}>📤</Text>
+              <Text style={styles.procreateSaveText}>Save to Photos</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Hint Toast */}
+          {showEditHint && (
+            <View style={styles.procreateHint}>
+              <Text style={styles.procreateHintText}>Two fingers: zoom/pan • One finger: draw • Double-tap: undo</Text>
+            </View>
+          )}
+        </View>
       </Modal>
     </SafeAreaView>
   );
