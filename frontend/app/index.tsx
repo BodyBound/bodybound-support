@@ -578,13 +578,35 @@ export default function Index() {
       
       // Show error if no versions generated
       if (!versions.light && !versions.medium && !versions.heavy) {
-        Alert.alert('Generation Failed', 'Could not generate stencils. Please try again or use a different image.');
+        Alert.alert(
+          'Generation Failed', 
+          'Could not generate stencils. This may be due to:\n\n• No internet connection\n• AI services temporarily unavailable\n\nPlease check your connection and try again.',
+          [{ text: 'OK' }]
+        );
       }
       
       setHasGeneratedOnce(true);
     } catch (error: any) {
       console.error('Error generating stencil versions:', error);
-      Alert.alert('Error', error.message || 'Failed to generate stencils. Please try again.');
+      
+      // Show user-friendly error message
+      let errorMessage = 'Failed to generate stencils.';
+      
+      if (error.message?.includes('timed out') || error.message?.includes('timeout')) {
+        errorMessage = 'Request timed out. The AI servers may be busy. Please try again in a moment.';
+      } else if (error.message?.includes('network') || error.message?.includes('Network')) {
+        errorMessage = 'Network error. Please check your internet connection and try again.';
+      } else if (error.message?.includes('503') || error.message?.includes('unavailable')) {
+        errorMessage = 'AI services are temporarily unavailable. Please try again in a few minutes.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert(
+        'Connection Issue',
+        errorMessage,
+        [{ text: 'OK' }]
+      );
     } finally {
       setIsGeneratingAI(false);
       setIsGeneratingVersions(false);
