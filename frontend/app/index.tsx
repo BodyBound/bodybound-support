@@ -2512,7 +2512,6 @@ export default function Index() {
             <Text style={styles.procreateHintText}>
               Apple Pencil: draw • Finger: pan • Two fingers: zoom • Double-tap: undo
             </Text>
-            </Text>
           </View>
         </View>
       </Modal>
