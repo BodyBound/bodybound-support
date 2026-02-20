@@ -1259,34 +1259,47 @@ export default function Index() {
     const touches = event.nativeEvent.touches;
     const touchCount = touches ? touches.length : 1;
     
-    // Two or more fingers = zoom and pan simultaneously
+    // IMPROVED: Detect second finger joining at ANY time during the gesture
+    // This makes two-finger zoom much easier to trigger
     if (touchCount >= 2 && touches) {
-      setIsPinching(true);
-      
-      // Zoom with damping
-      const newDistance = getDistance(Array.from(touches));
-      if (lastDistance > 0) {
-        const scaleFactor = newDistance / lastDistance;
-        const dampedScale = 1 + (scaleFactor - 1) * 0.5;
-        const newScale = Math.min(Math.max(editScale * dampedScale, 0.5), 3);
-        setEditScale(newScale);
+      // Immediately switch to pinch mode when second finger detected
+      if (!isPinching) {
+        // First time detecting 2 fingers - initialize
+        setIsPinching(true);
+        setLastDistance(getDistance(Array.from(touches)));
+        const midX = (touches[0].pageX + touches[1].pageX) / 2;
+        const midY = (touches[0].pageY + touches[1].pageY) / 2;
+        setLastPanX(midX);
+        setLastPanY(midY);
+        // Cancel any drawing in progress
+        setCurrentPath('');
+        setCurrentPoints([]);
+      } else {
+        // Continue pinch gesture
+        // Zoom with damping
+        const newDistance = getDistance(Array.from(touches));
+        if (lastDistance > 0) {
+          const scaleFactor = newDistance / lastDistance;
+          const dampedScale = 1 + (scaleFactor - 1) * 0.5;
+          const newScale = Math.min(Math.max(editScale * dampedScale, 0.5), 3);
+          setEditScale(newScale);
+        }
+        setLastDistance(newDistance);
+        
+        // Pan using midpoint
+        const midX = (touches[0].pageX + touches[1].pageX) / 2;
+        const midY = (touches[0].pageY + touches[1].pageY) / 2;
+        const deltaX = midX - lastPanX;
+        const deltaY = midY - lastPanY;
+        setEditTranslateX(prev => prev + deltaX);
+        setEditTranslateY(prev => prev + deltaY);
+        setLastPanX(midX);
+        setLastPanY(midY);
       }
-      setLastDistance(newDistance);
-      
-      // Pan using midpoint
-      const midX = (touches[0].pageX + touches[1].pageX) / 2;
-      const midY = (touches[0].pageY + touches[1].pageY) / 2;
-      const deltaX = midX - lastPanX;
-      const deltaY = midY - lastPanY;
-      setEditTranslateX(prev => prev + deltaX);
-      setEditTranslateY(prev => prev + deltaY);
-      setLastPanX(midX);
-      setLastPanY(midY);
-      
       return;
     }
     
-    // If transitioning from pinch to single touch, reset
+    // If transitioning from pinch to single touch, reset and wait
     if (isPinching && touchCount === 1) {
       setIsPinching(false);
       setLastDistance(0);
