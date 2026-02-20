@@ -3150,19 +3150,33 @@ const styles = StyleSheet.create({
   },
   editToolsRow: {
     flexDirection: 'row',
-    gap: 12,
+    justifyContent: 'space-around',
+    marginTop: 8,
+    marginBottom: 16,
   },
   editToolButton: {
-    flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#0F0F0F',
-    paddingVertical: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#2D2D2D',
-    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#1A1A1A',
+    minWidth: 65,
+  },
+  editToolButtonActive: {
+    backgroundColor: '#C9A227',
+  },
+  editToolIcon: {
+    fontSize: 20,
+    marginBottom: 4,
+  },
+  editToolText: {
+    color: '#9CA3AF',
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  editToolTextActive: {
+    color: '#0A0A0A',
+    fontWeight: '700',
   },
   editToolButtonText: {
     color: '#C9A227',
