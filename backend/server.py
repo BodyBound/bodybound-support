@@ -568,38 +568,56 @@ async def generate_ai_stencil(request: AIStencilRequest):
         shading_level = "minimal" if request.shading_detail < 20 else "light" if request.shading_detail < 40 else "moderate" if request.shading_detail < 60 else "heavy"
         fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
         
-        # Create the prompt for EXACT tracing - very strict with professional tattoo stencil style
-        prompt = f"""CRITICAL: This is a TRACING task. Convert THIS EXACT input image to a professional tattoo stencil.
+        # Create the prompt for EXACT tracing - ULTRA STRICT for tattoo stencils
+        prompt = f"""You are a professional tattoo stencil tracer. Your ONLY job is to convert the input photograph into a clean line drawing stencil.
 
-ABSOLUTE REQUIREMENTS - MUST FOLLOW EXACTLY:
-1. TRACE the input image EXACTLY - same subject, same composition, same pose, same proportions
-2. This is NOT creative interpretation - it is PRECISE TRACING like a photocopier
-3. Every feature must be in the EXACT same position as the input photo
-4. DO NOT add, remove, or reposition ANY elements
-5. If input shows a face at 3/4 angle, output must show THAT SAME face at THAT SAME angle
-6. Match all proportions precisely - measure twice, draw once
+CRITICAL RULES - VIOLATING ANY OF THESE IS FAILURE:
 
-OUTPUT STYLE - PROFESSIONAL TATTOO STENCIL:
-- Use {line_color} colored lines on pure white background
-- Clean, confident line work like hand-drawn stencils
-- NO gradients, NO soft shading, NO gray tones, NO watercolor effects
+1. ABSOLUTELY NO COLOR - The output must be ONLY black lines on a pure white background. 
+   - NO skin tones, NO hair color, NO eye color, NO clothing colors
+   - NO brown, NO blonde, NO any color whatsoever
+   - ONLY black ink lines on white paper
 
-SHADING TECHNIQUE: {shading_level.upper()}
+2. EXACT TRACING REQUIRED - This is NOT creative art. You must TRACE the photo like a copy machine.
+   - Same face shape, same nose shape, same eye positions
+   - Same hair outline (but NO color fill - just outline)
+   - Same proportions - if eyes are close together in photo, they must be close in stencil
+   - Same angle and pose - do not change anything
+
+3. LINE ART ONLY:
+   - Draw clean black outlines
+   - Use black lines for all features
+   - Any shading must be done with black dots or dashed lines ONLY
+   - NO filled-in areas with color - only black line work
+
+OUTPUT SPECIFICATIONS:
+- Pure white background (#FFFFFF)
+- Black lines only (#000000)
+- Clean, confident strokes suitable for tattoo transfer
+- Resolution and size matching input image proportions
+
+SHADING STYLE: {shading_level.upper()}
 {
-"- Clean outlines only, no internal shading lines" if shading_level == "minimal" else
-"- Use DOTTED/DASHED lines to indicate contour, shadows and lighting areas (like tattoo placement guides). NO cross-hatching. Dots and dashes only for shading guidance." if shading_level == "light" else
-"- Use dotted lines and light stippling (dots) for contour guidance. Some parallel lines for texture. Keep it clean, not busy." if shading_level == "moderate" else
-"- Detailed stippling and parallel lines for texture and depth"
+"- Outlines only. No internal detail lines. Just the outer edges of each feature." if shading_level == "minimal" else
+"- Outlines plus DOTTED or DASHED black lines to show contour/shadow areas. Like tattoo placement guides. NO solid fills." if shading_level == "light" else
+"- Outlines plus stippling (small black dots) for shading. Some parallel lines for texture. Still NO solid color fills." if shading_level == "moderate" else
+"- Heavy stippling and cross-hatching with black lines for deep shadows and texture."
 }
 
-BLACK FILLS: {fill_level.upper()}
+SOLID BLACK FILLS: {fill_level.upper()}
 {
-"- NO solid black fills - lines and dots only" if fill_level == "none" else
-"- Minimal solid black in only the darkest shadow areas" if fill_level == "minimal" else
-"- Moderate solid black fills in shadow areas"
+"- NONE. No solid black areas. Lines and dots only." if fill_level == "none" else
+"- Minimal. Only the deepest shadow areas get solid black." if fill_level == "minimal" else
+"- Moderate solid black in shadow areas."
 }
 
-FINAL CHECK: Your output must be recognizable as the EXACT SAME subject from the input photo. If someone compared them side-by-side, they should match perfectly in composition and pose."""
+VERIFICATION CHECKLIST:
+✓ Is the output ONLY black and white? (NO other colors)
+✓ Does it match the EXACT face/body proportions from the input?
+✓ Are the features in the SAME positions as the input photo?
+✓ Would someone recognize THIS SPECIFIC PERSON from the stencil?
+
+Generate the stencil now."""
 
         # Send the image with prompt
         msg = UserMessage(
