@@ -527,10 +527,12 @@ class AIStencilRequest(BaseModel):
     line_color: str = Field(default="purple")  # "purple", "blue", "black"
     shading_detail: int = Field(default=50, ge=0, le=100)  # 0-100: how much cross-hatching
     solid_fill: int = Field(default=30, ge=0, le=100)  # 0-100: how much solid black fill
+    regenerate_style: Optional[str] = Field(default=None)  # "light", "medium", "heavy" - if set, only regenerate this style
 
 class AIStencilResponse(BaseModel):
     stencil_base64: str
     processing_time_ms: float
+    regenerated_style: Optional[str] = None  # Which style was regenerated (if single style request)
     
 async def generate_with_gemini(image_data: str, prompt: str) -> tuple[str, str]:
     """Try to generate stencil with Google Gemini"""
