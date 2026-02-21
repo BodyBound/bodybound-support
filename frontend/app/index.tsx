@@ -2428,9 +2428,11 @@ export default function Index() {
             style={styles.procreateCanvas}
             onStartShouldSetResponder={() => true}
             onMoveShouldSetResponder={() => true}
+            onResponderTerminationRequest={() => false}
             onResponderGrant={handleDrawStart}
             onResponderMove={handleDrawMove}
             onResponderRelease={handleDrawEnd}
+            onResponderTerminate={handleDrawEnd}
           >
             <View style={[
               styles.procreateCanvasInner,
