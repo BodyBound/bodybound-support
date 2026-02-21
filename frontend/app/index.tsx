@@ -3069,6 +3069,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   headerLogo: {
     width: 42,
     height: 42,
@@ -3091,6 +3096,20 @@ const styles = StyleSheet.create({
     color: '#8B7355',
     letterSpacing: 1,
     textTransform: 'uppercase',
+  },
+  helpButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#C9A227',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  helpButtonText: {
+    color: '#C9A227',
+    fontSize: 18,
+    fontWeight: '700',
   },
   galleryButton: {
     padding: 8,
