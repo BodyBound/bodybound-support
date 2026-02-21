@@ -2637,46 +2637,17 @@ export default function Index() {
         statusBarTranslucent={true}
         onRequestClose={() => setShowEditModal(false)}
       >
-        <View style={styles.procreateContainer}>
-          {/* Full Screen Canvas */}
-          <View 
-            ref={editCanvasRef}
-            style={styles.procreateCanvas}
-            onStartShouldSetResponder={() => true}
-            onMoveShouldSetResponder={() => true}
-            onResponderTerminationRequest={() => false}
-            onResponderGrant={handleDrawStart}
-            onResponderMove={handleDrawMove}
-            onResponderRelease={handleDrawEnd}
-            onResponderTerminate={handleDrawEnd}
-            // Pointer Events API - better stylus detection
-            onPointerDown={(e: any) => {
-              const pointerType = e.nativeEvent?.pointerType;
-              console.log('[PointerAPI] Down - pointerType:', pointerType);
-              if (pointerType === 'pen' || pointerType === 'pencil') {
-                // Mark that we detected pencil via pointer events
-                (global as any).__lastPointerWasPencil = true;
-              } else {
-                (global as any).__lastPointerWasPencil = false;
-              }
-            }}
-            onPointerMove={(e: any) => {
-              const pointerType = e.nativeEvent?.pointerType;
-              if (pointerType === 'pen' || pointerType === 'pencil') {
-                (global as any).__lastPointerWasPencil = true;
-              }
-            }}
-          >
-            <View style={[
-              styles.procreateCanvasInner,
-              { 
-                transform: [
-                  { translateX: editTranslateX },
-                  { translateY: editTranslateY },
-                  { scale: editScale }
-                ]
-              }
-            ]}>
+        <GestureHandlerRootView style={styles.procreateContainer}>
+          {/* Full Screen Canvas with proper gesture detection */}
+          <GestureDetector gesture={allGestures}>
+            <Animated.View 
+              ref={editCanvasRef as any}
+              style={styles.procreateCanvas}
+            >
+              <Animated.View style={[
+                styles.procreateCanvasInner,
+                animatedCanvasStyle
+              ]}>
               {/* Original image as background - use frozen editModeOriginalImage */}
               {editModeOriginalImage && !isCapturingForExport && (
                 <Image
