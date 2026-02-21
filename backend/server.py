@@ -639,40 +639,77 @@ async def generate_ai_stencil(request: AIStencilRequest):
         
         fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
         
-        # Create the prompt for EXACT tracing - ULTRA STRICT for tattoo stencils
-        prompt = f"""TRACE THE ATTACHED PHOTOGRAPH INTO A LINE DRAWING.
+        # Create the prompt for EXACT tracing - PROFESSIONAL TATTOO STENCILS
+        # This is for real tattoo artists - precision is critical
+        prompt = f"""PROFESSIONAL TATTOO STENCIL TRACE
 
-⚠️ CRITICAL: This is a TRACING task, NOT creative generation. You MUST copy the exact image provided.
+You are creating a tattoo stencil for professional tattoo artists. PRECISION IS CRITICAL.
 
-MANDATORY REQUIREMENTS:
-1. TRACE THE EXACT REFERENCE IMAGE - Every detail must match:
-   - If there are horns, draw the EXACT same horns in the EXACT same position
-   - If there is makeup or facial features, trace them EXACTLY as shown
-   - Same face angle, same expression, same pose - EXACTLY as photographed
-   - Same hair style and position
-   - ALL unique features (tattoos, accessories, special elements) MUST be traced
+STEP 1: ANALYZE THE REFERENCE PHOTO
+Look at every detail in the attached image:
+- Face shape, jawline, cheekbones
+- Eye shape, position, and spacing
+- Nose shape and angle
+- Lip shape and expression
+- Hair outline and flow
+- ANY unique features: horns, makeup, tattoos, accessories, piercings, jewelry
+- Pose and angle of the subject
 
-2. OUTPUT FORMAT:
-   - Pure white background (#FFFFFF)
-   - Black lines only (#000000) 
-   - NO colors, NO gray tones, NO fills
-   - Clean line art suitable for tattoo stencil transfer
+STEP 2: TRACE WITH EXACT PRECISION
+Create a line drawing that traces the reference EXACTLY:
+- Same proportions - if the nose is long, draw it long
+- Same positions - if eyes are wide-set, draw them wide-set  
+- Same angle - if face is turned 3/4, draw it at 3/4
+- ALL unique elements MUST appear in the stencil exactly as shown
 
-3. DETAIL LEVEL: {shading_level.upper()}
+STEP 3: OUTPUT SPECIFICATIONS
+- Pure white background (#FFFFFF)
+- Black lines only (#000000)
+- NO color, NO gray, NO fills, NO gradients
+- Clean confident strokes suitable for thermal transfer paper
+
+STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
+
 {
-"LIGHT - Trace only the main outlines. Simple clean edges of all shapes. No internal details or shading marks." if shading_level == "minimal" else
-"MEDIUM - Trace all outlines PLUS add dotted/dashed guide lines for shadows and contours." if shading_level == "light" else
-"HEAVY - Trace all outlines PLUS detailed stippling and hatching for depth and texture." if shading_level == "moderate" else
-"MAXIMUM - Full detail with extensive stippling, cross-hatching, and texture work."
+'''LIGHT VERSION:
+- SIMPLE CLEAN OUTLINES ONLY
+- Trace the outer edge of every shape (face, hair, features, accessories)
+- Clean single-weight lines defining each form
+- NO internal shading lines
+- NO dots or dashes
+- NO texture marks
+- Think: A clean coloring book outline that captures the exact likeness''' if shading_level == "minimal" else
+
+'''MEDIUM VERSION:
+- SIMPLE OUTLINES + DOTTED REFERENCE LINES
+- Start with the same clean outlines as Light version
+- ADD dotted lines (......) or dashed lines (------) to show:
+  * Where shadows fall (under cheekbones, under nose, around eye sockets)
+  * Contour lines showing the 3D form of the face
+  * Guide marks for shading placement
+- These dotted lines help the tattoo artist know where to shade
+- Keep dots/dashes subtle - they are REFERENCE guides, not heavy marks''' if shading_level == "light" else
+
+'''HEAVY VERSION:
+- SIMPLE OUTLINES + CONTOUR LINES + EXTRA DETAIL
+- Start with the same clean outlines as Light version
+- ADD solid contour lines (not just dots) showing form and depth
+- ADD extra detail lines for:
+  * Hair texture and flow direction
+  * Clothing folds or fabric texture
+  * Skin contours and muscle definition
+- More line work than Medium, but still clean and purposeful
+- Every line should serve the tattoo artist's needs'''
 }
 
-VERIFICATION - The output MUST pass these checks:
-✓ Does it look like the SAME person/subject from the input photo?
-✓ Are ALL unique features (horns, makeup, accessories) present and accurate?
-✓ Is the pose/angle IDENTICAL to the reference?
-✓ Is it black lines on white only - NO colors?
+FINAL VERIFICATION:
+✓ Would a tattoo artist recognize THIS EXACT PERSON from the stencil?
+✓ Are the proportions IDENTICAL to the reference photo?
+✓ Are ALL unique features (horns, makeup, jewelry, etc.) accurately traced?
+✓ Is the detail level correct for {shading_level.upper()}?
+✓ Is it purely black lines on white - no colors or gray?
 
-Generate the traced stencil now."""
+Generate the stencil now. This is for professional use - precision matters."""
 
         
         image_base64 = None
