@@ -2252,15 +2252,23 @@ export default function Index() {
             <Text style={styles.headerSubtitle}>Stencil Generator</Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.galleryButton}
-          onPress={() => {
-            loadGallery();
-            setShowGallery(true);
-          }}
-        >
-          <Text style={styles.iconText}>📁</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.helpButton}
+            onPress={showOnboardingTutorial}
+          >
+            <Text style={styles.helpButtonText}>?</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.galleryButton}
+            onPress={() => {
+              loadGallery();
+              setShowGallery(true);
+            }}
+          >
+            <Text style={styles.iconText}>📁</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
