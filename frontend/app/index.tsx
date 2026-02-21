@@ -1477,10 +1477,26 @@ export default function Index() {
     
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     
-    // Check if this is Apple Pencil - check multiple possible properties
-    const isApplePencil = nativeEvent.touchType === 'stylus' || 
-                          nativeEvent.touchType === 'pencil' ||
-                          (nativeEvent.force !== undefined && nativeEvent.force > 0 && nativeEvent.altitudeAngle !== undefined);
+    // Check if this is Apple Pencil - use same comprehensive detection as start
+    const touch = touches && touches.length > 0 ? touches[0] : null;
+    const touchFromArray = touch as any;
+    
+    const touchTypeFromEvent = nativeEvent.touchType;
+    const touchTypeFromTouch = touchFromArray?.touchType;
+    const touchTypeFromType = touchFromArray?.type;
+    
+    const hasForce = nativeEvent.force !== undefined && nativeEvent.force > 0;
+    const hasAltitude = nativeEvent.altitudeAngle !== undefined;
+    const hasAzimuth = nativeEvent.azimuthAngle !== undefined;
+    
+    const isApplePencil = 
+      touchTypeFromEvent === 'stylus' || 
+      touchTypeFromEvent === 'pencil' ||
+      touchTypeFromTouch === 'stylus' ||
+      touchTypeFromTouch === 'pencil' ||
+      touchTypeFromType === 'stylus' ||
+      (hasAltitude && hasForce) ||
+      hasAzimuth;
     
     if (isApplePencil && currentPoints.length > 0) {
       // Apple Pencil - continue drawing
