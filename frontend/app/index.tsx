@@ -1493,7 +1493,11 @@ export default function Index() {
     const hasAltitude = nativeEvent.altitudeAngle !== undefined;
     const hasAzimuth = nativeEvent.azimuthAngle !== undefined;
     
+    // Check pointer events flag for reliable pencil detection
+    const pointerWasPencil = (global as any).__lastPointerWasPencil === true;
+    
     const isApplePencil = 
+      pointerWasPencil ||
       touchTypeFromEvent === 'stylus' || 
       touchTypeFromEvent === 'pencil' ||
       touchTypeFromTouch === 'stylus' ||
