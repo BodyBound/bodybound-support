@@ -28,6 +28,8 @@ import { Share as RNShare } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
 import { captureRef } from 'react-native-view-shot';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
