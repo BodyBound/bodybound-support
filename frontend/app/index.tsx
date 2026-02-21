@@ -1382,7 +1382,7 @@ export default function Index() {
     touchCountRef.current = touchCount;
     
     // Two or more fingers = zoom and pan simultaneously
-    // This check is done FIRST so a second finger joining triggers pinch mode immediately
+    // PROCREATE-LEVEL RESPONSIVENESS: Detect second finger IMMEDIATELY
     if (touchCount >= 2 && touches) {
       // Cancel any drawing in progress - second finger joined
       if (currentPoints.length > 0) {
@@ -1391,7 +1391,7 @@ export default function Index() {
       }
       pendingDrawRef.current = false;
       
-      // Transition to pinch mode if not already
+      // Transition to pinch mode INSTANTLY
       if (!isPinchingRef.current) {
         isPinchingRef.current = true;
         setIsPinching(true);
@@ -1406,19 +1406,19 @@ export default function Index() {
         return;
       }
       
-      // Calculate zoom with improved sensitivity
+      // PROCREATE-STYLE ZOOM: Nearly 1:1 response, minimal damping
       const newDistance = getDistance(Array.from(touches));
       if (lastDistanceRef.current > 0) {
         const scaleFactor = newDistance / lastDistanceRef.current;
-        // Increased sensitivity - less damping for more responsive zoom
-        const dampedScale = 1 + (scaleFactor - 1) * 0.7;
-        const newScale = Math.min(Math.max(editScale * dampedScale, 0.3), 5);
+        // 0.95 = almost 1:1 like Procreate (was 0.7)
+        const dampedScale = 1 + (scaleFactor - 1) * 0.95;
+        const newScale = Math.min(Math.max(editScale * dampedScale, 0.1), 10);
         setEditScale(newScale);
       }
       lastDistanceRef.current = newDistance;
       setLastDistance(newDistance);
       
-      // Pan using midpoint with improved responsiveness
+      // PROCREATE-STYLE PAN: Direct 1:1 movement
       const midX = (touches[0].pageX + touches[1].pageX) / 2;
       const midY = (touches[0].pageY + touches[1].pageY) / 2;
       const deltaX = midX - lastPanRef.current.x;
