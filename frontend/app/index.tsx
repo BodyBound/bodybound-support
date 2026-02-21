@@ -1331,14 +1331,44 @@ export default function Index() {
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     const now = Date.now();
     
-    // Check if this is Apple Pencil - check multiple possible properties
-    // iOS native can report it as touchType='stylus' or through other properties
-    const isApplePencil = nativeEvent.touchType === 'stylus' || 
-                          nativeEvent.touchType === 'pencil' ||
-                          (nativeEvent.force !== undefined && nativeEvent.force > 0 && nativeEvent.altitudeAngle !== undefined);
+    // Check if this is Apple Pencil - need to check multiple sources
+    // React Native's responder system may expose touchType differently
+    const touch = touches && touches.length > 0 ? touches[0] : null;
+    const touchFromArray = touch as any;
     
-    // Debug log for native testing
-    console.log('[EditMode] Touch start - touchType:', nativeEvent.touchType, 'force:', nativeEvent.force, 'isApplePencil:', isApplePencil);
+    // Check touchType from multiple possible locations
+    const touchTypeFromEvent = nativeEvent.touchType;
+    const touchTypeFromTouch = touchFromArray?.touchType;
+    const touchTypeFromType = touchFromArray?.type;
+    
+    // Apple Pencil specific properties - these are ONLY available for stylus input
+    const hasForce = nativeEvent.force !== undefined && nativeEvent.force > 0;
+    const hasAltitude = nativeEvent.altitudeAngle !== undefined;
+    const hasAzimuth = nativeEvent.azimuthAngle !== undefined;
+    
+    // Determine if Apple Pencil based on all available signals
+    const isApplePencil = 
+      touchTypeFromEvent === 'stylus' || 
+      touchTypeFromEvent === 'pencil' ||
+      touchTypeFromTouch === 'stylus' ||
+      touchTypeFromTouch === 'pencil' ||
+      touchTypeFromType === 'stylus' ||
+      // Apple Pencil has altitude angle - fingers do not
+      (hasAltitude && hasForce) ||
+      // Check for azimuth angle (tilt detection) - only stylus has this
+      hasAzimuth;
+    
+    // Extensive debug logging to diagnose the issue
+    console.log('[EditMode] Touch Debug:', JSON.stringify({
+      touchTypeFromEvent,
+      touchTypeFromTouch,
+      touchTypeFromType,
+      force: nativeEvent.force,
+      altitudeAngle: nativeEvent.altitudeAngle,
+      azimuthAngle: nativeEvent.azimuthAngle,
+      isApplePencil,
+      touchCount
+    }));
     
     // Double-tap detection for undo (within 300ms) - works for any touch
     if (now - lastTapTimeRef.current < 300) {
@@ -1361,13 +1391,13 @@ export default function Index() {
     
     // ONLY Apple Pencil can draw immediately
     if (isApplePencil) {
-      console.log('[EditMode] Starting pencil draw at:', locationX, locationY);
+      console.log('[EditMode] ✏️ PENCIL DETECTED - Starting draw at:', locationX, locationY);
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
       pendingDrawRef.current = false;
     } else {
       // For finger touch - do not draw
-      console.log('[EditMode] Finger touch - will pan');
+      console.log('[EditMode] 👆 FINGER - will pan');
       pendingDrawRef.current = false;
     }
   };
