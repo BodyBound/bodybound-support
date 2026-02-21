@@ -2791,6 +2791,17 @@ export default function Index() {
               
               {/* SVG Drawing Layer */}
               <Svg style={styles.procreateDrawingLayer}>
+                {/* Render saved dot marks */}
+                {dotMarks.map((dot, index) => (
+                  <Circle
+                    key={`dot-${index}`}
+                    cx={dot.x}
+                    cy={dot.y}
+                    r={dot.size / 2}
+                    fill="#000000"
+                  />
+                ))}
+                {/* Render drawing paths */}
                 {drawingPaths.map((path, index) => {
                   const isEraserPath = path.startsWith('ERASER:');
                   const actualPath = isEraserPath ? path.replace('ERASER:', '') : path;
