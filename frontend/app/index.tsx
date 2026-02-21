@@ -2479,6 +2479,23 @@ export default function Index() {
             onResponderMove={handleDrawMove}
             onResponderRelease={handleDrawEnd}
             onResponderTerminate={handleDrawEnd}
+            // Pointer Events API - better stylus detection
+            onPointerDown={(e: any) => {
+              const pointerType = e.nativeEvent?.pointerType;
+              console.log('[PointerAPI] Down - pointerType:', pointerType);
+              if (pointerType === 'pen' || pointerType === 'pencil') {
+                // Mark that we detected pencil via pointer events
+                (global as any).__lastPointerWasPencil = true;
+              } else {
+                (global as any).__lastPointerWasPencil = false;
+              }
+            }}
+            onPointerMove={(e: any) => {
+              const pointerType = e.nativeEvent?.pointerType;
+              if (pointerType === 'pen' || pointerType === 'pencil') {
+                (global as any).__lastPointerWasPencil = true;
+              }
+            }}
           >
             <View style={[
               styles.procreateCanvasInner,
