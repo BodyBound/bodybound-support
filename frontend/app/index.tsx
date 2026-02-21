@@ -2635,19 +2635,6 @@ export default function Index() {
           </View>
         )}
 
-        {/* Save Button - Only visible when stencil exists */}
-        {originalImage && stencilImage && (
-          <View style={styles.saveButtonsRow}>
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={() => setShowSaveModal(true)}
-            >
-              <Text style={styles.saveIcon}>💾</Text>
-              <Text style={styles.saveButtonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
         {/* Minimal Share Section - Just icons */}
         <View style={styles.minimalShareRow}>
           <TouchableOpacity style={styles.minimalShareButton} onPress={requestAppReview}>
