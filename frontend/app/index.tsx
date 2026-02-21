@@ -2433,19 +2433,19 @@ export default function Index() {
                 ]
               }
             ]}>
-              {/* Original image as background */}
-              {originalImage && !isCapturingForExport && (
+              {/* Original image as background - use frozen editModeOriginalImage */}
+              {editModeOriginalImage && !isCapturingForExport && (
                 <Image
-                  source={{ uri: originalImage }}
+                  source={{ uri: editModeOriginalImage }}
                   style={styles.procreateBackgroundImage}
                   resizeMode="contain"
                 />
               )}
               
-              {/* Stencil overlay */}
-              {stencilImage && (
+              {/* Stencil overlay - use frozen editModeStencilImage */}
+              {editModeStencilImage && (
                 <Image
-                  source={{ uri: stencilImage }}
+                  source={{ uri: editModeStencilImage }}
                   style={[
                     styles.procreateStencilImage, 
                     { opacity: isCapturingForExport ? 1 : editOpacity }
