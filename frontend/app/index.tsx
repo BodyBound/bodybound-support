@@ -1523,7 +1523,7 @@ export default function Index() {
       altitudeAngle: nativeEvent.altitudeAngle,
       azimuthAngle: nativeEvent.azimuthAngle,
       isApplePencil,
-      manualDrawModeRef: manualDrawModeRef.current,
+      enableFingerPainting: enableFingerPaintingRef.current,
       touchCount
     }));
     
@@ -1546,14 +1546,13 @@ export default function Index() {
     setLastPanX(pageX);
     setLastPanY(pageY);
     
-    // Drawing logic: Manual mode OR automatic pencil detection
-    // Use REF to avoid stale closure - this is critical!
-    const shouldDraw = manualDrawModeRef.current || isApplePencil;
+    // Drawing logic: Finger painting enabled OR automatic pencil detection
+    const shouldDraw = enableFingerPaintingRef.current || isApplePencil;
     
-    console.log('[EditMode] shouldDraw:', shouldDraw, 'manualDrawModeRef:', manualDrawModeRef.current, 'isApplePencil:', isApplePencil);
+    console.log('[EditMode] shouldDraw:', shouldDraw, 'enableFingerPainting:', enableFingerPaintingRef.current, 'isApplePencil:', isApplePencil);
     
     if (shouldDraw) {
-      console.log('[EditMode] ✏️ DRAWING - Starting at:', locationX, locationY, manualDrawModeRef.current ? '(manual mode)' : '(pencil detected)');
+      console.log('[EditMode] ✏️ DRAWING - Starting at:', locationX, locationY, enableFingerPaintingRef.current ? '(finger painting)' : '(pencil detected)');
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
       pendingDrawRef.current = false;
