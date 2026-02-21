@@ -2815,16 +2815,16 @@ export default function Index() {
             </TouchableOpacity>
           </View>
 
-          {/* Hint at top - updated for manual mode */}
+          {/* Hint at top - Procreate style */}
           <View style={styles.procreateTopHintBar} pointerEvents="box-none">
             <Text style={styles.procreateHintText}>
-              {manualDrawMode 
-                ? 'DRAW MODE: Touch to draw • Two fingers: zoom/pan • Double-tap: undo'
-                : 'PAN MODE: Touch to pan • Two fingers: zoom • Double-tap: undo • Tap ✏️ to draw'
+              {enableFingerPainting 
+                ? 'Pencil + Finger: draw • Two fingers: zoom/pan • Double-tap: undo'
+                : 'Pencil: draw • Finger: pan • Two fingers: zoom • Double-tap: undo'
               }
             </Text>
           </View>
-        </View>
+        </GestureHandlerRootView>
       </Modal>
     </SafeAreaView>
   );
