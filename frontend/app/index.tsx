@@ -1260,15 +1260,71 @@ export default function Index() {
     }
   };
 
-  // Share stencil - saves to gallery directly
-  const shareStencil = async () => {
+  // Unified Save Options - shows action sheet with all save options
+  const showSaveOptions = () => {
     if (!stencilImage) {
-      Alert.alert('Error', 'No stencil to share.');
+      Alert.alert('Error', 'No stencil to save.');
       return;
     }
 
-    // Use the save to gallery function directly
-    await saveToPhotoGallery(stencilImage, 'body_bound_stencil');
+    Alert.alert(
+      'Save Stencil',
+      'Choose where to save your stencil',
+      [
+        {
+          text: 'Save to App',
+          onPress: () => setShowSaveModal(true),
+        },
+        {
+          text: 'Save to Photos',
+          onPress: () => saveToPhotoGallery(stencilImage, 'body_bound_stencil'),
+        },
+        {
+          text: 'Export to Procreate',
+          onPress: () => exportToProcreate(),
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+
+  // Export to Procreate via share sheet
+  const exportToProcreate = async () => {
+    if (!stencilImage) {
+      Alert.alert('Error', 'No stencil to export.');
+      return;
+    }
+
+    try {
+      // Get the base64 data
+      const base64Data = stencilImage.replace(/^data:image\/\w+;base64,/, '');
+      
+      // Create a temporary file
+      const filename = `body_bound_stencil_${Date.now()}.png`;
+      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+      
+      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+
+      // Open share sheet - user can select Procreate from here
+      const result = await RNShare.share({
+        url: fileUri,
+        title: 'Export to Procreate',
+        message: 'Body Bound Stencil',
+      });
+
+      if (result.action === RNShare.sharedAction) {
+        console.log('Stencil exported successfully');
+      }
+    } catch (error: any) {
+      console.error('Error exporting to Procreate:', error);
+      Alert.alert('Export Error', 'Could not export stencil. Please try again.');
+    }
   };
 
   // Request App Store review
