@@ -2,7 +2,7 @@
   "expo": {
     "name": "Body Bound Stencil Generator",
     "slug": "body-bound-stencil",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "body-bound-stencil",
