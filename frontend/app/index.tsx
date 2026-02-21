@@ -127,8 +127,7 @@ export default function Index() {
   const [currentPoints, setCurrentPoints] = useState<{x: number, y: number}[]>([]); // Points for smooth curve
   const [brushSize, setBrushSize] = useState(3); // Brush size in pixels
   const [isEraser, setIsEraser] = useState(false); // Eraser mode
-  const [manualDrawMode, setManualDrawMode] = useState(false); // Manual toggle: true = draw with any touch, false = pan
-  const manualDrawModeRef = useRef(false); // Ref to avoid stale closures in touch handlers
+  const [enableFingerPainting, setEnableFingerPainting] = useState(false); // Like Procreate: OFF = pencil only
   const [editedStencil, setEditedStencil] = useState<string | null>(null); // Saved edited version
   const [originalAIStencil, setOriginalAIStencil] = useState<string | null>(null); // Original AI stencil (for revert)
   const [isCapturingForExport, setIsCapturingForExport] = useState(false); // Hide original when saving
@@ -138,13 +137,26 @@ export default function Index() {
   const editCanvasRef = useRef<View>(null); // Ref for capturing the canvas
   const lastTapTimeRef = useRef<number>(0); // For double-tap detection
   
+  // Shared values for Reanimated (for smooth gesture handling)
+  const scale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const savedScale = useSharedValue(1);
+  const savedTranslateX = useSharedValue(0);
+  const savedTranslateY = useSharedValue(0);
+  
+  // Refs for drawing state (to avoid stale closures in gestures)
+  const currentPointsRef = useRef<{x: number, y: number}[]>([]);
+  const isDrawingRef = useRef(false);
+  const enableFingerPaintingRef = useRef(false);
+  
   // Keep ref in sync with state
   useEffect(() => {
-    manualDrawModeRef.current = manualDrawMode;
-    console.log('[EditMode] manualDrawMode changed to:', manualDrawMode);
-  }, [manualDrawMode]);
+    enableFingerPaintingRef.current = enableFingerPainting;
+    console.log('[EditMode] enableFingerPainting changed to:', enableFingerPainting);
+  }, [enableFingerPainting]);
   
-  // Zoom and pan state for Edit mode
+  // Zoom and pan state for Edit mode (legacy - keeping for compatibility)
   const [editScale, setEditScale] = useState(1);
   const [editTranslateX, setEditTranslateX] = useState(0);
   const [editTranslateY, setEditTranslateY] = useState(0);
