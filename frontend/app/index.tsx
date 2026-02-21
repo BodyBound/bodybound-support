@@ -4718,6 +4718,32 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
+  procreateDrawModeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: '#666',
+    gap: 8,
+  },
+  procreateDrawModeButtonActive: {
+    borderColor: '#4CAF50',
+    backgroundColor: 'rgba(76, 175, 80, 0.2)',
+  },
+  procreateDrawModeIcon: {
+    fontSize: 18,
+  },
+  procreateDrawModeText: {
+    color: '#999',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  procreateDrawModeTextActive: {
+    color: '#4CAF50',
+  },
   procreateHint: {
     position: 'absolute',
     top: 110,
