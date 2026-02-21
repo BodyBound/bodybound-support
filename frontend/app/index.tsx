@@ -113,6 +113,11 @@ export default function Index() {
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [hasGeneratedOnce, setHasGeneratedOnce] = useState(false);
   
+  // Onboarding tutorial state
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingSlide, setOnboardingSlide] = useState(0);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(true); // Default true until we check
+  
   // Background removal state
   const [isRemovingBackground, setIsRemovingBackground] = useState(false);
   
@@ -131,6 +136,9 @@ export default function Index() {
   const [isGeneratingVersions, setIsGeneratingVersions] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0); // 0, 1, 2, 3 for progress
   const [regeneratingStyle, setRegeneratingStyle] = useState<string | null>(null); // Which single style is being regenerated
+  
+  // Dot marks for pencil taps (for better sensitivity)
+  const [dotMarks, setDotMarks] = useState<{x: number, y: number, size: number}[]>([]);
   
   // Full-size preview state with zoom
   const [showPreviewModal, setShowPreviewModal] = useState(false);
