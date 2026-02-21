@@ -24,15 +24,52 @@ import * as Print from 'expo-print';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import * as StoreReview from 'expo-store-review';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Share as RNShare } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Circle } from 'react-native-svg';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, runOnJS } from 'react-native-reanimated';
 import { captureRef } from 'react-native-view-shot';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+
+// Onboarding tutorial slides
+const ONBOARDING_SLIDES = [
+  {
+    id: 1,
+    icon: '🎨',
+    title: 'Welcome to BODY BOUND',
+    subtitle: 'Professional Stencil Generator',
+    description: 'Transform any photo into a precise tattoo stencil in seconds. Let\'s walk you through how it works.',
+    buttonText: 'Get Started',
+  },
+  {
+    id: 2,
+    icon: '📷',
+    title: 'Step 1: Choose Your Photo',
+    subtitle: 'Select or Capture',
+    description: 'Tap the camera icon to select a photo from your gallery or take a new one. For best results, use clear, well-lit images.',
+    buttonText: 'Next',
+  },
+  {
+    id: 3,
+    icon: '✨',
+    title: 'Step 2: Generate Stencils',
+    subtitle: 'Three Detail Levels',
+    description: 'LIGHT - Simple clean outlines\nMEDIUM - Outlines + dotted guide lines\nHEAVY - Full detail with contours\n\nTap GENERATE to create all three!',
+    buttonText: 'Next',
+  },
+  {
+    id: 4,
+    icon: '✏️',
+    title: 'Step 3: Edit & Export',
+    subtitle: 'iPad Pro Features',
+    description: '• Apple Pencil to draw/refine\n• Two fingers to zoom & pan\n• Double-tap to undo\n• Tap Save to export to Photos',
+    buttonText: 'Start Creating!',
+  },
+];
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface StencilSettings {
