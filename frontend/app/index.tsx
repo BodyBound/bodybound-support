@@ -1216,6 +1216,9 @@ export default function Index() {
     if (!originalAIStencil && stencilImage) {
       setOriginalAIStencil(stencilImage);
     }
+    // Freeze the images for edit mode - prevents new generations from interfering
+    setEditModeStencilImage(stencilImage);
+    setEditModeOriginalImage(originalImage);
     // Don't reset drawings - preserve them for continued editing
     setCurrentPath('');
     setEditOpacity(0.5);
