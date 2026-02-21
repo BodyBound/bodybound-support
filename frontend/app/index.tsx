@@ -1519,7 +1519,8 @@ export default function Index() {
       hasAzimuth;
     
     // Drawing logic: Manual mode OR automatic pencil detection
-    const shouldDraw = manualDrawMode || isApplePencil;
+    // Use REF to avoid stale closure
+    const shouldDraw = manualDrawModeRef.current || isApplePencil;
     
     if (shouldDraw && currentPoints.length > 0) {
       // Continue drawing
