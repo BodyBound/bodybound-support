@@ -126,6 +126,7 @@ export default function Index() {
   const [brushSize, setBrushSize] = useState(3); // Brush size in pixels
   const [isEraser, setIsEraser] = useState(false); // Eraser mode
   const [manualDrawMode, setManualDrawMode] = useState(false); // Manual toggle: true = draw with any touch, false = pan
+  const manualDrawModeRef = useRef(false); // Ref to avoid stale closures in touch handlers
   const [editedStencil, setEditedStencil] = useState<string | null>(null); // Saved edited version
   const [originalAIStencil, setOriginalAIStencil] = useState<string | null>(null); // Original AI stencil (for revert)
   const [isCapturingForExport, setIsCapturingForExport] = useState(false); // Hide original when saving
@@ -134,6 +135,12 @@ export default function Index() {
   const [editModeOriginalImage, setEditModeOriginalImage] = useState<string | null>(null); // Frozen original for edit mode
   const editCanvasRef = useRef<View>(null); // Ref for capturing the canvas
   const lastTapTimeRef = useRef<number>(0); // For double-tap detection
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    manualDrawModeRef.current = manualDrawMode;
+    console.log('[EditMode] manualDrawMode changed to:', manualDrawMode);
+  }, [manualDrawMode]);
   
   // Zoom and pan state for Edit mode
   const [editScale, setEditScale] = useState(1);
