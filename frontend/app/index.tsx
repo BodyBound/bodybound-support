@@ -1331,8 +1331,14 @@ export default function Index() {
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     const now = Date.now();
     
-    // Check if this is Apple Pencil
-    const isApplePencil = nativeEvent.touchType === 'stylus';
+    // Check if this is Apple Pencil - check multiple possible properties
+    // iOS native can report it as touchType='stylus' or through other properties
+    const isApplePencil = nativeEvent.touchType === 'stylus' || 
+                          nativeEvent.touchType === 'pencil' ||
+                          (nativeEvent.force !== undefined && nativeEvent.force > 0 && nativeEvent.altitudeAngle !== undefined);
+    
+    // Debug log for native testing
+    console.log('[EditMode] Touch start - touchType:', nativeEvent.touchType, 'force:', nativeEvent.force, 'isApplePencil:', isApplePencil);
     
     // Double-tap detection for undo (within 300ms) - works for any touch
     if (now - lastTapTimeRef.current < 300) {
@@ -1355,13 +1361,14 @@ export default function Index() {
     
     // ONLY Apple Pencil can draw immediately
     if (isApplePencil) {
+      console.log('[EditMode] Starting pencil draw at:', locationX, locationY);
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
       pendingDrawRef.current = false;
     } else {
-      // For finger touch, wait briefly to see if second finger joins
-      // This makes two-finger gestures much easier to trigger
-      pendingDrawRef.current = false; // Finger never draws, so no pending state needed
+      // For finger touch - do not draw
+      console.log('[EditMode] Finger touch - will pan');
+      pendingDrawRef.current = false;
     }
   };
 
