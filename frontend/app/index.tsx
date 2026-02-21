@@ -1510,14 +1510,17 @@ export default function Index() {
       (hasAltitude && hasForce) ||
       hasAzimuth;
     
-    if (isApplePencil && currentPoints.length > 0) {
-      // Apple Pencil - continue drawing
+    // Drawing logic: Manual mode OR automatic pencil detection
+    const shouldDraw = manualDrawMode || isApplePencil;
+    
+    if (shouldDraw && currentPoints.length > 0) {
+      // Continue drawing
       const newPoints = [...currentPoints, { x: locationX, y: locationY }];
       setCurrentPoints(newPoints);
       const smoothPath = createSmoothPath(newPoints);
       setCurrentPath(smoothPath);
-    } else if (!isApplePencil && !isPinchingRef.current) {
-      // Single finger - pan the canvas
+    } else if (!shouldDraw && !isPinchingRef.current) {
+      // Single finger - pan the canvas (when not in draw mode)
       const deltaX = pageX - lastPanRef.current.x;
       const deltaY = pageY - lastPanRef.current.y;
       setEditTranslateX(prev => prev + deltaX);
