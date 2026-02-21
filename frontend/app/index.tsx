@@ -539,6 +539,9 @@ export default function Index() {
         console.log('[GenerateAI] Light version error:', errorText);
       }
 
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Generate Medium version - Clean lines + texture/contour, NO black fill
       setGenerationProgress(2);
       console.log('[GenerateAI] Starting Medium version...');
@@ -563,6 +566,9 @@ export default function Index() {
         const errorText = await mediumResponse.text();
         console.log('[GenerateAI] Medium version error:', errorText);
       }
+
+      // Small delay to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Generate Heavy version - Texture AND solid black (moderate)
       setGenerationProgress(3);
