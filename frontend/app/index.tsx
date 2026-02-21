@@ -362,6 +362,41 @@ export default function Index() {
     }
   }, [showWelcome]);
 
+  // Check if user has seen onboarding tutorial
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const seen = await AsyncStorage.getItem('hasSeenOnboarding');
+        if (seen !== 'true') {
+          setHasSeenOnboarding(false);
+          setShowOnboarding(true);
+        }
+      } catch (error) {
+        console.log('Error checking onboarding status:', error);
+      }
+    };
+    checkOnboarding();
+  }, []);
+
+  // Complete onboarding
+  const completeOnboarding = async () => {
+    try {
+      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+      setHasSeenOnboarding(true);
+      setShowOnboarding(false);
+      setOnboardingSlide(0);
+    } catch (error) {
+      console.log('Error saving onboarding status:', error);
+      setShowOnboarding(false);
+    }
+  };
+
+  // Show onboarding again (from help button)
+  const showOnboardingTutorial = () => {
+    setOnboardingSlide(0);
+    setShowOnboarding(true);
+  };
+
   // Function to load photos from device library
   const loadPhotoLibrary = async (loadMore = false) => {
     if (loadingPhotos) return;
