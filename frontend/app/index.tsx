@@ -2793,12 +2793,12 @@ export default function Index() {
               ]}
               onPress={() => setEnableFingerPainting(!enableFingerPainting)}
             >
-              <Text style={styles.procreateDrawModeIcon}>{enableFingerPainting ? '👆' : '✏️'}</Text>
+              <Text style={styles.procreateDrawModeIcon}>{enableFingerPainting ? '🖐️' : '✏️'}</Text>
               <Text style={[
                 styles.procreateDrawModeText,
                 enableFingerPainting && styles.procreateDrawModeTextActive
               ]}>
-                {enableFingerPainting ? 'FINGER ON' : 'PENCIL ONLY'}
+                {enableFingerPainting ? 'PAN MODE' : 'DRAW MODE'}
               </Text>
             </TouchableOpacity>
             
@@ -2811,12 +2811,12 @@ export default function Index() {
             </TouchableOpacity>
           </View>
 
-          {/* Hint at top - Procreate style */}
+          {/* Hint at top - Clear instructions */}
           <View style={styles.procreateTopHintBar} pointerEvents="box-none">
             <Text style={styles.procreateHintText}>
               {enableFingerPainting 
-                ? 'Pencil + Finger: draw • Two fingers: zoom/pan • Double-tap: undo'
-                : 'Pencil: draw • Finger: pan • Two fingers: zoom • Double-tap: undo'
+                ? 'Single touch: pan • Two fingers: zoom • Double-tap: undo'
+                : 'Single touch: DRAW • Two fingers: zoom/pan • Double-tap: undo'
               }
             </Text>
           </View>
