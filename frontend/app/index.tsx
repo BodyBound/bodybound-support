@@ -1401,12 +1401,13 @@ export default function Index() {
     setLastPanY(pageY);
     
     // Drawing logic: Manual mode OR automatic pencil detection
-    // When manualDrawMode is ON, any single touch draws
-    // When manualDrawMode is OFF, only detected Apple Pencil draws (or pan if not detected)
-    const shouldDraw = manualDrawMode || isApplePencil;
+    // Use REF to avoid stale closure - this is critical!
+    const shouldDraw = manualDrawModeRef.current || isApplePencil;
+    
+    console.log('[EditMode] shouldDraw:', shouldDraw, 'manualDrawModeRef:', manualDrawModeRef.current, 'isApplePencil:', isApplePencil);
     
     if (shouldDraw) {
-      console.log('[EditMode] ✏️ DRAWING - Starting at:', locationX, locationY, manualDrawMode ? '(manual mode)' : '(pencil detected)');
+      console.log('[EditMode] ✏️ DRAWING - Starting at:', locationX, locationY, manualDrawModeRef.current ? '(manual mode)' : '(pencil detected)');
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
       pendingDrawRef.current = false;
