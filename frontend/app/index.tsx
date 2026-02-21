@@ -125,8 +125,7 @@ export default function Index() {
   const [currentPoints, setCurrentPoints] = useState<{x: number, y: number}[]>([]); // Points for smooth curve
   const [brushSize, setBrushSize] = useState(3); // Brush size in pixels
   const [isEraser, setIsEraser] = useState(false); // Eraser mode
-  const [isDrawMode, setIsDrawMode] = useState(true); // true = draw, false = navigate/pan
-  const [isPencilMode, setIsPencilMode] = useState(true); // true = touches draw, false = touches pan
+  const [manualDrawMode, setManualDrawMode] = useState(false); // Manual toggle: true = draw with any touch, false = pan
   const [editedStencil, setEditedStencil] = useState<string | null>(null); // Saved edited version
   const [originalAIStencil, setOriginalAIStencil] = useState<string | null>(null); // Original AI stencil (for revert)
   const [isCapturingForExport, setIsCapturingForExport] = useState(false); // Hide original when saving
