@@ -1388,7 +1388,8 @@ export default function Index() {
       // If finger panning is ENABLED, single touch PANS
       if (!enableFingerPaintingRef.current) {
         // DEFAULT: Draw with any single touch (this makes pencil work!)
-        runOnJS(startDrawing)(event.x, event.y);
+        // Pass current transform values for coordinate conversion
+        runOnJS(startDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value);
       } else {
         // OPTIONAL: Pan with single finger (enabled by toggle)
         savedTranslateX.value = translateX.value;
@@ -1397,8 +1398,8 @@ export default function Index() {
     })
     .onUpdate((event) => {
       if (!enableFingerPaintingRef.current) {
-        // Drawing
-        runOnJS(continueDrawing)(event.x, event.y);
+        // Drawing - pass current transform values
+        runOnJS(continueDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value);
       } else {
         // Panning
         translateX.value = savedTranslateX.value + event.translationX;
