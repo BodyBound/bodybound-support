@@ -1342,45 +1342,43 @@ export default function Index() {
     setDrawingPaths(prev => prev.slice(0, -1));
   };
 
-  // Procreate-style gestures using react-native-gesture-handler
-  // This provides proper stylus detection via pointerType
+  // SIMPLIFIED APPROACH: 
+  // - Single touch (pencil OR finger) = DRAW by default
+  // - Two fingers = Zoom + Pan (navigation)
+  // - Toggle controls whether single finger pans instead of draws
   
-  // PAN gesture for drawing (stylus) OR panning (finger when finger painting disabled)
-  const panGesture = Gesture.Pan()
+  // Single-finger gesture - DRAWS by default (guarantees pencil works)
+  const drawGesture = Gesture.Pan()
     .minPointers(1)
     .maxPointers(1)
     .onStart((event) => {
-      const isStylusTouch = (event as any).pointerType === 'pen' || 
-                           (event as any).pointerType === 'pencil' ||
-                           (event as any).pointerType === 'stylus';
+      console.log('[Gesture] Single touch start at:', event.x, event.y);
       
-      console.log('[Gesture] Pan Start - pointerType:', (event as any).pointerType, 'isStylusTouch:', isStylusTouch);
-      
-      // Stylus always draws
-      // Finger draws only if enableFingerPainting is ON
-      if (isStylusTouch || enableFingerPaintingRef.current) {
+      // If finger panning is DISABLED (default), single touch DRAWS
+      // If finger panning is ENABLED, single touch PANS
+      if (!enableFingerPaintingRef.current) {
+        // DEFAULT: Draw with any single touch (this makes pencil work!)
         runOnJS(startDrawing)(event.x, event.y);
       } else {
-        // Finger without finger painting - save position for panning
+        // OPTIONAL: Pan with single finger (enabled by toggle)
         savedTranslateX.value = translateX.value;
         savedTranslateY.value = translateY.value;
       }
     })
     .onUpdate((event) => {
-      const isStylusTouch = (event as any).pointerType === 'pen' || 
-                           (event as any).pointerType === 'pencil' ||
-                           (event as any).pointerType === 'stylus';
-      
-      if (isStylusTouch || enableFingerPaintingRef.current) {
+      if (!enableFingerPaintingRef.current) {
+        // Drawing
         runOnJS(continueDrawing)(event.x, event.y);
       } else {
-        // Finger pan
+        // Panning
         translateX.value = savedTranslateX.value + event.translationX;
         translateY.value = savedTranslateY.value + event.translationY;
       }
     })
     .onEnd(() => {
-      runOnJS(endDrawing)();
+      if (!enableFingerPaintingRef.current) {
+        runOnJS(endDrawing)();
+      }
     });
 
   // PINCH gesture for zooming (always works with 2 fingers)
