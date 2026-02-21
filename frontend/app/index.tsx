@@ -2662,6 +2662,23 @@ export default function Index() {
 
           {/* Bottom - Save to Photos */}
           <View style={styles.procreateBottomBar} pointerEvents="box-none">
+            {/* Draw/Pan Mode Toggle */}
+            <TouchableOpacity 
+              style={[
+                styles.procreateDrawModeButton,
+                manualDrawMode && styles.procreateDrawModeButtonActive
+              ]}
+              onPress={() => setManualDrawMode(!manualDrawMode)}
+            >
+              <Text style={styles.procreateDrawModeIcon}>{manualDrawMode ? '✏️' : '🖐️'}</Text>
+              <Text style={[
+                styles.procreateDrawModeText,
+                manualDrawMode && styles.procreateDrawModeTextActive
+              ]}>
+                {manualDrawMode ? 'DRAW' : 'PAN'}
+              </Text>
+            </TouchableOpacity>
+            
             <TouchableOpacity 
               style={styles.procreateSaveButton}
               onPress={saveEditedToGallery}
@@ -2671,10 +2688,13 @@ export default function Index() {
             </TouchableOpacity>
           </View>
 
-          {/* Hint at top - Apple Pencil only */}
+          {/* Hint at top - updated for manual mode */}
           <View style={styles.procreateTopHintBar} pointerEvents="box-none">
             <Text style={styles.procreateHintText}>
-              Apple Pencil: draw • Finger: pan • Two fingers: zoom • Double-tap: undo
+              {manualDrawMode 
+                ? 'DRAW MODE: Touch to draw • Two fingers: zoom/pan • Double-tap: undo'
+                : 'PAN MODE: Touch to pan • Two fingers: zoom • Double-tap: undo • Tap ✏️ to draw'
+              }
             </Text>
           </View>
         </View>
