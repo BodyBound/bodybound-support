@@ -1447,8 +1447,10 @@ export default function Index() {
     
     const { locationX, locationY, pageX, pageY } = event.nativeEvent;
     
-    // Check if this is Apple Pencil
-    const isApplePencil = nativeEvent.touchType === 'stylus';
+    // Check if this is Apple Pencil - check multiple possible properties
+    const isApplePencil = nativeEvent.touchType === 'stylus' || 
+                          nativeEvent.touchType === 'pencil' ||
+                          (nativeEvent.force !== undefined && nativeEvent.force > 0 && nativeEvent.altitudeAngle !== undefined);
     
     if (isApplePencil && currentPoints.length > 0) {
       // Apple Pencil - continue drawing
