@@ -1435,7 +1435,13 @@ export default function Index() {
     if (!isDrawingRef.current) return;
     isDrawingRef.current = false;
     
-    if (currentPointsRef.current.length > 1) {
+    // If we only have 1 point, it's a tap - create a dot
+    if (currentPointsRef.current.length === 1) {
+      const point = currentPointsRef.current[0];
+      // Add a small dot at the tap location
+      setDotMarks(prev => [...prev, { x: point.x, y: point.y, size: brushSize }]);
+      console.log('[Drawing] Single tap - created dot at:', point.x, point.y);
+    } else if (currentPointsRef.current.length > 1) {
       const smoothPath = createSmoothPath(currentPointsRef.current);
       if (isEraser) {
         setDrawingPaths(prev => [...prev, `ERASER:${smoothPath}`]);
@@ -1449,7 +1455,12 @@ export default function Index() {
   };
 
   const undoLastPath = () => {
-    setDrawingPaths(prev => prev.slice(0, -1));
+    // Undo dots first if there are any, otherwise undo paths
+    if (dotMarks.length > 0) {
+      setDotMarks(prev => prev.slice(0, -1));
+    } else {
+      setDrawingPaths(prev => prev.slice(0, -1));
+    }
   };
 
   // SIMPLIFIED APPROACH: 
