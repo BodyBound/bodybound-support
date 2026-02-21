@@ -1417,11 +1417,11 @@ export default function Index() {
     twoFingerPan
   );
 
-  // Race between single-finger pan (draw/pan) and the combined two-finger gestures
+  // Race between single-finger draw and the combined two-finger gestures
   // Also include double-tap for undo
   const allGestures = Gesture.Race(
     combinedGesture,
-    Gesture.Exclusive(doubleTapGesture, panGesture)
+    Gesture.Exclusive(doubleTapGesture, drawGesture)
   );
 
   // Animated style for the canvas transform
