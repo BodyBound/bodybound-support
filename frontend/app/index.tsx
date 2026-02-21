@@ -2787,22 +2787,22 @@ export default function Index() {
             </TouchableOpacity>
           </View>
 
-          {/* Bottom - Save to Photos */}
+          {/* Bottom - Controls */}
           <View style={styles.procreateBottomBar} pointerEvents="box-none">
-            {/* Draw/Pan Mode Toggle */}
+            {/* Enable Finger Painting Toggle - Like Procreate */}
             <TouchableOpacity 
               style={[
                 styles.procreateDrawModeButton,
-                manualDrawMode && styles.procreateDrawModeButtonActive
+                enableFingerPainting && styles.procreateDrawModeButtonActive
               ]}
-              onPress={() => setManualDrawMode(!manualDrawMode)}
+              onPress={() => setEnableFingerPainting(!enableFingerPainting)}
             >
-              <Text style={styles.procreateDrawModeIcon}>{manualDrawMode ? '✏️' : '🖐️'}</Text>
+              <Text style={styles.procreateDrawModeIcon}>{enableFingerPainting ? '👆' : '✏️'}</Text>
               <Text style={[
                 styles.procreateDrawModeText,
-                manualDrawMode && styles.procreateDrawModeTextActive
+                enableFingerPainting && styles.procreateDrawModeTextActive
               ]}>
-                {manualDrawMode ? 'DRAW' : 'PAN'}
+                {enableFingerPainting ? 'FINGER ON' : 'PENCIL ONLY'}
               </Text>
             </TouchableOpacity>
             
