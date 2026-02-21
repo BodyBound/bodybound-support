@@ -1469,9 +1469,11 @@ export default function Index() {
   // - Toggle controls whether single finger pans instead of draws
   
   // Single-finger gesture - DRAWS by default (guarantees pencil works)
+  // minDistance(0) makes it super sensitive - picks up even tiny taps
   const drawGesture = Gesture.Pan()
     .minPointers(1)
     .maxPointers(1)
+    .minDistance(0) // CRITICAL: Set to 0 for maximum sensitivity - picks up taps and dots!
     .onStart((event) => {
       console.log('[Gesture] Single touch start at:', event.x, event.y);
       
