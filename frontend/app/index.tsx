@@ -2957,6 +2957,85 @@ export default function Index() {
           </View>
         </GestureHandlerRootView>
       </Modal>
+
+      {/* Onboarding Tutorial Modal */}
+      <Modal
+        visible={showOnboarding}
+        animationType="fade"
+        transparent={true}
+        statusBarTranslucent={true}
+        onRequestClose={() => {}}
+      >
+        <View style={styles.onboardingOverlay}>
+          <View style={styles.onboardingCard}>
+            {/* Slide Content */}
+            <View style={styles.onboardingContent}>
+              <Text style={styles.onboardingIcon}>
+                {ONBOARDING_SLIDES[onboardingSlide]?.icon}
+              </Text>
+              <Text style={styles.onboardingTitle}>
+                {ONBOARDING_SLIDES[onboardingSlide]?.title}
+              </Text>
+              <Text style={styles.onboardingSubtitle}>
+                {ONBOARDING_SLIDES[onboardingSlide]?.subtitle}
+              </Text>
+              <Text style={styles.onboardingDescription}>
+                {ONBOARDING_SLIDES[onboardingSlide]?.description}
+              </Text>
+            </View>
+
+            {/* Progress Dots */}
+            <View style={styles.onboardingDots}>
+              {ONBOARDING_SLIDES.map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.onboardingDot,
+                    index === onboardingSlide && styles.onboardingDotActive
+                  ]}
+                />
+              ))}
+            </View>
+
+            {/* Navigation Buttons */}
+            <View style={styles.onboardingButtons}>
+              {onboardingSlide > 0 && (
+                <TouchableOpacity
+                  style={styles.onboardingBackButton}
+                  onPress={() => setOnboardingSlide(prev => prev - 1)}
+                >
+                  <Text style={styles.onboardingBackText}>Back</Text>
+                </TouchableOpacity>
+              )}
+              
+              <TouchableOpacity
+                style={styles.onboardingNextButton}
+                onPress={() => {
+                  if (onboardingSlide < ONBOARDING_SLIDES.length - 1) {
+                    setOnboardingSlide(prev => prev + 1);
+                  } else {
+                    completeOnboarding();
+                  }
+                }}
+              >
+                <Text style={styles.onboardingNextText}>
+                  {ONBOARDING_SLIDES[onboardingSlide]?.buttonText}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Skip Button */}
+            {onboardingSlide < ONBOARDING_SLIDES.length - 1 && (
+              <TouchableOpacity
+                style={styles.onboardingSkip}
+                onPress={completeOnboarding}
+              >
+                <Text style={styles.onboardingSkipText}>Skip Tutorial</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
