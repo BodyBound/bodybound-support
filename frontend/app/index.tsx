@@ -1377,7 +1377,7 @@ export default function Index() {
       altitudeAngle: nativeEvent.altitudeAngle,
       azimuthAngle: nativeEvent.azimuthAngle,
       isApplePencil,
-      manualDrawMode,
+      manualDrawModeRef: manualDrawModeRef.current,
       touchCount
     }));
     
