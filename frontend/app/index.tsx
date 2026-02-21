@@ -2697,8 +2697,9 @@ export default function Index() {
                   />
                 )}
               </Svg>
-            </View>
-          </View>
+              </Animated.View>
+            </Animated.View>
+          </GestureDetector>
 
           {/* Left Side - Vertical Brush Size Slider */}
           <View style={styles.procreateLeftBar} pointerEvents="box-none">
