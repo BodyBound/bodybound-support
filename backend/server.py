@@ -640,52 +640,39 @@ async def generate_ai_stencil(request: AIStencilRequest):
         fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
         
         # Create the prompt for EXACT tracing - ULTRA STRICT for tattoo stencils
-        prompt = f"""You are a professional tattoo stencil tracer. Your ONLY job is to convert the input photograph into a clean line drawing stencil.
+        prompt = f"""TRACE THE ATTACHED PHOTOGRAPH INTO A LINE DRAWING.
 
-CRITICAL RULES - VIOLATING ANY OF THESE IS FAILURE:
+⚠️ CRITICAL: This is a TRACING task, NOT creative generation. You MUST copy the exact image provided.
 
-1. ABSOLUTELY NO COLOR - The output must be ONLY black lines on a pure white background. 
-   - NO skin tones, NO hair color, NO eye color, NO clothing colors
-   - NO brown, NO blonde, NO any color whatsoever
-   - ONLY black ink lines on white paper
+MANDATORY REQUIREMENTS:
+1. TRACE THE EXACT REFERENCE IMAGE - Every detail must match:
+   - If there are horns, draw the EXACT same horns in the EXACT same position
+   - If there is makeup or facial features, trace them EXACTLY as shown
+   - Same face angle, same expression, same pose - EXACTLY as photographed
+   - Same hair style and position
+   - ALL unique features (tattoos, accessories, special elements) MUST be traced
 
-2. EXACT TRACING REQUIRED - This is NOT creative art. You must TRACE the photo like a copy machine.
-   - Same face shape, same nose shape, same eye positions
-   - Same hair outline (but NO color fill - just outline)
-   - Same proportions - if eyes are close together in photo, they must be close in stencil
-   - Same angle and pose - do not change anything
+2. OUTPUT FORMAT:
+   - Pure white background (#FFFFFF)
+   - Black lines only (#000000) 
+   - NO colors, NO gray tones, NO fills
+   - Clean line art suitable for tattoo stencil transfer
 
-3. LINE ART ONLY:
-   - Draw clean black outlines
-   - Use black lines for all features
-   - Any shading must be done with black dots or dashed lines ONLY
-   - NO filled-in areas with color - only black line work
-
-OUTPUT SPECIFICATIONS:
-- Pure white background (#FFFFFF)
-- Black lines only (#000000)
-- Clean, confident strokes suitable for tattoo transfer
-- Resolution and size matching input image proportions
-
-DETAIL LEVEL: {shading_level.upper()}
-
-ALL VERSIONS START WITH THE SAME CLEAN OUTLINES. The only difference is how much contour detail is added:
-
+3. DETAIL LEVEL: {shading_level.upper()}
 {
-"LIGHT VERSION - Clean outlines only. Draw the basic outline of every feature (face shape, eyes, nose, lips, hair outline, ears, clothing edges). NO internal shading lines. NO dots. NO texture. Just the clean outer edges that define each shape. Think: a simple coloring book outline." if shading_level == "minimal" else
-"MEDIUM VERSION - Same clean outlines as Light, PLUS add DOTTED or DASHED lines to indicate contour and lighting. These dotted lines show where shadows fall and help with placement. Use small dashes (---) or dots (...) along cheekbones, under the nose, around eye sockets, jawline shadows. Keep the dots/dashes subtle - they are reference guides, not heavy shading." if shading_level == "light" else
-"HEAVY VERSION - Same clean outlines as Light, PLUS more detailed contour markings. Add stippling (clusters of small dots) in shadow areas. Use parallel hatching lines for texture in hair or clothing. More dots and dashes than Medium version to show depth. Still NO solid black fills unless absolutely necessary for the darkest shadows." if shading_level == "moderate" else
-"MAXIMUM DETAIL - Full stippling, cross-hatching, and detailed texture work."
+"LIGHT - Trace only the main outlines. Simple clean edges of all shapes. No internal details or shading marks." if shading_level == "minimal" else
+"MEDIUM - Trace all outlines PLUS add dotted/dashed guide lines for shadows and contours." if shading_level == "light" else
+"HEAVY - Trace all outlines PLUS detailed stippling and hatching for depth and texture." if shading_level == "moderate" else
+"MAXIMUM - Full detail with extensive stippling, cross-hatching, and texture work."
 }
 
-VERIFICATION CHECKLIST:
-✓ Is the output ONLY black and white? (NO other colors)
-✓ Does it match the EXACT face/body proportions from the input?
-✓ Are the features in the SAME positions as the input photo?
-✓ Would someone recognize THIS SPECIFIC PERSON from the stencil?
-✓ Are the base outlines clean and consistent?
+VERIFICATION - The output MUST pass these checks:
+✓ Does it look like the SAME person/subject from the input photo?
+✓ Are ALL unique features (horns, makeup, accessories) present and accurate?
+✓ Is the pose/angle IDENTICAL to the reference?
+✓ Is it black lines on white only - NO colors?
 
-Generate the stencil now."""
+Generate the traced stencil now."""
 
         
         image_base64 = None
