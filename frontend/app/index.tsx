@@ -1663,9 +1663,8 @@ export default function Index() {
       (hasAltitude && hasForce) ||
       hasAzimuth;
     
-    // Drawing logic: Manual mode OR automatic pencil detection
-    // Use REF to avoid stale closure
-    const shouldDraw = manualDrawModeRef.current || isApplePencil;
+    // Drawing logic: Finger painting enabled OR automatic pencil detection
+    const shouldDraw = enableFingerPaintingRef.current || isApplePencil;
     
     if (shouldDraw && currentPoints.length > 0) {
       // Continue drawing
