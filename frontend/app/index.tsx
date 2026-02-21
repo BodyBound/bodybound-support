@@ -1304,41 +1304,46 @@ export default function Index() {
     return path;
   };
 
-  // Convert screen coordinates to canvas coordinates (accounting for zoom and pan)
-  const screenToCanvas = (screenX: number, screenY: number) => {
-    // Get current transform values
-    const currentScale = scale.value;
-    const currentTranslateX = translateX.value;
-    const currentTranslateY = translateY.value;
-    
-    // Get canvas center (the transform origin)
+  // Refs to track current transform for coordinate conversion
+  const currentScaleRef = useRef(1);
+  const currentTranslateXRef = useRef(0);
+  const currentTranslateYRef = useRef(0);
+
+  // Helper functions for gesture callbacks (must be regular functions to use with runOnJS)
+  const startDrawing = (screenX: number, screenY: number, currentScale: number, currentTX: number, currentTY: number) => {
+    // Convert screen coordinates to canvas coordinates
     const { width, height } = Dimensions.get('window');
     const centerX = width / 2;
     const centerY = height / 2;
     
-    // Convert screen coordinates to canvas coordinates
-    // First, translate to center-origin coordinates
-    // Then apply inverse scale
-    // Then translate back
-    const canvasX = (screenX - centerX - currentTranslateX) / currentScale + centerX;
-    const canvasY = (screenY - centerY - currentTranslateY) / currentScale + centerY;
+    // Apply inverse transform
+    const x = (screenX - centerX - currentTX) / currentScale + centerX;
+    const y = (screenY - centerY - currentTY) / currentScale + centerY;
     
-    return { x: canvasX, y: canvasY };
-  };
-
-  // Helper functions for gesture callbacks (must be regular functions to use with runOnJS)
-  const startDrawing = (screenX: number, screenY: number) => {
-    const { x, y } = screenToCanvas(screenX, screenY);
-    console.log('[Drawing] Start - screen:', screenX, screenY, '-> canvas:', x, y);
+    // Store current transform for continue drawing
+    currentScaleRef.current = currentScale;
+    currentTranslateXRef.current = currentTX;
+    currentTranslateYRef.current = currentTY;
+    
+    console.log('[Drawing] Start - screen:', screenX.toFixed(0), screenY.toFixed(0), '-> canvas:', x.toFixed(0), y.toFixed(0), 'scale:', currentScale.toFixed(2));
+    
     currentPointsRef.current = [{ x, y }];
     isDrawingRef.current = true;
     setCurrentPoints([{ x, y }]);
     setCurrentPath(`M${x},${y}`);
   };
 
-  const continueDrawing = (screenX: number, screenY: number) => {
+  const continueDrawing = (screenX: number, screenY: number, currentScale: number, currentTX: number, currentTY: number) => {
     if (!isDrawingRef.current) return;
-    const { x, y } = screenToCanvas(screenX, screenY);
+    
+    // Convert screen coordinates to canvas coordinates
+    const { width, height } = Dimensions.get('window');
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    const x = (screenX - centerX - currentTX) / currentScale + centerX;
+    const y = (screenY - centerY - currentTY) / currentScale + centerY;
+    
     const newPoints = [...currentPointsRef.current, { x, y }];
     currentPointsRef.current = newPoints;
     setCurrentPoints(newPoints);
