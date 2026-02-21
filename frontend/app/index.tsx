@@ -1370,6 +1370,7 @@ export default function Index() {
       altitudeAngle: nativeEvent.altitudeAngle,
       azimuthAngle: nativeEvent.azimuthAngle,
       isApplePencil,
+      manualDrawMode,
       touchCount
     }));
     
@@ -1392,9 +1393,13 @@ export default function Index() {
     setLastPanX(pageX);
     setLastPanY(pageY);
     
-    // ONLY Apple Pencil can draw immediately
-    if (isApplePencil) {
-      console.log('[EditMode] ✏️ PENCIL DETECTED - Starting draw at:', locationX, locationY);
+    // Drawing logic: Manual mode OR automatic pencil detection
+    // When manualDrawMode is ON, any single touch draws
+    // When manualDrawMode is OFF, only detected Apple Pencil draws (or pan if not detected)
+    const shouldDraw = manualDrawMode || isApplePencil;
+    
+    if (shouldDraw) {
+      console.log('[EditMode] ✏️ DRAWING - Starting at:', locationX, locationY, manualDrawMode ? '(manual mode)' : '(pencil detected)');
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
       pendingDrawRef.current = false;
