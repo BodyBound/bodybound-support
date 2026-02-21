@@ -1347,7 +1347,11 @@ export default function Index() {
     const hasAzimuth = nativeEvent.azimuthAngle !== undefined;
     
     // Determine if Apple Pencil based on all available signals
+    // Also check the pointer events flag which is more reliable on native iOS
+    const pointerWasPencil = (global as any).__lastPointerWasPencil === true;
+    
     const isApplePencil = 
+      pointerWasPencil ||
       touchTypeFromEvent === 'stylus' || 
       touchTypeFromEvent === 'pencil' ||
       touchTypeFromTouch === 'stylus' ||
