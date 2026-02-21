@@ -1304,7 +1304,138 @@ export default function Index() {
     return path;
   };
 
-  // Calculate distance between two touch points (for pinch zoom)
+  // Helper functions for gesture callbacks (must be regular functions to use with runOnJS)
+  const startDrawing = (x: number, y: number) => {
+    currentPointsRef.current = [{ x, y }];
+    isDrawingRef.current = true;
+    setCurrentPoints([{ x, y }]);
+    setCurrentPath(`M${x},${y}`);
+  };
+
+  const continueDrawing = (x: number, y: number) => {
+    if (!isDrawingRef.current) return;
+    const newPoints = [...currentPointsRef.current, { x, y }];
+    currentPointsRef.current = newPoints;
+    setCurrentPoints(newPoints);
+    const smoothPath = createSmoothPath(newPoints);
+    setCurrentPath(smoothPath);
+  };
+
+  const endDrawing = () => {
+    if (!isDrawingRef.current) return;
+    isDrawingRef.current = false;
+    
+    if (currentPointsRef.current.length > 1) {
+      const smoothPath = createSmoothPath(currentPointsRef.current);
+      if (isEraser) {
+        setDrawingPaths(prev => [...prev, `ERASER:${smoothPath}`]);
+      } else {
+        setDrawingPaths(prev => [...prev, smoothPath]);
+      }
+    }
+    currentPointsRef.current = [];
+    setCurrentPath('');
+    setCurrentPoints([]);
+  };
+
+  const undoLastPath = () => {
+    setDrawingPaths(prev => prev.slice(0, -1));
+  };
+
+  // Procreate-style gestures using react-native-gesture-handler
+  // This provides proper stylus detection via pointerType
+  
+  // PAN gesture for drawing (stylus) OR panning (finger when finger painting disabled)
+  const panGesture = Gesture.Pan()
+    .minPointers(1)
+    .maxPointers(1)
+    .onStart((event) => {
+      const isStylusTouch = (event as any).pointerType === 'pen' || 
+                           (event as any).pointerType === 'pencil' ||
+                           (event as any).pointerType === 'stylus';
+      
+      console.log('[Gesture] Pan Start - pointerType:', (event as any).pointerType, 'isStylusTouch:', isStylusTouch);
+      
+      // Stylus always draws
+      // Finger draws only if enableFingerPainting is ON
+      if (isStylusTouch || enableFingerPaintingRef.current) {
+        runOnJS(startDrawing)(event.x, event.y);
+      } else {
+        // Finger without finger painting - save position for panning
+        savedTranslateX.value = translateX.value;
+        savedTranslateY.value = translateY.value;
+      }
+    })
+    .onUpdate((event) => {
+      const isStylusTouch = (event as any).pointerType === 'pen' || 
+                           (event as any).pointerType === 'pencil' ||
+                           (event as any).pointerType === 'stylus';
+      
+      if (isStylusTouch || enableFingerPaintingRef.current) {
+        runOnJS(continueDrawing)(event.x, event.y);
+      } else {
+        // Finger pan
+        translateX.value = savedTranslateX.value + event.translationX;
+        translateY.value = savedTranslateY.value + event.translationY;
+      }
+    })
+    .onEnd(() => {
+      runOnJS(endDrawing)();
+    });
+
+  // PINCH gesture for zooming (always works with 2 fingers)
+  const pinchGesture = Gesture.Pinch()
+    .onStart(() => {
+      savedScale.value = scale.value;
+    })
+    .onUpdate((event) => {
+      // Procreate-style: nearly 1:1 zoom response
+      scale.value = Math.min(Math.max(savedScale.value * event.scale, 0.1), 10);
+    });
+
+  // Two-finger PAN for moving while zooming
+  const twoFingerPan = Gesture.Pan()
+    .minPointers(2)
+    .maxPointers(2)
+    .onStart(() => {
+      savedTranslateX.value = translateX.value;
+      savedTranslateY.value = translateY.value;
+    })
+    .onUpdate((event) => {
+      translateX.value = savedTranslateX.value + event.translationX;
+      translateY.value = savedTranslateY.value + event.translationY;
+    });
+
+  // Double-tap to undo
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      runOnJS(undoLastPath)();
+    });
+
+  // Combine all gestures - pinch and two-finger pan run simultaneously
+  const combinedGesture = Gesture.Simultaneous(
+    pinchGesture,
+    twoFingerPan
+  );
+
+  // Race between single-finger pan (draw/pan) and the combined two-finger gestures
+  // Also include double-tap for undo
+  const allGestures = Gesture.Race(
+    combinedGesture,
+    Gesture.Exclusive(doubleTapGesture, panGesture)
+  );
+
+  // Animated style for the canvas transform
+  const animatedCanvasStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+      { scale: scale.value }
+    ]
+  }));
+
+  // Calculate distance between two touch points (for pinch zoom) - legacy
   const getDistance = (touches: any[]): number => {
     if (touches.length < 2) return 0;
     const dx = touches[0].pageX - touches[1].pageX;
@@ -1312,6 +1443,7 @@ export default function Index() {
     return Math.sqrt(dx * dx + dy * dy);
   };
 
+  // Legacy touch handlers - kept for fallback but won't be used with GestureDetector
   // Handle touch start - iPad: ONLY Apple Pencil draws, finger does zoom/pan/undo
   const handleDrawStart = (event: GestureResponderEvent) => {
     const touches = event.nativeEvent.touches;
