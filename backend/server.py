@@ -34,7 +34,7 @@ db = client[os.environ['DB_NAME']]
 
 # Get AI API keys
 GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', '')
-EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', 'sk-emergent-c513d61F9269aAfA13')
+EMERGENT_LLM_KEY = os.environ.get('EMERGENT_LLM_KEY', '')
 
 # Primary: Google API key, Backup: Emergent key for OpenAI
 AI_API_KEY = GOOGLE_API_KEY if GOOGLE_API_KEY else EMERGENT_LLM_KEY
