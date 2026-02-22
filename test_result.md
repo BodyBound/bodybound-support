@@ -197,15 +197,18 @@ backend:
 
   - task: "PSD Export endpoint for Procreate"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "POST /api/export-psd - Accepts original_image and stencil_image as base64, generates layered PSD file with original as bottom layer and stencil (transparent background) as top layer. Returns PSD file as streaming response."
+      - working: true
+        agent: "testing"
+        comment: "Tested POST /api/export-psd with test images (200x200 original, 100x100 stencil). Successfully generates valid PSD file with correct headers (application/x-photoshop), proper PSD signature (8BPS), reasonable file size (480KB), and good processing time (271ms). Endpoint correctly resizes images to match dimensions and handles layered PSD creation. Error handling verified for invalid base64 data. PSD export functionality is working correctly for Procreate integration."
 
 frontend:
   - task: "Image picker and camera functionality"
