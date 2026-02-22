@@ -276,7 +276,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "AI stencil generation endpoint"
+    - "PSD Export endpoint for Procreate"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -288,3 +288,5 @@ agent_communication:
     message: "Backend testing completed successfully! All 5 endpoints are working correctly: health check, image processing with OpenCV edge detection, save/get/delete stencils with MongoDB persistence. Created comprehensive test suite in backend_test.py. Image processing works with ~1.77ms response time. Error handling verified for invalid inputs. All CRUD operations functional. Backend is production-ready."
   - agent: "testing"
     message: "AI stencil generation endpoint testing completed successfully! POST /api/ai-stencil is working perfectly with Emergent LLM API using Gemini model. Tested with various parameter combinations: shading_detail (0-100), solid_fill (0-100), and line_color (black, blue, purple). Processing time averages ~15 seconds. Proper input validation and error handling confirmed. AI API key is configured and functional. No budget/quota issues detected."
+  - agent: "main"
+    message: "Added new POST /api/export-psd endpoint for Procreate export. It accepts two base64 images (original_image, stencil_image) and generates a layered PSD file. The original photo is the bottom layer, and the stencil with transparent background is the top layer. Returns PSD file as streaming download. Please test this new endpoint with sample base64 images."
