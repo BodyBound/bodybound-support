@@ -1300,14 +1300,10 @@ export default function Index() {
       return;
     }
 
+    setIsExportingPSD(true);
+    
     try {
-      // Show loading indicator
-      Alert.alert(
-        'Generating PSD...',
-        'Creating layered file for Procreate. This may take a moment.',
-        [],
-        { cancelable: false }
-      );
+      console.log('[ExportPSD] Starting PSD generation...');
 
       // Call backend to generate layered PSD
       const response = await fetch(`${API_URL}/api/export-psd`, {
@@ -1326,48 +1322,44 @@ export default function Index() {
 
       // Get the PSD file as blob
       const psdBlob = await response.blob();
+      console.log('[ExportPSD] Received PSD blob, size:', psdBlob.size);
       
       // Convert blob to base64 for saving
       const reader = new FileReader();
-      reader.readAsDataURL(psdBlob);
       
-      reader.onloadend = async () => {
-        try {
-          const base64Data = reader.result as string;
-          const base64Content = base64Data.split(',')[1];
-          
-          // Create temporary PSD file
-          const filename = `body_bound_stencil_${Date.now()}.psd`;
-          const fileUri = `${FileSystem.cacheDirectory}${filename}`;
-          
-          await FileSystem.writeAsStringAsync(fileUri, base64Content, {
-            encoding: FileSystem.EncodingType.Base64,
-          });
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Failed to read file'));
+      });
+      
+      reader.readAsDataURL(psdBlob);
+      const base64Data = await base64Promise;
+      const base64Content = base64Data.split(',')[1];
+      
+      // Create temporary PSD file
+      const filename = `body_bound_stencil_${Date.now()}.psd`;
+      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+      
+      await FileSystem.writeAsStringAsync(fileUri, base64Content, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
 
-          console.log('[ExportPSD] PSD file saved to:', fileUri);
+      console.log('[ExportPSD] PSD file saved to:', fileUri);
+      setIsExportingPSD(false);
 
-          // Open share sheet - user can select Procreate
-          const result = await RNShare.share({
-            url: fileUri,
-            title: 'Open in Procreate',
-          });
+      // Open share sheet - user can select Procreate
+      const result = await RNShare.share({
+        url: fileUri,
+        title: 'Open in Procreate',
+      });
 
-          if (result.action === RNShare.sharedAction) {
-            console.log('[ExportPSD] PSD shared successfully');
-          }
-        } catch (innerError: any) {
-          console.error('[ExportPSD] Error saving PSD file:', innerError);
-          Alert.alert('Export Error', 'Could not save PSD file. Please try again.');
-        }
-      };
-
-      reader.onerror = () => {
-        console.error('[ExportPSD] Error reading blob');
-        Alert.alert('Export Error', 'Could not process PSD file. Please try again.');
-      };
+      if (result.action === RNShare.sharedAction) {
+        console.log('[ExportPSD] PSD shared successfully');
+      }
       
     } catch (error: any) {
       console.error('[ExportPSD] Error:', error);
+      setIsExportingPSD(false);
       Alert.alert(
         'Export Failed', 
         `Could not generate PSD file: ${error.message || 'Unknown error'}. Please try again.`
