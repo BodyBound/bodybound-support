@@ -3127,6 +3127,19 @@ export default function Index() {
           </View>
         </View>
       </Modal>
+
+      {/* PSD Export Loading Overlay */}
+      {isExportingPSD && (
+        <View style={styles.exportLoadingOverlay}>
+          <View style={styles.exportLoadingCard}>
+            <ActivityIndicator size="large" color="#C9A227" />
+            <Text style={styles.exportLoadingTitle}>Creating PSD File</Text>
+            <Text style={styles.exportLoadingText}>
+              Generating layered file for Procreate...
+            </Text>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
