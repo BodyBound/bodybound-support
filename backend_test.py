@@ -283,6 +283,142 @@ def test_delete_stencil(stencil_id):
         print(f"❌ Delete stencil FAILED - Error: {str(e)}")
         return False
 
+def create_stencil_test_image():
+    """Create a test stencil image with black lines on white background"""
+    img = Image.new('RGB', (100, 100), (255, 255, 255))  # White background
+    
+    draw = ImageDraw.Draw(img)
+    # Draw some black lines to simulate a stencil
+    draw.line([(10, 10), (90, 90)], fill=(0, 0, 0), width=3)
+    draw.line([(90, 10), (10, 90)], fill=(0, 0, 0), width=3)
+    draw.rectangle([30, 30, 70, 70], outline=(0, 0, 0), width=2)
+    
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    buffer.seek(0)
+    
+    img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    return f"data:image/png;base64,{img_base64}"
+
+def test_psd_export():
+    """Test the new PSD export endpoint for Procreate"""
+    print("\n=== Testing PSD Export Endpoint ===")
+    
+    try:
+        # Create test images
+        print("Creating test images...")
+        original_image = create_test_image()  # Use existing function for original
+        stencil_image = create_stencil_test_image()  # Create stencil-specific image
+        
+        # Prepare request data
+        request_data = {
+            "original_image": original_image,
+            "stencil_image": stencil_image
+        }
+        
+        print(f"Sending POST request to {API_BASE}/export-psd...")
+        start_time = time.time()
+        
+        response = requests.post(
+            f"{API_BASE}/export-psd",
+            json=request_data,
+            headers={"Content-Type": "application/json"},
+            timeout=30
+        )
+        
+        processing_time = (time.time() - start_time) * 1000
+        
+        print(f"Response status: {response.status_code}")
+        print(f"Response time: {processing_time:.2f}ms")
+        print(f"Response headers: {dict(response.headers)}")
+        
+        # Check status code
+        if response.status_code != 200:
+            print(f"❌ PSD Export FAILED: Expected status 200, got {response.status_code}")
+            print(f"Response text: {response.text}")
+            return False
+        
+        # Check content type
+        content_type = response.headers.get('content-type', '')
+        if 'application/x-photoshop' not in content_type:
+            print(f"❌ PSD Export FAILED: Expected content-type 'application/x-photoshop', got '{content_type}'")
+            return False
+        
+        # Check content disposition (filename)
+        content_disposition = response.headers.get('content-disposition', '')
+        if 'attachment' not in content_disposition or '.psd' not in content_disposition:
+            print(f"❌ PSD Export FAILED: Expected attachment with .psd filename, got '{content_disposition}'")
+            return False
+        
+        # Check response body starts with PSD signature
+        response_data = response.content
+        if len(response_data) < 4:
+            print(f"❌ PSD Export FAILED: Response too short ({len(response_data)} bytes)")
+            return False
+        
+        psd_signature = response_data[:4]
+        if psd_signature != b'8BPS':
+            print(f"❌ PSD Export FAILED: Expected PSD signature '8BPS', got '{psd_signature}'")
+            return False
+        
+        # Check file size is reasonable (should be > 1KB for a valid PSD)
+        file_size = len(response_data)
+        if file_size < 1024:
+            print(f"❌ PSD Export FAILED: PSD file too small ({file_size} bytes), likely invalid")
+            return False
+        
+        # Save the PSD file for manual verification (optional)
+        psd_filename = f"/tmp/test_export_{int(time.time())}.psd"
+        with open(psd_filename, 'wb') as f:
+            f.write(response_data)
+        
+        print(f"✅ PSD Export PASSED: Working correctly")
+        print(f"   - Status: 200 OK")
+        print(f"   - Content-Type: {content_type}")
+        print(f"   - File size: {file_size} bytes")
+        print(f"   - PSD signature: {psd_signature}")
+        print(f"   - Processing time: {processing_time:.2f}ms")
+        print(f"   - Saved test file: {psd_filename}")
+        
+        return True
+        
+    except requests.exceptions.RequestException as e:
+        print(f"❌ PSD Export FAILED: Network error - {str(e)}")
+        return False
+    except Exception as e:
+        print(f"❌ PSD Export FAILED: Unexpected error - {str(e)}")
+        return False
+
+def test_psd_export_edge_cases():
+    """Test PSD export with edge cases"""
+    print("\n=== Testing PSD Export Edge Cases ===")
+    
+    # Test 1: Invalid base64 data
+    print("\nTest 1: Invalid base64 data")
+    try:
+        request_data = {
+            "original_image": "invalid_base64_data",
+            "stencil_image": "also_invalid"
+        }
+        
+        response = requests.post(
+            f"{API_BASE}/export-psd",
+            json=request_data,
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        if response.status_code == 500:
+            print("✅ Correctly handles invalid base64 data with 500 error")
+            return True
+        else:
+            print(f"⚠️  Unexpected response for invalid data: {response.status_code}")
+            return False
+            
+    except Exception as e:
+        print(f"⚠️  Error testing invalid data: {str(e)}")
+        return False
+
 def main():
     """Run all backend tests"""
     print("🧪 Starting Tattoo Stencil Backend API Tests")
