@@ -645,6 +645,12 @@ async def generate_ai_stencil(request: AIStencilRequest):
 
 You are creating a tattoo stencil for professional tattoo artists. PRECISION IS CRITICAL.
 
+⚠️ CRITICAL - IMAGE ORIENTATION:
+- If the reference photo is VERTICAL (portrait), output MUST be VERTICAL
+- If the reference photo is HORIZONTAL (landscape), output MUST be HORIZONTAL
+- NEVER rotate or change the orientation of the image
+- The output dimensions should match the input dimensions
+
 STEP 1: ANALYZE THE REFERENCE PHOTO
 Look at every detail in the attached image:
 - Face shape, jawline, cheekbones
@@ -654,12 +660,14 @@ Look at every detail in the attached image:
 - Hair outline and flow
 - ANY unique features: horns, makeup, tattoos, accessories, piercings, jewelry
 - Pose and angle of the subject
+- IMAGE ORIENTATION (vertical or horizontal)
 
 STEP 2: TRACE WITH EXACT PRECISION
 Create a line drawing that traces the reference EXACTLY:
 - Same proportions - if the nose is long, draw it long
 - Same positions - if eyes are wide-set, draw them wide-set  
 - Same angle - if face is turned 3/4, draw it at 3/4
+- SAME ORIENTATION - vertical stays vertical, horizontal stays horizontal
 - ALL unique elements MUST appear in the stencil exactly as shown
 
 STEP 3: OUTPUT SPECIFICATIONS
@@ -667,6 +675,7 @@ STEP 3: OUTPUT SPECIFICATIONS
 - Black lines only (#000000)
 - NO color, NO gray, NO fills, NO gradients
 - Clean confident strokes suitable for thermal transfer paper
+- MAINTAIN ORIGINAL IMAGE ORIENTATION
 
 STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
 
