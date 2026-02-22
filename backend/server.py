@@ -1,4 +1,5 @@
 from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
+from fastapi.responses import Response
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -15,6 +16,8 @@ import base64
 from io import BytesIO
 from PIL import Image
 import asyncio
+import struct
+import zlib
 
 # For AI-powered stencil generation
 from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
