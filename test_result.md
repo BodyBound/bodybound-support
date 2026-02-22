@@ -195,6 +195,18 @@ backend:
         agent: "testing"
         comment: "Tested DELETE /api/stencils/{id}. Successfully deletes stencils by UUID and returns confirmation message. Properly handles 404 for non-existent stencils."
 
+  - task: "PSD Export endpoint for Procreate"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "POST /api/export-psd - Accepts original_image and stencil_image as base64, generates layered PSD file with original as bottom layer and stencil (transparent background) as top layer. Returns PSD file as streaming response."
+
 frontend:
   - task: "Image picker and camera functionality"
     implemented: true
