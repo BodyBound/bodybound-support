@@ -1292,38 +1292,85 @@ export default function Index() {
     );
   };
 
-  // Export to Procreate via share sheet
+  // Export to Procreate - generates layered PSD file
   const exportToProcreate = async () => {
-    if (!stencilImage) {
-      Alert.alert('Error', 'No stencil to export.');
+    if (!stencilImage || !originalImage) {
+      Alert.alert('Error', 'Both original photo and stencil are required for Procreate export.');
       return;
     }
 
     try {
-      // Get the base64 data
-      const base64Data = stencilImage.replace(/^data:image\/\w+;base64,/, '');
-      
-      // Create a temporary file
-      const filename = `body_bound_stencil_${Date.now()}.png`;
-      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
-      
-      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
-        encoding: FileSystem.EncodingType.Base64,
+      // Show loading indicator
+      Alert.alert(
+        'Generating PSD...',
+        'Creating layered file for Procreate. This may take a moment.',
+        [],
+        { cancelable: false }
+      );
+
+      // Call backend to generate layered PSD
+      const response = await fetch(`${API_URL}/api/export-psd`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          original_image: originalImage,
+          stencil_image: stencilImage,
+        }),
       });
 
-      // Open share sheet - user can select Procreate from here
-      const result = await RNShare.share({
-        url: fileUri,
-        title: 'Export to Procreate',
-        message: 'Body Bound Stencil',
-      });
-
-      if (result.action === RNShare.sharedAction) {
-        console.log('Stencil exported successfully');
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server error: ${errorText}`);
       }
+
+      // Get the PSD file as blob
+      const psdBlob = await response.blob();
+      
+      // Convert blob to base64 for saving
+      const reader = new FileReader();
+      reader.readAsDataURL(psdBlob);
+      
+      reader.onloadend = async () => {
+        try {
+          const base64Data = reader.result as string;
+          const base64Content = base64Data.split(',')[1];
+          
+          // Create temporary PSD file
+          const filename = `body_bound_stencil_${Date.now()}.psd`;
+          const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+          
+          await FileSystem.writeAsStringAsync(fileUri, base64Content, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+
+          console.log('[ExportPSD] PSD file saved to:', fileUri);
+
+          // Open share sheet - user can select Procreate
+          const result = await RNShare.share({
+            url: fileUri,
+            title: 'Open in Procreate',
+          });
+
+          if (result.action === RNShare.sharedAction) {
+            console.log('[ExportPSD] PSD shared successfully');
+          }
+        } catch (innerError: any) {
+          console.error('[ExportPSD] Error saving PSD file:', innerError);
+          Alert.alert('Export Error', 'Could not save PSD file. Please try again.');
+        }
+      };
+
+      reader.onerror = () => {
+        console.error('[ExportPSD] Error reading blob');
+        Alert.alert('Export Error', 'Could not process PSD file. Please try again.');
+      };
+      
     } catch (error: any) {
-      console.error('Error exporting to Procreate:', error);
-      Alert.alert('Export Error', 'Could not export stencil. Please try again.');
+      console.error('[ExportPSD] Error:', error);
+      Alert.alert(
+        'Export Failed', 
+        `Could not generate PSD file: ${error.message || 'Unknown error'}. Please try again.`
+      );
     }
   };
 
