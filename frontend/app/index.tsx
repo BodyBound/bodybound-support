@@ -136,6 +136,7 @@ export default function Index() {
   const [isGeneratingVersions, setIsGeneratingVersions] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0); // 0, 1, 2, 3 for progress
   const [regeneratingStyle, setRegeneratingStyle] = useState<string | null>(null); // Which single style is being regenerated
+  const [isExportingPSD, setIsExportingPSD] = useState(false); // Loading state for PSD export
   
   // Dot marks for pencil taps (for better sensitivity)
   const [dotMarks, setDotMarks] = useState<{x: number, y: number, size: number}[]>([]);
