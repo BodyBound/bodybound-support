@@ -579,6 +579,56 @@ export default function Index() {
     }
   };
 
+  // Retry wrapper with exponential backoff for more reliable AI generation
+  const fetchWithRetry = async (
+    url: string, 
+    options: RequestInit, 
+    maxRetries: number = 3,
+    baseDelay: number = 2000
+  ): Promise<Response> => {
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[FetchRetry] Attempt ${attempt}/${maxRetries} for ${url}`);
+        const response = await fetchWithTimeout(url, options);
+        
+        if (response.ok) {
+          return response;
+        }
+        
+        // If server error (5xx), retry
+        if (response.status >= 500) {
+          const errorText = await response.text();
+          console.log(`[FetchRetry] Server error ${response.status}: ${errorText}`);
+          lastError = new Error(`Server error: ${response.status}`);
+          
+          if (attempt < maxRetries) {
+            const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+            console.log(`[FetchRetry] Waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+        }
+        
+        // For client errors (4xx), don't retry
+        return response;
+        
+      } catch (error: any) {
+        console.log(`[FetchRetry] Attempt ${attempt} failed:`, error.message);
+        lastError = error;
+        
+        if (attempt < maxRetries) {
+          const delay = baseDelay * Math.pow(2, attempt - 1);
+          console.log(`[FetchRetry] Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+    
+    throw lastError || new Error('All retry attempts failed');
+  };
+
   // AI-Powered Stencil Generation - Generate 3 versions
   const generateAIStencil = async () => {
     if (!originalImage) {
