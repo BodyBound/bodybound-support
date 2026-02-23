@@ -670,7 +670,7 @@ export default function Index() {
       // Generate Light version - Clean lines only, no texture, no black
       setGenerationProgress(1);
       console.log('[GenerateAI] Starting Light version, sending base64 length:', base64Part.length);
-      const lightResponse = await fetchWithTimeout(`${API_URL}/api/ai-stencil`, {
+      const lightResponse = await fetchWithRetry(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -680,7 +680,7 @@ export default function Index() {
           shading_detail: 5,
           solid_fill: 0,
         }),
-      });
+      }, 3, 2000);
       console.log('[GenerateAI] Light response status:', lightResponse.status);
       if (lightResponse.ok) {
         const lightData = await lightResponse.json();
