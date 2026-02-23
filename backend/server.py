@@ -761,6 +761,36 @@ Generate the stencil now. This is for professional use - precision matters."""
                 detail="Unable to generate stencil. AI services may be experiencing issues. Please check your internet connection and try again."
             )
         
+        # CRITICAL: Resize the generated stencil to match the original image dimensions
+        # This ensures perfect alignment in the edit mode overlay
+        try:
+            # Get original image dimensions from the input
+            original_img_data = base64.b64decode(image_data)
+            original_img = Image.open(BytesIO(original_img_data))
+            original_width, original_height = original_img.size
+            logger.info(f"Original image dimensions: {original_width}x{original_height}")
+            
+            # Decode the generated stencil
+            stencil_img_data = base64.b64decode(image_base64)
+            stencil_img = Image.open(BytesIO(stencil_img_data))
+            stencil_width, stencil_height = stencil_img.size
+            logger.info(f"Generated stencil dimensions: {stencil_width}x{stencil_height}")
+            
+            # Resize stencil to match original if dimensions differ
+            if stencil_width != original_width or stencil_height != original_height:
+                logger.info(f"Resizing stencil from {stencil_width}x{stencil_height} to {original_width}x{original_height}")
+                stencil_img = stencil_img.resize((original_width, original_height), Image.Resampling.LANCZOS)
+                
+                # Convert back to base64
+                buffer = BytesIO()
+                stencil_img.save(buffer, format='PNG')
+                image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                mime_type = 'image/png'
+                logger.info("Stencil resized successfully for alignment")
+        except Exception as resize_error:
+            logger.warning(f"Could not resize stencil (non-critical): {resize_error}")
+            # Continue with original stencil if resize fails
+        
         # Format as data URL
         stencil_base64 = f"data:{mime_type};base64,{image_base64}"
         
