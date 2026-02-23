@@ -698,7 +698,7 @@ export default function Index() {
       // Generate Medium version - Clean lines + texture/contour, NO black fill
       setGenerationProgress(2);
       console.log('[GenerateAI] Starting Medium version...');
-      const mediumResponse = await fetchWithTimeout(`${API_URL}/api/ai-stencil`, {
+      const mediumResponse = await fetchWithRetry(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -708,7 +708,7 @@ export default function Index() {
           shading_detail: 30,
           solid_fill: 0,
         }),
-      });
+      }, 3, 2000);
       console.log('[GenerateAI] Medium response status:', mediumResponse.status);
       if (mediumResponse.ok) {
         const mediumData = await mediumResponse.json();
@@ -726,7 +726,7 @@ export default function Index() {
       // Generate Heavy version - Texture AND solid black (moderate)
       setGenerationProgress(3);
       console.log('[GenerateAI] Starting Heavy version...');
-      const heavyResponse = await fetchWithTimeout(`${API_URL}/api/ai-stencil`, {
+      const heavyResponse = await fetchWithRetry(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -736,7 +736,7 @@ export default function Index() {
           shading_detail: 50,
           solid_fill: 30,
         }),
-      });
+      }, 3, 2000);
       console.log('[GenerateAI] Heavy response status:', heavyResponse.status);
       if (heavyResponse.ok) {
         const heavyData = await heavyResponse.json();
