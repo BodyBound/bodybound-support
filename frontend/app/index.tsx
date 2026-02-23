@@ -2480,13 +2480,11 @@ export default function Index() {
                       <Text style={styles.exportIconText}>🔍</Text>
                       <Text style={styles.exportButtonText}>Full View</Text>
                     </TouchableOpacity>
-                    {/* Edit button - iPad only (requires Apple Pencil) */}
-                    {Platform.OS === 'ios' && Platform.isPad && (
-                      <TouchableOpacity style={styles.exportButton} onPress={openEditMode}>
-                        <Text style={[styles.exportIconText, { color: '#10B981' }]}>✏️</Text>
-                        <Text style={styles.exportButtonText}>Edit</Text>
-                      </TouchableOpacity>
-                    )}
+                    {/* Edit button - available on all iOS devices */}
+                    <TouchableOpacity style={styles.exportButton} onPress={openEditMode}>
+                      <Text style={[styles.exportIconText, { color: '#10B981' }]}>✏️</Text>
+                      <Text style={styles.exportButtonText}>Edit</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity style={styles.exportButton} onPress={printStencil}>
                       <Text style={[styles.exportIconText, { color: '#3B82F6' }]}>🖨️</Text>
                       <Text style={styles.exportButtonText}>Print</Text>
