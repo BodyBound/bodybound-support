@@ -922,195 +922,100 @@ async def delete_stencil(stencil_id: str):
         logger.error(f"Error deleting stencil: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error deleting stencil: {str(e)}")
 
-# PSD Export for Procreate - Layered file with original + stencil
-class ExportPSDRequest(BaseModel):
-    original_image: str  # base64 encoded original photo
-    stencil_image: str   # base64 encoded stencil (transparent bg)
+# Make Stencil Transparent - converts white background to transparent for Procreate layers
+class MakeTransparentRequest(BaseModel):
+    image_base64: str  # base64 encoded stencil image
+    target_width: Optional[int] = None  # Optional: resize to match reference dimensions
+    target_height: Optional[int] = None  # Optional: resize to match reference dimensions
 
-@api_router.post("/export-psd")
-async def export_psd(request: ExportPSDRequest):
-    """Generate a layered PSD file with original photo and stencil on separate layers.
+class MakeTransparentResponse(BaseModel):
+    image_base64: str  # base64 encoded PNG with transparent background
+    width: int
+    height: int
+
+@api_router.post("/make-transparent", response_model=MakeTransparentResponse)
+async def make_transparent(request: MakeTransparentRequest):
+    """Convert white/near-white pixels to transparent in a stencil image.
     
-    The PSD file will have:
-    - Layer 1 (bottom): Original reference photo
-    - Layer 2 (top): Stencil with transparent background
+    This creates a PNG with:
+    - Black lines preserved as-is
+    - White/light gray background made fully transparent
     
-    This allows tattoo artists to easily align stencils in Procreate.
+    Perfect for layering over a reference photo in Procreate.
     """
     try:
         import time
         start_time = time.time()
         
-        logger.info("[ExportPSD] Starting PSD generation...")
-        
-        # Decode the original image
-        original_data = request.original_image
-        if ',' in original_data:
-            original_data = original_data.split(',')[1]
-        original_bytes = base64.b64decode(original_data)
-        original_img = Image.open(BytesIO(original_bytes))
+        logger.info("[MakeTransparent] Starting transparency conversion...")
         
         # Decode the stencil image
-        stencil_data = request.stencil_image
+        stencil_data = request.image_base64
         if ',' in stencil_data:
             stencil_data = stencil_data.split(',')[1]
         stencil_bytes = base64.b64decode(stencil_data)
         stencil_img = Image.open(BytesIO(stencil_bytes))
         
-        logger.info(f"[ExportPSD] Original size: {original_img.size}, Stencil size: {stencil_img.size}")
+        original_size = stencil_img.size
+        logger.info(f"[MakeTransparent] Original stencil size: {original_size}")
         
-        # Ensure both images are the same size - resize stencil to match original
-        if stencil_img.size != original_img.size:
-            stencil_img = stencil_img.resize(original_img.size, Image.Resampling.LANCZOS)
-            logger.info(f"[ExportPSD] Resized stencil to: {stencil_img.size}")
+        # Resize to match target dimensions if specified
+        if request.target_width and request.target_height:
+            target_size = (request.target_width, request.target_height)
+            if stencil_img.size != target_size:
+                stencil_img = stencil_img.resize(target_size, Image.Resampling.LANCZOS)
+                logger.info(f"[MakeTransparent] Resized to: {target_size}")
         
-        # Convert original to RGBA if needed
-        if original_img.mode != 'RGBA':
-            original_img = original_img.convert('RGBA')
-        
-        # Convert stencil to RGBA with transparent background
+        # Convert to RGBA if needed
         if stencil_img.mode != 'RGBA':
             stencil_img = stencil_img.convert('RGBA')
         
-        # Make white/near-white pixels transparent in stencil
-        stencil_data_array = np.array(stencil_img)
-        white_mask = (stencil_data_array[:,:,0] > 240) & (stencil_data_array[:,:,1] > 240) & (stencil_data_array[:,:,2] > 240)
-        stencil_data_array[white_mask, 3] = 0
-        stencil_img = Image.fromarray(stencil_data_array)
+        # Convert to numpy array for pixel manipulation
+        stencil_array = np.array(stencil_img)
         
-        logger.info("[ExportPSD] Images prepared, creating PSD...")
+        # Make white/near-white pixels transparent
+        # Threshold of 240 for R, G, B means very light pixels become transparent
+        white_mask = (
+            (stencil_array[:,:,0] > 240) & 
+            (stencil_array[:,:,1] > 240) & 
+            (stencil_array[:,:,2] > 240)
+        )
         
-        width, height = original_img.size
+        # Set alpha to 0 for white pixels (transparent)
+        stencil_array[white_mask, 3] = 0
         
-        # Create proper PSD file with correct structure
-        psd_buffer = BytesIO()
+        # Keep black/dark pixels fully opaque
+        dark_mask = (
+            (stencil_array[:,:,0] < 50) & 
+            (stencil_array[:,:,1] < 50) & 
+            (stencil_array[:,:,2] < 50)
+        )
+        stencil_array[dark_mask, 3] = 255
         
-        # Get raw pixel data
-        original_rgba = original_img.tobytes()
-        stencil_rgba = stencil_img.tobytes()
+        # Create final image
+        result_img = Image.fromarray(stencil_array)
         
-        # Create composite for the merged image data
-        composite = Image.alpha_composite(original_img, stencil_img)
-        composite_rgba = composite.tobytes()
+        # Convert to base64 PNG
+        buffer = BytesIO()
+        result_img.save(buffer, format='PNG', optimize=True)
+        result_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
         
-        # ===== 1. FILE HEADER (26 bytes) =====
-        psd_buffer.write(b'8BPS')  # Signature
-        psd_buffer.write(struct.pack('>H', 1))  # Version
-        psd_buffer.write(b'\x00' * 6)  # Reserved (6 zero bytes)
-        psd_buffer.write(struct.pack('>H', 4))  # Channels (RGBA)
-        psd_buffer.write(struct.pack('>I', height))  # Height
-        psd_buffer.write(struct.pack('>I', width))  # Width
-        psd_buffer.write(struct.pack('>H', 8))  # Depth (8 bits per channel)
-        psd_buffer.write(struct.pack('>H', 3))  # Color mode (3 = RGB)
-        
-        # ===== 2. COLOR MODE DATA =====
-        psd_buffer.write(struct.pack('>I', 0))  # Length = 0 for RGB
-        
-        # ===== 3. IMAGE RESOURCES =====
-        psd_buffer.write(struct.pack('>I', 0))  # Length = 0 (no resources)
-        
-        # ===== 4. LAYER AND MASK INFORMATION =====
-        layer_section = BytesIO()
-        
-        # Build layer info
-        layer_info = BytesIO()
-        layer_info.write(struct.pack('>h', 2))  # 2 layers
-        
-        # Helper to write a layer record
-        def write_layer(buf, name, w, h):
-            # Layer bounds
-            buf.write(struct.pack('>i', 0))  # top
-            buf.write(struct.pack('>i', 0))  # left  
-            buf.write(struct.pack('>i', h))  # bottom
-            buf.write(struct.pack('>i', w))  # right
-            
-            # 4 channels (RGBA)
-            buf.write(struct.pack('>H', 4))
-            
-            # Channel info - each channel's data length
-            channel_len = w * h + 2  # +2 for compression marker
-            for chan_id in [-1, 0, 1, 2]:  # Alpha, R, G, B
-                buf.write(struct.pack('>h', chan_id))
-                buf.write(struct.pack('>I', channel_len))
-            
-            # Blend mode
-            buf.write(b'8BIM')
-            buf.write(b'norm')
-            
-            # Opacity, clipping, flags, filler
-            buf.write(struct.pack('B', 255))  # Opacity
-            buf.write(struct.pack('B', 0))    # Clipping
-            buf.write(struct.pack('B', 8))    # Flags (visible)
-            buf.write(struct.pack('B', 0))    # Filler
-            
-            # Extra data
-            name_bytes = name.encode('ascii', errors='replace')
-            name_padded = bytes([len(name_bytes)]) + name_bytes
-            while len(name_padded) % 4 != 0:
-                name_padded += b'\x00'
-            
-            extra_len = 4 + 4 + len(name_padded)  # mask data len + blend ranges len + name
-            buf.write(struct.pack('>I', extra_len))
-            buf.write(struct.pack('>I', 0))  # Layer mask data length
-            buf.write(struct.pack('>I', 0))  # Layer blending ranges length
-            buf.write(name_padded)
-        
-        # Write layer records (bottom to top)
-        write_layer(layer_info, "Original Photo", width, height)
-        write_layer(layer_info, "Stencil", width, height)
-        
-        # Helper to write channel data
-        def write_channel_data(buf, img_bytes, w, h):
-            pixels = np.frombuffer(img_bytes, dtype=np.uint8).reshape((h, w, 4))
-            for chan_idx in [3, 0, 1, 2]:  # Alpha, R, G, B order for PSD
-                buf.write(struct.pack('>H', 0))  # Raw compression
-                buf.write(pixels[:, :, chan_idx].tobytes())
-        
-        # Write channel data for each layer
-        write_channel_data(layer_info, original_rgba, width, height)
-        write_channel_data(layer_info, stencil_rgba, width, height)
-        
-        # Get layer info bytes
-        layer_info_bytes = layer_info.getvalue()
-        if len(layer_info_bytes) % 2 != 0:
-            layer_info_bytes += b'\x00'
-        
-        # Write to layer section
-        layer_section.write(struct.pack('>I', len(layer_info_bytes)))
-        layer_section.write(layer_info_bytes)
-        layer_section.write(struct.pack('>I', 0))  # Global layer mask info
-        
-        # Write layer section to main buffer
-        layer_section_bytes = layer_section.getvalue()
-        psd_buffer.write(struct.pack('>I', len(layer_section_bytes)))
-        psd_buffer.write(layer_section_bytes)
-        
-        # ===== 5. IMAGE DATA (Composite) =====
-        psd_buffer.write(struct.pack('>H', 0))  # Raw compression
-        
-        # Write composite channels (R, G, B, A)
-        comp_pixels = np.frombuffer(composite_rgba, dtype=np.uint8).reshape((height, width, 4))
-        for chan_idx in [0, 1, 2, 3]:  # R, G, B, A
-            psd_buffer.write(comp_pixels[:, :, chan_idx].tobytes())
+        width, height = result_img.size
         
         processing_time = (time.time() - start_time) * 1000
-        logger.info(f"[ExportPSD] Generated PSD in {processing_time:.2f}ms, size: {psd_buffer.tell()} bytes")
+        logger.info(f"[MakeTransparent] Converted in {processing_time:.2f}ms, output size: {width}x{height}")
         
-        psd_buffer.seek(0)
-        
-        return StreamingResponse(
-            psd_buffer,
-            media_type="application/x-photoshop",
-            headers={
-                "Content-Disposition": f"attachment; filename=body_bound_stencil_{int(time.time())}.psd"
-            }
+        return MakeTransparentResponse(
+            image_base64=f"data:image/png;base64,{result_base64}",
+            width=width,
+            height=height
         )
         
     except Exception as e:
-        logger.error(f"[ExportPSD] Error generating PSD: {str(e)}")
+        logger.error(f"[MakeTransparent] Error: {str(e)}")
         import traceback
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Error generating PSD file: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating transparent image: {str(e)}")
 
 
 # Preview endpoints for edge detection samples
