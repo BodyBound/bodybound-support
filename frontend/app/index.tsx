@@ -1354,6 +1354,12 @@ export default function Index() {
     
     try {
       console.log('[ExportPSD] Starting PSD generation...');
+      console.log('[ExportPSD] Original image size:', originalImage.length, 'chars');
+      console.log('[ExportPSD] Stencil image size:', stencilImage.length, 'chars');
+
+      // Create abort controller for timeout (60 seconds for large images)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       // Call backend to generate layered PSD
       const response = await fetch(`${API_URL}/api/export-psd`, {
@@ -1363,7 +1369,10 @@ export default function Index() {
           original_image: originalImage,
           stencil_image: stencilImage,
         }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
