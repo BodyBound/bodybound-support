@@ -606,13 +606,16 @@ def main():
     ai_success, ai_stencil_image = test_ai_stencil()
     results['ai_stencil'] = ai_success
     
-    # Test 4: PSD Export (NEW TEST - Primary focus)
+    # Test 4: Make Transparent (NEW TEST - Primary focus as requested)
+    results['make_transparent'] = test_make_transparent()
+    
+    # Test 5: PSD Export 
     results['psd_export'] = test_psd_export()
     
-    # Test 5: PSD Export Edge Cases
+    # Test 6: PSD Export Edge Cases
     results['psd_edge_cases'] = test_psd_export_edge_cases()
     
-    # Test 6: Save Stencil (only if processing worked)
+    # Test 7: Save Stencil (only if processing worked)
     if process_success and stencil_image:
         original_image = create_test_image()
         save_success, stencil_id = test_save_stencil(original_image, stencil_image)
@@ -622,11 +625,11 @@ def main():
         results['save'] = False
         stencil_id = None
     
-    # Test 7: Get Stencils
+    # Test 8: Get Stencils
     get_success, stencils_data = test_get_stencils()
     results['get'] = get_success
     
-    # Test 8: Delete Stencil (only if we have an ID)
+    # Test 9: Delete Stencil (only if we have an ID)
     if stencil_id:
         results['delete'] = test_delete_stencil(stencil_id)
     else:
@@ -647,11 +650,11 @@ def main():
     
     print(f"\nOverall: {passed_tests}/{total_tests} tests passed")
     
-    # Special focus on PSD export since that's the current focus
-    if results.get('psd_export'):
-        print("\n🎯 PRIMARY FOCUS: PSD Export endpoint is WORKING correctly!")
+    # Special focus on Make Transparent endpoint since that's the current focus
+    if results.get('make_transparent'):
+        print("\n🎯 PRIMARY FOCUS: Make Transparent endpoint is WORKING correctly!")
     else:
-        print("\n⚠️  PRIMARY FOCUS: PSD Export endpoint has ISSUES!")
+        print("\n⚠️  PRIMARY FOCUS: Make Transparent endpoint has ISSUES!")
     
     if passed_tests == total_tests:
         print("🎉 All tests PASSED!")
