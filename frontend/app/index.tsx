@@ -1331,8 +1331,8 @@ export default function Index() {
           onPress: () => saveToPhotoGallery(stencilImage, 'body_bound_stencil'),
         },
         {
-          text: 'Export to Procreate',
-          onPress: () => exportToProcreate(),
+          text: 'Save Stencil & Reference',
+          onPress: () => saveStencilAndReference(),
         },
         {
           text: 'Cancel',
@@ -1343,85 +1343,151 @@ export default function Index() {
     );
   };
 
-  // Export to Procreate - generates layered PSD file
-  const exportToProcreate = async () => {
+  // Save both stencil (transparent PNG) and reference (JPEG) for Procreate import
+  // Both images are saved at identical dimensions for perfect layer alignment
+  const saveStencilAndReference = async () => {
     if (!stencilImage || !originalImage) {
-      Alert.alert('Error', 'Both original photo and stencil are required for Procreate export.');
+      Alert.alert('Error', 'Both original photo and stencil are required.');
       return;
     }
 
-    setIsExportingPSD(true);
+    setIsExportingPSD(true); // Reuse this loading state
     
     try {
-      console.log('[ExportPSD] Starting PSD generation...');
-      console.log('[ExportPSD] Original image size:', originalImage.length, 'chars');
-      console.log('[ExportPSD] Stencil image size:', stencilImage.length, 'chars');
+      console.log('[SaveBoth] Starting save process...');
+      
+      // Request MediaLibrary permissions
+      const permissionResult = await MediaLibrary.requestPermissionsAsync();
+      if (permissionResult.status !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please allow access to your photo library to save images. Go to Settings > Body Bound > Photos.',
+          [{ text: 'OK' }]
+        );
+        setIsExportingPSD(false);
+        return;
+      }
 
-      // Create abort controller for timeout (60 seconds for large images)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      // Step 1: Get dimensions from original image to ensure both are the same size
+      console.log('[SaveBoth] Processing original image...');
+      const originalManipulated = await ImageManipulator.manipulateAsync(
+        originalImage,
+        [], // No transformations - keep original size
+        { 
+          format: ImageManipulator.SaveFormat.JPEG,
+          compress: 0.9, // High quality JPEG
+        }
+      );
+      
+      // Get the dimensions of the processed original
+      const getImageSize = (uri: string): Promise<{width: number, height: number}> => {
+        return new Promise((resolve, reject) => {
+          Image.getSize(uri, (width, height) => resolve({width, height}), reject);
+        });
+      };
+      
+      const originalSize = await getImageSize(originalManipulated.uri);
+      console.log('[SaveBoth] Original dimensions:', originalSize.width, 'x', originalSize.height);
 
-      // Call backend to generate layered PSD
-      const response = await fetch(`${API_URL}/api/export-psd`, {
+      // Step 2: Process stencil - resize to match original and convert white to transparent
+      console.log('[SaveBoth] Processing stencil with transparency...');
+      
+      // First resize stencil to match original dimensions
+      const stencilResized = await ImageManipulator.manipulateAsync(
+        stencilImage,
+        [{ resize: { width: originalSize.width, height: originalSize.height } }],
+        { 
+          format: ImageManipulator.SaveFormat.PNG,
+          compress: 1, // Lossless for stencil
+        }
+      );
+      
+      console.log('[SaveBoth] Stencil resized to match original');
+
+      // Step 3: Read the stencil image and make white pixels transparent
+      // This is done by reading the image data and creating a new PNG with alpha channel
+      const stencilBase64 = await FileSystem.readAsStringAsync(stencilResized.uri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      // Create transparent PNG by calling our backend helper
+      // The backend will convert white/near-white pixels to transparent
+      console.log('[SaveBoth] Converting stencil to transparent PNG...');
+      
+      const transparentResponse = await fetch(`${API_URL}/api/make-transparent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          original_image: originalImage,
-          stencil_image: stencilImage,
+          image_base64: `data:image/png;base64,${stencilBase64}`,
+          target_width: originalSize.width,
+          target_height: originalSize.height,
         }),
-        signal: controller.signal,
       });
       
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Server error: ${errorText}`);
+      if (!transparentResponse.ok) {
+        throw new Error('Failed to create transparent stencil');
       }
-
-      // Get the PSD file as blob
-      const psdBlob = await response.blob();
-      console.log('[ExportPSD] Received PSD blob, size:', psdBlob.size);
       
-      // Convert blob to base64 for saving
-      const reader = new FileReader();
+      const transparentData = await transparentResponse.json();
+      const transparentStencilBase64 = transparentData.image_base64;
       
-      const base64Promise = new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('Failed to read file'));
-      });
+      // Step 4: Save the transparent stencil PNG
+      console.log('[SaveBoth] Saving transparent stencil PNG...');
       
-      reader.readAsDataURL(psdBlob);
-      const base64Data = await base64Promise;
-      const base64Content = base64Data.split(',')[1];
+      // Write transparent stencil to file
+      const stencilFilename = `stencil_${Date.now()}.png`;
+      const stencilFileUri = `${FileSystem.cacheDirectory}${stencilFilename}`;
       
-      // Create temporary PSD file
-      const filename = `body_bound_stencil_${Date.now()}.psd`;
-      const fileUri = `${FileSystem.cacheDirectory}${filename}`;
+      // Remove data URL prefix if present
+      const stencilPngBase64 = transparentStencilBase64.includes(',') 
+        ? transparentStencilBase64.split(',')[1] 
+        : transparentStencilBase64;
       
-      await FileSystem.writeAsStringAsync(fileUri, base64Content, {
+      await FileSystem.writeAsStringAsync(stencilFileUri, stencilPngBase64, {
         encoding: FileSystem.EncodingType.Base64,
       });
-
-      console.log('[ExportPSD] PSD file saved to:', fileUri);
-      setIsExportingPSD(false);
-
-      // Open share sheet - user can select Procreate
-      const result = await RNShare.share({
-        url: fileUri,
-        title: 'Open in Procreate',
-      });
-
-      if (result.action === RNShare.sharedAction) {
-        console.log('[ExportPSD] PSD shared successfully');
+      
+      // Save stencil to gallery
+      const stencilAsset = await MediaLibrary.createAssetAsync(stencilFileUri);
+      console.log('[SaveBoth] Stencil saved:', stencilAsset.filename);
+      
+      // Step 5: Save the reference JPEG
+      console.log('[SaveBoth] Saving reference JPEG...');
+      const referenceAsset = await MediaLibrary.createAssetAsync(originalManipulated.uri);
+      console.log('[SaveBoth] Reference saved:', referenceAsset.filename);
+      
+      // Try to add both to album
+      try {
+        const albumName = 'Body Bound Stencils';
+        let album = await MediaLibrary.getAlbumAsync(albumName);
+        
+        if (album === null) {
+          await MediaLibrary.createAlbumAsync(albumName, stencilAsset, false);
+          album = await MediaLibrary.getAlbumAsync(albumName);
+        }
+        
+        if (album) {
+          await MediaLibrary.addAssetsToAlbumAsync([referenceAsset], album, false);
+        }
+        console.log('[SaveBoth] Both images added to album');
+      } catch (albumError) {
+        console.log('[SaveBoth] Album operation failed (non-critical):', albumError);
       }
+
+      setIsExportingPSD(false);
+      
+      Alert.alert(
+        'Saved! ✓',
+        'Both images saved to your photo gallery:\n\n• Stencil (PNG with transparent background)\n• Reference Photo (JPEG)\n\nOpen Procreate and import both as separate layers. They\'ll align perfectly!',
+        [{ text: 'Got it!' }]
+      );
       
     } catch (error: any) {
-      console.error('[ExportPSD] Error:', error);
+      console.error('[SaveBoth] Error:', error);
       setIsExportingPSD(false);
       Alert.alert(
-        'Export Failed', 
-        `Could not generate PSD file: ${error.message || 'Unknown error'}. Please try again.`
+        'Save Failed', 
+        `Could not save images: ${error.message || 'Unknown error'}. Please try again.`
       );
     }
   };
