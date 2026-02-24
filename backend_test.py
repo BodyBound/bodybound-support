@@ -419,6 +419,175 @@ def test_psd_export_edge_cases():
         print(f"⚠️  Error testing invalid data: {str(e)}")
         return False
 
+def create_test_stencil_for_transparency():
+    """Create a test stencil image with black lines on white background for transparency testing"""
+    img = Image.new('RGB', (100, 100), (255, 255, 255))  # White background
+    draw = ImageDraw.Draw(img)
+    
+    # Draw a black square in the center
+    draw.rectangle([25, 25, 75, 75], fill=(0, 0, 0))
+    
+    # Convert to base64
+    buffer = io.BytesIO()
+    img.save(buffer, format='PNG')
+    img_data = buffer.getvalue()
+    base64_string = base64.b64encode(img_data).decode('utf-8')
+    return f"data:image/png;base64,{base64_string}"
+
+def analyze_transparency(base64_image):
+    """Analyze the transparency of pixels in a base64 image"""
+    import numpy as np
+    
+    # Remove data URL prefix
+    if ',' in base64_image:
+        base64_data = base64_image.split(',')[1]
+    else:
+        base64_data = base64_image
+    
+    # Decode image
+    img_data = base64.b64decode(base64_data)
+    img = Image.open(io.BytesIO(img_data))
+    
+    # Convert to RGBA if needed
+    if img.mode != 'RGBA':
+        img = img.convert('RGBA')
+    
+    # Convert to numpy array
+    img_array = np.array(img)
+    
+    # Count transparent vs opaque pixels
+    transparent_pixels = np.sum(img_array[:,:,3] == 0)
+    opaque_pixels = np.sum(img_array[:,:,3] == 255)
+    total_pixels = img_array.shape[0] * img_array.shape[1]
+    
+    return {
+        'width': img.size[0],
+        'height': img.size[1],
+        'total_pixels': total_pixels,
+        'transparent_pixels': transparent_pixels,
+        'opaque_pixels': opaque_pixels,
+        'transparency_ratio': transparent_pixels / total_pixels if total_pixels > 0 else 0,
+        'opacity_ratio': opaque_pixels / total_pixels if total_pixels > 0 else 0
+    }
+
+def test_make_transparent():
+    """Test the new /api/make-transparent endpoint"""
+    print("\n=== Testing Make Transparent Endpoint ===")
+    
+    try:
+        # Create test stencil image (black square on white background)
+        test_stencil = create_test_stencil_for_transparency()
+        
+        # Test basic functionality
+        print("Test 1: Basic transparency conversion")
+        payload = {
+            "image_base64": test_stencil
+        }
+        
+        start_time = time.time()
+        response = requests.post(
+            f"{API_BASE}/make-transparent",
+            json=payload,
+            headers={'Content-Type': 'application/json'},
+            timeout=15
+        )
+        processing_time = (time.time() - start_time) * 1000
+        
+        print(f"Status Code: {response.status_code}")
+        print(f"Processing time: {processing_time:.2f}ms")
+        
+        if response.status_code != 200:
+            print(f"❌ Make Transparent FAILED: Expected 200, got {response.status_code}")
+            print(f"Response: {response.text}")
+            return False
+        
+        result = response.json()
+        
+        # Verify response structure
+        required_keys = ['image_base64', 'width', 'height']
+        for key in required_keys:
+            if key not in result:
+                print(f"❌ Make Transparent FAILED: Missing key '{key}' in response")
+                return False
+        
+        # Verify dimensions
+        if result['width'] != 100 or result['height'] != 100:
+            print(f"❌ Make Transparent FAILED: Expected 100x100, got {result['width']}x{result['height']}")
+            return False
+        
+        # Analyze transparency
+        transparency_info = analyze_transparency(result['image_base64'])
+        print(f"Transparency analysis: {transparency_info}")
+        
+        # Verify that we have both transparent and opaque pixels
+        if transparency_info['transparent_pixels'] == 0:
+            print("❌ Make Transparent FAILED: No transparent pixels found - white background should be transparent")
+            return False
+        
+        if transparency_info['opaque_pixels'] == 0:
+            print("❌ Make Transparent FAILED: No opaque pixels found - black square should be opaque")
+            return False
+        
+        # The white background should be majority transparent
+        if transparency_info['transparency_ratio'] < 0.5:  # At least 50% should be transparent
+            print(f"❌ Make Transparent FAILED: Only {transparency_info['transparency_ratio']:.2%} transparent, expected >50%")
+            return False
+        
+        print("✅ Basic transparency conversion PASSED")
+        
+        # Test 2: With resizing
+        print("\nTest 2: Transparency with resizing")
+        payload_resize = {
+            "image_base64": test_stencil,
+            "target_width": 200,
+            "target_height": 200
+        }
+        
+        response_resize = requests.post(
+            f"{API_BASE}/make-transparent",
+            json=payload_resize,
+            headers={'Content-Type': 'application/json'},
+            timeout=15
+        )
+        
+        if response_resize.status_code != 200:
+            print(f"❌ Make Transparent with resize FAILED: Status {response_resize.status_code}")
+            return False
+        
+        result_resize = response_resize.json()
+        
+        if result_resize['width'] != 200 or result_resize['height'] != 200:
+            print(f"❌ Make Transparent resize FAILED: Expected 200x200, got {result_resize['width']}x{result_resize['height']}")
+            return False
+        
+        print("✅ Transparency with resizing PASSED")
+        
+        # Test 3: Error handling
+        print("\nTest 3: Error handling for invalid base64")
+        payload_invalid = {
+            "image_base64": "invalid_base64_data"
+        }
+        
+        response_invalid = requests.post(
+            f"{API_BASE}/make-transparent",
+            json=payload_invalid,
+            headers={'Content-Type': 'application/json'},
+            timeout=10
+        )
+        
+        if response_invalid.status_code == 200:
+            print("❌ Make Transparent error handling FAILED: Should reject invalid base64")
+            return False
+        
+        print("✅ Error handling PASSED")
+        
+        print("✅ Make Transparent endpoint PASSED all tests")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Make Transparent FAILED: Error - {str(e)}")
+        return False
+
 def main():
     """Run all backend tests"""
     print("🧪 Starting Tattoo Stencil Backend API Tests")
