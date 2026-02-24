@@ -644,15 +644,24 @@ async def generate_ai_stencil(request: AIStencilRequest):
         
         # Create the prompt for EXACT tracing - PROFESSIONAL TATTOO STENCILS
         # This is for real tattoo artists - precision is critical
-        prompt = f"""PROFESSIONAL TATTOO STENCIL TRACE
+        prompt = f"""PROFESSIONAL TATTOO STENCIL TRACE - PIXEL-PERFECT ALIGNMENT REQUIRED
 
-You are creating a tattoo stencil for professional tattoo artists. PRECISION IS CRITICAL.
+You are creating a tattoo stencil for professional tattoo artists. 
 
-⚠️ CRITICAL - IMAGE ORIENTATION:
+🚨 ABSOLUTE CRITICAL REQUIREMENT - EXACT POSITIONING:
+The stencil MUST align PERFECTLY with the reference photo when overlaid.
+- Every facial feature must be in the EXACT SAME PIXEL POSITION as the reference
+- NO shifting, NO cropping, NO repositioning of any element
+- The top-left corner of your output must correspond to the top-left corner of the input
+- If you trace a line at coordinates (x,y), it must match the same position in the reference
+
+⚠️ CRITICAL - IMAGE ORIENTATION & DIMENSIONS:
 - If the reference photo is VERTICAL (portrait), output MUST be VERTICAL
 - If the reference photo is HORIZONTAL (landscape), output MUST be HORIZONTAL
 - NEVER rotate or change the orientation of the image
-- The output dimensions should match the input dimensions
+- Output MUST have the EXACT SAME aspect ratio as the input
+- Do NOT add any margins, padding, or borders
+- Do NOT crop any edges of the image
 
 STEP 1: ANALYZE THE REFERENCE PHOTO
 Look at every detail in the attached image:
@@ -664,21 +673,25 @@ Look at every detail in the attached image:
 - ANY unique features: horns, makeup, tattoos, accessories, piercings, jewelry
 - Pose and angle of the subject
 - IMAGE ORIENTATION (vertical or horizontal)
+- EXACT POSITION of each element within the frame
 
-STEP 2: TRACE WITH EXACT PRECISION
+STEP 2: TRACE WITH PIXEL-PERFECT PRECISION
 Create a line drawing that traces the reference EXACTLY:
 - Same proportions - if the nose is long, draw it long
 - Same positions - if eyes are wide-set, draw them wide-set  
 - Same angle - if face is turned 3/4, draw it at 3/4
 - SAME ORIENTATION - vertical stays vertical, horizontal stays horizontal
+- SAME FRAMING - if there's empty space at top, keep it; if head is cropped, keep it cropped
 - ALL unique elements MUST appear in the stencil exactly as shown
+- Each line must be positioned so it would perfectly overlay the reference photo
 
 STEP 3: OUTPUT SPECIFICATIONS
 - Pure white background (#FFFFFF)
 - Black lines only (#000000)
 - NO color, NO gray, NO fills, NO gradients
 - Clean confident strokes suitable for thermal transfer paper
-- MAINTAIN ORIGINAL IMAGE ORIENTATION
+- MAINTAIN ORIGINAL IMAGE ORIENTATION AND FRAMING EXACTLY
+- DO NOT reframe, recenter, or recompose the image in any way
 
 STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
 
@@ -720,8 +733,10 @@ FINAL VERIFICATION:
 ✓ Are ALL unique features (horns, makeup, jewelry, etc.) accurately traced?
 ✓ Is the detail level correct for {shading_level.upper()}?
 ✓ Is it purely black lines on white - no colors or gray?
+✓ Would this stencil PERFECTLY OVERLAY the reference with no shifting?
+✓ Is the framing EXACTLY the same - no cropping, no added margins?
 
-Generate the stencil now. This is for professional use - precision matters."""
+Generate the stencil now. This is for professional use - PERFECT ALIGNMENT is mandatory."""
 
         
         image_base64 = None
