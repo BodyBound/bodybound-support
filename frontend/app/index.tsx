@@ -3251,14 +3251,14 @@ export default function Index() {
         </View>
       </Modal>
 
-      {/* PSD Export Loading Overlay */}
+      {/* Save Both Loading Overlay */}
       {isExportingPSD && (
         <View style={styles.exportLoadingOverlay}>
           <View style={styles.exportLoadingCard}>
             <ActivityIndicator size="large" color="#C9A227" />
-            <Text style={styles.exportLoadingTitle}>Creating PSD File</Text>
+            <Text style={styles.exportLoadingTitle}>Saving Images</Text>
             <Text style={styles.exportLoadingText}>
-              Generating layered file for Procreate...
+              Preparing stencil and reference for Procreate...
             </Text>
           </View>
         </View>
