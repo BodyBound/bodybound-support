@@ -11,6 +11,7 @@ import time
 from PIL import Image, ImageDraw
 import io
 import os
+import numpy as np
 from dotenv import load_dotenv
 
 # Load environment variables
