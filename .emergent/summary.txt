@@ -27,191 +27,200 @@ The user wants to build a mobile app for tattoo artists named BODY BOUND stencil
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack Expo (React Native) and FastAPI application. The frontend is a massive monolithic file ( > 5000 lines).
+A full-stack Expo (React Native) and FastAPI application. The frontend is a massive monolithic file ( > 5000 lines) and the backend handles AI generation and file export.
 
 **Key features implemented:**
--   AI stencil generation using Google Gemini, with specific prompts for Light, Medium, and Heavy styles. The AI prompt has been updated to preserve image orientation.
--   A full-screen, Procreate-style Edit Mode rebuilt using .
--   A **workaround** for drawing: single-finger/pencil touch always draws, while two-finger gestures handle pan and zoom. This was implemented because reliable Apple Pencil vs. finger detection failed repeatedly.
--   Drawing accuracy on a panned/zoomed canvas has been fixed by implementing coordinate space transformation.
--   Pencil sensitivity for creating dots/dashes has been improved by detecting single-point taps.
--   A bug where new stencils would overlay the image in Edit Mode has been fixed by freezing the image state when entering the editor.
--   An in-app, multi-step onboarding tutorial for new users has been added, which can be re-accessed via a help button.
--   A unified Save button has been implemented, which shows an  with options: Save to Photos and Export to Procreate.
-
-The project suffers from persistent preview server instability (ngrok tunnel issues) and has a major piece of technical debt in its monolithic frontend.
+- AI stencil generation using Google Gemini, with prompts updated to improve alignment.
+- A Procreate-style Edit Mode with a workaround for drawing (any single touch draws).
+- A unified Save button with options for Save to Photos and Export to Procreate.
+- The Export to Procreate feature generates a layered PSD file.
+- An in-app onboarding tutorial.
+- Automatic retry logic for AI generation calls to improve reliability.
+- The app has been successfully built and deployed to TestFlight previously. The user is now testing a production build.
 
 **Last working item**:
-- Last item agent was working: Implementing the Export to Procreate feature by generating a layered PSD file. The agent successfully installed the  library in the backend and was about to create a new FastAPI endpoint to handle the PSD generation.
-- Status: IN PROGRESS
-- Agent Testing Done: N
-- Which testing method agent to use? backend testing agent (After the new endpoint is created, it needs to be tested by sending a request with two base64 image strings (original and stencil) and verifying that a valid PSD file is returned.)
-- User Testing Done: N
+    - Last item agent was working: The user reported that the Export to Procreate feature was timing out (endless spinning wheel) in the production app, likely due to large image files. The agent added a 60-second timeout to the frontend  call in  function within .
+    - Status: IN PROGRESS
+    - Agent Testing Done: N
+    - Which testing method agent to use? manual testing by curl. The fix is in the frontend and requires a new production build to be tested by the user. The agent cannot replicate the production environment's conditions (large files, network latency).
+    - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- Issue 1: **Pencil vs. Finger Detection in Edit Mode is not working.** (P0 - CRITICAL UX)
-- Issue 2: **Inconsistent AI Generation Time.** (P1)
-- Issue 3: **Monolithic Frontend Architecture.** (P2)
-- Issue 4: **Persistent Preview Server Instability.** (P3 - Development Blocker)
+  - Issue 1:  **PSD Export Times Out in Production** (P0 - CRITICAL)
+  - Issue 2:  **Pencil vs. Finger Detection in Edit Mode is not working** (P1 - CRITICAL UX)
+  - Issue 3:  **Inconsistent AI Generation Time** (P2)
+  - Issue 4:  **Monolithic Frontend Architecture** (P3)
+  - Issue 5:  **Persistent Preview Server Instability** (P4 - Development Blocker)
+  
+  Issues Detail:
+  - Issue 1: **PSD Export Times Out in Production**
+     - Attempted fixes: A 60-second timeout was added to the  request in the  function in .
+     - Next debug checklist: 
+        1. A new build needs to be generated and deployed for the user to test the timeout fix.
+        2. If it still fails, investigate backend optimizations for PSD generation with large files (e.g., streaming response, image compression options).
+        3. Add more detailed progress indicators on the frontend (e.g., upload progress, processing, download progress) instead of a generic spinner.
+     - Why fix this issue and what will be achieved with the fix? This is a core feature for the user's professional workflow. Fixing it will make the export function reliable for real-world use cases involving high-resolution photos.
+     - Status:  IN PROGRESS
+     - Is recurring issue? Y (The PSD export logic was fixed, but now it's a performance/timeout issue).
+     - Should Test frontend/backend/both after fix? Both (Frontend for UI feedback, Backend for performance).
+     - Blocked on other issue: None.
 
-**Issues Detail**:
-- **Issue 1: Pencil vs. Finger Detection in Edit Mode is not working.**
-    - **Attempted fixes**: The agent has tried multiple approaches to differentiate Apple Pencil from finger touches, all of which failed on the user's native device:
-        1.  React Native's basic responder system ().
-        2.  React Native's experimental Pointer Events API ().
-        3.  A manual Draw/Pan toggle button (failed due to stale closures, then fixed with a ref, but still not the desired UX).
-        4.  A full rewrite using  (the most promising approach, but was abandoned when it didn't work immediately).
-        The current implementation is a **workaround** where *any* single touch draws. This is functional but not the Procreate-like experience the user wants.
-    - **Next debug checklist**:
-        1.  Revisit the  implementation (, messages 307-363). This is the industry-standard way to solve this.
-        2.  Do not abandon it. Instead, add  statements inside the  and  handlers to inspect the  value received on the native device.
-        3.  Verify the  or  logic is correctly prioritizing gestures. The issue may lie in how the pan and draw gestures are composed.
-    - **Why fix this issue and what will be achieved with the fix?**: This is the most significant and recurring user complaint. Fixing it will achieve the user's primary goal for the editor: a seamless, Procreate-like experience where the pencil draws and fingers navigate without needing a manual toggle.
-    - **Status**: NOT STARTED (Current workaround is in place)
-    - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: Frontend (requires user testing on a physical iPad).
-    - **Blocked on other issue**: None.
+  - Issue 2: **Pencil vs. Finger Detection in Edit Mode is not working.**
+     - Attempted fixes: A workaround is in place where any single touch draws. The agent has not attempted to implement a proper fix in this session, as it prioritized shipping the PSD export feature.
+     - Next debug checklist:
+        1. Revisit the  implementation.
+        2. Add  statements inside the gesture handlers to inspect the  value received on the user's native device during a build.
+        3. Ensure  or  is used correctly to differentiate between a pan gesture (finger) and a drawing gesture (pencil).
+     - Why fix this issue and what will be achieved with the fix? This is the most significant recurring UX complaint. A fix will provide the seamless, Procreate-like experience the user has repeatedly requested.
+     - Status:  NOT STARTED
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? Frontend (requires user testing on a physical iPad with Apple Pencil).
+     - Blocked on other issue: None.
 
-- **Issue 2: Inconsistent AI Generation Time.**
-    - **Attempted fixes**: Increased frontend timeout to 120s. Added a small delay between frontend requests.
-    - **Next debug checklist**: The backend logs show the Medium style prompt takes significantly longer (~100s) than Light or Heavy (~15s).
-        1.  Review the prompt for the Medium style in . It's likely more complex.
-        2.  Experiment with simplifying the prompt for the Medium style to reduce the computational load on the Gemini API while preserving the dotted guide lines effect.
-        3.  Consider running the three API calls in parallel on the backend () instead of sequentially from the frontend, and stream the results back as they complete.
-    - **Why fix this issue and what will be achieved with the fix?**: Users perceive the app as timing out when a generation takes over a minute. A faster, more consistent generation time will dramatically improve the user experience.
-    - **Status**: NOT STARTED
-    - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: Backend.
-    - **Blocked on other issue**: None.
+  - Issue 3: **Inconsistent AI Generation Time.**
+     - Attempted fixes: Frontend timeout was increased to 120s, and automatic retry logic was added. The core issue of the Medium prompt being slow remains.
+     - Next debug checklist: 
+        1. Review and simplify the AI prompt for the Medium style in .
+        2. Consider running the three AI calls in parallel on the backend using  and streaming results back to the frontend.
+     - Why fix this issue and what will be achieved with the fix? Improves user experience by making generation times faster and more predictable.
+     - Status: NOT STARTED
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? Backend.
+     - Blocked on other issue: None.
 
-- **Issue 3: Monolithic Frontend Architecture.**
-    - **Attempted fixes**: None. This has been consistently deferred.
-    - **Next debug checklist**:
-        1.  Plan a refactoring strategy.
-        2.  Create a  directory inside .
-        3.  Break down  into smaller components like , , , and a dedicated .
-    - **Why fix this issue and what will be achieved with the fix?**: The  file is over 5000 lines, making it unmaintainable and highly prone to bugs. Refactoring is essential for long-term stability and faster future development.
-    - **Status**: NOT STARTED
-    - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: Frontend (extensive regression testing needed).
-    - **Blocked on other issue**: Lower priority than user-facing bugs.
+  - Issue 4: **Monolithic Frontend Architecture.**
+     - Attempted fixes: None. Consistently deferred.
+     - Next debug checklist: 
+        1. Plan a refactoring strategy with the user's approval.
+        2. Create a  directory.
+        3. Break down  into smaller, logical components.
+     - Why fix this issue and what will be achieved with the fix? Reduces technical debt, improves maintainability, and speeds up future development.
+     - Status: NOT STARTED
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? Frontend (extensive regression testing).
+     - Blocked on other issue: Lower priority than user-facing bugs.
 
-- **Issue 4: Persistent Preview Server Instability.**
-    - **Attempted fixes**: Numerous restarts, cache clearing ([21:43:19] Starting project at /app/frontend), reinstalling dependencies, and using the .
-    - **Next debug checklist**: This appears to be an infrastructure problem with  or the preview proxy. When the  URL fails (e.g., 520 error), the workaround is to get the direct  URL from the tunnel's API () and use that.
-    - **Why fix this issue and what will be achieved with the fix?**: This is not a code issue but severely hampers development and testing.
-    - **Status**: NOT STARTED
-    - **Is recurring issue?**: Y
-    - **Should Test frontend/backend/both after fix?**: N/A
-    - **Blocked on other issue**: None.
+  - Issue 5: **Persistent Preview Server Instability.**
+     - Attempted fixes: Numerous restarts and cache clearing.
+     - Next debug checklist: This is an infrastructure issue. The workaround is to get the direct  URL via  when the preview proxy fails.
+     - Why fix this issue and what will be achieved with the fix? Improves development and testing velocity.
+     - Status: NOT STARTED
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? N/A.
+     - Blocked on other issue: None.
 
 **In progress Task List**:
-- **Task 1: Implement Layered PSD Export** (P0)
-    - **Where to resume**:
-        1.  In , create a new FastAPI endpoint (e.g., ).
-        2.  This endpoint should accept a POST request with two base64-encoded images:  and .
-        3.  Use the  library to create a new PSD document.
-        4.  Decode the base64 strings into Pillow images.
-        5.  Add the original image as the bottom layer and the stencil image (with a transparent background) as the top layer.
-        6.  Save the PSD to an in-memory byte stream ().
-        7.  Return the PSD file as a  with the appropriate content type ().
-        8.  Update the  function in  to call this new endpoint when the user selects Export to Procreate and use React Native's  API to share the received file.
-    - **What will be achieved with this?**: Fulfills a key user request for a professional workflow, allowing tattoo artists to easily line up stencils with their reference in Procreate.
-    - **Status**: IN PROGRESS
-    - **Should Test frontend/backend/both after fix?**: Both.
-    - **Blocked on something**: Nothing.
+- No separate in-progress tasks. The last work on the timeout is tracked as a P0 issue.
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks**:
-    - **(P1) Implement Save to App**: This requires backend logic to store stencils (likely in a database or file system) and a new frontend UI/gallery to browse and load saved stencils. The user has not specified a database, so this will need clarification.
-    - **(P2) Refactor **: Break the monolithic file into smaller, manageable components. This is critical technical debt.
+    Upcoming Tasks:
+    - **(P0) Fix Pencil vs. Finger Detection**: Per user request, this is the next priority after PSD export is stable.
+    - **(P1) Implement Save to App Gallery**: Allow users to save stencils to an in-app gallery for later use. This will require database/storage implementation on the backend and a new UI on the frontend.
+    Future Tasks:
+    - **(P2) Refactor **: Break the monolithic file into smaller, manageable components.
 
 **Completed work in this session**
-- **CRITICAL FIX**: Fixed a build-breaking JSX syntax error, unblocking all development.
-- **CRITICAL AI FIX**: Resolved an issue where the AI was generating incorrect, generic images. Correctly identified that OpenAI's text-to-image model was being used incorrectly and reverted to the Google Gemini vision model, which can trace reference images.
-- **CRITICAL AI FIX**: Fixed a bug where vertical photos were generating horizontal stencils by updating the AI prompt.
-- **MAJOR FEATURE**: Rewrote the entire Edit Mode gesture system using  to resolve multiple bugs.
-- **MAJOR FEATURE**: Implemented a unified Save button with an  for Save to Photos and Export to Procreate options, consolidating the UI.
-- **MAJOR FEATURE**: Built and integrated a multi-step onboarding tutorial for first-time users.
-- **BUG FIX**: Fixed a critical bug where drawing on a zoomed/panned canvas was offset.
-- **BUG FIX**: Fixed a critical bug where newly generated stencils would overlay the image being edited.
-- **BUG FIX**: Improved pencil sensitivity to allow for dot/dash marks by detecting single-point taps.
-- **BUG FIX**: Resolved frontend timeouts by increasing the  timeout to 120 seconds to accommodate slow AI generation.
+- **Layered PSD Export Feature (DONE)**:
+  - Created a new  endpoint in  using  and a manual PSD builder fallback.
+  - Connected the frontend Export to Procreate button to call this endpoint.
+  - Added a loading indicator modal for the export process in .
+- **Bug Fixes for PSD Export (DONE)**:
+  - Fixed a critical bug in the manual PSD builder logic related to incorrect null byte padding in .
+  - The fix was verified via the backend testing agent.
+- **Improved AI Stencil Reliability & Alignment (DONE)**:
+  - Added a  wrapper with exponential backoff for all AI generation calls in .
+  - Fixed a stencil alignment issue by resizing the generated stencil to match the original image dimensions on the backend ().
+  - Further improved alignment by making the AI prompt in  more explicit about pixel-perfect positioning.
+- **Deployment & Build Fixes (DONE)**:
+  - Removed a hardcoded API key from .
+  - Fixed a TestFlight error by adding and incrementing the  in .
+  - Correctly identified and guided the user through multiple external issues: EAS build outages and the need to regenerate iOS certificates.
+- **UI/UX Bug Fixes (DONE)**:
+  - Fixed a runtime crash caused by a call to a non-existent  function in .
+  - Restored the Edit button, which was unintentionally hidden.
+  - Fixed a hardcoded version number in the UI of .
 
 **Earlier issues found/mentioned but not fixed**
-- **Issue 1: Pencil vs. Finger detection.** The current solution is a workaround, not a fix. The user's desired Procreate-like behavior has not been achieved.
-- **Issue 2: Monolithic  file.** This has been acknowledged as a major risk but consistently deferred.
+   - **Pencil vs. Finger detection**: This is the main one. The current solution is a workaround, and the user has repeatedly asked for a Procreate-like experience. This is tracked as a P1 pending issue.
+   - **Monolithic  file**: Acknowledged as major technical debt but consistently deferred.
 
 **Known issue recurrence from previous fork**
-- **Pencil not drawing in Edit Mode:** This was the most persistent and recurring bug throughout the session, with at least 6 major attempts to fix it, leading to the current workaround.
-- **Preview Server Instability:** The  tunnel and  proxy have been extremely unreliable, causing significant delays.
+  - **Pencil not drawing correctly / Pencil vs. Finger detection**: This remains the most significant and recurring challenge. The current implementation is a workaround, not a solution.
+  - **Preview Server Instability**: The ngrok tunnel has been extremely unreliable throughout the session, causing significant delays. This is an infrastructure problem.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Frontend**: React Native, Expo, , ,  (for drawing).
-- **Backend**: FastAPI, Pillow, , .
-- **Core Problem Domain**: Complex multi-touch gesture handling (), coordinate space transformation for drawing on a zoomed/panned canvas, and managing state in a massive single-file React component.
+- **Frontend**: React Native, Expo, , , .
+- **Backend**: FastAPI, Pillow,  (Gemini Pro Vision), .
+- **Core Problem Domain**:
+    - **File Generation**: Generating complex binary files (PSD) on the backend using a mix of libraries and manual  packing.
+    - **AI Prompt Engineering**: Iteratively refining prompts for a vision model (Gemini) to control output alignment and style.
+    - **Monolith Management**: Carefully making changes to a massive, single-file React component without introducing regressions.
+    - **Infrastructure Debugging**: Differentiating between code bugs and external platform issues (EAS build system, ngrok tunnels).
 
 **key DB schema**
-- No database is currently in use.
+  - No database is currently in use.
 
 **changes in tech stack**
-- **Backend**:  was installed to support layered PSD export.
-- **Frontend**:  and  were leveraged for a major rewrite of the editor's gesture system.  was installed for the onboarding tutorial.
+  - No new technologies were added, but the use of  and manual PSD generation logic in the backend was a significant implementation detail.
 
 **All files of reference**
-- : The entire frontend. All recent work on the editor, unified save button, and onboarding tutorial are here. This is the primary file to edit for frontend tasks.
-- : The entire backend. Contains the AI prompt logic. This is the primary file to edit for the in-progress PSD export task.
+- : The entire frontend application. All UI logic, state management, and API calls are here. It was modified to call the new PSD endpoint, add loading states, and fix multiple UI bugs.
+- : The entire backend application. It was modified to add the  endpoint, fix bugs in the PSD generation logic, and improve the AI prompts for better alignment.
+- : The Expo configuration file. It was modified to update the app  and the iOS  to resolve deployment issues.
 
 **Areas that need refactoring**:
-- **CRITICAL**:  must be broken down into smaller components. It is a huge liability and makes development slow and risky.
+- **CRITICAL**:  is over 5000 lines and is a major source of risk and slow development. It must be broken into smaller, reusable components. This should be a high-priority task after critical bug fixes are resolved.
 
 **key api endpoints**
-- : Main endpoint for generating stencils from a photo.
-- **(To be created)** : The new endpoint for generating a layered PSD file.
+- : Generates the three stencil versions from an image.
+- : (New) Takes an original image and a stencil image and returns a layered PSD file.
+- : Health check endpoint.
 
 **Critical Info for New Agent**
-1.  **Resume PSD Export Task**: Your immediate task is to continue the work in  to create the  endpoint using the  library. Then, connect it to the Export to Procreate option in the frontend's .
-2.  **The Pencil Drawing Problem is NOT SOLVED**: The current single touch always draws is a temporary workaround. The user wants true Procreate-like behavior (pencil draws, finger navigates). Your top priority after the PSD task should be to revisit the  implementation and properly debug why  is not being detected correctly. Do not give up on this approach.
-3.  **AI Provider is Gemini ONLY**: Do NOT re-introduce OpenAI. The agent made a critical mistake by switching to , which cannot trace reference photos. Google Gemini is the correct and only provider for this task.
-4.  **Monolith Hazard**: Be extremely careful editing . It's over 5000 lines. Any change can have unintended side effects. Strongly recommend proposing the refactor task to the user after fixing the critical UX issues.
-5.  **Preview Server Instability**: If the  URL gives a 520 or other connection error, do not waste time. Immediately try to get the direct  URL by running  in the terminal and use that for testing.
+1.  **Production vs. Preview**: The user is actively using a deployed production app. Remember that any frontend changes you make ( files) **will require a new build to be visible to the user in their production app**. Only backend changes ( files) are live immediately after service restart.
+2.  **Resume with Timeout Fix**: Your first task is to ensure the user can get a new build (version 2.0.8, build 29 or higher) to test the 60-second timeout fix for the PSD export. The code for this is already written.
+3.  **Next Priority: Pencil vs. Finger**: The user has clearly stated that fixing the editor to distinguish between Apple Pencil (for drawing) and finger touches (for panning/zooming) is the next most important task. Do not defer this. Re-investigate using  and debug the  property on a native device.
+4.  **iOS Credentials**: The user confirmed their iOS certificate issues are resolved. You should be able to proceed with generating new builds. If a build fails with a signing error, remind the user to contact Emergent support.
+5.  **Monolith Hazard**: Be extremely cautious when editing . Propose the refactoring task to the user once the critical PSD and drawing bugs are fully resolved.
+6.  **Infrastructure Flakiness**: The ngrok preview tunnel is unreliable. If it fails, don't waste time. Use  to get the direct URL or focus on backend work until it stabilizes.
 
 **documents created in this job**
-- None.
+  - None.
 
-**Last 10 User Messages and any pending HUMAN messages**
-1.  **Request for Layered PSD Export**: (IN PROGRESS) User asked if the Export to Procreate option can create a layered file with the original photo and stencil separate.
-2.  **Bug Report - Image Orientation & Timeout**: (RESOLVED/IN PROGRESS) User reported testers are seeing vertical photos generate horizontal stencils and are still experiencing timeouts. The orientation was fixed in the prompt; timeouts are a known issue due to inconsistent AI speed.
-3.  **App Connection Issues**: (RESOLVED for now) User reported the preview was not working.
-4.  **Request for Unified Save Button**: (RESOLVED) User asked to combine Share and Save into one button with options, including Export to Procreate.
-5.  **Preview Works Confirmation**: (RESOLVED) User was asking if the preview was back online.
-6.  **Pencil Sensitivity & Onboarding Request**: (RESOLVED) User approved the onboarding tutorial and requested higher pencil sensitivity for dots/dashes.
-7.  **Request for Onboarding Preview**: (RESOLVED) User asked to see what the onboarding tutorial would look like.
-8.  **Request for Tutorial Video**: (RESOLVED) User asked for a tutorial video. Agent correctly clarified it can build an in-app tutorial instead.
-9.  **Bug Report - Drawing Accuracy**: (RESOLVED) User reported that drawing was offset, especially when zoomed in.
-10. **Bug Report - Simplified Drawing Workaround**: (IN PROGRESS) User confirmed the pencil now draws with the new simplified approach but reported the accuracy issue.
+**Last 10 User Messages and any pending HUMAN messages** 
+ -  1. **(Last Message)** User reports the PSD export is taking a very long time (spinning wheel) on the production app. (IN PROGRESS)
+ -  2. **Confirmation**: User confirms they are ready to launch, as their iOS credential issues are handled. (RESOLVED)
+ -  3. **Bug Report**: User correctly points out the UI shows  while the agent claimed it was . (RESOLVED)
+ -  4. **Bug Report**: User reports the PSD export feature is failing with an error in the production app. (RESOLVED)
+ -  5. **Bug Report**: User reports that the stencil alignment is still off. (RESOLVED)
+ -  6. **Request**: User asks to proceed with regenerating iOS credentials via Emergent support. (RESOLVED)
+ -  7. **Question**: User asks if deleting certificates from the Apple Developer portal is causing build issues and if the agent can generate new ones. (RESOLVED)
+ -  8. **Bug Report**: User reports a new build failed due to an EAS (Expo) service outage. (RESOLVED - External Issue)
+ -  9. **Bug Report**: User reports a new build failed due to the TestFlight build number not being incremented. (RESOLVED)
+ -  10. **Bug Report**: User reports a critical iOS build failure (Fastlane PTY error). (RESOLVED - External Issue)
 
 **Project Health Check:**
-- **Broken**: The primary task of implementing PSD export is incomplete.
-- **Mocked**: No mocked components, but the core pencil-vs-finger detection is a workaround, not a true implementation of the user's request. The project also suffers from severe technical debt and an unstable development environment.
+- **Broken**: The PSD export feature is timing out for the user on the production app with large files. A fix has been implemented but requires a new build to be tested.
+- **Mocked**: The core Procreate-style editing experience (pencil-vs-finger detection) is still a workaround where any single touch draws. This does not meet the user's primary requirement for the editor.
 
 **3rd Party Integrations**
-- **Google Gemini Pro Vision** via  — requires User LLM Key. (Primary AI stencil generator)
-- **psd-tools**: Python library installed on the backend for creating PSD files.
-- **EAS (Expo Application Services)**: Used for building and deploying the iOS application.
+- **Google Gemini Pro Vision**: Accessed via  library. Requires a user-provided .
+- **psd-tools**: Python library used on the backend to construct layered PSD files.
+- **EAS (Expo Application Services)**: Used for building and deploying the iOS application. Build process is managed by the Emergent platform but relies on EAS.
 
 **Testing status**
-- Testing agent used after significant changes: NO
-- Troubleshoot agent used after agent stuck in loop: YES, was used to diagnose preview server issues.
-- Test files created: None.
-- Known regressions: The pencil-vs-finger detection has been a constant battle, with the current state being a functional but less-than-ideal workaround.
+  - Testing agent used after significant changes: YES (Backend testing agent was used to verify the PSD export endpoint after a major bug fix).
+  - Troubleshoot agent used after agent stuck in loop: NO (but  was used correctly for platform/infrastructure issues).
+  - Test files created: None.
+  - Known regressions: None, but the pencil drawing functionality remains a workaround rather than a proper implementation.
 
 **Credentials to test flow:**
-N/A
+N/A. The user has provided their own Google API key.
 
 **What agent forgot to execute**
-- The agent did not thoroughly debug the  implementation. After it failed the first time, the agent immediately pivoted to a simpler (but less desirable) workaround instead of investigating *why* the  was not being read correctly within the gesture handlers. This is the root cause of the most persistent user complaint.
+The agent has consistently and correctly prioritized user-reported bugs and feature completion over the long-standing Pencil vs. Finger detection issue. While not forgotten, it is the most significant piece of the original request that has not been properly addressed and remains in a temporary workaround state. The user has now re-prioritized it as the next major task.
+
 </analysis>
