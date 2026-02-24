@@ -2955,9 +2955,9 @@ export default function Index() {
               <Text style={styles.previewActionIcon}>🖨️</Text>
               <Text style={styles.previewActionText}>Print</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.previewActionButton} onPress={exportToProcreate}>
+            <TouchableOpacity style={styles.previewActionButton} onPress={saveStencilAndReference}>
               <Text style={styles.previewActionIcon}>📤</Text>
-              <Text style={styles.previewActionText}>Share</Text>
+              <Text style={styles.previewActionText}>Procreate</Text>
             </TouchableOpacity>
           </View>
         </View>
