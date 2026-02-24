@@ -209,6 +209,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "Tested POST /api/export-psd with test images (200x200 original, 100x100 stencil). Successfully generates valid PSD file with correct headers (application/x-photoshop), proper PSD signature (8BPS), reasonable file size (480KB), and good processing time (271ms). Endpoint correctly resizes images to match dimensions and handles layered PSD creation. Error handling verified for invalid base64 data. PSD export functionality is working correctly for Procreate integration."
+      - working: true
+        agent: "testing"
+        comment: "Re-tested PSD export endpoint after recent fixes as requested. Verified with 100x100 solid color test images. All requirements met: Status 200, Content-Type application/x-photoshop, PSD signature 8BPS present, file size 117.4KB (reasonable). Processing time 156ms. Error handling for invalid base64 confirmed with 500 status. Comprehensive testing shows endpoint is working correctly after fixes."
 
 frontend:
   - task: "Image picker and camera functionality"
