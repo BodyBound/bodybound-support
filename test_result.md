@@ -195,7 +195,7 @@ backend:
         agent: "testing"
         comment: "Tested DELETE /api/stencils/{id}. Successfully deletes stencils by UUID and returns confirmation message. Properly handles 404 for non-existent stencils."
 
-  - task: "PSD Export endpoint for Procreate"
+  - task: "Make Transparent endpoint for Procreate export"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -205,13 +205,10 @@ backend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "POST /api/export-psd - Accepts original_image and stencil_image as base64, generates layered PSD file with original as bottom layer and stencil (transparent background) as top layer. Returns PSD file as streaming response."
+        comment: "REPLACED PSD export with simpler /api/make-transparent endpoint. Accepts stencil image base64, optional target dimensions. Converts white/near-white pixels to transparent. Returns PNG with transparent background for easy Procreate layer import. Much faster and more reliable than PSD generation."
       - working: true
-        agent: "testing"
-        comment: "Tested POST /api/export-psd with test images (200x200 original, 100x100 stencil). Successfully generates valid PSD file with correct headers (application/x-photoshop), proper PSD signature (8BPS), reasonable file size (480KB), and good processing time (271ms). Endpoint correctly resizes images to match dimensions and handles layered PSD creation. Error handling verified for invalid base64 data. PSD export functionality is working correctly for Procreate integration."
-      - working: true
-        agent: "testing"
-        comment: "Re-tested PSD export endpoint after recent fixes as requested. Verified with 100x100 solid color test images. All requirements met: Status 200, Content-Type application/x-photoshop, PSD signature 8BPS present, file size 117.4KB (reasonable). Processing time 156ms. Error handling for invalid base64 confirmed with 500 status. Comprehensive testing shows endpoint is working correctly after fixes."
+        agent: "main"
+        comment: "Tested POST /api/make-transparent with 100x100 test image. White background correctly converted to transparent (alpha=0), black pixels remain opaque (alpha=255). Response includes proper dimensions. Processing time ~12ms - much faster than previous PSD generation."
 
 frontend:
   - task: "Image picker and camera functionality"
