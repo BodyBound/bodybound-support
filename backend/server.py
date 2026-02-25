@@ -487,6 +487,83 @@ async def process_image(request: ProcessImageRequest):
         logger.error(f"Error processing image: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
 
+# Fast Stencil Generation - All 3 versions using OpenCV edge detection
+class FastStencilRequest(BaseModel):
+    image_base64: str
+
+class FastStencilResponse(BaseModel):
+    light: str  # Clean outlines only
+    medium: str  # Outlines + some detail/contour
+    heavy: str  # Full detail with texture
+    processing_time_ms: float
+
+@api_router.post("/fast-stencil", response_model=FastStencilResponse)
+async def generate_fast_stencil(request: FastStencilRequest):
+    """Generate all 3 stencil versions instantly using OpenCV edge detection.
+    
+    This is MUCH faster than AI generation (milliseconds vs minutes).
+    Uses professional edge detection algorithms for accurate tracing.
+    """
+    try:
+        import time
+        start_time = time.time()
+        
+        logger.info("[FastStencil] Starting fast edge detection...")
+        
+        # Auto-resize image if too large
+        resized_image = resize_image_if_needed(request.image_base64, max_dimension=2000, max_file_size_mb=4.0)
+        
+        # Convert base64 to OpenCV image
+        img = base64_to_cv2(resized_image)
+        if img is None:
+            raise HTTPException(status_code=400, detail="Invalid image data")
+        
+        # Generate LIGHT version - Clean outlines, minimal detail
+        light_settings = StencilSettings(
+            clarity=70.0,        # Higher = less edges, cleaner
+            noise_reduction=60.0, # Higher = smoother
+            line_weight=40.0,    # Thinner lines
+            invert=True
+        )
+        light_stencil = process_image_to_stencil(img, light_settings)
+        light_base64 = cv2_to_base64(light_stencil)
+        
+        # Generate MEDIUM version - Outlines + contour details
+        medium_settings = StencilSettings(
+            clarity=50.0,        # Balanced
+            noise_reduction=40.0, # Some smoothing
+            line_weight=50.0,    # Medium lines
+            invert=True
+        )
+        medium_stencil = process_image_to_stencil(img, medium_settings)
+        medium_base64 = cv2_to_base64(medium_stencil)
+        
+        # Generate HEAVY version - Full detail with texture
+        heavy_settings = StencilSettings(
+            clarity=30.0,        # Lower = more edges, more detail
+            noise_reduction=20.0, # Less smoothing = more texture
+            line_weight=60.0,    # Thicker lines
+            invert=True
+        )
+        heavy_stencil = process_image_to_stencil(img, heavy_settings)
+        heavy_base64 = cv2_to_base64(heavy_stencil)
+        
+        processing_time = (time.time() - start_time) * 1000
+        logger.info(f"[FastStencil] Generated all 3 versions in {processing_time:.0f}ms")
+        
+        return FastStencilResponse(
+            light=light_base64,
+            medium=medium_base64,
+            heavy=heavy_base64,
+            processing_time_ms=round(processing_time, 2)
+        )
+        
+    except Exception as e:
+        logger.error(f"[FastStencil] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating stencils: {str(e)}")
+
 class RemoveBackgroundRequest(BaseModel):
     image_base64: str
     method: str = Field(default="auto")  # "auto", "grabcut", or "threshold"
