@@ -3325,6 +3325,63 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0A0A0A',
   },
+  // Image Quality Warning Banner Styles
+  qualityWarningBanner: {
+    backgroundColor: '#2D1F00',
+    borderWidth: 1,
+    borderColor: '#C9A227',
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 12,
+    padding: 14,
+  },
+  qualityWarningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  qualityWarningIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  qualityWarningTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#C9A227',
+    flex: 1,
+  },
+  qualityWarningClose: {
+    padding: 4,
+  },
+  qualityWarningCloseText: {
+    color: '#8B7355',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  qualityWarningText: {
+    color: '#E5C76B',
+    fontSize: 13,
+    marginBottom: 4,
+    marginLeft: 26,
+  },
+  qualitySuggestionsContainer: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#3D2D10',
+  },
+  qualitySuggestionsTitle: {
+    color: '#C9A227',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  qualitySuggestionText: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    marginLeft: 20,
+    marginBottom: 2,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
