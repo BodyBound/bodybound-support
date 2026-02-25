@@ -819,7 +819,7 @@ STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
 - Keep crosshatching SUBTLE and professional - not overwhelming
 - The hatching should guide the tattoo artist on shading intensity
 - Also include contour lines for form and muscle definition
-- Every mark should serve the tattoo artist\'s needs'''
+- Every mark should serve the tattoo artist needs'''
 }
 
 FINAL ALIGNMENT CHECK (DO THIS BEFORE OUTPUTTING):
@@ -1045,7 +1045,7 @@ STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
 - Keep crosshatching SUBTLE and professional - not overwhelming
 - The hatching should guide the tattoo artist on shading intensity
 - Also include contour lines for form and muscle definition
-- Every mark should serve the tattoo artist\'s needs'''
+- Every mark should serve the tattoo artist needs'''
 }
 
 FINAL ALIGNMENT CHECK (DO THIS BEFORE OUTPUTTING):
