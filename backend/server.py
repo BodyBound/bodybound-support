@@ -1030,6 +1030,58 @@ async def remove_background_endpoint(request: RemoveBackgroundRequest):
         logger.error(f"Error removing background: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error removing background: {str(e)}")
 
+# ============================================
+# IMAGE QUALITY VALIDATION ENDPOINT
+# ============================================
+
+class ValidateImageRequest(BaseModel):
+    image_base64: str
+
+class ValidateImageResponse(BaseModel):
+    is_valid: bool
+    warnings: List[str]
+    suggestions: List[str]
+    blur_score: float
+    brightness_score: float
+    resolution_width: int
+    resolution_height: int
+
+@api_router.post("/validate-image", response_model=ValidateImageResponse)
+async def validate_image_endpoint(request: ValidateImageRequest):
+    """Validate image quality before stencil generation.
+    
+    Returns warnings and suggestions to help users get the best stencil results.
+    This is optional - the AI generation will still work, but results may vary.
+    """
+    try:
+        # Fix EXIF orientation first
+        oriented_image = fix_exif_orientation(request.image_base64)
+        
+        # Validate quality
+        result = validate_image_quality(oriented_image)
+        
+        return ValidateImageResponse(
+            is_valid=result.is_valid,
+            warnings=result.warnings,
+            suggestions=result.suggestions,
+            blur_score=round(result.blur_score, 2),
+            brightness_score=round(result.brightness_score, 2),
+            resolution_width=result.resolution[0],
+            resolution_height=result.resolution[1]
+        )
+    except Exception as e:
+        logger.error(f"Error validating image: {str(e)}")
+        # Return valid with no warnings on error - don't block user
+        return ValidateImageResponse(
+            is_valid=True,
+            warnings=[],
+            suggestions=[],
+            blur_score=0,
+            brightness_score=0,
+            resolution_width=0,
+            resolution_height=0
+        )
+
 # AI-Powered Stencil Generation
 class AIStencilRequest(BaseModel):
     image_base64: str
