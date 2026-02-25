@@ -2281,6 +2281,9 @@ export default function Index() {
     setOriginalImage(null);
     setStencilImage(null);
     setHasGeneratedOnce(false);
+    setImageQualityWarnings([]);
+    setImageQualitySuggestions([]);
+    setShowQualityWarning(false);
     setSettings({
       clarity: 30,
       line_weight: 40,
