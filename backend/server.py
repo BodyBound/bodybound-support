@@ -741,95 +741,102 @@ async def generate_ai_stencil(request: AIStencilRequest):
         
         # Create the prompt for EXACT tracing - PROFESSIONAL TATTOO STENCILS
         # This is for real tattoo artists - precision is critical
-        prompt = f"""PROFESSIONAL TATTOO STENCIL TRACE - PIXEL-PERFECT ALIGNMENT CRITICAL
+        prompt = f"""PROFESSIONAL TATTOO STENCIL - EXACT STYLE REPLICATION
 
-You are creating a tattoo stencil for professional tattoo artists.
+You are creating a tattoo stencil for professional tattoo artists. Your output MUST match this EXACT style:
 
-🚨🚨🚨 MOST CRITICAL REQUIREMENT - EXACT SPATIAL ALIGNMENT 🚨🚨🚨
-This stencil will be OVERLAID directly on the reference photo. ANY misalignment will ruin the tattoo.
+🎨 MASTER STYLE REFERENCE (FOLLOW THIS EXACTLY):
+- THICK, BOLD BLACK OUTLINES for all primary contours (face shape, jawline, nose profile, lips, hair outline, accessories)
+- MEDIUM WEIGHT LINES for secondary features (ear structure, eye details, eyebrows)
+- DASHED/DOTTED LINES for shading guides and form indication
+- HIGH CONTRAST black lines on pure white - NO gray, NO faint lines
+- Lines should be CONFIDENT and BOLD - not sketchy or light
 
-ALIGNMENT RULES (MANDATORY):
-1. DO NOT shift the subject left, right, up, or down - keep EXACT position
-2. DO NOT zoom in or zoom out - maintain EXACT scale
-3. DO NOT crop or add margins - use the FULL canvas edge-to-edge
-4. The LEFT EYE in your stencil must be at the EXACT SAME pixel coordinates as in the reference
-5. The RIGHT EYE in your stencil must be at the EXACT SAME pixel coordinates as in the reference
-6. The NOSE TIP must be at the EXACT SAME pixel coordinates as in the reference
-7. The CHIN must be at the EXACT SAME pixel coordinates as in the reference
-8. If you printed the stencil and placed it over the photo, EVERY LINE must align perfectly
+🚨🚨🚨 CRITICAL: PIXEL-PERFECT ALIGNMENT 🚨🚨🚨
+This stencil will be OVERLAID on the reference photo. ZERO misalignment allowed.
 
-⚠️ IMAGE DIMENSIONS & CANVAS:
-- Output the EXACT SAME dimensions as the input image
-- If input is 1080x1920, output must be 1080x1920
-- FILL THE ENTIRE CANVAS - no empty borders
-- Keep the subject at the EXACT same position within the frame
-- If there's negative space (empty area) in the reference, preserve it EXACTLY
+ALIGNMENT RULES (MANDATORY - READ CAREFULLY):
+1. DO NOT shift subject left, right, up, or down - EXACT same position
+2. DO NOT zoom in or zoom out - EXACT same scale  
+3. DO NOT add margins or borders - edge-to-edge matching
+4. The LEFT EYE center must be at EXACTLY the same (x,y) coordinates
+5. The RIGHT EYE center must be at EXACTLY the same (x,y) coordinates
+6. The NOSE TIP must be at EXACTLY the same (x,y) coordinates
+7. The CHIN must be at EXACTLY the same (x,y) coordinates
+8. The TOP OF HEAD must be the same distance from top edge
+9. TRACE OVER the photo - do not redraw from memory or interpretation
 
-STEP 1: ANALYZE REFERENCE POSITIONS
-Before drawing, note the EXACT position of:
-- Where does the top of the head touch (or how far from top edge)?
-- Where is the chin relative to the bottom edge?
-- Where are the eyes horizontally positioned?
-- How much space is on each side of the face?
-These positions MUST be identical in your output.
+⚠️ CANVAS & DIMENSIONS:
+- Output MUST be the EXACT SAME pixel dimensions as input
+- FILL the entire canvas - subject in SAME position
+- If input has negative space, preserve it EXACTLY
 
-STEP 2: TRACE WITH SPATIAL PRECISION
-Create a line drawing where:
-- Every line traces the EXACT position from the reference
-- The overall composition fills the frame identically
-- Subject is NOT recentered or repositioned
-- Scale is NOT changed
+📐 LINE WEIGHT SPECIFICATIONS:
+- THICKEST LINES (3-4pt equivalent): Face outline, jawline, main hair outline, nose bridge/profile, lip outline, major accessory outlines
+- MEDIUM LINES (2pt equivalent): Eye outlines, ear details, eyebrow shapes, secondary hair strands, jewelry
+- THIN LINES (1pt equivalent): Dashed contour lines, shading guides, texture details
 
-STEP 3: OUTPUT SPECIFICATIONS
-- Pure white background (#FFFFFF)
-- Black lines only (#000000)
-- NO color, NO gray, NO fills, NO gradients
-- Clean confident strokes suitable for thermal transfer paper
+STEP 1: TRACE THE EXACT POSITIONS
+Before drawing, mentally note:
+- Exact distance from top edge to top of head
+- Exact distance from bottom edge to chin
+- Exact horizontal position of each eye
+- Exact spacing on left and right sides
+YOUR STENCIL MUST MATCH THESE EXACTLY.
 
-STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
+STEP 2: DRAW WITH BOLD, CONFIDENT LINES
+- Use THICK, DARK strokes - not light or sketchy
+- Lines should be suitable for thermal transfer paper
+- Every line should be clearly visible and professional
+
+STEP 3: APPLY DETAIL LEVEL - {shading_level.upper()}
 
 {
-'''LIGHT VERSION:
-- SIMPLE CLEAN OUTLINES ONLY
-- Trace the outer edge of every shape (face, hair, features, accessories)
-- Clean single-weight lines defining each form
+'''LIGHT VERSION - BOLD OUTLINES ONLY:
+- THICK bold outlines for face shape, jawline, profile
+- THICK bold outlines for hair silhouette and major strands
+- THICK bold outlines for all accessories (feathers, jewelry, headwear)
+- Clean defined eyes with bold eyeliner-style outlines
+- Bold eyebrow shapes
 - NO internal shading lines
-- NO dots or dashes
-- NO texture marks
-- Think: A clean coloring book outline that captures the exact likeness''' if shading_level == "minimal" else
+- NO dots or dashes inside the face
+- Just clean, bold outlines that define every shape
+- Think: Bold coloring book style with STRONG line weight''' if shading_level == "minimal" else
 
-'''MEDIUM VERSION:
-- SIMPLE OUTLINES + DOTTED REFERENCE LINES
-- Start with the same clean outlines as Light version
-- ADD dotted lines (......) or dashed lines (------) to show:
-  * Where shadows fall (under cheekbones, under nose, around eye sockets)
-  * Contour lines showing the 3D form of the face
-  * Guide marks for shading placement
-- These dotted lines help the tattoo artist know where to shade
-- Keep dots/dashes subtle - they are REFERENCE guides, not heavy marks''' if shading_level == "light" else
+'''MEDIUM VERSION - BOLD OUTLINES + DASHED SHADING GUIDES:
+- Same THICK bold outlines as Light version for all shapes
+- ADD DASHED LINES (- - - -) to indicate shadow placement:
+  * Dashed contour under cheekbones following the bone structure
+  * Dashed line under the nose indicating shadow
+  * Dashed lines around eye sockets showing depth
+  * Dashed lines on lips showing volume (horizontal dashes on lower lip)
+- ADD DOTTED LINES (....) for subtle form indicators
+- Hair should have internal line detail showing flow direction
+- Feathers should have internal vein lines
+- The dashed lines guide where the tattoo artist should shade
+- This is the IDEAL balance of outline and shading reference''' if shading_level == "light" else
 
-'''HEAVY VERSION:
-- SIMPLE OUTLINES + SUBTLE CROSSHATCH SHADING
-- Start with the same clean outlines as Light version
-- ADD CROSSHATCHING in shadow areas to indicate depth:
-  * Use fine diagonal lines (///) or cross-patterns (XXX) in dark areas
-  * Apply crosshatching under cheekbones, under nose, in eye sockets
-  * Add crosshatching in hair to show volume and depth
-  * Use denser hatching for darker shadows, lighter hatching for mid-tones
-- Keep crosshatching SUBTLE and professional - not overwhelming
-- The hatching should guide the tattoo artist on shading intensity
-- Also include contour lines for form and muscle definition
-- Every mark should serve the tattoo artist needs'''
+'''HEAVY VERSION - BOLD OUTLINES + DASHED LINES + CROSSHATCHING:
+- Same THICK bold outlines as Light version
+- Same DASHED shading guides as Medium version
+- ADD CROSSHATCHING in the darkest shadow areas:
+  * Fine diagonal parallel lines (///) under cheekbones
+  * Crosshatch pattern in deep shadows (under nose, eye sockets)
+  * Denser hatching = darker shadow, lighter hatching = softer shadow
+- Add more texture detail in hair with parallel flow lines
+- Add more detail in feathers with fine barb lines
+- Keep crosshatching CONTROLLED and PROFESSIONAL
+- The extra detail helps artist see exact shading intensity needed'''
 }
 
-FINAL ALIGNMENT CHECK (DO THIS BEFORE OUTPUTTING):
-✓ Is the subject in the EXACT same position as the reference?
-✓ Is the scale EXACTLY the same (not zoomed in or out)?
-✓ Would overlaying this on the reference show PERFECT alignment?
-✓ Are eye positions, nose, chin all at their original coordinates?
-✓ Is the canvas filled edge-to-edge matching the reference framing?
+FINAL CHECKS BEFORE OUTPUT:
+✓ Are lines BOLD and THICK enough? (not light or sketchy)
+✓ Is alignment PERFECT with reference? (overlay test would match)
+✓ Is contrast HIGH? (pure black on pure white)
+✓ Does it look like a PROFESSIONAL tattoo stencil?
+✓ Would this transfer cleanly to skin?
 
-Generate the stencil now. ALIGNMENT IS NON-NEGOTIABLE - this is for professional tattoo use."""
+Generate the stencil now. BOLD LINES + PERFECT ALIGNMENT are mandatory."""
 
         
         image_base64 = None
@@ -967,95 +974,102 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
             shading_level = "moderate"
         
         # Create the detailed prompt (same as synchronous version)
-        prompt = f"""PROFESSIONAL TATTOO STENCIL TRACE - PIXEL-PERFECT ALIGNMENT CRITICAL
+        prompt = f"""PROFESSIONAL TATTOO STENCIL - EXACT STYLE REPLICATION
 
-You are creating a tattoo stencil for professional tattoo artists.
+You are creating a tattoo stencil for professional tattoo artists. Your output MUST match this EXACT style:
 
-🚨🚨🚨 MOST CRITICAL REQUIREMENT - EXACT SPATIAL ALIGNMENT 🚨🚨🚨
-This stencil will be OVERLAID directly on the reference photo. ANY misalignment will ruin the tattoo.
+🎨 MASTER STYLE REFERENCE (FOLLOW THIS EXACTLY):
+- THICK, BOLD BLACK OUTLINES for all primary contours (face shape, jawline, nose profile, lips, hair outline, accessories)
+- MEDIUM WEIGHT LINES for secondary features (ear structure, eye details, eyebrows)
+- DASHED/DOTTED LINES for shading guides and form indication
+- HIGH CONTRAST black lines on pure white - NO gray, NO faint lines
+- Lines should be CONFIDENT and BOLD - not sketchy or light
 
-ALIGNMENT RULES (MANDATORY):
-1. DO NOT shift the subject left, right, up, or down - keep EXACT position
-2. DO NOT zoom in or zoom out - maintain EXACT scale
-3. DO NOT crop or add margins - use the FULL canvas edge-to-edge
-4. The LEFT EYE in your stencil must be at the EXACT SAME pixel coordinates as in the reference
-5. The RIGHT EYE in your stencil must be at the EXACT SAME pixel coordinates as in the reference
-6. The NOSE TIP must be at the EXACT SAME pixel coordinates as in the reference
-7. The CHIN must be at the EXACT SAME pixel coordinates as in the reference
-8. If you printed the stencil and placed it over the photo, EVERY LINE must align perfectly
+🚨🚨🚨 CRITICAL: PIXEL-PERFECT ALIGNMENT 🚨🚨🚨
+This stencil will be OVERLAID on the reference photo. ZERO misalignment allowed.
 
-⚠️ IMAGE DIMENSIONS & CANVAS:
-- Output the EXACT SAME dimensions as the input image
-- If input is 1080x1920, output must be 1080x1920
-- FILL THE ENTIRE CANVAS - no empty borders
-- Keep the subject at the EXACT same position within the frame
-- If there's negative space (empty area) in the reference, preserve it EXACTLY
+ALIGNMENT RULES (MANDATORY - READ CAREFULLY):
+1. DO NOT shift subject left, right, up, or down - EXACT same position
+2. DO NOT zoom in or zoom out - EXACT same scale  
+3. DO NOT add margins or borders - edge-to-edge matching
+4. The LEFT EYE center must be at EXACTLY the same (x,y) coordinates
+5. The RIGHT EYE center must be at EXACTLY the same (x,y) coordinates
+6. The NOSE TIP must be at EXACTLY the same (x,y) coordinates
+7. The CHIN must be at EXACTLY the same (x,y) coordinates
+8. The TOP OF HEAD must be the same distance from top edge
+9. TRACE OVER the photo - do not redraw from memory or interpretation
 
-STEP 1: ANALYZE REFERENCE POSITIONS
-Before drawing, note the EXACT position of:
-- Where does the top of the head touch (or how far from top edge)?
-- Where is the chin relative to the bottom edge?
-- Where are the eyes horizontally positioned?
-- How much space is on each side of the face?
-These positions MUST be identical in your output.
+⚠️ CANVAS & DIMENSIONS:
+- Output MUST be the EXACT SAME pixel dimensions as input
+- FILL the entire canvas - subject in SAME position
+- If input has negative space, preserve it EXACTLY
 
-STEP 2: TRACE WITH SPATIAL PRECISION
-Create a line drawing where:
-- Every line traces the EXACT position from the reference
-- The overall composition fills the frame identically
-- Subject is NOT recentered or repositioned
-- Scale is NOT changed
+📐 LINE WEIGHT SPECIFICATIONS:
+- THICKEST LINES (3-4pt equivalent): Face outline, jawline, main hair outline, nose bridge/profile, lip outline, major accessory outlines
+- MEDIUM LINES (2pt equivalent): Eye outlines, ear details, eyebrow shapes, secondary hair strands, jewelry
+- THIN LINES (1pt equivalent): Dashed contour lines, shading guides, texture details
 
-STEP 3: OUTPUT SPECIFICATIONS
-- Pure white background (#FFFFFF)
-- Black lines only (#000000)
-- NO color, NO gray, NO fills, NO gradients
-- Clean confident strokes suitable for thermal transfer paper
+STEP 1: TRACE THE EXACT POSITIONS
+Before drawing, mentally note:
+- Exact distance from top edge to top of head
+- Exact distance from bottom edge to chin
+- Exact horizontal position of each eye
+- Exact spacing on left and right sides
+YOUR STENCIL MUST MATCH THESE EXACTLY.
 
-STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
+STEP 2: DRAW WITH BOLD, CONFIDENT LINES
+- Use THICK, DARK strokes - not light or sketchy
+- Lines should be suitable for thermal transfer paper
+- Every line should be clearly visible and professional
+
+STEP 3: APPLY DETAIL LEVEL - {shading_level.upper()}
 
 {
-'''LIGHT VERSION:
-- SIMPLE CLEAN OUTLINES ONLY
-- Trace the outer edge of every shape (face, hair, features, accessories)
-- Clean single-weight lines defining each form
+'''LIGHT VERSION - BOLD OUTLINES ONLY:
+- THICK bold outlines for face shape, jawline, profile
+- THICK bold outlines for hair silhouette and major strands
+- THICK bold outlines for all accessories (feathers, jewelry, headwear)
+- Clean defined eyes with bold eyeliner-style outlines
+- Bold eyebrow shapes
 - NO internal shading lines
-- NO dots or dashes
-- NO texture marks
-- Think: A clean coloring book outline that captures the exact likeness''' if shading_level == "minimal" else
+- NO dots or dashes inside the face
+- Just clean, bold outlines that define every shape
+- Think: Bold coloring book style with STRONG line weight''' if shading_level == "minimal" else
 
-'''MEDIUM VERSION:
-- SIMPLE OUTLINES + DOTTED REFERENCE LINES
-- Start with the same clean outlines as Light version
-- ADD dotted lines (......) or dashed lines (------) to show:
-  * Where shadows fall (under cheekbones, under nose, around eye sockets)
-  * Contour lines showing the 3D form of the face
-  * Guide marks for shading placement
-- These dotted lines help the tattoo artist know where to shade
-- Keep dots/dashes subtle - they are REFERENCE guides, not heavy marks''' if shading_level == "light" else
+'''MEDIUM VERSION - BOLD OUTLINES + DASHED SHADING GUIDES:
+- Same THICK bold outlines as Light version for all shapes
+- ADD DASHED LINES (- - - -) to indicate shadow placement:
+  * Dashed contour under cheekbones following the bone structure
+  * Dashed line under the nose indicating shadow
+  * Dashed lines around eye sockets showing depth
+  * Dashed lines on lips showing volume (horizontal dashes on lower lip)
+- ADD DOTTED LINES (....) for subtle form indicators
+- Hair should have internal line detail showing flow direction
+- Feathers should have internal vein lines
+- The dashed lines guide where the tattoo artist should shade
+- This is the IDEAL balance of outline and shading reference''' if shading_level == "light" else
 
-'''HEAVY VERSION:
-- SIMPLE OUTLINES + SUBTLE CROSSHATCH SHADING
-- Start with the same clean outlines as Light version
-- ADD CROSSHATCHING in shadow areas to indicate depth:
-  * Use fine diagonal lines (///) or cross-patterns (XXX) in dark areas
-  * Apply crosshatching under cheekbones, under nose, in eye sockets
-  * Add crosshatching in hair to show volume and depth
-  * Use denser hatching for darker shadows, lighter hatching for mid-tones
-- Keep crosshatching SUBTLE and professional - not overwhelming
-- The hatching should guide the tattoo artist on shading intensity
-- Also include contour lines for form and muscle definition
-- Every mark should serve the tattoo artist needs'''
+'''HEAVY VERSION - BOLD OUTLINES + DASHED LINES + CROSSHATCHING:
+- Same THICK bold outlines as Light version
+- Same DASHED shading guides as Medium version
+- ADD CROSSHATCHING in the darkest shadow areas:
+  * Fine diagonal parallel lines (///) under cheekbones
+  * Crosshatch pattern in deep shadows (under nose, eye sockets)
+  * Denser hatching = darker shadow, lighter hatching = softer shadow
+- Add more texture detail in hair with parallel flow lines
+- Add more detail in feathers with fine barb lines
+- Keep crosshatching CONTROLLED and PROFESSIONAL
+- The extra detail helps artist see exact shading intensity needed'''
 }
 
-FINAL ALIGNMENT CHECK (DO THIS BEFORE OUTPUTTING):
-✓ Is the subject in the EXACT same position as the reference?
-✓ Is the scale EXACTLY the same (not zoomed in or out)?
-✓ Would overlaying this on the reference show PERFECT alignment?
-✓ Are eye positions, nose, chin all at their original coordinates?
-✓ Is the canvas filled edge-to-edge matching the reference framing?
+FINAL CHECKS BEFORE OUTPUT:
+✓ Are lines BOLD and THICK enough? (not light or sketchy)
+✓ Is alignment PERFECT with reference? (overlay test would match)
+✓ Is contrast HIGH? (pure black on pure white)
+✓ Does it look like a PROFESSIONAL tattoo stencil?
+✓ Would this transfer cleanly to skin?
 
-Generate the stencil now. ALIGNMENT IS NON-NEGOTIABLE - this is for professional tattoo use."""
+Generate the stencil now. BOLD LINES + PERFECT ALIGNMENT are mandatory."""
 
         # Generate using Gemini
         result_base64, mime_type = await generate_with_gemini(image_data, prompt)
