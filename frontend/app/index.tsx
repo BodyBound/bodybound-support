@@ -558,8 +558,8 @@ export default function Index() {
   }, [originalImage, settings]);
 
   // Helper function to make API calls with timeout (no retry - keep it simple and fast)
-  // AI stencil generation can take 60-120 seconds, so we use a longer timeout
-  const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs: number = 120000): Promise<Response> => {
+  // AI stencil generation can take 60-180 seconds on busy servers, so we use a very long timeout
+  const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs: number = 180000): Promise<Response> => {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     
