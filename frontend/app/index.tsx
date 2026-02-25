@@ -165,6 +165,12 @@ export default function Index() {
   const [photoLibraryEndCursor, setPhotoLibraryEndCursor] = useState<string | undefined>(undefined);
   const [hasMorePhotos, setHasMorePhotos] = useState(true);
   
+  // Image Quality Validation state
+  const [imageQualityWarnings, setImageQualityWarnings] = useState<string[]>([]);
+  const [imageQualitySuggestions, setImageQualitySuggestions] = useState<string[]>([]);
+  const [isValidatingImage, setIsValidatingImage] = useState(false);
+  const [showQualityWarning, setShowQualityWarning] = useState(false);
+  
   // Edit Mode state - Overlay + Apple Pencil Drawing
   const [showEditModal, setShowEditModal] = useState(false);
   const [editOpacity, setEditOpacity] = useState(0.5); // Stencil opacity over original
