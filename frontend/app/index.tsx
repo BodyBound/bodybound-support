@@ -3200,7 +3200,7 @@ export default function Index() {
 
           {/* Bottom - Controls */}
           <View style={styles.procreateBottomBar} pointerEvents="box-none">
-            {/* Enable Finger Painting Toggle - Like Procreate */}
+            {/* Enable Finger Drawing Toggle - Like Procreate */}
             <TouchableOpacity 
               style={[
                 styles.procreateDrawModeButton,
@@ -3213,7 +3213,7 @@ export default function Index() {
                 styles.procreateDrawModeText,
                 enableFingerPainting && styles.procreateDrawModeTextActive
               ]}>
-                {enableFingerPainting ? 'PAN MODE' : 'DRAW MODE'}
+                {enableFingerPainting ? 'FINGER DRAWS' : 'PENCIL ONLY'}
               </Text>
             </TouchableOpacity>
             
@@ -3230,8 +3230,8 @@ export default function Index() {
           <View style={styles.procreateTopHintBar} pointerEvents="box-none">
             <Text style={styles.procreateHintText}>
               {enableFingerPainting 
-                ? 'Single touch: pan • Two fingers: zoom • Double-tap: undo'
-                : 'Single touch: DRAW • Two fingers: zoom/pan • Double-tap: undo'
+                ? '✏️ Apple Pencil: draw • 👆 Finger: draw • 🤏 Two fingers: zoom/pan'
+                : '✏️ Apple Pencil: draw • 👆 Finger: pan • 🤏 Two fingers: zoom • Double-tap: undo'
               }
             </Text>
           </View>
