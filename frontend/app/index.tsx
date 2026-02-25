@@ -818,7 +818,7 @@ export default function Index() {
       let imageBase64 = originalImage;
       if (!imageBase64.startsWith('data:')) {
         const base64Data = await FileSystem.readAsStringAsync(imageBase64, {
-          encoding: FileSystem.EncodingType.Base64,
+          encoding: 'base64',
         });
         imageBase64 = `data:image/jpeg;base64,${base64Data}`;
       }
@@ -1407,7 +1407,7 @@ export default function Index() {
       // Step 3: Read the stencil image and make white pixels transparent
       // This is done by reading the image data and creating a new PNG with alpha channel
       const stencilBase64 = await FileSystem.readAsStringAsync(stencilResized.uri, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64',
       });
       
       // Create transparent PNG by calling our backend helper
@@ -1444,7 +1444,7 @@ export default function Index() {
         : transparentStencilBase64;
       
       await FileSystem.writeAsStringAsync(stencilFileUri, stencilPngBase64, {
-        encoding: FileSystem.EncodingType.Base64,
+        encoding: 'base64',
       });
       
       // Save stencil to gallery
