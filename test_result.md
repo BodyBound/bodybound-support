@@ -201,7 +201,7 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
@@ -212,6 +212,12 @@ backend:
       - working: true
         agent: "testing"
         comment: "Comprehensive testing completed for POST /api/make-transparent endpoint. All test cases PASSED: (1) Basic functionality - 100x100 black square on white background correctly converts white pixels to transparent (alpha=0) and preserves black pixels as opaque (alpha=255). 74% transparency ratio achieved. (2) Resizing functionality - Successfully resizes from 100x100 to 200x200 while maintaining transparency. (3) Error handling - Correctly rejects invalid base64 data with appropriate error status. Processing time ~152ms. Response structure validated with correct PNG data URL format and RGBA mode. Endpoint is fully functional and ready for Procreate integration."
+      - working: false
+        agent: "user"
+        comment: "User reported PNG saved stencil has two issues: (1) Lines are WHITE instead of BLACK (inverted). (2) Lines look sloppy with gray halos around them from imprecise background removal."
+      - working: true
+        agent: "main"
+        comment: "MAJOR FIX: Completely rewrote make-transparent algorithm. OLD: Simple threshold masking (white>240=transparent, black<50=opaque) which left gray halos and didn't handle anti-aliasing. NEW: Luminance-based alpha calculation that (1) Uses luminance formula to calculate alpha - darker=more opaque, lighter=more transparent, (2) Forces ALL visible pixels to pure black RGB (0,0,0) eliminating halos, (3) Applies threshold (luminance>230) to make faint pixels fully transparent, (4) Boosts alpha by 1.3x for crisper lines. RESULT: Pure black linework only with smooth alpha transitions and no halos. Tested with synthetic stencil containing gray anti-aliasing - all visible pixels now pure black, clean transparency."
 
 frontend:
   - task: "Image picker and camera functionality"
