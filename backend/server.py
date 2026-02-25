@@ -1356,6 +1356,13 @@ Generate the stencil now. BOLD LINES + PERFECT ALIGNMENT are mandatory."""
         # Format as data URL
         stencil_base64 = f"data:{mime_type};base64,{image_base64}"
         
+        # === STEP 7: POST-PROCESS STENCIL ===
+        # Boost line weight, clean artifacts, ensure consistent quality
+        stencil_base64 = post_process_stencil(stencil_base64)
+        
+        # === STEP 8: CACHE THE RESULT for future instant retrieval ===
+        cache_stencil(cache_key, stencil_base64)
+        
         processing_time = (time.time() - start_time) * 1000
         
         logger.info(f"AI stencil generated in {processing_time:.2f}ms using {provider_used}")
