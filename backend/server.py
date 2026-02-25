@@ -538,9 +538,9 @@ class AIStencilResponse(BaseModel):
     regenerated_style: Optional[str] = None  # Which style was regenerated (if single style request)
     
 async def generate_with_gemini(image_data: str, prompt: str) -> tuple[str, str]:
-    """Try to generate stencil with Google Gemini using Emergent LLM Key"""
+    """Try to generate stencil with Google Gemini"""
     chat = LlmChat(
-        api_key=EMERGENT_LLM_KEY,  # Use Emergent LLM key for Gemini
+        api_key=AI_API_KEY,  # Uses GOOGLE_API_KEY (your pay-as-you-go key)
         session_id=f"stencil-{uuid.uuid4()}", 
         system_message="You are an expert tattoo stencil artist. You create clean, professional tattoo stencils from reference images."
     )
