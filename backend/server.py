@@ -56,6 +56,27 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# In-memory job storage for async stencil generation
+# In production, this could be Redis or MongoDB for persistence across restarts
+stencil_jobs = {}
+
+class StencilJob:
+    def __init__(self, job_id: str, image_base64: str, settings: dict):
+        self.job_id = job_id
+        self.image_base64 = image_base64
+        self.settings = settings
+        self.status = "pending"  # pending, processing, completed, failed
+        self.progress = 0  # 0-100
+        self.current_style = None  # light, medium, heavy
+        self.result = {
+            "light": None,
+            "medium": None,
+            "heavy": None
+        }
+        self.error = None
+        self.created_at = datetime.utcnow()
+        self.completed_at = None
+
 # Define Models
 class StencilSettings(BaseModel):
     clarity: float = Field(default=50.0, ge=0, le=100)  # Controls edge detection threshold
