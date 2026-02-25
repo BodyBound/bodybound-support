@@ -636,39 +636,38 @@ class AIStencilResponse(BaseModel):
     regenerated_style: Optional[str] = None  # Which style was regenerated (if single style request)
     
 async def generate_with_gemini(image_data: str, prompt: str) -> tuple[str, str]:
-    """Try to generate stencil with Google Gemini"""
-    chat = LlmChat(
-        api_key=AI_API_KEY,  # Uses GOOGLE_API_KEY (your pay-as-you-go key)
-        session_id=f"stencil-{uuid.uuid4()}", 
-        system_message="You are an expert tattoo stencil artist. You create clean, professional tattoo stencils from reference images."
-    )
-    chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["image", "text"])
+    """Generate stencil with Google Gemini 2.5 Flash Image (Nano Banana) - FAST model"""
+    import google.generativeai as genai
     
-    msg = UserMessage(
-        text=prompt,
-        file_contents=[ImageContent(image_data)]
-    )
+    # Configure with user's Google API key
+    genai.configure(api_key=AI_API_KEY)
     
-    text_response, images = await chat.send_message_multimodal_response(msg)
+    # Use Gemini 2.5 Flash Image (Nano Banana) - much faster than gemini-3-pro-image-preview
+    # This model is optimized for fast, high-quality image generation
+    model = genai.GenerativeModel('gemini-2.5-flash-image')
     
-    if not images or len(images) == 0:
-        raise Exception("Gemini did not return any images")
+    # Decode the base64 image
+    if ',' in image_data:
+        image_data = image_data.split(',')[1]
     
-    generated_image = images[0]
+    image_bytes = base64.b64decode(image_data)
     
-    if isinstance(generated_image, dict):
-        image_base64 = generated_image.get('data') or generated_image.get('b64_json') or generated_image.get('base64')
-        mime_type = generated_image.get('mime_type', 'image/png')
-    elif isinstance(generated_image, str):
-        image_base64 = generated_image
-        mime_type = 'image/png'
-    else:
-        raise Exception(f"Unexpected image format: {type(generated_image)}")
+    # Generate with the fast model
+    response = model.generate_content([
+        prompt,
+        {"mime_type": "image/png", "data": image_bytes}
+    ])
     
-    if not image_base64:
-        raise Exception("Gemini returned empty image data")
+    # Extract the generated image
+    if response.candidates and response.candidates[0].content.parts:
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, 'inline_data') and part.inline_data:
+                # Got image data
+                image_base64 = base64.b64encode(part.inline_data.data).decode('utf-8')
+                mime_type = part.inline_data.mime_type or 'image/png'
+                return image_base64, mime_type
     
-    return image_base64, mime_type
+    raise Exception("Gemini did not return any images")
 
 async def generate_with_openai(prompt: str) -> tuple[str, str]:
     """Fallback: Generate stencil with OpenAI gpt-image-1"""
