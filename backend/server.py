@@ -813,8 +813,13 @@ async def generate_ai_stencil(request: AIStencilRequest):
         # Auto-resize image if too large to prevent AI failures
         resized_image = resize_image_if_needed(request.image_base64, max_dimension=2000, max_file_size_mb=4.0)
         
+        # AUTOMATIC PHOTO ENHANCEMENT for better AI stencil results
+        # This boosts contrast, sharpens details, and enhances edges so the AI
+        # can better capture fine details like hair, jewelry, subtle facial features
+        enhanced_image = enhance_photo_for_ai(resized_image)
+        
         # Extract base64 data (remove data URL prefix if present)
-        image_data = resized_image
+        image_data = enhanced_image
         if ',' in image_data:
             image_data = image_data.split(',')[1]
         
