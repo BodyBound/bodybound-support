@@ -1108,6 +1108,16 @@ async def generate_ai_stencil(request: AIStencilRequest):
     
     If regenerate_style is specified (light/medium/heavy), only that style is generated.
     Otherwise, this endpoint is called 3 times by the frontend for all styles.
+    
+    ENHANCED PIPELINE:
+    1. EXIF orientation fix (phone photos)
+    2. Image quality validation (warnings for blur/darkness)
+    3. Auto-resize if too large
+    4. Photo enhancement (contrast, sharpening)
+    5. Cache check (instant return if same image processed before)
+    6. AI generation
+    7. Post-processing (boost lines, clean artifacts)
+    8. Cache storage for future requests
     """
     try:
         import time
@@ -1116,10 +1126,33 @@ async def generate_ai_stencil(request: AIStencilRequest):
         if not EMERGENT_LLM_KEY and not AI_API_KEY:
             raise HTTPException(status_code=500, detail="AI API key not configured. Please check your internet connection and try again.")
         
-        # Auto-resize image if too large to prevent AI failures
-        resized_image = resize_image_if_needed(request.image_base64, max_dimension=2000, max_file_size_mb=4.0)
+        # Determine the style for caching
+        cache_style = request.regenerate_style or f"shading_{request.shading_detail}"
         
-        # AUTOMATIC PHOTO ENHANCEMENT for better AI stencil results
+        # === STEP 1: Check cache first for instant results ===
+        cache_key = get_cache_key(request.image_base64, cache_style)
+        cached_result = get_cached_stencil(cache_key)
+        if cached_result:
+            logger.info(f"[AI-Stencil] Cache HIT - returning cached result in {(time.time() - start_time) * 1000:.0f}ms")
+            return AIStencilResponse(
+                stencil_base64=cached_result,
+                processing_time_ms=round((time.time() - start_time) * 1000, 2),
+                regenerated_style=request.regenerate_style
+            )
+        
+        # === STEP 2: Fix EXIF orientation (phone photos often have wrong rotation) ===
+        oriented_image = fix_exif_orientation(request.image_base64)
+        
+        # === STEP 3: Validate image quality (log warnings, don't block) ===
+        quality_result = validate_image_quality(oriented_image)
+        if quality_result.warnings:
+            logger.info(f"[AI-Stencil] Quality warnings: {quality_result.warnings}")
+            # Future: could return warnings to frontend to show user
+        
+        # === STEP 4: Auto-resize image if too large to prevent AI failures ===
+        resized_image = resize_image_if_needed(oriented_image, max_dimension=2000, max_file_size_mb=4.0)
+        
+        # === STEP 5: AUTOMATIC PHOTO ENHANCEMENT for better AI stencil results ===
         # This boosts contrast, sharpens details, and enhances edges so the AI
         # can better capture fine details like hair, jewelry, subtle facial features
         enhanced_image = enhance_photo_for_ai(resized_image)
