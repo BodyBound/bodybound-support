@@ -741,54 +741,50 @@ async def generate_ai_stencil(request: AIStencilRequest):
         
         # Create the prompt for EXACT tracing - PROFESSIONAL TATTOO STENCILS
         # This is for real tattoo artists - precision is critical
-        prompt = f"""PROFESSIONAL TATTOO STENCIL TRACE - PIXEL-PERFECT ALIGNMENT REQUIRED
+        prompt = f"""PROFESSIONAL TATTOO STENCIL TRACE - PIXEL-PERFECT ALIGNMENT CRITICAL
 
-You are creating a tattoo stencil for professional tattoo artists. 
+You are creating a tattoo stencil for professional tattoo artists.
 
-🚨 ABSOLUTE CRITICAL REQUIREMENT - EXACT POSITIONING:
-The stencil MUST align PERFECTLY with the reference photo when overlaid.
-- Every facial feature must be in the EXACT SAME PIXEL POSITION as the reference
-- NO shifting, NO cropping, NO repositioning of any element
-- The top-left corner of your output must correspond to the top-left corner of the input
-- If you trace a line at coordinates (x,y), it must match the same position in the reference
+🚨🚨🚨 MOST CRITICAL REQUIREMENT - EXACT SPATIAL ALIGNMENT 🚨🚨🚨
+This stencil will be OVERLAID directly on the reference photo. ANY misalignment will ruin the tattoo.
 
-⚠️ CRITICAL - IMAGE ORIENTATION & DIMENSIONS:
-- If the reference photo is VERTICAL (portrait), output MUST be VERTICAL
-- If the reference photo is HORIZONTAL (landscape), output MUST be HORIZONTAL
-- NEVER rotate or change the orientation of the image
-- Output MUST have the EXACT SAME aspect ratio as the input
-- Do NOT add any margins, padding, or borders
-- Do NOT crop any edges of the image
+ALIGNMENT RULES (MANDATORY):
+1. DO NOT shift the subject left, right, up, or down - keep EXACT position
+2. DO NOT zoom in or zoom out - maintain EXACT scale
+3. DO NOT crop or add margins - use the FULL canvas edge-to-edge
+4. The LEFT EYE in your stencil must be at the EXACT SAME pixel coordinates as in the reference
+5. The RIGHT EYE in your stencil must be at the EXACT SAME pixel coordinates as in the reference
+6. The NOSE TIP must be at the EXACT SAME pixel coordinates as in the reference
+7. The CHIN must be at the EXACT SAME pixel coordinates as in the reference
+8. If you printed the stencil and placed it over the photo, EVERY LINE must align perfectly
 
-STEP 1: ANALYZE THE REFERENCE PHOTO
-Look at every detail in the attached image:
-- Face shape, jawline, cheekbones
-- Eye shape, position, and spacing
-- Nose shape and angle
-- Lip shape and expression
-- Hair outline and flow
-- ANY unique features: horns, makeup, tattoos, accessories, piercings, jewelry
-- Pose and angle of the subject
-- IMAGE ORIENTATION (vertical or horizontal)
-- EXACT POSITION of each element within the frame
+⚠️ IMAGE DIMENSIONS & CANVAS:
+- Output the EXACT SAME dimensions as the input image
+- If input is 1080x1920, output must be 1080x1920
+- FILL THE ENTIRE CANVAS - no empty borders
+- Keep the subject at the EXACT same position within the frame
+- If there's negative space (empty area) in the reference, preserve it EXACTLY
 
-STEP 2: TRACE WITH PIXEL-PERFECT PRECISION
-Create a line drawing that traces the reference EXACTLY:
-- Same proportions - if the nose is long, draw it long
-- Same positions - if eyes are wide-set, draw them wide-set  
-- Same angle - if face is turned 3/4, draw it at 3/4
-- SAME ORIENTATION - vertical stays vertical, horizontal stays horizontal
-- SAME FRAMING - if there's empty space at top, keep it; if head is cropped, keep it cropped
-- ALL unique elements MUST appear in the stencil exactly as shown
-- Each line must be positioned so it would perfectly overlay the reference photo
+STEP 1: ANALYZE REFERENCE POSITIONS
+Before drawing, note the EXACT position of:
+- Where does the top of the head touch (or how far from top edge)?
+- Where is the chin relative to the bottom edge?
+- Where are the eyes horizontally positioned?
+- How much space is on each side of the face?
+These positions MUST be identical in your output.
+
+STEP 2: TRACE WITH SPATIAL PRECISION
+Create a line drawing where:
+- Every line traces the EXACT position from the reference
+- The overall composition fills the frame identically
+- Subject is NOT recentered or repositioned
+- Scale is NOT changed
 
 STEP 3: OUTPUT SPECIFICATIONS
 - Pure white background (#FFFFFF)
 - Black lines only (#000000)
 - NO color, NO gray, NO fills, NO gradients
 - Clean confident strokes suitable for thermal transfer paper
-- MAINTAIN ORIGINAL IMAGE ORIENTATION AND FRAMING EXACTLY
-- DO NOT reframe, recenter, or recompose the image in any way
 
 STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
 
@@ -813,27 +809,27 @@ STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
 - Keep dots/dashes subtle - they are REFERENCE guides, not heavy marks''' if shading_level == "light" else
 
 '''HEAVY VERSION:
-- SIMPLE OUTLINES + CONTOUR LINES + EXTRA DETAIL
+- SIMPLE OUTLINES + SUBTLE CROSSHATCH SHADING
 - Start with the same clean outlines as Light version
-- ADD solid contour lines (not just dots) showing form and depth
-- ADD extra detail lines for:
-  * Hair texture and flow direction
-  * Clothing folds or fabric texture
-  * Skin contours and muscle definition
-- More line work than Medium, but still clean and purposeful
-- Every line should serve the tattoo artist's needs'''
+- ADD CROSSHATCHING in shadow areas to indicate depth:
+  * Use fine diagonal lines (///) or cross-patterns (XXX) in dark areas
+  * Apply crosshatching under cheekbones, under nose, in eye sockets
+  * Add crosshatching in hair to show volume and depth
+  * Use denser hatching for darker shadows, lighter hatching for mid-tones
+- Keep crosshatching SUBTLE and professional - not overwhelming
+- The hatching should guide the tattoo artist on shading intensity
+- Also include contour lines for form and muscle definition
+- Every mark should serve the tattoo artist\'s needs'''
 }
 
-FINAL VERIFICATION:
-✓ Would a tattoo artist recognize THIS EXACT PERSON from the stencil?
-✓ Are the proportions IDENTICAL to the reference photo?
-✓ Are ALL unique features (horns, makeup, jewelry, etc.) accurately traced?
-✓ Is the detail level correct for {shading_level.upper()}?
-✓ Is it purely black lines on white - no colors or gray?
-✓ Would this stencil PERFECTLY OVERLAY the reference with no shifting?
-✓ Is the framing EXACTLY the same - no cropping, no added margins?
+FINAL ALIGNMENT CHECK (DO THIS BEFORE OUTPUTTING):
+✓ Is the subject in the EXACT same position as the reference?
+✓ Is the scale EXACTLY the same (not zoomed in or out)?
+✓ Would overlaying this on the reference show PERFECT alignment?
+✓ Are eye positions, nose, chin all at their original coordinates?
+✓ Is the canvas filled edge-to-edge matching the reference framing?
 
-Generate the stencil now. This is for professional use - PERFECT ALIGNMENT is mandatory."""
+Generate the stencil now. ALIGNMENT IS NON-NEGOTIABLE - this is for professional tattoo use."""
 
         
         image_base64 = None
@@ -971,54 +967,50 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
             shading_level = "moderate"
         
         # Create the detailed prompt (same as synchronous version)
-        prompt = f"""PROFESSIONAL TATTOO STENCIL TRACE - PIXEL-PERFECT ALIGNMENT REQUIRED
+        prompt = f"""PROFESSIONAL TATTOO STENCIL TRACE - PIXEL-PERFECT ALIGNMENT CRITICAL
 
-You are creating a tattoo stencil for professional tattoo artists. 
+You are creating a tattoo stencil for professional tattoo artists.
 
-🚨 ABSOLUTE CRITICAL REQUIREMENT - EXACT POSITIONING:
-The stencil MUST align PERFECTLY with the reference photo when overlaid.
-- Every facial feature must be in the EXACT SAME PIXEL POSITION as the reference
-- NO shifting, NO cropping, NO repositioning of any element
-- The top-left corner of your output must correspond to the top-left corner of the input
-- If you trace a line at coordinates (x,y), it must match the same position in the reference
+🚨🚨🚨 MOST CRITICAL REQUIREMENT - EXACT SPATIAL ALIGNMENT 🚨🚨🚨
+This stencil will be OVERLAID directly on the reference photo. ANY misalignment will ruin the tattoo.
 
-⚠️ CRITICAL - IMAGE ORIENTATION & DIMENSIONS:
-- If the reference photo is VERTICAL (portrait), output MUST be VERTICAL
-- If the reference photo is HORIZONTAL (landscape), output MUST be HORIZONTAL
-- NEVER rotate or change the orientation of the image
-- Output MUST have the EXACT SAME aspect ratio as the input
-- Do NOT add any margins, padding, or borders
-- Do NOT crop any edges of the image
+ALIGNMENT RULES (MANDATORY):
+1. DO NOT shift the subject left, right, up, or down - keep EXACT position
+2. DO NOT zoom in or zoom out - maintain EXACT scale
+3. DO NOT crop or add margins - use the FULL canvas edge-to-edge
+4. The LEFT EYE in your stencil must be at the EXACT SAME pixel coordinates as in the reference
+5. The RIGHT EYE in your stencil must be at the EXACT SAME pixel coordinates as in the reference
+6. The NOSE TIP must be at the EXACT SAME pixel coordinates as in the reference
+7. The CHIN must be at the EXACT SAME pixel coordinates as in the reference
+8. If you printed the stencil and placed it over the photo, EVERY LINE must align perfectly
 
-STEP 1: ANALYZE THE REFERENCE PHOTO
-Look at every detail in the attached image:
-- Face shape, jawline, cheekbones
-- Eye shape, position, and spacing
-- Nose shape and angle
-- Lip shape and expression
-- Hair outline and flow
-- ANY unique features: horns, makeup, tattoos, accessories, piercings, jewelry
-- Pose and angle of the subject
-- IMAGE ORIENTATION (vertical or horizontal)
-- EXACT POSITION of each element within the frame
+⚠️ IMAGE DIMENSIONS & CANVAS:
+- Output the EXACT SAME dimensions as the input image
+- If input is 1080x1920, output must be 1080x1920
+- FILL THE ENTIRE CANVAS - no empty borders
+- Keep the subject at the EXACT same position within the frame
+- If there's negative space (empty area) in the reference, preserve it EXACTLY
 
-STEP 2: TRACE WITH PIXEL-PERFECT PRECISION
-Create a line drawing that traces the reference EXACTLY:
-- Same proportions - if the nose is long, draw it long
-- Same positions - if eyes are wide-set, draw them wide-set  
-- Same angle - if face is turned 3/4, draw it at 3/4
-- SAME ORIENTATION - vertical stays vertical, horizontal stays horizontal
-- SAME FRAMING - if there's empty space at top, keep it; if head is cropped, keep it cropped
-- ALL unique elements MUST appear in the stencil exactly as shown
-- Each line must be positioned so it would perfectly overlay the reference photo
+STEP 1: ANALYZE REFERENCE POSITIONS
+Before drawing, note the EXACT position of:
+- Where does the top of the head touch (or how far from top edge)?
+- Where is the chin relative to the bottom edge?
+- Where are the eyes horizontally positioned?
+- How much space is on each side of the face?
+These positions MUST be identical in your output.
+
+STEP 2: TRACE WITH SPATIAL PRECISION
+Create a line drawing where:
+- Every line traces the EXACT position from the reference
+- The overall composition fills the frame identically
+- Subject is NOT recentered or repositioned
+- Scale is NOT changed
 
 STEP 3: OUTPUT SPECIFICATIONS
 - Pure white background (#FFFFFF)
 - Black lines only (#000000)
 - NO color, NO gray, NO fills, NO gradients
 - Clean confident strokes suitable for thermal transfer paper
-- MAINTAIN ORIGINAL IMAGE ORIENTATION AND FRAMING EXACTLY
-- DO NOT reframe, recenter, or recompose the image in any way
 
 STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
 
@@ -1043,27 +1035,27 @@ STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
 - Keep dots/dashes subtle - they are REFERENCE guides, not heavy marks''' if shading_level == "light" else
 
 '''HEAVY VERSION:
-- SIMPLE OUTLINES + CONTOUR LINES + EXTRA DETAIL
+- SIMPLE OUTLINES + SUBTLE CROSSHATCH SHADING
 - Start with the same clean outlines as Light version
-- ADD solid contour lines (not just dots) showing form and depth
-- ADD extra detail lines for:
-  * Hair texture and flow direction
-  * Clothing folds or fabric texture
-  * Skin contours and muscle definition
-- More line work than Medium, but still clean and purposeful
-- Every line should serve the tattoo artist's needs'''
+- ADD CROSSHATCHING in shadow areas to indicate depth:
+  * Use fine diagonal lines (///) or cross-patterns (XXX) in dark areas
+  * Apply crosshatching under cheekbones, under nose, in eye sockets
+  * Add crosshatching in hair to show volume and depth
+  * Use denser hatching for darker shadows, lighter hatching for mid-tones
+- Keep crosshatching SUBTLE and professional - not overwhelming
+- The hatching should guide the tattoo artist on shading intensity
+- Also include contour lines for form and muscle definition
+- Every mark should serve the tattoo artist\'s needs'''
 }
 
-FINAL VERIFICATION:
-✓ Would a tattoo artist recognize THIS EXACT PERSON from the stencil?
-✓ Are the proportions IDENTICAL to the reference photo?
-✓ Are ALL unique features (horns, makeup, jewelry, etc.) accurately traced?
-✓ Is the detail level correct for {shading_level.upper()}?
-✓ Is it purely black lines on white - no colors or gray?
-✓ Would this stencil PERFECTLY OVERLAY the reference with no shifting?
-✓ Is the framing EXACTLY the same - no cropping, no added margins?
+FINAL ALIGNMENT CHECK (DO THIS BEFORE OUTPUTTING):
+✓ Is the subject in the EXACT same position as the reference?
+✓ Is the scale EXACTLY the same (not zoomed in or out)?
+✓ Would overlaying this on the reference show PERFECT alignment?
+✓ Are eye positions, nose, chin all at their original coordinates?
+✓ Is the canvas filled edge-to-edge matching the reference framing?
 
-Generate the stencil now. This is for professional use - PERFECT ALIGNMENT is mandatory."""
+Generate the stencil now. ALIGNMENT IS NON-NEGOTIABLE - this is for professional tattoo use."""
 
         # Generate using Gemini
         result_base64, mime_type = await generate_with_gemini(image_data, prompt)
