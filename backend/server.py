@@ -259,6 +259,109 @@ def resize_image_if_needed(base64_string: str, max_dimension: int = 2000, max_fi
         logger.error(f"Error resizing image: {str(e)}")
         return base64_string  # Return original if resize fails
 
+def enhance_photo_for_ai(base64_string: str) -> str:
+    """Automatically enhance photo before AI processing for better stencil results.
+    
+    This preprocessing step helps the AI capture finer details by:
+    1. Boosting contrast to make edges more defined
+    2. Applying sharpening to bring out fine details (hair, jewelry, subtle features)
+    3. Using CLAHE for adaptive local contrast enhancement
+    4. Subtle edge enhancement to make contours more visible
+    
+    Args:
+        base64_string: The original base64 encoded image
+        
+    Returns:
+        Base64 encoded enhanced image ready for AI processing
+    """
+    try:
+        logger.info("[PhotoEnhance] Starting automatic photo enhancement...")
+        
+        # Remove data URL prefix if present
+        prefix = ""
+        if ',' in base64_string:
+            prefix_parts = base64_string.split(',')
+            prefix = prefix_parts[0] + ","
+            base64_data = prefix_parts[1]
+        else:
+            base64_data = base64_string
+        
+        # Decode the image
+        img_data = base64.b64decode(base64_data)
+        img = Image.open(BytesIO(img_data))
+        
+        # Convert to RGB if necessary
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Convert to OpenCV format (BGR)
+        img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        original_shape = img_cv.shape
+        logger.info(f"[PhotoEnhance] Original image: {original_shape[1]}x{original_shape[0]}")
+        
+        # === STEP 1: CONTRAST ENHANCEMENT ===
+        # Convert to LAB color space for better contrast manipulation
+        lab = cv2.cvtColor(img_cv, cv2.COLOR_BGR2LAB)
+        l_channel, a_channel, b_channel = cv2.split(lab)
+        
+        # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization) to L channel
+        # This enhances local contrast without over-amplifying noise
+        clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+        l_enhanced = clahe.apply(l_channel)
+        
+        # Merge back and convert to BGR
+        lab_enhanced = cv2.merge([l_enhanced, a_channel, b_channel])
+        img_contrast = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2BGR)
+        
+        # === STEP 2: SHARPENING (Unsharp Mask) ===
+        # This brings out fine details like hair strands, jewelry, facial features
+        gaussian = cv2.GaussianBlur(img_contrast, (0, 0), 2.0)
+        # Unsharp mask: original + (original - blurred) * amount
+        sharpening_amount = 0.7  # Moderate sharpening
+        img_sharp = cv2.addWeighted(img_contrast, 1 + sharpening_amount, gaussian, -sharpening_amount, 0)
+        
+        # === STEP 3: SUBTLE EDGE ENHANCEMENT ===
+        # Enhance edges slightly to help AI detect contours better
+        # Using a subtle Laplacian edge enhancement
+        gray = cv2.cvtColor(img_sharp, cv2.COLOR_BGR2GRAY)
+        edges = cv2.Laplacian(gray, cv2.CV_64F)
+        edges = np.uint8(np.absolute(edges))
+        
+        # Create a subtle edge overlay (very light - just to boost existing edges)
+        edges_3channel = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
+        edge_boost = 0.08  # Very subtle - we don't want visible halos
+        img_edge_enhanced = cv2.addWeighted(img_sharp, 1.0, edges_3channel, edge_boost, 0)
+        
+        # === STEP 4: FINAL CONTRAST BOOST ===
+        # Slight additional contrast to make darks darker, lights lighter
+        # This helps the AI distinguish features more clearly
+        alpha = 1.15  # Contrast boost (1.0 = no change)
+        beta = -10    # Brightness adjustment (negative = slightly darker midtones)
+        img_final = cv2.convertScaleAbs(img_edge_enhanced, alpha=alpha, beta=beta)
+        
+        # Ensure we don't clip too much - keep details in highlights and shadows
+        img_final = np.clip(img_final, 0, 255).astype(np.uint8)
+        
+        # Convert back to PIL and then to base64
+        img_final_rgb = cv2.cvtColor(img_final, cv2.COLOR_BGR2RGB)
+        result_img = Image.fromarray(img_final_rgb)
+        
+        # Save as high-quality JPEG
+        buffer = BytesIO()
+        result_img.save(buffer, format='JPEG', quality=95, optimize=True)
+        enhanced_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        logger.info(f"[PhotoEnhance] Enhancement complete - contrast boosted, sharpened, edges enhanced")
+        
+        return f"data:image/jpeg;base64,{enhanced_base64}"
+        
+    except Exception as e:
+        logger.error(f"[PhotoEnhance] Error enhancing photo: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # Return original if enhancement fails
+        return base64_string
+
 def process_image_to_stencil(img: np.ndarray, settings: StencilSettings) -> np.ndarray:
     """Process image to create tattoo stencil using advanced edge detection
     
