@@ -60,6 +60,42 @@ logger = logging.getLogger(__name__)
 # In production, this could be Redis or MongoDB for persistence across restarts
 stencil_jobs = {}
 
+# Stencil cache for faster regeneration of same images
+# Key: hash of image + settings, Value: generated stencil results
+stencil_cache = {}
+CACHE_MAX_SIZE = 50  # Maximum number of cached stencils
+
+import hashlib
+
+def get_cache_key(image_base64: str, style: str) -> str:
+    """Generate a cache key from image content and style"""
+    # Use first 1000 chars of base64 + style for faster hashing
+    # This is sufficient to uniquely identify most images
+    image_sample = image_base64[:1000] if len(image_base64) > 1000 else image_base64
+    content = f"{image_sample}_{style}"
+    return hashlib.md5(content.encode()).hexdigest()
+
+def cache_stencil(cache_key: str, stencil_base64: str):
+    """Cache a generated stencil"""
+    global stencil_cache
+    # Evict oldest if cache is full
+    if len(stencil_cache) >= CACHE_MAX_SIZE:
+        # Remove oldest entry (first key)
+        oldest_key = next(iter(stencil_cache))
+        del stencil_cache[oldest_key]
+    stencil_cache[cache_key] = {
+        'stencil': stencil_base64,
+        'timestamp': datetime.utcnow()
+    }
+    logger.info(f"[Cache] Cached stencil, total cached: {len(stencil_cache)}")
+
+def get_cached_stencil(cache_key: str) -> Optional[str]:
+    """Retrieve a cached stencil if available"""
+    if cache_key in stencil_cache:
+        logger.info(f"[Cache] Cache HIT - returning cached stencil")
+        return stencil_cache[cache_key]['stencil']
+    return None
+
 class StencilJob:
     def __init__(self, job_id: str, image_base64: str, settings: dict):
         self.job_id = job_id
