@@ -526,6 +526,42 @@ export default function Index() {
       const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
       setOriginalImage(base64Image);
       setStencilImage(null);
+      // Validate the image quality
+      validateImageQuality(base64Image);
+    }
+  };
+
+  // Validate image quality before stencil generation
+  const validateImageQuality = async (imageBase64: string) => {
+    setIsValidatingImage(true);
+    setImageQualityWarnings([]);
+    setImageQualitySuggestions([]);
+    setShowQualityWarning(false);
+    
+    try {
+      console.log('[ValidateImage] Validating image quality...');
+      const response = await fetch(`${API_URL}/api/validate-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_base64: imageBase64 }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[ValidateImage] Response:', JSON.stringify(data));
+        
+        if (data.warnings && data.warnings.length > 0) {
+          setImageQualityWarnings(data.warnings);
+          setImageQualitySuggestions(data.suggestions || []);
+          setShowQualityWarning(true);
+          console.log('[ValidateImage] Warnings:', data.warnings);
+        }
+      }
+    } catch (error) {
+      console.error('[ValidateImage] Error:', error);
+      // Don't show error - validation is optional
+    } finally {
+      setIsValidatingImage(false);
     }
   };
 
