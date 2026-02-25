@@ -629,26 +629,27 @@ export default function Index() {
     throw lastError || new Error('All retry attempts failed');
   };
 
-  // AI-Powered Stencil Generation - Generate 3 versions using Gemini AI
-  // This produces clean, detailed, professional-quality stencils
+  // AI-Powered Stencil Generation using Async/Polling Architecture
+  // This avoids gateway timeouts by:
+  // 1. Starting generation (returns immediately with job ID)
+  // 2. Polling status endpoint until complete
+  // Each poll is quick, so no timeout issues
   const generateAIStencil = async () => {
     if (!originalImage) {
       Alert.alert('No Image', 'Please select an image first.');
       return;
     }
 
-    // Validate image data before sending - check for proper base64 format
+    // Validate image data before sending
     console.log('[GenerateAI] Original image length:', originalImage.length);
     console.log('[GenerateAI] Image prefix:', originalImage.substring(0, 50));
     
-    // Validate the base64 data is properly formatted
     if (!originalImage.startsWith('data:image/')) {
       console.error('[GenerateAI] Invalid image format - missing data URI prefix');
       Alert.alert('Invalid Image', 'The selected image format is not valid. Please select a different photo.');
       return;
     }
     
-    // Check that the base64 portion isn't too short (indicating corruption)
     const base64Part = originalImage.split(',')[1];
     if (!base64Part || base64Part.length < 1000) {
       console.error('[GenerateAI] Base64 data appears corrupted or too short:', base64Part?.length);
@@ -661,134 +662,116 @@ export default function Index() {
     setGenerationProgress(0);
     setStencilVersions({ light: null, medium: null, heavy: null });
     
-    const versions: { light: string | null; medium: string | null; heavy: string | null } = {
-      light: null,
-      medium: null,
-      heavy: null
-    };
-    
     try {
-      // Generate Light version - Clean lines only, no texture, no black
-      setGenerationProgress(1);
-      console.log('[GenerateAI] Starting Light version, sending base64 length:', base64Part.length);
-      const lightResponse = await fetchWithRetry(`${API_URL}/api/ai-stencil`, {
+      // Step 1: Start async generation - returns immediately with job ID
+      console.log('[GenerateAI] Starting async generation...');
+      const startResponse = await fetch(`${API_URL}/api/ai-stencil-async`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image_base64: originalImage,
-          style: 'tattoo',
           line_color: lineColor,
-          shading_detail: 5,
-          solid_fill: 0,
         }),
-      }, 3, 2000);
-      console.log('[GenerateAI] Light response status:', lightResponse.status);
-      if (lightResponse.ok) {
-        const lightData = await lightResponse.json();
-        versions.light = lightData.stencil_base64;
-        setStencilVersions({ ...versions });
-        console.log('[GenerateAI] Light version received, length:', lightData.stencil_base64?.length);
-      } else {
-        const errorText = await lightResponse.text();
-        console.log('[GenerateAI] Light version error:', errorText);
-      }
-
-      // Small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Generate Medium version - Clean lines + texture/contour, NO black fill
-      setGenerationProgress(2);
-      console.log('[GenerateAI] Starting Medium version...');
-      const mediumResponse = await fetchWithRetry(`${API_URL}/api/ai-stencil`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image_base64: originalImage,
-          style: 'tattoo',
-          line_color: lineColor,
-          shading_detail: 30,
-          solid_fill: 0,
-        }),
-      }, 3, 2000);
-      console.log('[GenerateAI] Medium response status:', mediumResponse.status);
-      if (mediumResponse.ok) {
-        const mediumData = await mediumResponse.json();
-        versions.medium = mediumData.stencil_base64;
-        setStencilVersions({ ...versions });
-        console.log('[GenerateAI] Medium version received, length:', mediumData.stencil_base64?.length);
-      } else {
-        const errorText = await mediumResponse.text();
-        console.log('[GenerateAI] Medium version error:', errorText);
-      }
-
-      // Small delay to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Generate Heavy version - Texture AND solid black (moderate)
-      setGenerationProgress(3);
-      console.log('[GenerateAI] Starting Heavy version...');
-      const heavyResponse = await fetchWithRetry(`${API_URL}/api/ai-stencil`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image_base64: originalImage,
-          style: 'tattoo',
-          line_color: lineColor,
-          shading_detail: 50,
-          solid_fill: 30,
-        }),
-      }, 3, 2000);
-      console.log('[GenerateAI] Heavy response status:', heavyResponse.status);
-      if (heavyResponse.ok) {
-        const heavyData = await heavyResponse.json();
-        versions.heavy = heavyData.stencil_base64;
-        setStencilVersions({ ...versions });
-        console.log('[GenerateAI] Heavy version received, length:', heavyData.stencil_base64?.length);
-      } else {
-        const errorText = await heavyResponse.text();
-        console.log('[GenerateAI] Heavy version error:', errorText);
-      }
-
-      // Set the medium version as default selected
-      setSelectedVersion('medium');
-      if (versions.medium) {
-        setStencilImage(versions.medium);
-      } else if (versions.light) {
-        setStencilImage(versions.light);
-        setSelectedVersion('light');
-      } else if (versions.heavy) {
-        setStencilImage(versions.heavy);
-        setSelectedVersion('heavy');
+      });
+      
+      if (!startResponse.ok) {
+        const errorText = await startResponse.text();
+        console.error('[GenerateAI] Failed to start job:', errorText);
+        throw new Error('Failed to start stencil generation');
       }
       
-      // Show error if no versions generated
-      if (!versions.light && !versions.medium && !versions.heavy) {
-        Alert.alert(
-          'Generation Failed', 
-          'Could not generate stencils. This may be due to:\n\n• No internet connection\n• AI services temporarily unavailable\n\nPlease check your connection and try again.',
-          [{ text: 'OK' }]
-        );
+      const startData = await startResponse.json();
+      const jobId = startData.job_id;
+      console.log('[GenerateAI] Job started:', jobId);
+      
+      // Step 2: Poll for status until complete
+      let attempts = 0;
+      const maxAttempts = 120; // 120 * 2.5s = 5 minutes max
+      const pollInterval = 2500; // Poll every 2.5 seconds
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        
+        const statusResponse = await fetch(`${API_URL}/api/ai-stencil-status/${jobId}`);
+        
+        if (!statusResponse.ok) {
+          console.error('[GenerateAI] Status check failed');
+          attempts++;
+          continue;
+        }
+        
+        const statusData = await statusResponse.json();
+        console.log(`[GenerateAI] Status: ${statusData.status}, Progress: ${statusData.progress}%, Current: ${statusData.current_style}`);
+        
+        // Update progress for UI
+        if (statusData.progress <= 33) {
+          setGenerationProgress(1); // Light
+        } else if (statusData.progress <= 66) {
+          setGenerationProgress(2); // Medium
+        } else {
+          setGenerationProgress(3); // Heavy
+        }
+        
+        if (statusData.status === 'completed') {
+          console.log('[GenerateAI] Generation completed!');
+          
+          const versions = {
+            light: statusData.result?.light || null,
+            medium: statusData.result?.medium || null,
+            heavy: statusData.result?.heavy || null
+          };
+          
+          setStencilVersions(versions);
+          
+          // Set default selection
+          setSelectedVersion('medium');
+          if (versions.medium) {
+            setStencilImage(versions.medium);
+          } else if (versions.light) {
+            setStencilImage(versions.light);
+            setSelectedVersion('light');
+          } else if (versions.heavy) {
+            setStencilImage(versions.heavy);
+            setSelectedVersion('heavy');
+          }
+          
+          setHasGeneratedOnce(true);
+          
+          // Clean up job on server
+          try {
+            await fetch(`${API_URL}/api/ai-stencil-job/${jobId}`, { method: 'DELETE' });
+          } catch (e) {
+            // Non-critical, ignore
+          }
+          
+          break;
+        } else if (statusData.status === 'failed') {
+          console.error('[GenerateAI] Job failed:', statusData.error);
+          throw new Error(statusData.error || 'Generation failed');
+        }
+        
+        attempts++;
       }
       
-      setHasGeneratedOnce(true);
+      if (attempts >= maxAttempts) {
+        throw new Error('Generation timed out. Please try again.');
+      }
+      
     } catch (error: any) {
       console.error('Error generating stencil versions:', error);
       
-      // Show user-friendly error message
       let errorMessage = 'Failed to generate stencils.';
       
       if (error.message?.includes('timed out') || error.message?.includes('timeout')) {
-        errorMessage = 'Request timed out. The AI servers may be busy. Please try again in a moment.';
+        errorMessage = 'Generation timed out. Please try again.';
       } else if (error.message?.includes('network') || error.message?.includes('Network')) {
         errorMessage = 'Network error. Please check your internet connection and try again.';
-      } else if (error.message?.includes('503') || error.message?.includes('unavailable')) {
-        errorMessage = 'AI services are temporarily unavailable. Please try again in a few minutes.';
       } else if (error.message) {
         errorMessage = error.message;
       }
       
       Alert.alert(
-        'Connection Issue',
+        'Generation Issue',
         errorMessage,
         [{ text: 'OK' }]
       );
