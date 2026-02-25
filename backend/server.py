@@ -1314,13 +1314,15 @@ class MakeTransparentResponse(BaseModel):
 
 @api_router.post("/make-transparent", response_model=MakeTransparentResponse)
 async def make_transparent(request: MakeTransparentRequest):
-    """Convert white/near-white pixels to transparent in a stencil image.
+    """Convert stencil to clean black linework on transparent background.
     
     This creates a PNG with:
-    - Black lines preserved as-is
-    - White/light gray background made fully transparent
+    - Pure black lines (RGB 0,0,0) with alpha based on original darkness
+    - Complete transparency for white/light areas (no halo effect)
+    - Perfect for layering over a reference photo in Procreate
     
-    Perfect for layering over a reference photo in Procreate.
+    The key innovation: We use luminance to calculate alpha, then force
+    all visible pixels to pure black. This eliminates gray "halos" around lines.
     """
     try:
         import time
@@ -1358,34 +1360,51 @@ async def make_transparent(request: MakeTransparentRequest):
                 stencil_img = stencil_img.resize(target_size, Image.Resampling.LANCZOS)
                 logger.info(f"[MakeTransparent] Resized to: {target_size}")
         
-        # Convert to RGBA if needed
-        if stencil_img.mode != 'RGBA':
-            stencil_img = stencil_img.convert('RGBA')
+        # Convert to RGB first (in case it's RGBA or palette mode)
+        if stencil_img.mode != 'RGB':
+            # Convert palette or RGBA to RGB
+            stencil_img = stencil_img.convert('RGB')
         
         # Convert to numpy array for pixel manipulation
-        stencil_array = np.array(stencil_img)
+        rgb_array = np.array(stencil_img, dtype=np.float32)
         
-        # Make white/near-white pixels transparent
-        # Threshold of 240 for R, G, B means very light pixels become transparent
-        white_mask = (
-            (stencil_array[:,:,0] > 240) & 
-            (stencil_array[:,:,1] > 240) & 
-            (stencil_array[:,:,2] > 240)
+        # Calculate luminance (perceived brightness) for each pixel
+        # Using standard luminance formula: 0.299*R + 0.587*G + 0.114*B
+        luminance = (
+            0.299 * rgb_array[:,:,0] + 
+            0.587 * rgb_array[:,:,1] + 
+            0.114 * rgb_array[:,:,2]
         )
         
-        # Set alpha to 0 for white pixels (transparent)
-        stencil_array[white_mask, 3] = 0
+        # Invert luminance to get alpha: dark pixels = high alpha, light pixels = low alpha
+        # luminance 0 (black) -> alpha 255 (fully opaque)
+        # luminance 255 (white) -> alpha 0 (fully transparent)
+        alpha = 255.0 - luminance
         
-        # Keep black/dark pixels fully opaque
-        dark_mask = (
-            (stencil_array[:,:,0] < 50) & 
-            (stencil_array[:,:,1] < 50) & 
-            (stencil_array[:,:,2] < 50)
-        )
-        stencil_array[dark_mask, 3] = 255
+        # Apply a threshold to eliminate near-white pixels completely
+        # This removes any faint gray "halos" around lines
+        # Pixels with luminance > 230 become fully transparent
+        alpha[luminance > 230] = 0
+        
+        # Boost the alpha for darker pixels to make lines crisper
+        # This creates sharper line edges
+        alpha = np.clip(alpha * 1.3, 0, 255)
+        
+        # Create output RGBA array
+        # All visible pixels will be PURE BLACK with varying alpha
+        height, width = rgb_array.shape[:2]
+        result_array = np.zeros((height, width, 4), dtype=np.uint8)
+        
+        # Set RGB to pure black (0, 0, 0) for all pixels
+        result_array[:,:,0] = 0  # R = 0
+        result_array[:,:,1] = 0  # G = 0
+        result_array[:,:,2] = 0  # B = 0
+        
+        # Set alpha from our calculated values
+        result_array[:,:,3] = alpha.astype(np.uint8)
         
         # Create final image
-        result_img = Image.fromarray(stencil_array)
+        result_img = Image.fromarray(result_array, mode='RGBA')
         
         # Convert to base64 PNG
         buffer = BytesIO()
