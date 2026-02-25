@@ -471,6 +471,8 @@ export default function Index() {
           setStencilImage(null);
           setStencilVersions({ light: null, medium: null, heavy: null });
           setHasGeneratedOnce(false);
+          // Validate the image quality
+          validateImageQuality(base64Image);
         } else {
           console.error('[SelectPhoto] ImageManipulator did not return base64 data');
           Alert.alert('Error', 'Could not process the selected photo. Please try another.');
