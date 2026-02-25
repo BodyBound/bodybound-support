@@ -167,6 +167,276 @@ def cv2_to_base64(img: np.ndarray) -> str:
     base64_string = base64.b64encode(buffer).decode('utf-8')
     return f"data:image/png;base64,{base64_string}"
 
+# ============================================
+# IMAGE QUALITY VALIDATOR
+# ============================================
+
+class ImageQualityResult(BaseModel):
+    """Result of image quality validation"""
+    is_valid: bool = True
+    warnings: List[str] = []
+    errors: List[str] = []
+    blur_score: float = 0.0
+    brightness_score: float = 0.0
+    resolution: tuple = (0, 0)
+    suggestions: List[str] = []
+
+def validate_image_quality(base64_string: str) -> ImageQualityResult:
+    """Validate image quality before AI processing.
+    
+    Checks for:
+    - Blur (using Laplacian variance)
+    - Brightness/exposure issues
+    - Resolution requirements
+    - Overall quality score
+    
+    Returns warnings and suggestions to help users get better results.
+    """
+    result = ImageQualityResult()
+    
+    try:
+        # Decode image
+        if ',' in base64_string:
+            base64_data = base64_string.split(',')[1]
+        else:
+            base64_data = base64_string
+        
+        img_data = base64.b64decode(base64_data)
+        img = Image.open(BytesIO(img_data))
+        
+        # Convert to OpenCV format
+        img_cv = cv2.cvtColor(np.array(img.convert('RGB')), cv2.COLOR_RGB2BGR)
+        gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+        
+        height, width = img_cv.shape[:2]
+        result.resolution = (width, height)
+        
+        # === CHECK 1: Resolution ===
+        min_dimension = 500
+        if width < min_dimension or height < min_dimension:
+            result.warnings.append(f"Low resolution ({width}x{height})")
+            result.suggestions.append("Use a higher resolution image (at least 500x500) for better stencil detail")
+        
+        max_dimension = 4000
+        if width > max_dimension or height > max_dimension:
+            result.warnings.append(f"Very high resolution ({width}x{height}) - will be resized")
+        
+        # === CHECK 2: Blur Detection ===
+        # Laplacian variance - higher = sharper, lower = blurrier
+        laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+        result.blur_score = laplacian_var
+        
+        blur_threshold_bad = 50  # Very blurry
+        blur_threshold_warn = 100  # Somewhat blurry
+        
+        if laplacian_var < blur_threshold_bad:
+            result.warnings.append("Image appears very blurry")
+            result.suggestions.append("Use a sharper, more focused image for cleaner stencil lines")
+        elif laplacian_var < blur_threshold_warn:
+            result.warnings.append("Image appears slightly blurry")
+            result.suggestions.append("A sharper image would produce better results")
+        
+        # === CHECK 3: Brightness/Exposure ===
+        mean_brightness = np.mean(gray)
+        result.brightness_score = mean_brightness
+        
+        if mean_brightness < 40:
+            result.warnings.append("Image appears too dark")
+            result.suggestions.append("Use a brighter image or one with better lighting")
+        elif mean_brightness > 220:
+            result.warnings.append("Image appears overexposed")
+            result.suggestions.append("Use an image with less harsh lighting")
+        
+        # === CHECK 4: Contrast ===
+        std_dev = np.std(gray)
+        if std_dev < 30:
+            result.warnings.append("Image has low contrast")
+            result.suggestions.append("An image with more contrast will produce clearer stencil lines")
+        
+        # Determine overall validity
+        # We don't block processing, just warn - let users decide
+        result.is_valid = True  # Always allow processing, just with warnings
+        
+        logger.info(f"[QualityCheck] Resolution: {width}x{height}, Blur: {laplacian_var:.1f}, Brightness: {mean_brightness:.1f}, Contrast: {std_dev:.1f}")
+        
+        if result.warnings:
+            logger.info(f"[QualityCheck] Warnings: {result.warnings}")
+        
+    except Exception as e:
+        logger.error(f"[QualityCheck] Error validating image: {str(e)}")
+        result.is_valid = True  # Don't block on validation errors
+        
+    return result
+
+# ============================================
+# EXIF ORIENTATION FIX
+# ============================================
+
+def fix_exif_orientation(base64_string: str) -> str:
+    """Fix image orientation based on EXIF data.
+    
+    Many phone cameras store rotation in EXIF metadata rather than
+    actually rotating the image. This can cause alignment issues.
+    This function reads EXIF and rotates the image correctly.
+    """
+    try:
+        # Decode image
+        if ',' in base64_string:
+            prefix = base64_string.split(',')[0] + ','
+            base64_data = base64_string.split(',')[1]
+        else:
+            prefix = "data:image/jpeg;base64,"
+            base64_data = base64_string
+        
+        img_data = base64.b64decode(base64_data)
+        img = Image.open(BytesIO(img_data))
+        
+        # Check for EXIF orientation
+        try:
+            from PIL.ExifTags import TAGS
+            exif = img._getexif()
+            if exif:
+                for tag_id, value in exif.items():
+                    tag = TAGS.get(tag_id, tag_id)
+                    if tag == 'Orientation':
+                        logger.info(f"[EXIF] Found orientation tag: {value}")
+                        
+                        # Apply rotation based on orientation value
+                        if value == 2:
+                            img = img.transpose(Image.FLIP_LEFT_RIGHT)
+                        elif value == 3:
+                            img = img.rotate(180)
+                        elif value == 4:
+                            img = img.transpose(Image.FLIP_TOP_BOTTOM)
+                        elif value == 5:
+                            img = img.transpose(Image.FLIP_LEFT_RIGHT).rotate(270)
+                        elif value == 6:
+                            img = img.rotate(270, expand=True)
+                        elif value == 7:
+                            img = img.transpose(Image.FLIP_LEFT_RIGHT).rotate(90)
+                        elif value == 8:
+                            img = img.rotate(90, expand=True)
+                        
+                        # Convert back to base64
+                        buffer = BytesIO()
+                        # Determine format
+                        fmt = 'JPEG' if 'jpeg' in prefix.lower() or 'jpg' in prefix.lower() else 'PNG'
+                        img.save(buffer, format=fmt, quality=95)
+                        fixed_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                        
+                        logger.info(f"[EXIF] Applied orientation fix for value {value}")
+                        return f"{prefix}{fixed_base64}"
+                        
+        except (AttributeError, KeyError, TypeError) as e:
+            # No EXIF data or no orientation tag - that's fine
+            pass
+        
+        return base64_string  # Return original if no fix needed
+        
+    except Exception as e:
+        logger.error(f"[EXIF] Error fixing orientation: {str(e)}")
+        return base64_string  # Return original on error
+
+# ============================================
+# STENCIL POST-PROCESSING
+# ============================================
+
+def post_process_stencil(base64_string: str) -> str:
+    """Post-process AI-generated stencil to ensure quality.
+    
+    This function:
+    1. Boosts line weight if lines are too thin
+    2. Cleans up stray pixels/artifacts
+    3. Ensures consistent line darkness
+    4. Removes noise while preserving detail
+    """
+    try:
+        logger.info("[PostProcess] Starting stencil post-processing...")
+        
+        # Decode image
+        if ',' in base64_string:
+            prefix = base64_string.split(',')[0] + ','
+            base64_data = base64_string.split(',')[1]
+        else:
+            prefix = "data:image/png;base64,"
+            base64_data = base64_string
+        
+        img_data = base64.b64decode(base64_data)
+        img = Image.open(BytesIO(img_data))
+        
+        # Convert to OpenCV format
+        img_cv = cv2.cvtColor(np.array(img.convert('RGB')), cv2.COLOR_RGB2BGR)
+        gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+        
+        # === STEP 1: Analyze current line darkness ===
+        # Find dark pixels (lines)
+        dark_mask = gray < 128
+        if np.sum(dark_mask) > 0:
+            avg_line_darkness = np.mean(gray[dark_mask])
+            logger.info(f"[PostProcess] Average line darkness: {avg_line_darkness:.1f}")
+        else:
+            avg_line_darkness = 128
+        
+        # === STEP 2: Boost line weight if too thin/light ===
+        # If lines are too light (gray instead of black), make them darker
+        if avg_line_darkness > 60:  # Lines should be closer to 0 (black)
+            logger.info("[PostProcess] Boosting line darkness...")
+            # Increase contrast to make lines darker
+            # Apply a curve that makes darks darker while keeping whites white
+            lut = np.zeros(256, dtype=np.uint8)
+            for i in range(256):
+                if i < 180:  # Dark to mid tones - make darker
+                    lut[i] = max(0, int(i * 0.7))
+                else:  # Keep whites white
+                    lut[i] = i
+            gray = cv2.LUT(gray, lut)
+        
+        # === STEP 3: Clean up artifacts ===
+        # Remove small isolated pixels (noise)
+        # Use morphological opening to remove small white noise in black areas
+        kernel_small = np.ones((2, 2), np.uint8)
+        
+        # Invert for morphological operations (lines become white)
+        inverted = 255 - gray
+        
+        # Remove small noise
+        cleaned = cv2.morphologyEx(inverted, cv2.MORPH_OPEN, kernel_small)
+        
+        # Slight dilation to ensure lines are bold enough
+        kernel_dilate = np.ones((2, 2), np.uint8)
+        # Only dilate if lines are thin
+        line_pixels = np.sum(cleaned > 128)
+        total_pixels = cleaned.shape[0] * cleaned.shape[1]
+        line_ratio = line_pixels / total_pixels
+        
+        if line_ratio < 0.05:  # Less than 5% of image is lines - they're thin
+            logger.info("[PostProcess] Lines appear thin, applying slight thickening...")
+            cleaned = cv2.dilate(cleaned, kernel_dilate, iterations=1)
+        
+        # Invert back
+        gray = 255 - cleaned
+        
+        # === STEP 4: Ensure pure black and white ===
+        # Threshold to ensure crisp black/white output
+        _, binary = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
+        
+        # Convert back to 3-channel for consistency
+        result = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
+        
+        # Convert back to base64
+        _, buffer = cv2.imencode('.png', result)
+        result_base64 = base64.b64encode(buffer).decode('utf-8')
+        
+        logger.info("[PostProcess] Stencil post-processing complete")
+        
+        return f"data:image/png;base64,{result_base64}"
+        
+    except Exception as e:
+        logger.error(f"[PostProcess] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return base64_string  # Return original on error
+
 def generate_thumbnail(base64_string: str, max_size: int = 150) -> str:
     """Generate a thumbnail from a base64 image for gallery preview
     
