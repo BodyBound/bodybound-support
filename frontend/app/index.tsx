@@ -508,6 +508,8 @@ export default function Index() {
       setStencilImage(null);
       setStencilVersions({ light: null, medium: null, heavy: null });
       setHasGeneratedOnce(false);
+      // Validate the image quality
+      validateImageQuality(base64Image);
     }
   };
 
