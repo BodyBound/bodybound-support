@@ -1709,44 +1709,58 @@ export default function Index() {
     }
   };
 
-  // SIMPLIFIED APPROACH: 
-  // - Single touch (pencil OR finger) = DRAW by default
+  // PROCREATE-STYLE BEHAVIOR:
+  // - Apple Pencil (stylus) = ALWAYS draws
+  // - Single finger = PANS (navigation) by default, unless "Finger Drawing" is ON
   // - Two fingers = Zoom + Pan (navigation)
-  // - Toggle controls whether single finger pans instead of draws
+  // - enableFingerPainting toggle: when ON, finger also draws like Procreate's option
   
-  // Single-finger gesture - DRAWS by default (guarantees pencil works)
-  // minDistance(0) makes it super sensitive - picks up even tiny taps
+  // Single-finger gesture with proper pencil vs finger detection
+  // Uses pointerType to differentiate between stylus (pencil) and touch (finger)
   const drawGesture = Gesture.Pan()
     .minPointers(1)
     .maxPointers(1)
     .minDistance(0) // CRITICAL: Set to 0 for maximum sensitivity - picks up taps and dots!
     .onStart((event) => {
-      console.log('[Gesture] Single touch start at:', event.x, event.y);
+      // Check if this is Apple Pencil using pointerType
+      const isPencil = event.pointerType === PointerType.STYLUS;
       
-      // If finger panning is DISABLED (default), single touch DRAWS
-      // If finger panning is ENABLED, single touch PANS
-      if (!enableFingerPaintingRef.current) {
-        // DEFAULT: Draw with any single touch (this makes pencil work!)
-        // Pass current transform values for coordinate conversion
+      console.log('[Gesture] Touch start - pointerType:', event.pointerType, 'isPencil:', isPencil, 'fingerDrawingEnabled:', enableFingerPaintingRef.current);
+      
+      // DRAW if: 
+      // 1. It's Apple Pencil (STYLUS) - ALWAYS draws
+      // 2. OR "Finger Drawing" toggle is ON (enableFingerPainting)
+      const shouldDraw = isPencil || enableFingerPaintingRef.current;
+      
+      if (shouldDraw) {
+        // Draw mode - start drawing
+        console.log('[Gesture] ✏️ DRAWING with', isPencil ? 'Apple Pencil' : 'Finger');
         runOnJS(startDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value);
       } else {
-        // OPTIONAL: Pan with single finger (enabled by toggle)
+        // Finger touch without finger drawing enabled - PAN mode
+        console.log('[Gesture] 👆 PANNING with finger');
         savedTranslateX.value = translateX.value;
         savedTranslateY.value = translateY.value;
       }
     })
     .onUpdate((event) => {
-      if (!enableFingerPaintingRef.current) {
+      const isPencil = event.pointerType === PointerType.STYLUS;
+      const shouldDraw = isPencil || enableFingerPaintingRef.current;
+      
+      if (shouldDraw) {
         // Drawing - pass current transform values
         runOnJS(continueDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value);
       } else {
-        // Panning
+        // Panning with finger
         translateX.value = savedTranslateX.value + event.translationX;
         translateY.value = savedTranslateY.value + event.translationY;
       }
     })
-    .onEnd(() => {
-      if (!enableFingerPaintingRef.current) {
+    .onEnd((event) => {
+      const isPencil = event.pointerType === PointerType.STYLUS;
+      const shouldDraw = isPencil || enableFingerPaintingRef.current;
+      
+      if (shouldDraw) {
         runOnJS(endDrawing)();
       }
     });
