@@ -2675,6 +2675,33 @@ export default function Index() {
           )}
         </View>
 
+        {/* Image Quality Warning Banner */}
+        {showQualityWarning && imageQualityWarnings.length > 0 && (
+          <View style={styles.qualityWarningBanner}>
+            <View style={styles.qualityWarningHeader}>
+              <Text style={styles.qualityWarningIcon}>⚠️</Text>
+              <Text style={styles.qualityWarningTitle}>Image Quality Notice</Text>
+              <TouchableOpacity 
+                style={styles.qualityWarningClose}
+                onPress={() => setShowQualityWarning(false)}
+              >
+                <Text style={styles.qualityWarningCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {imageQualityWarnings.map((warning, index) => (
+              <Text key={index} style={styles.qualityWarningText}>• {warning}</Text>
+            ))}
+            {imageQualitySuggestions.length > 0 && (
+              <View style={styles.qualitySuggestionsContainer}>
+                <Text style={styles.qualitySuggestionsTitle}>💡 Tips:</Text>
+                {imageQualitySuggestions.map((suggestion, index) => (
+                  <Text key={index} style={styles.qualitySuggestionText}>• {suggestion}</Text>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
+
         {/* Compact Tools Row - Crop + Generate side by side */}
         {originalImage && (
           <View style={styles.compactToolsContainer}>
