@@ -744,57 +744,42 @@ export default function Index() {
     }
   };
 
-  // Regenerate a single style (Light, Medium, or Heavy)
+  // Regenerate a single style (Light, Medium, or Heavy) - uses fast edge detection
   const regenerateSingleStyle = async (style: 'light' | 'medium' | 'heavy') => {
     if (!originalImage || regeneratingStyle) return;
     
     try {
       setRegeneratingStyle(style);
       
-      // Get base64 from original image
-      let imageBase64 = originalImage;
-      if (!imageBase64.startsWith('data:')) {
-        const base64Data = await FileSystem.readAsStringAsync(imageBase64, {
-          encoding: 'base64',
-        });
-        imageBase64 = `data:image/jpeg;base64,${base64Data}`;
-      }
+      console.log(`[RegenerateSingle] Regenerating ${style} version using fast edge detection...`);
       
-      const base64Part = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-      
-      console.log(`[RegenerateSingle] Regenerating ${style} version...`);
-      
-      const response = await fetch(`${API_URL}/api/ai-stencil`, {
+      // Use the fast-stencil endpoint which generates all 3 versions instantly
+      // We'll just use the specific version the user requested
+      const response = await fetch(`${API_URL}/api/fast-stencil`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          image_base64: base64Part,
-          style: 'tattoo',
-          line_color: 'black',
-          shading_detail: 0,
-          solid_fill: 0,
-          regenerate_style: style, // Tell backend to only generate this style
+          image_base64: originalImage,
         }),
       });
       
       if (response.ok) {
         const data = await response.json();
-        console.log(`[RegenerateSingle] ${style} version regenerated successfully`);
+        console.log(`[RegenerateSingle] Generated in ${data.processing_time_ms}ms`);
         
         // Update only this style in stencilVersions
+        const newStencil = data[style];
+        
         setStencilVersions(prev => ({
           ...prev,
-          [style]: data.stencil_base64
+          [style]: newStencil
         }));
-        
-        // If this was the selected version, update the displayed stencil
-        if (selectedVersion === style) {
-          setStencilImage(data.stencil_base64);
-        }
         
         // Auto-select the regenerated style
         setSelectedVersion(style);
-        setStencilImage(data.stencil_base64);
+        setStencilImage(newStencil);
+        
+        console.log(`[RegenerateSingle] ${style} version regenerated successfully`);
       } else {
         const errorText = await response.text();
         console.error(`[RegenerateSingle] ${style} version error:`, errorText);
