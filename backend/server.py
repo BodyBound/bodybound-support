@@ -830,11 +830,11 @@ STEP 3: APPLY DETAIL LEVEL - {shading_level.upper()}
 }
 
 FINAL CHECKS BEFORE OUTPUT:
-✓ Are lines BOLD and THICK enough? (not light or sketchy)
-✓ Is alignment PERFECT with reference? (overlay test would match)
-✓ Is contrast HIGH? (pure black on pure white)
-✓ Does it look like a PROFESSIONAL tattoo stencil?
-✓ Would this transfer cleanly to skin?
+- Are lines BOLD and THICK enough? (not light or sketchy)
+- Is alignment PERFECT with reference? (overlay test would match)
+- Is contrast HIGH? (pure black on pure white)
+- Does it look like a PROFESSIONAL tattoo stencil?
+- Would this transfer cleanly to skin?
 
 Generate the stencil now. BOLD LINES + PERFECT ALIGNMENT are mandatory."""
 
@@ -1063,11 +1063,11 @@ STEP 3: APPLY DETAIL LEVEL - {shading_level.upper()}
 }
 
 FINAL CHECKS BEFORE OUTPUT:
-✓ Are lines BOLD and THICK enough? (not light or sketchy)
-✓ Is alignment PERFECT with reference? (overlay test would match)
-✓ Is contrast HIGH? (pure black on pure white)
-✓ Does it look like a PROFESSIONAL tattoo stencil?
-✓ Would this transfer cleanly to skin?
+- Are lines BOLD and THICK enough? (not light or sketchy)
+- Is alignment PERFECT with reference? (overlay test would match)
+- Is contrast HIGH? (pure black on pure white)
+- Does it look like a PROFESSIONAL tattoo stencil?
+- Would this transfer cleanly to skin?
 
 Generate the stencil now. BOLD LINES + PERFECT ALIGNMENT are mandatory."""
 
