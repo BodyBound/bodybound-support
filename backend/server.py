@@ -927,6 +927,288 @@ Generate the stencil now. This is for professional use - PERFECT ALIGNMENT is ma
             detail=f"Error generating stencil. Please check your internet connection and try again. If the problem persists, AI services may be temporarily unavailable."
         )
 
+# ============================================
+# ASYNC STENCIL GENERATION (Polling Architecture)
+# ============================================
+# This avoids gateway timeouts by:
+# 1. Starting generation in background, returning job ID immediately
+# 2. Frontend polls status endpoint until complete
+# 3. Each poll request is quick (< 1 second), avoiding timeouts
+
+class AsyncStencilRequest(BaseModel):
+    image_base64: str
+    line_color: str = "black"
+
+class AsyncStencilStartResponse(BaseModel):
+    job_id: str
+    status: str
+    message: str
+
+class AsyncStencilStatusResponse(BaseModel):
+    job_id: str
+    status: str  # pending, processing, completed, failed
+    progress: int  # 0-100
+    current_style: Optional[str]  # Which style is being generated
+    result: Optional[dict]  # Contains light, medium, heavy when complete
+    error: Optional[str]
+
+async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_detail: int, solid_fill: int):
+    """Generate a single stencil style for an async job"""
+    try:
+        job.current_style = style
+        logger.info(f"[AsyncJob {job.job_id}] Generating {style} version...")
+        
+        # Get image data
+        image_data = job.image_base64
+        if ',' in image_data:
+            image_data = image_data.split(',')[1]
+        
+        # Determine shading level
+        if shading_detail <= 10:
+            shading_level = "minimal"
+        elif shading_detail <= 35:
+            shading_level = "light"
+        else:
+            shading_level = "moderate"
+        
+        # Create the detailed prompt (same as synchronous version)
+        prompt = f"""PROFESSIONAL TATTOO STENCIL TRACE - PIXEL-PERFECT ALIGNMENT REQUIRED
+
+You are creating a tattoo stencil for professional tattoo artists. 
+
+🚨 ABSOLUTE CRITICAL REQUIREMENT - EXACT POSITIONING:
+The stencil MUST align PERFECTLY with the reference photo when overlaid.
+- Every facial feature must be in the EXACT SAME PIXEL POSITION as the reference
+- NO shifting, NO cropping, NO repositioning of any element
+- The top-left corner of your output must correspond to the top-left corner of the input
+- If you trace a line at coordinates (x,y), it must match the same position in the reference
+
+⚠️ CRITICAL - IMAGE ORIENTATION & DIMENSIONS:
+- If the reference photo is VERTICAL (portrait), output MUST be VERTICAL
+- If the reference photo is HORIZONTAL (landscape), output MUST be HORIZONTAL
+- NEVER rotate or change the orientation of the image
+- Output MUST have the EXACT SAME aspect ratio as the input
+- Do NOT add any margins, padding, or borders
+- Do NOT crop any edges of the image
+
+STEP 1: ANALYZE THE REFERENCE PHOTO
+Look at every detail in the attached image:
+- Face shape, jawline, cheekbones
+- Eye shape, position, and spacing
+- Nose shape and angle
+- Lip shape and expression
+- Hair outline and flow
+- ANY unique features: horns, makeup, tattoos, accessories, piercings, jewelry
+- Pose and angle of the subject
+- IMAGE ORIENTATION (vertical or horizontal)
+- EXACT POSITION of each element within the frame
+
+STEP 2: TRACE WITH PIXEL-PERFECT PRECISION
+Create a line drawing that traces the reference EXACTLY:
+- Same proportions - if the nose is long, draw it long
+- Same positions - if eyes are wide-set, draw them wide-set  
+- Same angle - if face is turned 3/4, draw it at 3/4
+- SAME ORIENTATION - vertical stays vertical, horizontal stays horizontal
+- SAME FRAMING - if there's empty space at top, keep it; if head is cropped, keep it cropped
+- ALL unique elements MUST appear in the stencil exactly as shown
+- Each line must be positioned so it would perfectly overlay the reference photo
+
+STEP 3: OUTPUT SPECIFICATIONS
+- Pure white background (#FFFFFF)
+- Black lines only (#000000)
+- NO color, NO gray, NO fills, NO gradients
+- Clean confident strokes suitable for thermal transfer paper
+- MAINTAIN ORIGINAL IMAGE ORIENTATION AND FRAMING EXACTLY
+- DO NOT reframe, recenter, or recompose the image in any way
+
+STEP 4: APPLY DETAIL LEVEL - {shading_level.upper()}
+
+{
+'''LIGHT VERSION:
+- SIMPLE CLEAN OUTLINES ONLY
+- Trace the outer edge of every shape (face, hair, features, accessories)
+- Clean single-weight lines defining each form
+- NO internal shading lines
+- NO dots or dashes
+- NO texture marks
+- Think: A clean coloring book outline that captures the exact likeness''' if shading_level == "minimal" else
+
+'''MEDIUM VERSION:
+- SIMPLE OUTLINES + DOTTED REFERENCE LINES
+- Start with the same clean outlines as Light version
+- ADD dotted lines (......) or dashed lines (------) to show:
+  * Where shadows fall (under cheekbones, under nose, around eye sockets)
+  * Contour lines showing the 3D form of the face
+  * Guide marks for shading placement
+- These dotted lines help the tattoo artist know where to shade
+- Keep dots/dashes subtle - they are REFERENCE guides, not heavy marks''' if shading_level == "light" else
+
+'''HEAVY VERSION:
+- SIMPLE OUTLINES + CONTOUR LINES + EXTRA DETAIL
+- Start with the same clean outlines as Light version
+- ADD solid contour lines (not just dots) showing form and depth
+- ADD extra detail lines for:
+  * Hair texture and flow direction
+  * Clothing folds or fabric texture
+  * Skin contours and muscle definition
+- More line work than Medium, but still clean and purposeful
+- Every line should serve the tattoo artist's needs'''
+}
+
+FINAL VERIFICATION:
+✓ Would a tattoo artist recognize THIS EXACT PERSON from the stencil?
+✓ Are the proportions IDENTICAL to the reference photo?
+✓ Are ALL unique features (horns, makeup, jewelry, etc.) accurately traced?
+✓ Is the detail level correct for {shading_level.upper()}?
+✓ Is it purely black lines on white - no colors or gray?
+✓ Would this stencil PERFECTLY OVERLAY the reference with no shifting?
+✓ Is the framing EXACTLY the same - no cropping, no added margins?
+
+Generate the stencil now. This is for professional use - PERFECT ALIGNMENT is mandatory."""
+
+        # Generate using Gemini
+        result_base64, mime_type = await generate_with_gemini(image_data, prompt)
+        
+        if result_base64:
+            # Resize to match original dimensions
+            try:
+                original_img_data = base64.b64decode(image_data)
+                original_img = Image.open(BytesIO(original_img_data))
+                original_width, original_height = original_img.size
+                
+                stencil_img_data = base64.b64decode(result_base64)
+                stencil_img = Image.open(BytesIO(stencil_img_data))
+                
+                if stencil_img.size != (original_width, original_height):
+                    stencil_img = stencil_img.resize((original_width, original_height), Image.Resampling.LANCZOS)
+                    buffer = BytesIO()
+                    stencil_img.save(buffer, format='PNG')
+                    result_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                    mime_type = 'image/png'
+            except Exception as resize_err:
+                logger.warning(f"[AsyncJob {job.job_id}] Resize warning: {resize_err}")
+            
+            job.result[style] = f"data:{mime_type};base64,{result_base64}"
+            logger.info(f"[AsyncJob {job.job_id}] {style} version completed")
+            return True
+        else:
+            logger.error(f"[AsyncJob {job.job_id}] {style} version failed - no result")
+            return False
+            
+    except Exception as e:
+        logger.error(f"[AsyncJob {job.job_id}] {style} version error: {str(e)}")
+        return False
+
+async def process_stencil_job(job_id: str):
+    """Background task to process all 3 stencil versions"""
+    job = stencil_jobs.get(job_id)
+    if not job:
+        logger.error(f"[AsyncJob {job_id}] Job not found")
+        return
+    
+    try:
+        job.status = "processing"
+        logger.info(f"[AsyncJob {job_id}] Starting background generation...")
+        
+        # Generate Light version (progress 0-33%)
+        job.progress = 10
+        success = await generate_single_stencil_for_job(job, "light", 5, 0)
+        job.progress = 33
+        
+        # Small delay between generations
+        await asyncio.sleep(0.5)
+        
+        # Generate Medium version (progress 33-66%)
+        job.progress = 40
+        success = await generate_single_stencil_for_job(job, "medium", 30, 0)
+        job.progress = 66
+        
+        # Small delay between generations
+        await asyncio.sleep(0.5)
+        
+        # Generate Heavy version (progress 66-100%)
+        job.progress = 75
+        success = await generate_single_stencil_for_job(job, "heavy", 50, 30)
+        job.progress = 100
+        
+        # Check if at least one version succeeded
+        if job.result["light"] or job.result["medium"] or job.result["heavy"]:
+            job.status = "completed"
+            logger.info(f"[AsyncJob {job_id}] All versions completed successfully")
+        else:
+            job.status = "failed"
+            job.error = "Failed to generate any stencil versions"
+            logger.error(f"[AsyncJob {job_id}] All versions failed")
+        
+        job.completed_at = datetime.utcnow()
+        job.current_style = None
+        
+    except Exception as e:
+        job.status = "failed"
+        job.error = str(e)
+        job.completed_at = datetime.utcnow()
+        logger.error(f"[AsyncJob {job_id}] Job failed with error: {str(e)}")
+
+@api_router.post("/ai-stencil-async", response_model=AsyncStencilStartResponse)
+async def start_async_stencil(request: AsyncStencilRequest):
+    """Start async stencil generation - returns immediately with job ID.
+    
+    Use GET /api/ai-stencil-status/{job_id} to poll for results.
+    This avoids gateway timeouts by not waiting for generation to complete.
+    """
+    try:
+        # Create job
+        job_id = str(uuid.uuid4())
+        job = StencilJob(
+            job_id=job_id,
+            image_base64=request.image_base64,
+            settings={"line_color": request.line_color}
+        )
+        stencil_jobs[job_id] = job
+        
+        logger.info(f"[AsyncJob {job_id}] Job created, starting background processing...")
+        
+        # Start background task (don't await it)
+        asyncio.create_task(process_stencil_job(job_id))
+        
+        return AsyncStencilStartResponse(
+            job_id=job_id,
+            status="pending",
+            message="Stencil generation started. Poll /api/ai-stencil-status/{job_id} for results."
+        )
+        
+    except Exception as e:
+        logger.error(f"Error starting async stencil job: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error starting generation: {str(e)}")
+
+@api_router.get("/ai-stencil-status/{job_id}", response_model=AsyncStencilStatusResponse)
+async def get_stencil_status(job_id: str):
+    """Check status of async stencil generation job.
+    
+    Poll this endpoint every 2-3 seconds until status is 'completed' or 'failed'.
+    """
+    job = stencil_jobs.get(job_id)
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    return AsyncStencilStatusResponse(
+        job_id=job.job_id,
+        status=job.status,
+        progress=job.progress,
+        current_style=job.current_style,
+        result=job.result if job.status == "completed" else None,
+        error=job.error
+    )
+
+@api_router.delete("/ai-stencil-job/{job_id}")
+async def delete_stencil_job(job_id: str):
+    """Delete a completed job to free memory"""
+    if job_id in stencil_jobs:
+        del stencil_jobs[job_id]
+        return {"status": "deleted"}
+    raise HTTPException(status_code=404, detail="Job not found")
+
 @api_router.post("/stencils", response_model=SavedStencil)
 async def save_stencil(request: SaveStencilRequest):
     """Save a stencil to the database with auto-generated thumbnail"""
