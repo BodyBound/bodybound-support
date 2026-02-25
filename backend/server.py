@@ -951,8 +951,21 @@ async def make_transparent(request: MakeTransparentRequest):
         
         # Decode the stencil image
         stencil_data = request.image_base64
+        if not stencil_data or len(stencil_data) < 100:
+            raise ValueError(f"Invalid image data: too short ({len(stencil_data) if stencil_data else 0} chars)")
+        
         if ',' in stencil_data:
             stencil_data = stencil_data.split(',')[1]
+        
+        # Validate base64 data length
+        if len(stencil_data) < 100:
+            raise ValueError(f"Invalid base64 data after prefix removal: too short ({len(stencil_data)} chars)")
+        
+        # Add padding if needed for base64
+        padding_needed = len(stencil_data) % 4
+        if padding_needed:
+            stencil_data += '=' * (4 - padding_needed)
+        
         stencil_bytes = base64.b64decode(stencil_data)
         stencil_img = Image.open(BytesIO(stencil_bytes))
         
