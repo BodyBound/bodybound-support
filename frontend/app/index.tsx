@@ -900,6 +900,105 @@ export default function Index() {
     }
   };
 
+  // Generate a single stencil style (for initial generation - saves user cost)
+  const generateSingleStyle = async (style: 'light' | 'medium' | 'heavy') => {
+    if (!originalImage || isGeneratingAI || regeneratingStyle) return;
+    
+    // If this style already exists, just select it
+    if (stencilVersions[style]) {
+      selectVersion(style);
+      return;
+    }
+    
+    try {
+      setRegeneratingStyle(style);
+      setIsGeneratingAI(true);
+      
+      // Get base64 from original image
+      let imageBase64 = originalImage;
+      if (!imageBase64.startsWith('data:')) {
+        const base64Data = await FileSystem.readAsStringAsync(imageBase64, {
+          encoding: 'base64',
+        });
+        imageBase64 = `data:image/jpeg;base64,${base64Data}`;
+      }
+      
+      console.log(`[GenerateSingle] Generating ${style} version...`);
+      
+      // Use the async endpoint for single style generation
+      const response = await fetch(`${API_URL}/api/ai-stencil-async`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_base64: imageBase64,
+          style: 'tattoo',
+          line_color: 'black',
+          auto_enhance: autoEnhance,
+          single_style: style, // Only generate this style
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[GenerateSingle] Failed to start job:`, errorText);
+        Alert.alert('Generation Failed', 'Could not start stencil generation.');
+        return;
+      }
+      
+      const { job_id: jobId } = await response.json();
+      console.log(`[GenerateSingle] Job started:`, jobId);
+      
+      // Poll for completion
+      let completed = false;
+      while (!completed) {
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        const statusResponse = await fetch(`${API_URL}/api/ai-stencil-status/${jobId}`);
+        if (!statusResponse.ok) {
+          console.error(`[GenerateSingle] Status check failed`);
+          continue;
+        }
+        
+        const statusData = await statusResponse.json();
+        console.log(`[GenerateSingle] Status: ${statusData.status}, Progress: ${statusData.progress}%`);
+        
+        if (statusData.status === 'completed') {
+          completed = true;
+          console.log(`[GenerateSingle] Generation completed!`);
+          
+          // Get the generated style from results
+          const generatedStencil = statusData.results?.[style];
+          if (generatedStencil) {
+            setStencilVersions(prev => ({
+              ...prev,
+              [style]: generatedStencil
+            }));
+            setSelectedVersion(style);
+            setStencilImage(generatedStencil);
+            setHasGeneratedOnce(true);
+          }
+          
+          // Clean up job
+          try {
+            await fetch(`${API_URL}/api/ai-stencil-job/${jobId}`, { method: 'DELETE' });
+          } catch (e) {
+            console.log('Job cleanup failed (non-critical)');
+          }
+        } else if (statusData.status === 'failed') {
+          completed = true;
+          console.error(`[GenerateSingle] Job failed:`, statusData.error);
+          Alert.alert('Generation Failed', statusData.error || 'Could not generate stencil.');
+        }
+      }
+    } catch (error: any) {
+      console.error(`Error generating ${style} version:`, error);
+      Alert.alert('Connection Issue', 'Failed to generate. Please check your internet connection.');
+    } finally {
+      setRegeneratingStyle(null);
+      setIsGeneratingAI(false);
+    }
+  };
+
   // Remove background function
   const removeBackground = async () => {
     if (!originalImage) {
