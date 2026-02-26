@@ -5787,8 +5787,8 @@ const styles = StyleSheet.create({
   procreateBrushSliderWrapper: {
     flex: 1,
     width: 150,
-    transform: [{ rotate: '-90deg' }],
     justifyContent: 'center',
+    alignItems: 'center',
   },
   procreateBrushSlider: {
     width: '100%',
