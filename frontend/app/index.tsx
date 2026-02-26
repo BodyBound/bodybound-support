@@ -1871,20 +1871,25 @@ export default function Index() {
     const centerY = height / 2;
     
     // Apply inverse transform
-    const x = (screenX - centerX - currentTX) / currentScale + centerX;
-    const y = (screenY - centerY - currentTY) / currentScale + centerY;
+    const rawX = (screenX - centerX - currentTX) / currentScale + centerX;
+    const rawY = (screenY - centerY - currentTY) / currentScale + centerY;
+    
+    // Reset StreamLine smoothing for new stroke
+    resetStreamLine();
+    
+    // Apply StreamLine to first point
+    const smoothed = applyStreamLine(rawX, rawY);
     
     // Store current transform for continue drawing
     currentScaleRef.current = currentScale;
     currentTranslateXRef.current = currentTX;
     currentTranslateYRef.current = currentTY;
     
-    console.log('[Drawing] Start - screen:', screenX.toFixed(0), screenY.toFixed(0), '-> canvas:', x.toFixed(0), y.toFixed(0), 'scale:', currentScale.toFixed(2));
-    
-    currentPointsRef.current = [{ x, y }];
+    // INSTANT - no delays, start drawing immediately
+    currentPointsRef.current = [{ x: smoothed.x, y: smoothed.y }];
     isDrawingRef.current = true;
-    setCurrentPoints([{ x, y }]);
-    setCurrentPath(`M${x},${y}`);
+    setCurrentPoints([{ x: smoothed.x, y: smoothed.y }]);
+    setCurrentPath(`M${smoothed.x},${smoothed.y}`);
   };
 
   const continueDrawing = (screenX: number, screenY: number, currentScale: number, currentTX: number, currentTY: number) => {
@@ -1895,14 +1900,23 @@ export default function Index() {
     const centerX = width / 2;
     const centerY = height / 2;
     
-    const x = (screenX - centerX - currentTX) / currentScale + centerX;
-    const y = (screenY - centerY - currentTY) / currentScale + centerY;
+    const rawX = (screenX - centerX - currentTX) / currentScale + centerX;
+    const rawY = (screenY - centerY - currentTY) / currentScale + centerY;
     
-    const newPoints = [...currentPointsRef.current, { x, y }];
-    currentPointsRef.current = newPoints;
-    setCurrentPoints(newPoints);
-    const smoothPath = createSmoothPath(newPoints);
-    setCurrentPath(smoothPath);
+    // Apply StreamLine smoothing for silky smooth lines
+    const smoothed = applyStreamLine(rawX, rawY);
+    
+    // Only add point if it moved enough (reduces redundant points)
+    const lastPoint = currentPointsRef.current[currentPointsRef.current.length - 1];
+    const dist = Math.sqrt(Math.pow(smoothed.x - lastPoint.x, 2) + Math.pow(smoothed.y - lastPoint.y, 2));
+    
+    if (dist > 1) { // Minimum 1px movement
+      const newPoints = [...currentPointsRef.current, { x: smoothed.x, y: smoothed.y }];
+      currentPointsRef.current = newPoints;
+      setCurrentPoints(newPoints);
+      const smoothPath = createSmoothPath(newPoints);
+      setCurrentPath(smoothPath);
+    }
   };
 
   const endDrawing = () => {
