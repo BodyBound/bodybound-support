@@ -2675,12 +2675,6 @@ export default function Index() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerIconButton}
-            onPress={openEditMode}
-          >
-            <Text style={styles.headerIconText}>✏️</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerIconButton}
             onPress={printStencil}
           >
             <Text style={styles.headerIconText}>🖨️</Text>
