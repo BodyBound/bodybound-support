@@ -1825,6 +1825,7 @@ async def start_async_stencil(request: AsyncStencilRequest):
     This avoids gateway timeouts by not waiting for generation to complete.
     
     Set auto_enhance=true (default) to use AI upscaling/enhancement before stencil generation.
+    Set single_style to 'light', 'medium', or 'heavy' to only generate that style.
     """
     try:
         # Create job
@@ -1833,12 +1834,14 @@ async def start_async_stencil(request: AsyncStencilRequest):
             job_id=job_id,
             image_base64=request.image_base64,
             settings={"line_color": request.line_color},
-            auto_enhance=request.auto_enhance
+            auto_enhance=request.auto_enhance,
+            single_style=request.single_style
         )
         stencil_jobs[job_id] = job
         
         enhance_msg = "with AI enhancement" if request.auto_enhance else "without AI enhancement"
-        logger.info(f"[AsyncJob {job_id}] Job created {enhance_msg}, starting background processing...")
+        style_msg = f" (single style: {request.single_style})" if request.single_style else " (all styles)"
+        logger.info(f"[AsyncJob {job_id}] Job created {enhance_msg}{style_msg}, starting background processing...")
         
         # Start background task (don't await it)
         asyncio.create_task(process_stencil_job(job_id))
