@@ -451,45 +451,62 @@ export default function Index() {
   const selectPhotoFromLibrary = async (asset: MediaLibrary.Asset) => {
     try {
       console.log('[SelectPhoto] Starting photo selection for asset:', asset.id);
+      console.log('[SelectPhoto] Asset URI:', asset.uri);
       
       // Get the asset info with local URI
       const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
-      console.log('[SelectPhoto] Asset info received, localUri exists:', !!assetInfo.localUri);
+      console.log('[SelectPhoto] Asset info received, localUri:', assetInfo.localUri);
       
-      if (assetInfo.localUri) {
-        // Use ImageManipulator to ensure consistent image handling across platforms
-        // This handles HEIC conversion, proper encoding, and prevents iOS-specific issues
-        console.log('[SelectPhoto] Processing image with ImageManipulator...');
-        const manipulatedImage = await ImageManipulator.manipulateAsync(
-          assetInfo.localUri,
-          [{ resize: { width: 1500 } }], // Resize for optimal AI processing
-          { 
-            compress: 0.85, 
-            format: ImageManipulator.SaveFormat.JPEG, 
-            base64: true 
-          }
-        );
+      const uriToUse = assetInfo.localUri || asset.uri;
+      console.log('[SelectPhoto] Using URI:', uriToUse);
+      
+      // Use ImageManipulator to ensure consistent image handling across platforms
+      // This handles HEIC conversion, proper encoding, and prevents iOS-specific issues
+      console.log('[SelectPhoto] Processing image with ImageManipulator...');
+      const manipulatedImage = await ImageManipulator.manipulateAsync(
+        uriToUse,
+        [{ resize: { width: 1500 } }], // Resize for optimal AI processing
+        { 
+          compress: 0.85, 
+          format: ImageManipulator.SaveFormat.JPEG, 
+          base64: true 
+        }
+      );
+      
+      if (manipulatedImage.base64) {
+        console.log('[SelectPhoto] Image processed successfully, base64 length:', manipulatedImage.base64.length);
+        const base64Image = `data:image/jpeg;base64,${manipulatedImage.base64}`;
+        setOriginalImage(base64Image);
+        setStencilImage(null);
+        setStencilVersions({ light: null, medium: null, heavy: null });
+        setHasGeneratedOnce(false);
+        // Validate the image quality
+        validateImageQuality(base64Image);
+      } else {
+        console.error('[SelectPhoto] ImageManipulator did not return base64 data');
+        // Fallback: Try using ImagePicker directly
+        console.log('[SelectPhoto] Attempting fallback with ImagePicker...');
+        const pickerResult = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ['images'],
+          allowsEditing: false,
+          quality: 0.8,
+          base64: true,
+        });
         
-        if (manipulatedImage.base64) {
-          console.log('[SelectPhoto] Image processed successfully, base64 length:', manipulatedImage.base64.length);
-          const base64Image = `data:image/jpeg;base64,${manipulatedImage.base64}`;
+        if (!pickerResult.canceled && pickerResult.assets[0].base64) {
+          const base64Image = `data:image/jpeg;base64,${pickerResult.assets[0].base64}`;
           setOriginalImage(base64Image);
           setStencilImage(null);
           setStencilVersions({ light: null, medium: null, heavy: null });
           setHasGeneratedOnce(false);
-          // Validate the image quality
           validateImageQuality(base64Image);
         } else {
-          console.error('[SelectPhoto] ImageManipulator did not return base64 data');
-          Alert.alert('Error', 'Could not process the selected photo. Please try another.');
+          Alert.alert('Error', 'Could not process the selected photo. Please try using the Gallery button instead.');
         }
-      } else {
-        console.error('[SelectPhoto] No localUri available for asset');
-        Alert.alert('Error', 'Could not access the selected photo. Please try another.');
       }
     } catch (error: any) {
       console.error('[SelectPhoto] Error selecting photo:', error);
-      Alert.alert('Error', `Could not load the selected photo: ${error.message || 'Unknown error'}`);
+      Alert.alert('Error', `Could not load the selected photo: ${error.message || 'Unknown error'}. Please try using the Gallery button instead.`);
     }
   };
 
