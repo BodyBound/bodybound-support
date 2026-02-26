@@ -3532,7 +3532,20 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 6,
+  },
+  headerIconButton: {
+    width: 28,
+    height: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(26,26,26,0.8)',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  headerIconText: {
+    fontSize: 14,
   },
   headerLogo: {
     width: 42,
