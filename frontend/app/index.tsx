@@ -3278,7 +3278,7 @@ export default function Index() {
           </GestureDetector>
 
           {/* Left Side - Vertical Brush Size Slider */}
-          <View style={styles.procreateLeftBar} pointerEvents="box-none">
+          <View style={styles.procreateLeftBar}>
             <View style={styles.procreateBrushSliderContainer}>
               <Text style={styles.procreateBrushLabel}>Size</Text>
               <View style={styles.procreateBrushSliderWrapper}>
