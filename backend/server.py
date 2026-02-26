@@ -251,7 +251,7 @@ async def ai_convert_to_line_art(image_base64: str, detail_level: str = "medium"
             return None
         genai.configure(api_key=api_key)
         
-        model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
+        model = genai.GenerativeModel('gemini-2.5-flash-image')
         
         # Extract base64 data
         if ',' in image_base64:
