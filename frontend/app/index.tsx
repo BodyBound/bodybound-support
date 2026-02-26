@@ -3524,20 +3524,20 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   headerIconButton: {
-    width: 28,
-    height: 28,
+    width: 26,
+    height: 26,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(26,26,26,0.8)',
-    borderRadius: 6,
+    borderRadius: 5,
     borderWidth: 1,
     borderColor: '#444',
   },
   headerIconText: {
-    fontSize: 14,
+    fontSize: 12,
   },
   headerLogo: {
     width: 42,
