@@ -2136,7 +2136,11 @@ Generate pure black line art now - include dotted reference lines for contours -
             except Exception as resize_err:
                 logger.warning(f"[AsyncJob {job.job_id}] Alignment warning: {resize_err}")
             
-            job.result[style] = f"data:{mime_type};base64,{result_base64}"
+            # Apply post-processing to ensure clean B&W output
+            stencil_with_prefix = f"data:{mime_type};base64,{result_base64}"
+            processed_stencil = post_process_stencil(stencil_with_prefix)
+            
+            job.result[style] = processed_stencil
             logger.info(f"[AsyncJob {job.job_id}] {style} version completed")
             return True
         else:
