@@ -2786,97 +2786,118 @@ export default function Index() {
 
         {/* Compact Version Selector - Only shows after generation */}
         {originalImage && (stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
-          <View style={styles.compactVersionSection}>
-            <View style={styles.compactVersionRow}>
+          <View style={styles.stencilStyleSection}>
+            {/* Title Row */}
+            <View style={styles.styleHeaderRow}>
+              <Text style={styles.styleHeaderTitle}>LOW FIDELITY</Text>
+              <Text style={styles.styleHeaderTitle}>MID-RANGE</Text>
+              <Text style={styles.styleHeaderTitle}>HIGH DEF</Text>
+            </View>
+            
+            {/* Cards Row */}
+            <View style={styles.styleCardsRow}>
+              {/* LOW FIDELITY Card */}
               <TouchableOpacity
                 style={[
-                  styles.compactVersionButton,
-                  selectedVersion === 'light' && styles.compactVersionSelected,
-                  !stencilVersions.light && styles.compactVersionDisabled
+                  styles.styleCard,
+                  selectedVersion === 'light' && styles.styleCardSelected,
+                  !stencilVersions.light && styles.styleCardDisabled
                 ]}
                 onPress={() => stencilVersions.light && selectVersion('light')}
                 disabled={!stencilVersions.light}
               >
-                <Text style={styles.compactVersionEmoji}>✏️</Text>
-                <Text style={[
-                  styles.compactVersionText,
-                  selectedVersion === 'light' && styles.compactVersionTextSelected
-                ]}>Raw</Text>
-                {stencilVersions.light && (
-                  <TouchableOpacity
-                    style={styles.regenButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      regenerateSingleStyle('light');
-                    }}
-                    disabled={!!regeneratingStyle}
-                  >
-                    <Text style={styles.regenButtonText}>
-                      {regeneratingStyle === 'light' ? '⏳' : '🔄'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                <View style={styles.styleCardInner}>
+                  <Text style={styles.styleSkullIcon}>💀</Text>
+                  {stencilVersions.light && (
+                    <TouchableOpacity
+                      style={styles.styleRegenButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        regenerateSingleStyle('light');
+                      }}
+                      disabled={!!regeneratingStyle}
+                    >
+                      <Text style={styles.styleRegenText}>
+                        {regeneratingStyle === 'light' ? '⏳' : '🔄'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </TouchableOpacity>
               
+              {/* MID-RANGE Card */}
               <TouchableOpacity
                 style={[
-                  styles.compactVersionButton,
-                  selectedVersion === 'medium' && styles.compactVersionSelected,
-                  !stencilVersions.medium && styles.compactVersionDisabled
+                  styles.styleCard,
+                  selectedVersion === 'medium' && styles.styleCardSelected,
+                  !stencilVersions.medium && styles.styleCardDisabled
                 ]}
                 onPress={() => stencilVersions.medium && selectVersion('medium')}
                 disabled={!stencilVersions.medium}
               >
-                <Text style={styles.compactVersionEmoji}>🖊️</Text>
-                <Text style={[
-                  styles.compactVersionText,
-                  selectedVersion === 'medium' && styles.compactVersionTextSelected
-                ]}>Rugged</Text>
-                {stencilVersions.medium && (
-                  <TouchableOpacity
-                    style={styles.regenButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      regenerateSingleStyle('medium');
-                    }}
-                    disabled={!!regeneratingStyle}
-                  >
-                    <Text style={styles.regenButtonText}>
-                      {regeneratingStyle === 'medium' ? '⏳' : '🔄'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                <View style={styles.styleCardInner}>
+                  <Text style={styles.styleSkullIconMid}>💀</Text>
+                  {stencilVersions.medium && (
+                    <TouchableOpacity
+                      style={styles.styleRegenButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        regenerateSingleStyle('medium');
+                      }}
+                      disabled={!!regeneratingStyle}
+                    >
+                      <Text style={styles.styleRegenText}>
+                        {regeneratingStyle === 'medium' ? '⏳' : '🔄'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </TouchableOpacity>
               
+              {/* HIGH DEF Card */}
               <TouchableOpacity
                 style={[
-                  styles.compactVersionButton,
-                  selectedVersion === 'heavy' && styles.compactVersionSelected,
-                  !stencilVersions.heavy && styles.compactVersionDisabled
+                  styles.styleCard,
+                  selectedVersion === 'heavy' && styles.styleCardSelected,
+                  !stencilVersions.heavy && styles.styleCardDisabled
                 ]}
                 onPress={() => stencilVersions.heavy && selectVersion('heavy')}
                 disabled={!stencilVersions.heavy}
               >
-                <Text style={styles.compactVersionEmoji}>🖋️</Text>
-                <Text style={[
-                  styles.compactVersionText,
-                  selectedVersion === 'heavy' && styles.compactVersionTextSelected
-                ]}>Refined</Text>
-                {stencilVersions.heavy && (
-                  <TouchableOpacity
-                    style={styles.regenButton}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      regenerateSingleStyle('heavy');
-                    }}
-                    disabled={!!regeneratingStyle}
-                  >
-                    <Text style={styles.regenButtonText}>
-                      {regeneratingStyle === 'heavy' ? '⏳' : '🔄'}
-                    </Text>
-                  </TouchableOpacity>
-                )}
+                <View style={styles.styleCardInner}>
+                  <Text style={styles.styleSkullIconHigh}>💀</Text>
+                  {stencilVersions.heavy && (
+                    <TouchableOpacity
+                      style={styles.styleRegenButton}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        regenerateSingleStyle('heavy');
+                      }}
+                      disabled={!!regeneratingStyle}
+                    >
+                      <Text style={styles.styleRegenText}>
+                        {regeneratingStyle === 'heavy' ? '⏳' : '🔄'}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               </TouchableOpacity>
+            </View>
+            
+            {/* Description Row */}
+            <View style={styles.styleDescRow}>
+              <View style={styles.styleDescContainer}>
+                <Text style={styles.styleDescTitle}>CLEAN OUTLINES</Text>
+                <Text style={styles.styleDescSubtitle}>THE BONES</Text>
+              </View>
+              <View style={styles.styleDescContainer}>
+                <Text style={styles.styleDescTitle}>FORM & SHAPE</Text>
+                <Text style={styles.styleDescSubtitle}>MUSCLE & MEAT</Text>
+              </View>
+              <View style={styles.styleDescContainer}>
+                <Text style={styles.styleDescTitle}>FULL SHADING</Text>
+                <Text style={styles.styleDescSubtitle}>FULLY SATURATED</Text>
+              </View>
             </View>
           </View>
         )}
