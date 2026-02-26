@@ -1449,7 +1449,7 @@ You are creating a professional tattoo stencil. Your goal is to produce CRYSTAL-
 🎨 DETAIL LEVEL: {shading_level.upper()}
 
 {
-'''RAW STYLE - Clean linework, maximum detail capture:
+'''LOW FIDELITY - CLEAN OUTLINES / THE BONES:
 - FINE, CLEAN LINES tracing every contour and detail
 - Capture ALL elements: subject + background + accessories + textures
 - Hair: Individual strands with fine flowing lines
@@ -1459,8 +1459,8 @@ You are creating a professional tattoo stencil. Your goal is to produce CRYSTAL-
 - NO shading - pure linework only
 - Result should look like a highly detailed technical illustration''' if shading_level == "minimal" else
 
-'''RUGGED STYLE - Fine lines with light shading indication:
-- Same FINE LINE approach as Raw style
+'''MID-RANGE - FORM & SHAPE / MUSCLE & MEAT:
+- Same FINE LINE approach as Low Fidelity style
 - Add subtle contour lines to indicate form/depth:
   * Light parallel lines in shadow areas
   * Fine hatching to show volume
@@ -1470,7 +1470,7 @@ You are creating a professional tattoo stencil. Your goal is to produce CRYSTAL-
 - Jewelry: Complete detail with light dimensional shading
 - The shading helps artist understand form without being heavy''' if shading_level == "light" else
 
-'''REFINED STYLE - Maximum detail with refined shading:
+'''HIGH DEF - FULL SHADING / FULLY SATURATED:
 - FINE LINES capturing every possible detail
 - Comprehensive shading using fine line techniques:
   * Delicate hatching and cross-hatching for shadows
@@ -1688,7 +1688,7 @@ You are creating a professional tattoo stencil. Your goal is to produce CRYSTAL-
 🎨 DETAIL LEVEL: {shading_level.upper()}
 
 {
-'''RAW STYLE - Clean linework, maximum detail capture:
+'''LOW FIDELITY - CLEAN OUTLINES / THE BONES:
 - FINE, CLEAN LINES tracing every contour and detail
 - Capture ALL elements: subject + background + accessories + textures
 - Hair: Individual strands with fine flowing lines
@@ -1698,8 +1698,8 @@ You are creating a professional tattoo stencil. Your goal is to produce CRYSTAL-
 - NO shading - pure linework only
 - Result should look like a highly detailed technical illustration''' if shading_level == "minimal" else
 
-'''RUGGED STYLE - Fine lines with light shading indication:
-- Same FINE LINE approach as Raw style
+'''MID-RANGE - FORM & SHAPE / MUSCLE & MEAT:
+- Same FINE LINE approach as Low Fidelity style
 - Add subtle contour lines to indicate form/depth:
   * Light parallel lines in shadow areas
   * Fine hatching to show volume
@@ -1709,7 +1709,7 @@ You are creating a professional tattoo stencil. Your goal is to produce CRYSTAL-
 - Jewelry: Complete detail with light dimensional shading
 - The shading helps artist understand form without being heavy''' if shading_level == "light" else
 
-'''REFINED STYLE - Maximum detail with refined shading:
+'''HIGH DEF - FULL SHADING / FULLY SATURATED:
 - FINE LINES capturing every possible detail
 - Comprehensive shading using fine line techniques:
   * Delicate hatching and cross-hatching for shadows
