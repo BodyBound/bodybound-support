@@ -2827,60 +2827,14 @@ export default function Index() {
           </View>
         )}
 
-        {/* Auto-Enhance Toggle - Only show when image is loaded and no stencils yet */}
+        {/* Info - Shows before generation */}
         {originalImage && !stencilVersions.light && !stencilVersions.medium && !stencilVersions.heavy && (
           <View style={styles.autoEnhanceContainer}>
-            {/* Method Toggle: AI vs CV */}
-            <TouchableOpacity
-              style={styles.autoEnhanceRow}
-              onPress={() => setStencilMethod(stencilMethod === 'ai' ? 'cv' : 'ai')}
-              activeOpacity={0.7}
-            >
-              <View style={styles.autoEnhanceLeft}>
-                <Text style={styles.autoEnhanceIcon}>{stencilMethod === 'ai' ? '🤖' : '⚙️'}</Text>
-                <View style={styles.autoEnhanceTextContainer}>
-                  <Text style={styles.autoEnhanceLabel}>Stencil Engine</Text>
-                  <Text style={styles.autoEnhanceDescription}>
-                    {stencilMethod === 'ai' ? 'AI Generation (Gemini)' : 'Pro CV (U2-Net + Edge Detection)'}
-                  </Text>
-                </View>
-              </View>
-              <View style={[styles.methodToggle]}>
-                <Text style={[styles.methodToggleText, stencilMethod === 'ai' && styles.methodToggleActive]}>AI</Text>
-                <Text style={[styles.methodToggleText, stencilMethod === 'cv' && styles.methodToggleActive]}>CV</Text>
-              </View>
-            </TouchableOpacity>
-            
-            {/* CV mode info */}
-            {stencilMethod === 'cv' && (
-              <View style={styles.cvInfoRow}>
-                <Text style={styles.cvInfoText}>
-                  🎯 Pro Mode: U2-Net isolation → AI line art → Binary post-processing
-                </Text>
-              </View>
-            )}
-            
-            {/* AI Enhance Toggle - only show when AI method is selected */}
-            {stencilMethod === 'ai' && (
-              <TouchableOpacity
-                style={styles.autoEnhanceRow}
-                onPress={() => setAutoEnhance(!autoEnhance)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.autoEnhanceLeft}>
-                  <Text style={styles.autoEnhanceIcon}>🔍</Text>
-                  <View style={styles.autoEnhanceTextContainer}>
-                    <Text style={styles.autoEnhanceLabel}>AI Photo Enhance</Text>
-                    <Text style={styles.autoEnhanceDescription}>
-                      {autoEnhance ? 'Upscale & sharpen for best results' : 'Using original photo quality'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={[styles.autoEnhanceToggle, autoEnhance && styles.autoEnhanceToggleOn]}>
-                  <View style={[styles.autoEnhanceToggleKnob, autoEnhance && styles.autoEnhanceToggleKnobOn]} />
-                </View>
-              </TouchableOpacity>
-            )}
+            <View style={styles.cvInfoRow}>
+              <Text style={styles.cvInfoText}>
+                🎯 Tap a style below to generate your stencil
+              </Text>
+            </View>
           </View>
         )}
 
