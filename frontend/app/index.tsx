@@ -2760,6 +2760,30 @@ export default function Index() {
           </View>
         )}
 
+        {/* Auto-Enhance Toggle - Only show when image is loaded */}
+        {originalImage && !stencilVersions.light && !stencilVersions.medium && !stencilVersions.heavy && (
+          <View style={styles.autoEnhanceContainer}>
+            <TouchableOpacity
+              style={styles.autoEnhanceRow}
+              onPress={() => setAutoEnhance(!autoEnhance)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.autoEnhanceLeft}>
+                <Text style={styles.autoEnhanceIcon}>🔍</Text>
+                <View style={styles.autoEnhanceTextContainer}>
+                  <Text style={styles.autoEnhanceLabel}>AI Photo Enhance</Text>
+                  <Text style={styles.autoEnhanceDescription}>
+                    {autoEnhance ? 'Upscale & sharpen for best results' : 'Using original photo quality'}
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.autoEnhanceToggle, autoEnhance && styles.autoEnhanceToggleOn]}>
+                <View style={[styles.autoEnhanceToggleKnob, autoEnhance && styles.autoEnhanceToggleKnobOn]} />
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Compact Version Selector - Only shows after generation */}
         {originalImage && (stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
           <View style={styles.compactVersionSection}>
