@@ -713,13 +713,14 @@ export default function Index() {
     
     try {
       // Step 1: Start async generation - returns immediately with job ID
-      console.log('[GenerateAI] Starting async generation...');
+      console.log('[GenerateAI] Starting async generation...', autoEnhance ? 'with AI enhancement' : 'without enhancement');
       const startResponse = await fetch(`${API_URL}/api/ai-stencil-async`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image_base64: originalImage,
           line_color: lineColor,
+          auto_enhance: autoEnhance,
         }),
       });
       
