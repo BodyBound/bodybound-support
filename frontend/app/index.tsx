@@ -2716,12 +2716,14 @@ export default function Index() {
                   <Text style={styles.imageLabel}>
                     {stencilImage ? (showingOriginal ? 'Original' : 'Stencil') : 'Original'}
                   </Text>
-                  {stencilImage && (
-                    <View style={styles.holdHintContainer}>
-                      <Text style={styles.holdHintIcon}>👆</Text>
-                      <Text style={styles.holdHintText}>Tap Compare button</Text>
-                    </View>
-                  )}
+                  {/* Crop Image button - top right of image area */}
+                  <TouchableOpacity
+                    style={styles.cropTopButton}
+                    onPress={openCropModal}
+                  >
+                    <Text style={styles.cropTopIcon}>✂️</Text>
+                    <Text style={styles.cropTopText}>Crop Image</Text>
+                  </TouchableOpacity>
                 </View>
                 
                 {/* Image display */}
@@ -2730,14 +2732,6 @@ export default function Index() {
                   style={styles.previewImage}
                   resizeMode="contain"
                 />
-                
-                {/* Crop button - Small button in left corner above compare */}
-                <TouchableOpacity
-                  style={styles.cropCornerButton}
-                  onPress={openCropModal}
-                >
-                  <Text style={styles.cropCornerIcon}>✂️</Text>
-                </TouchableOpacity>
                 
                 {/* Compare toggle button - shows when stencil exists */}
                 {stencilImage && (
