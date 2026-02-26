@@ -1786,21 +1786,21 @@ async def generate_ai_stencil(request: AIStencilRequest):
             # Map regenerate_style to shading_level
             style_to_shading = {
                 "light": "minimal",
-                "medium": "light", 
-                "heavy": "moderate"
+                "medium": "moderate", 
+                "heavy": "detailed"
             }
-            shading_level = style_to_shading.get(request.regenerate_style.lower(), "light")
+            shading_level = style_to_shading.get(request.regenerate_style.lower(), "moderate")
             logger.info(f"Regenerating single style: {request.regenerate_style} (shading: {shading_level})")
         else:
             # Use shading_detail from request
-            shading_level = "minimal" if request.shading_detail < 20 else "light" if request.shading_detail < 40 else "moderate" if request.shading_detail < 60 else "heavy"
+            shading_level = "minimal" if request.shading_detail < 20 else "moderate" if request.shading_detail < 50 else "detailed"
         
         fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
         
-        # Create the prompt - THERMAFAX COMPATIBLE STENCIL
+        # Create the prompt - PROFESSIONAL TATTOO STENCIL
         prompt = f"""⛔ CRITICAL: BLACK AND WHITE LINE ART ONLY ⛔
 
-Convert this photo into a TATTOO STENCIL.
+Convert this photo into a PROFESSIONAL TATTOO STENCIL.
 
 🚫 ABSOLUTELY NO:
 - NO COLOR whatsoever - not pink, not red, not any color
@@ -1808,21 +1808,24 @@ Convert this photo into a TATTOO STENCIL.
 - NO pixel-based shading or gradients
 - NO soft tones or mid-tones
 - NO pencil sketch look with gray values
+- NO thin wispy lines - lines must be BOLD and VISIBLE
 
 ✅ ONLY THIS:
 - PURE BLACK lines (#000000)
 - PURE WHITE background (#FFFFFF)
-- Nothing else - literally only black and white
+- BOLD, CONFIDENT strokes - think professional tattoo flash art
+- Lines should be 2-4 pixels thick minimum
 
-Think of it like a rubber stamp or a coloring book outline:
-- Just crisp BLACK LINES on WHITE paper
-- If you were to print this, only black ink touches the paper
+🖋️ LINE QUALITY:
+- Draw like a professional tattoo artist
+- Lines should be BOLD and CONFIDENT, not sketchy
+- Every line should be clearly visible when printed
+- Use varying line weights: thicker for outlines, medium for details
 
 📐 LINE STYLES TO USE:
-- SOLID LINES: For main outlines and strong edges
-- DASHED/DOTTED LINES: For contour references, subtle transitions, and contrast guides
-- Use dotted lines to indicate where shadows fall or where form changes direction
-- Dotted lines help the tattoo artist understand depth and placement
+- SOLID BOLD LINES: For main outlines and strong edges
+- DASHED/DOTTED LINES: For contour references and shadow placement guides
+- Use dotted lines to indicate depth and form transitions
 
 🖼️ OUTPUT REQUIREMENTS:
 - Same dimensions as input - do not crop or zoom
@@ -1832,14 +1835,14 @@ Think of it like a rubber stamp or a coloring book outline:
 🎨 DETAIL LEVEL: {shading_level.upper()}
 
 {
-'''MINIMAL LINES: Simple outlines only. Solid lines for main edges. Light dotted lines for major contour references.''' if shading_level == "minimal" else
-'''MODERATE LINES: Outlines plus hatching. Use dotted/dashed lines for contour guides and shadow placement references. Solid lines for main features.''' if shading_level == "light" else
-'''MAXIMUM LINES: Dense linework with heavy hatching. Include dotted contour reference lines throughout to show form and depth. Mix solid and dotted lines strategically.'''
+'''LOW FIDELITY: Clean, bold outlines only. Strong solid lines for main edges. Minimal internal detail - just the essential shapes.''' if shading_level == "minimal" else
+'''MID-RANGE: Bold outlines plus interior detail lines. Include contour guides with dotted lines. Good balance of detail and clarity.''' if shading_level == "moderate" else
+'''HIGH DEFINITION: Maximum detail with bold linework. Dense hatching for shading areas. Include dotted contour reference lines throughout. Rich, detailed stencil.'''
 }
 
-Remember: The output goes to a thermal stencil machine. It can ONLY print pure black. Any gray or color will fail.
+Remember: This goes to a thermal stencil machine. It can ONLY print pure black. Lines must be BOLD enough to transfer cleanly.
 
-Generate pure black line art now - include dotted reference lines for contours - NO COLOR, NO GRAY."""
+Generate BOLD black line art now - professional tattoo quality - NO COLOR, NO GRAY."""
 
         
         image_base64 = None
