@@ -1291,41 +1291,45 @@ STEP 2: DRAW WITH BOLD, CONFIDENT LINES
 STEP 3: APPLY DETAIL LEVEL - {shading_level.upper()}
 
 {
-'''LIGHT VERSION - BOLD OUTLINES ONLY:
-- THICK bold outlines for face shape, jawline, profile
-- THICK bold outlines for hair silhouette and major strands
-- THICK bold outlines for all accessories (feathers, jewelry, headwear)
-- Clean defined eyes with bold eyeliner-style outlines
-- Bold eyebrow shapes
-- NO internal shading lines
-- NO dots or dashes inside the face
-- Just clean, bold outlines that define every shape
-- Think: Bold coloring book style with STRONG line weight''' if shading_level == "minimal" else
+'''LIGHT VERSION - CLEAN OUTLINES ONLY (NO SOLID BLACK FILLS):
+- CLEAN, MEDIUM-WEIGHT outlines ONLY - NOT thick/bold filled areas
+- Outline the face shape, jawline, profile with single stroke lines
+- Outline hair silhouette with single stroke lines (NO filled black areas)
+- Outline all accessories (feathers, jewelry, headwear) with single strokes
+- Clean defined eyes with outline strokes only
+- Simple eyebrow outlines
+- ⚠️ ABSOLUTELY NO SOLID BLACK FILLS anywhere
+- ⚠️ NO internal shading lines, NO dots, NO dashes
+- ⚠️ NO hatching or crosshatching whatsoever
+- Just CLEAN SINGLE-STROKE OUTLINES that define shapes
+- Think: Simple line drawing, NOT a coloring book with thick borders
+- Every dark area should just be an outline, NOT a filled shape''' if shading_level == "minimal" else
 
 '''MEDIUM VERSION - BOLD OUTLINES + DASHED SHADING GUIDES:
-- Same THICK bold outlines as Light version for all shapes
+- THICK bold outlines for all primary shapes (face, jawline, hair outline)
 - ADD DASHED LINES (- - - -) to indicate shadow placement:
   * Dashed contour under cheekbones following the bone structure
   * Dashed line under the nose indicating shadow
   * Dashed lines around eye sockets showing depth
-  * Dashed lines on lips showing volume (horizontal dashes on lower lip)
+  * Dashed lines on lips showing volume
 - ADD DOTTED LINES (....) for subtle form indicators
 - Hair should have internal line detail showing flow direction
 - Feathers should have internal vein lines
 - The dashed lines guide where the tattoo artist should shade
+- ⚠️ NO solid black filled areas - keep all shading as dashed/dotted guides
 - This is the IDEAL balance of outline and shading reference''' if shading_level == "light" else
 
-'''HEAVY VERSION - BOLD OUTLINES + DASHED LINES + CROSSHATCHING:
-- Same THICK bold outlines as Light version
-- Same DASHED shading guides as Medium version
-- ADD CROSSHATCHING in the darkest shadow areas:
-  * Fine diagonal parallel lines (///) under cheekbones
-  * Crosshatch pattern in deep shadows (under nose, eye sockets)
-  * Denser hatching = darker shadow, lighter hatching = softer shadow
-- Add more texture detail in hair with parallel flow lines
-- Add more detail in feathers with fine barb lines
-- Keep crosshatching CONTROLLED and PROFESSIONAL
-- The extra detail helps artist see exact shading intensity needed'''
+'''HEAVY VERSION - MEDIUM STYLE + CROSSHATCH SHADING MARKS:
+- SAME as MEDIUM version: Bold outlines + dashed shading guides
+- ADD CONTROLLED CROSSHATCHING marks to show shading intensity:
+  * Light crosshatch (X patterns) in medium shadow areas
+  * Denser crosshatch patterns in darker shadow areas
+  * Use crosshatch to indicate WHERE and HOW DARK to shade
+- ⚠️ IMPORTANT: Crosshatching should be MARKS/GUIDES, NOT solid black fills
+- ⚠️ NO solid black filled areas - all shading via line patterns
+- Keep crosshatching SPARSE and CONTROLLED - NOT dense black masses
+- The crosshatch tells the artist "shade here with this intensity"
+- Should look like MEDIUM version with additional hatching marks added'''
 }
 
 FINAL CHECKS BEFORE OUTPUT:
@@ -1534,41 +1538,45 @@ STEP 2: DRAW WITH BOLD, CONFIDENT LINES
 STEP 3: APPLY DETAIL LEVEL - {shading_level.upper()}
 
 {
-'''LIGHT VERSION - BOLD OUTLINES ONLY:
-- THICK bold outlines for face shape, jawline, profile
-- THICK bold outlines for hair silhouette and major strands
-- THICK bold outlines for all accessories (feathers, jewelry, headwear)
-- Clean defined eyes with bold eyeliner-style outlines
-- Bold eyebrow shapes
-- NO internal shading lines
-- NO dots or dashes inside the face
-- Just clean, bold outlines that define every shape
-- Think: Bold coloring book style with STRONG line weight''' if shading_level == "minimal" else
+'''LIGHT VERSION - CLEAN OUTLINES ONLY (NO SOLID BLACK FILLS):
+- CLEAN, MEDIUM-WEIGHT outlines ONLY - NOT thick/bold filled areas
+- Outline the face shape, jawline, profile with single stroke lines
+- Outline hair silhouette with single stroke lines (NO filled black areas)
+- Outline all accessories (feathers, jewelry, headwear) with single strokes
+- Clean defined eyes with outline strokes only
+- Simple eyebrow outlines
+- ⚠️ ABSOLUTELY NO SOLID BLACK FILLS anywhere
+- ⚠️ NO internal shading lines, NO dots, NO dashes
+- ⚠️ NO hatching or crosshatching whatsoever
+- Just CLEAN SINGLE-STROKE OUTLINES that define shapes
+- Think: Simple line drawing, NOT a coloring book with thick borders
+- Every dark area should just be an outline, NOT a filled shape''' if shading_level == "minimal" else
 
 '''MEDIUM VERSION - BOLD OUTLINES + DASHED SHADING GUIDES:
-- Same THICK bold outlines as Light version for all shapes
+- THICK bold outlines for all primary shapes (face, jawline, hair outline)
 - ADD DASHED LINES (- - - -) to indicate shadow placement:
   * Dashed contour under cheekbones following the bone structure
   * Dashed line under the nose indicating shadow
   * Dashed lines around eye sockets showing depth
-  * Dashed lines on lips showing volume (horizontal dashes on lower lip)
+  * Dashed lines on lips showing volume
 - ADD DOTTED LINES (....) for subtle form indicators
 - Hair should have internal line detail showing flow direction
 - Feathers should have internal vein lines
 - The dashed lines guide where the tattoo artist should shade
+- ⚠️ NO solid black filled areas - keep all shading as dashed/dotted guides
 - This is the IDEAL balance of outline and shading reference''' if shading_level == "light" else
 
-'''HEAVY VERSION - BOLD OUTLINES + DASHED LINES + CROSSHATCHING:
-- Same THICK bold outlines as Light version
-- Same DASHED shading guides as Medium version
-- ADD CROSSHATCHING in the darkest shadow areas:
-  * Fine diagonal parallel lines (///) under cheekbones
-  * Crosshatch pattern in deep shadows (under nose, eye sockets)
-  * Denser hatching = darker shadow, lighter hatching = softer shadow
-- Add more texture detail in hair with parallel flow lines
-- Add more detail in feathers with fine barb lines
-- Keep crosshatching CONTROLLED and PROFESSIONAL
-- The extra detail helps artist see exact shading intensity needed'''
+'''HEAVY VERSION - MEDIUM STYLE + CROSSHATCH SHADING MARKS:
+- SAME as MEDIUM version: Bold outlines + dashed shading guides
+- ADD CONTROLLED CROSSHATCHING marks to show shading intensity:
+  * Light crosshatch (X patterns) in medium shadow areas
+  * Denser crosshatch patterns in darker shadow areas
+  * Use crosshatch to indicate WHERE and HOW DARK to shade
+- ⚠️ IMPORTANT: Crosshatching should be MARKS/GUIDES, NOT solid black fills
+- ⚠️ NO solid black filled areas - all shading via line patterns
+- Keep crosshatching SPARSE and CONTROLLED - NOT dense black masses
+- The crosshatch tells the artist "shade here with this intensity"
+- Should look like MEDIUM version with additional hatching marks added'''
 }
 
 FINAL CHECKS BEFORE OUTPUT:
