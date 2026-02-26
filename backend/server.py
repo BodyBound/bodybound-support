@@ -646,8 +646,7 @@ def post_process_stencil(base64_string: str) -> str:
     This function:
     1. Removes ANY color - converts to pure grayscale
     2. Forces TRUE BINARY output - only black and white pixels
-    3. Cleans up stray pixels/artifacts
-    4. Ensures consistent line darkness
+    3. Preserves line detail while removing artifacts
     """
     try:
         logger.info("[PostProcess] Starting stencil post-processing...")
@@ -670,25 +669,20 @@ def post_process_stencil(base64_string: str) -> str:
         gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
         logger.info("[PostProcess] Converted to grayscale (removed any color)")
         
-        # === STEP 2: Force true binary with aggressive threshold ===
-        # Use a high threshold to eliminate all gray pixels
-        # Anything darker than 180 becomes black, lighter becomes white
-        _, binary = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY)
-        logger.info("[PostProcess] Applied binary threshold (no gray pixels)")
+        # === STEP 2: Apply adaptive threshold for better line preservation ===
+        # This preserves more detail than a fixed threshold
+        # Use Otsu's method to find optimal threshold automatically
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        logger.info("[PostProcess] Applied Otsu's adaptive threshold")
         
-        # === STEP 3: Clean up small noise artifacts ===
-        kernel_small = np.ones((2, 2), np.uint8)
-        # Invert for morphological operations (lines become white)
-        inverted = 255 - binary
-        # Remove small isolated pixels
-        cleaned = cv2.morphologyEx(inverted, cv2.MORPH_OPEN, kernel_small)
-        # Invert back
-        binary = 255 - cleaned
-        
-        # === STEP 4: Ensure lines are solid black ===
-        # Any remaining dark pixels should be pure black
-        binary[binary < 200] = 0
-        binary[binary >= 200] = 255
+        # === STEP 3: Ensure lines are solid black, background is white ===
+        # Check if image is inverted (more black than white = inverted)
+        white_pixels = np.sum(binary == 255)
+        black_pixels = np.sum(binary == 0)
+        if black_pixels > white_pixels:
+            # Invert - we want black lines on white background
+            binary = 255 - binary
+            logger.info("[PostProcess] Inverted to ensure white background")
         
         # Convert back to 3-channel for consistency
         result = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
