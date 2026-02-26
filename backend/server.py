@@ -2021,83 +2021,42 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
             shading_level = "moderate"
         
         # Create the detailed prompt - THERMAFAX COMPATIBLE STENCIL
-        prompt = f"""PROFESSIONAL TATTOO STENCIL - THERMAFAX MACHINE COMPATIBLE
+        prompt = f"""⛔ CRITICAL: BLACK AND WHITE LINE ART ONLY ⛔
 
-You are creating a tattoo stencil that MUST work with a Thermafax thermal transfer machine.
+Convert this photo into a TATTOO STENCIL.
 
-🚨 CRITICAL THERMAFAX REQUIREMENTS:
-- ONLY pure BLACK lines on pure WHITE background
-- ZERO gradients, ZERO soft shading, ZERO gray tones
-- Every mark must be a DISTINCT BLACK LINE
-- NO airbrushed effects, NO blending, NO tonal variations
-- If it's not a clean black line, DON'T include it
+🚫 ABSOLUTELY NO:
+- NO COLOR whatsoever - not pink, not red, not any color
+- NO gray pixels or gray shading
+- NO pixel-based shading or gradients
+- NO soft tones or mid-tones
+- NO pencil sketch look with gray values
 
-⚠️ WHAT WILL FAIL ON THERMAFAX (DO NOT DO):
-- ❌ Soft shading or gradients (will blur/smear)
-- ❌ Gray tones or semi-transparent areas (won't transfer)
-- ❌ Blended edges or feathered lines (will blob together)
-- ❌ Stippling that's too dense (becomes solid blob)
-- ❌ Any "drawing-like" or "artistic" shading
+✅ ONLY THIS:
+- PURE BLACK lines (#000000)
+- PURE WHITE background (#FFFFFF)
+- Nothing else - literally only black and white
 
-✅ WHAT WORKS ON THERMAFAX (DO THIS):
-- ✅ Clean, crisp black lines
-- ✅ Hatching (parallel lines) for shadow indication
-- ✅ Cross-hatching (crossed lines) for darker areas
-- ✅ Clear spacing between all lines
-- ✅ Pure white space between line work
+Think of it like a rubber stamp or a coloring book outline:
+- Just crisp BLACK LINES on WHITE paper
+- If you were to print this, only black ink touches the paper
 
-🖼️ ALIGNMENT (CRITICAL):
-- Output MUST be EXACT SAME dimensions as input
-- Subject position MUST match EXACTLY
-- DO NOT crop, zoom, or shift the composition
+🖼️ OUTPUT REQUIREMENTS:
+- Same dimensions as input - do not crop or zoom
+- Same composition - subject in same position
+- Monochrome only - zero color information
 
 🎨 DETAIL LEVEL: {shading_level.upper()}
 
 {
-'''LOW FIDELITY - CLEAN OUTLINES / THE BONES:
-- PURE LINE ART - NO shading, NO gradients, NO gray tones
-- Only CLEAN BLACK LINES on WHITE background
-- Single-weight outline strokes tracing every contour
-- Hair: Simple outline of the overall shape, major strand groupings
-- Face: Clean contour lines only - no internal detail shading
-- Background elements: Simple outlines only
-- Think: Basic line tracing that will transfer PERFECTLY on Thermafax
-- MUST BE: Pure black lines, pure white space - NOTHING in between''' if shading_level == "minimal" else
-
-'''MID-RANGE - FORM & SHAPE / MUSCLE & MEAT:
-- CLEAN BLACK LINES - NO soft shading, NO gradients, NO gray
-- Add MORE LINES to show form (not shading darkness)
-- Use HATCHING (parallel lines) to indicate shadow areas:
-  * Lines should be SEPARATE and DISTINCT - not blended
-  * Spacing between hatch lines indicates shadow depth
-- Hair: More individual strand lines showing flow direction
-- Face: Contour lines + sparse hatching for depth
-- ALL shading must be LINES, not tonal gradients
-- Thermafax-ready: Every mark is a clean black line''' if shading_level == "light" else
-
-'''HIGH DEF - FULL SHADING / FULLY SATURATED:
-- MAXIMUM LINE DENSITY - still NO soft shading or gradients
-- Heavy use of HATCHING and CROSS-HATCHING (line patterns only):
-  * Single direction hatching (///) for lighter shadows
-  * Cross-hatching (XXX) for darker areas
-  * Denser line spacing = darker area, NOT gray fill
-- Hair: Many individual strand lines with full flow detail
-- Face: Rich linework showing all contours and forms
-- Background: Complete detail with line-based texture
-- CRITICAL: Even "full shading" means MORE LINES, not gray tones
-- Must transfer cleanly on Thermafax - all marks are distinct lines
-- Think: Detailed engraving style - dense linework, zero gradients'''
+'''MINIMAL LINES: Simple outlines only. Just trace the main edges with single black lines. No internal shading lines.''' if shading_level == "minimal" else
+'''MODERATE LINES: Outlines plus some hatching (parallel black lines) to suggest shadows. Each line separate and distinct.''' if shading_level == "light" else
+'''MAXIMUM LINES: Dense linework with heavy hatching/cross-hatching. Lots of lines but each one is pure black, not gray.'''
 }
 
-📋 FINAL CHECKLIST:
-□ Are ALL details captured? (hair, jewelry, background, textures)
-□ Are lines FINE and DELICATE (not thick/bold)?
-□ Is the composition IDENTICAL to reference? (no cropping/shifting)
-□ Is contrast HIGH? (pure black on pure white)
-□ Would this capture the FULL richness of the reference image?
-□ Does it look like professional Stencil AI output?
+Remember: The output goes to a thermal stencil machine. It can ONLY print pure black. Any gray or color will fail.
 
-Generate the stencil now with FINE LINES and COMPLETE DETAIL CAPTURE."""
+Generate pure black line art now - NO COLOR, NO GRAY."""
 
         # Generate using Gemini
         result_base64, mime_type = await generate_with_gemini(image_data, prompt)
