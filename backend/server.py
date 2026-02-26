@@ -1690,22 +1690,17 @@ async def adjust_line_weight(request: LineWeightRequest):
 
 @api_router.post("/cv-stencil", response_model=CVStencilResponse)
 async def generate_cv_stencil_endpoint(request: CVStencilRequest):
-    """Generate a professional stencil using computer vision pipeline.
+    """Generate a professional stencil using hybrid pipeline.
     
     Pipeline:
-    1. U2-Net background removal (isolate subject, remove noise)
-    2. Canny edge detection (find contours)
-    3. Adaptive thresholding (capture detail with local contrast)
-    4. Morphological line weight control (dilation/erosion)
-    5. Optional AI cleanup pass (Gemini as enhancer, not generator)
+    1. U2-Net isolates subject from background
+    2. AI converts isolated subject to clean line art (NOT noisy edge detection)
+    3. Force true binary output (no gray pixels)
+    4. Apply subject mask to remove background artifacts
+    5. Apply line weight adjustment
     
-    This produces TRUE BINARY output - no gray pixels, Thermafax-ready.
-    
-    Parameters:
-    - detail_level: "light" (minimal), "medium" (balanced), "heavy" (maximum)
-    - line_weight: -5 to +5 (-5 = thinnest, 0 = normal, +5 = thickest)
-    - remove_background: Use U2-Net to isolate subject (recommended)
-    - ai_cleanup: Use Gemini AI to clean up the algorithmic output
+    This uses AI for artistic interpretation while ensuring clean,
+    Thermafax-compatible output.
     """
     import time
     start_time = time.time()
@@ -1716,31 +1711,24 @@ async def generate_cv_stencil_endpoint(request: CVStencilRequest):
         if img is None:
             raise HTTPException(status_code=400, detail="Invalid image data")
         
-        logger.info(f"[CV-Pro] Processing {img.shape} - detail={request.detail_level}, weight={request.line_weight}, bg_remove={request.remove_background}")
+        logger.info(f"[CV-Pro] Processing {img.shape} - detail={request.detail_level}, weight={request.line_weight}")
         
-        # Generate stencil using professional pipeline
-        stencil = generate_professional_stencil(
+        # Generate stencil using hybrid pipeline (U2-Net + AI + CV post-processing)
+        stencil = await generate_professional_stencil(
             img, 
             detail_level=request.detail_level,
-            line_weight=request.line_weight,
-            remove_background=request.remove_background,
-            use_ai_cleanup=False  # We'll do this separately if requested
+            line_weight=request.line_weight
         )
         
         # Convert to base64
         stencil_base64 = cv2_to_base64(stencil)
-        
-        # Optional AI cleanup pass
-        if request.ai_cleanup:
-            logger.info("[CV-Pro] Running AI cleanup pass...")
-            stencil_base64 = await enhance_stencil_with_ai(stencil_base64, request.detail_level)
         
         processing_time = (time.time() - start_time) * 1000
         logger.info(f"[CV-Pro] Complete in {processing_time:.1f}ms")
         
         return CVStencilResponse(
             stencil_base64=stencil_base64,
-            method="professional" + ("+ai" if request.ai_cleanup else ""),
+            method="hybrid-pro",
             processing_time_ms=processing_time
         )
         
