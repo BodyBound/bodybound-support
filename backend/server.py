@@ -1450,41 +1450,38 @@ You are creating a professional tattoo stencil. Your goal is to produce CRYSTAL-
 
 {
 '''LOW FIDELITY - CLEAN OUTLINES / THE BONES:
-- FINE, CLEAN LINES tracing every contour and detail
-- Capture ALL elements: subject + background + accessories + textures
-- Hair: Individual strands with fine flowing lines
-- Jewelry: Every link, bead, and detail preserved
-- Background: Include smoke, flames, patterns, atmospheric elements
-- Facial features: Subtle, precise lines - not bold cartoon outlines
-- NO shading - pure linework only
-- Result should look like a highly detailed technical illustration''' if shading_level == "minimal" else
+- PURE LINE ART - NO shading, NO gradients, NO gray tones
+- Only CLEAN BLACK LINES on WHITE background
+- Single-weight outline strokes tracing every contour
+- Hair: Simple outline of the overall shape, major strand groupings
+- Face: Clean contour lines only - no internal detail shading
+- Background elements: Simple outlines only
+- Think: Basic line tracing that will transfer PERFECTLY on Thermafax
+- MUST BE: Pure black lines, pure white space - NOTHING in between''' if shading_level == "minimal" else
 
 '''MID-RANGE - FORM & SHAPE / MUSCLE & MEAT:
-- Same FINE LINE approach as Low Fidelity style
-- Add subtle contour lines to indicate form/depth:
-  * Light parallel lines in shadow areas
-  * Fine hatching to show volume
-- Keep lines FINE and DELICATE - not bold
-- Capture ALL details including background elements
-- Hair: Fine strands with subtle directional flow lines
-- Jewelry: Complete detail with light dimensional shading
-- The shading helps artist understand form without being heavy''' if shading_level == "light" else
+- CLEAN BLACK LINES - NO soft shading, NO gradients, NO gray
+- Add MORE LINES to show form (not shading darkness)
+- Use HATCHING (parallel lines) to indicate shadow areas:
+  * Lines should be SEPARATE and DISTINCT - not blended
+  * Spacing between hatch lines indicates shadow depth
+- Hair: More individual strand lines showing flow direction
+- Face: Contour lines + sparse hatching for depth
+- ALL shading must be LINES, not tonal gradients
+- Thermafax-ready: Every mark is a clean black line''' if shading_level == "light" else
 
 '''HIGH DEF - FULL SHADING / FULLY SATURATED:
-- FINE LINES capturing every possible detail
-- Comprehensive shading using fine line techniques:
-  * Delicate hatching and cross-hatching for shadows
-  * Stippling or fine dots for softer gradients
-  * Contour lines following form
-- IMPORTANT: Shading should be FINE LINE PATTERNS, not solid black
-- Capture EVERYTHING: 
-  * Every hair strand with flow and volume
-  * Complete jewelry with dimensional detail
-  * Full background elements (smoke, flames, patterns)
-  * Skin texture and subtle facial features
-  * Clothing/fabric details and folds
-- This should be the MOST detailed version with rich line work
-- Think: Highly detailed engraving or technical illustration style'''
+- MAXIMUM LINE DENSITY - still NO soft shading or gradients
+- Heavy use of HATCHING and CROSS-HATCHING (line patterns only):
+  * Single direction hatching (///) for lighter shadows
+  * Cross-hatching (XXX) for darker areas
+  * Denser line spacing = darker area, NOT gray fill
+- Hair: Many individual strand lines with full flow detail
+- Face: Rich linework showing all contours and forms
+- Background: Complete detail with line-based texture
+- CRITICAL: Even "full shading" means MORE LINES, not gray tones
+- Must transfer cleanly on Thermafax - all marks are distinct lines
+- Think: Detailed engraving style - dense linework, zero gradients'''
 }
 
 📋 FINAL CHECKLIST:
@@ -1689,41 +1686,38 @@ You are creating a professional tattoo stencil. Your goal is to produce CRYSTAL-
 
 {
 '''LOW FIDELITY - CLEAN OUTLINES / THE BONES:
-- FINE, CLEAN LINES tracing every contour and detail
-- Capture ALL elements: subject + background + accessories + textures
-- Hair: Individual strands with fine flowing lines
-- Jewelry: Every link, bead, and detail preserved
-- Background: Include smoke, flames, patterns, atmospheric elements
-- Facial features: Subtle, precise lines - not bold cartoon outlines
-- NO shading - pure linework only
-- Result should look like a highly detailed technical illustration''' if shading_level == "minimal" else
+- PURE LINE ART - NO shading, NO gradients, NO gray tones
+- Only CLEAN BLACK LINES on WHITE background
+- Single-weight outline strokes tracing every contour
+- Hair: Simple outline of the overall shape, major strand groupings
+- Face: Clean contour lines only - no internal detail shading
+- Background elements: Simple outlines only
+- Think: Basic line tracing that will transfer PERFECTLY on Thermafax
+- MUST BE: Pure black lines, pure white space - NOTHING in between''' if shading_level == "minimal" else
 
 '''MID-RANGE - FORM & SHAPE / MUSCLE & MEAT:
-- Same FINE LINE approach as Low Fidelity style
-- Add subtle contour lines to indicate form/depth:
-  * Light parallel lines in shadow areas
-  * Fine hatching to show volume
-- Keep lines FINE and DELICATE - not bold
-- Capture ALL details including background elements
-- Hair: Fine strands with subtle directional flow lines
-- Jewelry: Complete detail with light dimensional shading
-- The shading helps artist understand form without being heavy''' if shading_level == "light" else
+- CLEAN BLACK LINES - NO soft shading, NO gradients, NO gray
+- Add MORE LINES to show form (not shading darkness)
+- Use HATCHING (parallel lines) to indicate shadow areas:
+  * Lines should be SEPARATE and DISTINCT - not blended
+  * Spacing between hatch lines indicates shadow depth
+- Hair: More individual strand lines showing flow direction
+- Face: Contour lines + sparse hatching for depth
+- ALL shading must be LINES, not tonal gradients
+- Thermafax-ready: Every mark is a clean black line''' if shading_level == "light" else
 
 '''HIGH DEF - FULL SHADING / FULLY SATURATED:
-- FINE LINES capturing every possible detail
-- Comprehensive shading using fine line techniques:
-  * Delicate hatching and cross-hatching for shadows
-  * Stippling or fine dots for softer gradients
-  * Contour lines following form
-- IMPORTANT: Shading should be FINE LINE PATTERNS, not solid black
-- Capture EVERYTHING: 
-  * Every hair strand with flow and volume
-  * Complete jewelry with dimensional detail
-  * Full background elements (smoke, flames, patterns)
-  * Skin texture and subtle facial features
-  * Clothing/fabric details and folds
-- This should be the MOST detailed version with rich line work
-- Think: Highly detailed engraving or technical illustration style'''
+- MAXIMUM LINE DENSITY - still NO soft shading or gradients
+- Heavy use of HATCHING and CROSS-HATCHING (line patterns only):
+  * Single direction hatching (///) for lighter shadows
+  * Cross-hatching (XXX) for darker areas
+  * Denser line spacing = darker area, NOT gray fill
+- Hair: Many individual strand lines with full flow detail
+- Face: Rich linework showing all contours and forms
+- Background: Complete detail with line-based texture
+- CRITICAL: Even "full shading" means MORE LINES, not gray tones
+- Must transfer cleanly on Thermafax - all marks are distinct lines
+- Think: Detailed engraving style - dense linework, zero gradients'''
 }
 
 📋 FINAL CHECKLIST:
