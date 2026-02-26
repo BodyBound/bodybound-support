@@ -1965,60 +1965,38 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
         if ',' in image_data:
             image_data = image_data.split(',')[1]
         
-        # Determine shading level
+        # Determine detail level
         if shading_detail <= 10:
-            shading_level = "minimal"
+            detail_level = "minimal"
         elif shading_detail <= 35:
-            shading_level = "moderate"
+            detail_level = "moderate"
         else:
-            shading_level = "detailed"
+            detail_level = "detailed"
         
-        # Create the detailed prompt - THERMAFAX COMPATIBLE STENCIL
-        prompt = f"""⛔ CRITICAL: BLACK AND WHITE LINE ART ONLY ⛔
+        # Create the prompt - Original Feb 16 style that produced excellent stencils
+        prompt = f"""Transform this image into a professional tattoo stencil drawing.
 
-Convert this photo into a PROFESSIONAL TATTOO STENCIL.
+CRITICAL REQUIREMENTS:
+1. Create clean, smooth, continuous lines - NO noise or scattered marks
+2. Use purple/violet colored lines on a pure white background
+3. Draw like a skilled tattoo artist would hand-draw a stencil:
+   - Main outline contours with solid, confident lines
+   - Inner detail lines for important features
+   - Use dotted or dashed lines to indicate shading/contour areas where the tattoo artist would add shading
+4. Simplify the image - remove unnecessary details, keep only the essential form
+5. Lines should be bold enough to transfer clearly to skin
+6. The output should look like a professional tattoo stencil/blueprint
+7. NO grayscale shading - only line work
+8. Ensure all lines are connected and flowing, not broken or pixelated
 
-🚫 ABSOLUTELY NO:
-- NO COLOR whatsoever - not pink, not red, not any color
-- NO gray pixels or gray shading
-- NO pixel-based shading or gradients
-- NO soft tones or mid-tones
-- NO pencil sketch look with gray values
-- NO thin wispy lines - lines must be BOLD and VISIBLE
-
-✅ ONLY THIS:
-- PURE BLACK lines (#000000)
-- PURE WHITE background (#FFFFFF)
-- BOLD, CONFIDENT strokes - think professional tattoo flash art
-- Lines should be 2-4 pixels thick minimum
-
-🖋️ LINE QUALITY:
-- Draw like a professional tattoo artist
-- Lines should be BOLD and CONFIDENT, not sketchy
-- Every line should be clearly visible when printed
-- Use varying line weights: thicker for outlines, medium for details
-
-📐 LINE STYLES TO USE:
-- SOLID BOLD LINES: For main outlines and strong edges
-- DASHED/DOTTED LINES: For contour references and shadow placement guides
-- Use dotted lines to indicate depth and form transitions
-
-🖼️ OUTPUT REQUIREMENTS:
-- Same dimensions as input - do not crop or zoom
-- Same composition - subject in same position
-- Monochrome only - zero color information
-
-🎨 DETAIL LEVEL: {shading_level.upper()}
-
+DETAIL LEVEL: {detail_level.upper()}
 {
-'''LOW FIDELITY: Clean, bold outlines only. Strong solid lines for main edges. Minimal internal detail - just the essential shapes.''' if shading_level == "minimal" else
-'''MID-RANGE: Bold outlines plus interior detail lines. Include contour guides with dotted lines. Good balance of detail and clarity.''' if shading_level == "moderate" else
-'''HIGH DEFINITION: Maximum detail with bold linework. Dense hatching for shading areas. Include dotted contour reference lines throughout. Rich, detailed stencil.'''
+"- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
+"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
+"- Maximum detail: Full detail with hatching, all contours, and shading guides"
 }
 
-Remember: This goes to a thermal stencil machine. It can ONLY print pure black. Lines must be BOLD enough to transfer cleanly.
-
-Generate BOLD black line art now - professional tattoo quality - NO COLOR, NO GRAY."""
+Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
         # Generate using Gemini
         result_base64, mime_type = await generate_with_gemini(image_data, prompt)
