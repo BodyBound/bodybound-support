@@ -3788,6 +3788,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  editSourceButton: {
+    backgroundColor: '#2A2018',
+    borderColor: '#C9A227',
+  },
   buttonIcon: {
     fontSize: 16,
   },
