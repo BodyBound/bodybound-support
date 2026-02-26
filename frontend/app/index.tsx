@@ -4362,6 +4362,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     alignSelf: 'flex-end',
   },
+  methodToggle: {
+    flexDirection: 'row',
+    backgroundColor: '#333',
+    borderRadius: 8,
+    padding: 2,
+  },
+  methodToggleText: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#888',
+    borderRadius: 6,
+  },
+  methodToggleActive: {
+    color: '#0A0A0A',
+    backgroundColor: '#C9A227',
+  },
   compactVersionSection: {
     marginTop: 10,
   },
