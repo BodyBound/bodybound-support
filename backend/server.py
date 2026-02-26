@@ -1802,10 +1802,28 @@ async def process_stencil_job(job_id: str):
         return
     
     try:
-        job.status = "processing"
-        logger.info(f"[AsyncJob {job_id}] Starting background generation...")
+        # Step 0: AI Enhancement (if enabled)
+        if job.auto_enhance:
+            job.status = "enhancing"
+            job.current_style = "enhancing"
+            job.progress = 5
+            logger.info(f"[AsyncJob {job_id}] Starting AI image enhancement...")
+            
+            try:
+                enhanced = await enhance_photo_with_ai(job.image_base64)
+                job.enhanced_image = enhanced
+                logger.info(f"[AsyncJob {job_id}] AI enhancement complete")
+            except Exception as e:
+                logger.warning(f"[AsyncJob {job_id}] AI enhancement failed, using basic: {str(e)}")
+                job.enhanced_image = enhance_photo_basic(job.image_base64)
+        else:
+            # Use basic enhancement only
+            job.enhanced_image = enhance_photo_basic(job.image_base64)
         
-        # Generate Light version (progress 0-33%)
+        job.status = "processing"
+        logger.info(f"[AsyncJob {job_id}] Starting stencil generation...")
+        
+        # Generate Light version (progress 10-33%)
         job.progress = 10
         success = await generate_single_stencil_for_job(job, "light", 5, 0)
         job.progress = 33
