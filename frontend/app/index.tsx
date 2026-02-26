@@ -2952,7 +2952,7 @@ export default function Index() {
         )}
 
         {/* Live Line Weight Adjustment - Shows after stencil generation */}
-        {stencilImage && stencilMethod === 'cv' && (
+        {stencilImage && (
           <View style={styles.lineWeightSection}>
             <View style={styles.sliderHeader}>
               <Text style={styles.sliderLabel}>Line Weight</Text>
