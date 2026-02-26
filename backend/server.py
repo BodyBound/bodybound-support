@@ -242,6 +242,15 @@ async def ai_convert_to_line_art(image_base64: str, detail_level: str = "medium"
     logger.info(f"[AI-LineArt] Converting to line art - detail: {detail_level}")
     
     try:
+        import google.generativeai as genai
+        
+        # Configure API
+        api_key = os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            logger.error("[AI-LineArt] No GOOGLE_API_KEY found")
+            return None
+        genai.configure(api_key=api_key)
+        
         model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
         
         # Extract base64 data
