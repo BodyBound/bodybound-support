@@ -2891,33 +2891,9 @@ export default function Index() {
               </View>
             </TouchableOpacity>
             
-            {/* CV-specific controls */}
+            {/* CV-specific controls - Before Generation */}
             {stencilMethod === 'cv' && (
               <>
-                {/* Line Weight Slider */}
-                <View style={styles.sliderRow}>
-                  <View style={styles.sliderHeader}>
-                    <Text style={styles.sliderLabel}>Line Weight</Text>
-                    <Text style={styles.sliderValue}>{lineWeight > 0 ? `+${lineWeight}` : lineWeight}</Text>
-                  </View>
-                  <View style={styles.sliderTrack}>
-                    {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((val) => (
-                      <TouchableOpacity
-                        key={val}
-                        style={[
-                          styles.sliderDot,
-                          lineWeight === val && styles.sliderDotActive
-                        ]}
-                        onPress={() => setLineWeight(val)}
-                      />
-                    ))}
-                  </View>
-                  <View style={styles.sliderLabels}>
-                    <Text style={styles.sliderMinMax}>Thin</Text>
-                    <Text style={styles.sliderMinMax}>Thick</Text>
-                  </View>
-                </View>
-                
                 {/* AI Cleanup Toggle */}
                 <TouchableOpacity
                   style={styles.autoEnhanceRow}
