@@ -4533,6 +4533,16 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 11,
   },
+  lineWeightSection: {
+    marginTop: 12,
+    marginHorizontal: 8,
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 2,
+    borderColor: '#333',
+  },
   compactVersionSection: {
     marginTop: 10,
   },
