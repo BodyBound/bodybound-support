@@ -129,6 +129,9 @@ export default function Index() {
   // Auto-enhance image before generation (AI upscaling)
   const [autoEnhance, setAutoEnhance] = useState(true);
   
+  // Stencil generation method: 'ai' (Gemini) or 'cv' (Computer Vision)
+  const [stencilMethod, setStencilMethod] = useState<'ai' | 'cv'>('ai');
+  
   // 3-Version Stencil Generation
   const [stencilVersions, setStencilVersions] = useState<{
     light: string | null;
