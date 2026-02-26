@@ -1963,11 +1963,11 @@ export default function Index() {
     .minPointers(1)
     .maxPointers(1)
     .minDistance(0) // CRITICAL: Set to 0 for maximum sensitivity - picks up taps and dots!
+    .hitSlop({ left: 0, right: 0, top: 0, bottom: 0 }) // No slop for instant response
+    .shouldCancelWhenOutside(false) // Keep drawing even if finger moves outside
     .onStart((event) => {
       // Check if this is Apple Pencil using pointerType
       const isPencil = event.pointerType === PointerType.STYLUS;
-      
-      console.log('[Gesture] Touch start - pointerType:', event.pointerType, 'isPencil:', isPencil, 'fingerDrawingEnabled:', enableFingerPaintingRef.current);
       
       // DRAW if: 
       // 1. It's Apple Pencil (STYLUS) - ALWAYS draws
@@ -1975,12 +1975,10 @@ export default function Index() {
       const shouldDraw = isPencil || enableFingerPaintingRef.current;
       
       if (shouldDraw) {
-        // Draw mode - start drawing
-        console.log('[Gesture] ✏️ DRAWING with', isPencil ? 'Apple Pencil' : 'Finger');
+        // Draw mode - start drawing INSTANTLY
         runOnJS(startDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value);
       } else {
         // Finger touch without finger drawing enabled - PAN mode
-        console.log('[Gesture] 👆 PANNING with finger');
         savedTranslateX.value = translateX.value;
         savedTranslateY.value = translateY.value;
       }
