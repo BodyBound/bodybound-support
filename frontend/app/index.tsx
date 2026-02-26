@@ -130,7 +130,13 @@ export default function Index() {
   const [autoEnhance, setAutoEnhance] = useState(true);
   
   // Stencil generation method: 'ai' (Gemini) or 'cv' (Computer Vision)
-  const [stencilMethod, setStencilMethod] = useState<'ai' | 'cv'>('ai');
+  const [stencilMethod, setStencilMethod] = useState<'ai' | 'cv'>('cv');
+  
+  // Line weight control for CV method (-5 to +5)
+  const [lineWeight, setLineWeight] = useState(0);
+  
+  // AI cleanup for CV method (optional refinement)
+  const [aiCleanup, setAiCleanup] = useState(false);
   
   // 3-Version Stencil Generation
   const [stencilVersions, setStencilVersions] = useState<{
