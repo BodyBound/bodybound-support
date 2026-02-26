@@ -2832,6 +2832,12 @@ export default function Index() {
             <Text style={styles.buttonIcon}>📷</Text>
             <Text style={styles.sourceButtonText}>Camera</Text>
           </TouchableOpacity>
+          {stencilImage && (
+            <TouchableOpacity style={[styles.sourceButton, styles.editSourceButton]} onPress={openEditMode}>
+              <Text style={styles.buttonIcon}>✏️</Text>
+              <Text style={styles.sourceButtonText}>Edit</Text>
+            </TouchableOpacity>
+          )}
           {originalImage && (
             <TouchableOpacity style={styles.resetButton} onPress={resetAll}>
               <Text style={styles.buttonIcon}>🔄</Text>
