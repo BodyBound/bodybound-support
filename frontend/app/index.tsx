@@ -2881,7 +2881,7 @@ export default function Index() {
                 <View style={styles.autoEnhanceTextContainer}>
                   <Text style={styles.autoEnhanceLabel}>Stencil Engine</Text>
                   <Text style={styles.autoEnhanceDescription}>
-                    {stencilMethod === 'ai' ? 'AI Generation (Gemini) ~15 sec' : 'Computer Vision (Edge Detection) Instant'}
+                    {stencilMethod === 'ai' ? 'AI Generation (Gemini)' : 'Pro CV (U2-Net + Edge Detection)'}
                   </Text>
                 </View>
               </View>
@@ -2890,6 +2890,55 @@ export default function Index() {
                 <Text style={[styles.methodToggleText, stencilMethod === 'cv' && styles.methodToggleActive]}>CV</Text>
               </View>
             </TouchableOpacity>
+            
+            {/* CV-specific controls */}
+            {stencilMethod === 'cv' && (
+              <>
+                {/* Line Weight Slider */}
+                <View style={styles.sliderRow}>
+                  <View style={styles.sliderHeader}>
+                    <Text style={styles.sliderLabel}>Line Weight</Text>
+                    <Text style={styles.sliderValue}>{lineWeight > 0 ? `+${lineWeight}` : lineWeight}</Text>
+                  </View>
+                  <View style={styles.sliderTrack}>
+                    {[-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5].map((val) => (
+                      <TouchableOpacity
+                        key={val}
+                        style={[
+                          styles.sliderDot,
+                          lineWeight === val && styles.sliderDotActive
+                        ]}
+                        onPress={() => setLineWeight(val)}
+                      />
+                    ))}
+                  </View>
+                  <View style={styles.sliderLabels}>
+                    <Text style={styles.sliderMinMax}>Thin</Text>
+                    <Text style={styles.sliderMinMax}>Thick</Text>
+                  </View>
+                </View>
+                
+                {/* AI Cleanup Toggle */}
+                <TouchableOpacity
+                  style={styles.autoEnhanceRow}
+                  onPress={() => setAiCleanup(!aiCleanup)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.autoEnhanceLeft}>
+                    <Text style={styles.autoEnhanceIcon}>✨</Text>
+                    <View style={styles.autoEnhanceTextContainer}>
+                      <Text style={styles.autoEnhanceLabel}>AI Line Cleanup</Text>
+                      <Text style={styles.autoEnhanceDescription}>
+                        {aiCleanup ? 'Gemini will refine lines (adds ~10s)' : 'Pure algorithmic output'}
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={[styles.autoEnhanceToggle, aiCleanup && styles.autoEnhanceToggleOn]}>
+                    <View style={[styles.autoEnhanceToggleKnob, aiCleanup && styles.autoEnhanceToggleKnobOn]} />
+                  </View>
+                </TouchableOpacity>
+              </>
+            )}
             
             {/* AI Enhance Toggle - only show when AI method is selected */}
             {stencilMethod === 'ai' && (
