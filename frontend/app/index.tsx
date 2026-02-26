@@ -2784,114 +2784,118 @@ export default function Index() {
           </View>
         )}
 
-        {/* Compact Version Selector - Only shows after generation */}
+        {/* Custom Button Style Selector - Dark Charcoal with Brass Labels */}
         {originalImage && (stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
           <View style={styles.stencilStyleSection}>
-            {/* Cards Row with integrated labels */}
-            <View style={styles.styleCardsRow}>
-              {/* LOW FIDELITY Card */}
+            {/* Brass Labels Row */}
+            <View style={styles.styleLabelRow}>
+              <Text style={styles.styleBrassLabel}>LOW FIDELITY</Text>
+              <Text style={styles.styleBrassLabel}>MID-RANGE</Text>
+              <Text style={styles.styleBrassLabel}>HIGH DEF</Text>
+            </View>
+            
+            {/* Custom Button Images Row */}
+            <View style={styles.styleButtonsRow}>
+              {/* LOW FIDELITY Button */}
               <TouchableOpacity
                 style={[
-                  styles.styleCard,
-                  selectedVersion === 'light' && styles.styleCardSelected,
-                  !stencilVersions.light && styles.styleCardDisabled
+                  styles.styleButtonWrapper,
+                  selectedVersion === 'light' && styles.styleButtonSelected,
+                  !stencilVersions.light && styles.styleButtonDisabled
                 ]}
                 onPress={() => stencilVersions.light && selectVersion('light')}
                 disabled={!stencilVersions.light}
+                activeOpacity={0.8}
               >
-                <View style={styles.styleCardInner}>
-                  <Image 
-                    source={{ uri: 'https://images.unsplash.com/photo-1729339984410-38e345467454?w=100&h=100&fit=crop' }}
-                    style={[styles.styleSkullImage, { opacity: 0.5 }]}
-                  />
-                  <Text style={styles.styleCardLabel}>LOW FIDELITY</Text>
-                  {stencilVersions.light && (
-                    <TouchableOpacity
-                      style={styles.styleRegenButton}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        regenerateSingleStyle('light');
-                      }}
-                      disabled={!!regeneratingStyle}
-                    >
-                      <Ionicons 
-                        name={regeneratingStyle === 'light' ? 'hourglass' : 'refresh'} 
-                        size={14} 
-                        color="#888" 
-                      />
-                    </TouchableOpacity>
-                  )}
-                </View>
+                <Image 
+                  source={{ uri: 'https://customer-assets.emergentagent.com/job_7aab69d1-18d7-492c-bf0e-47aa8d7232af/artifacts/6gntycn7_1000040955.jpg' }}
+                  style={styles.styleButtonImage}
+                  resizeMode="contain"
+                />
+                {stencilVersions.light && (
+                  <TouchableOpacity
+                    style={styles.styleRegenButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      regenerateSingleStyle('light');
+                    }}
+                    disabled={!!regeneratingStyle}
+                  >
+                    <Ionicons 
+                      name={regeneratingStyle === 'light' ? 'hourglass' : 'refresh'} 
+                      size={14} 
+                      color="#C9A227" 
+                    />
+                  </TouchableOpacity>
+                )}
               </TouchableOpacity>
               
-              {/* MID-RANGE Card */}
+              {/* MID-RANGE Button */}
               <TouchableOpacity
                 style={[
-                  styles.styleCard,
-                  selectedVersion === 'medium' && styles.styleCardSelected,
-                  !stencilVersions.medium && styles.styleCardDisabled
+                  styles.styleButtonWrapper,
+                  selectedVersion === 'medium' && styles.styleButtonSelected,
+                  !stencilVersions.medium && styles.styleButtonDisabled
                 ]}
                 onPress={() => stencilVersions.medium && selectVersion('medium')}
                 disabled={!stencilVersions.medium}
+                activeOpacity={0.8}
               >
-                <View style={styles.styleCardInner}>
-                  <Image 
-                    source={{ uri: 'https://images.unsplash.com/photo-1725689587796-af783f04c0e1?w=100&h=100&fit=crop' }}
-                    style={[styles.styleSkullImage, { opacity: 0.7 }]}
-                  />
-                  <Text style={styles.styleCardLabel}>MID-RANGE</Text>
-                  {stencilVersions.medium && (
-                    <TouchableOpacity
-                      style={styles.styleRegenButton}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        regenerateSingleStyle('medium');
-                      }}
-                      disabled={!!regeneratingStyle}
-                    >
-                      <Ionicons 
-                        name={regeneratingStyle === 'medium' ? 'hourglass' : 'refresh'} 
-                        size={14} 
-                        color="#888" 
-                      />
-                    </TouchableOpacity>
-                  )}
-                </View>
+                <Image 
+                  source={{ uri: 'https://customer-assets.emergentagent.com/job_7aab69d1-18d7-492c-bf0e-47aa8d7232af/artifacts/s7totdho_1000040953.jpg' }}
+                  style={styles.styleButtonImage}
+                  resizeMode="contain"
+                />
+                {stencilVersions.medium && (
+                  <TouchableOpacity
+                    style={styles.styleRegenButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      regenerateSingleStyle('medium');
+                    }}
+                    disabled={!!regeneratingStyle}
+                  >
+                    <Ionicons 
+                      name={regeneratingStyle === 'medium' ? 'hourglass' : 'refresh'} 
+                      size={14} 
+                      color="#C9A227" 
+                    />
+                  </TouchableOpacity>
+                )}
               </TouchableOpacity>
               
-              {/* HIGH DEF Card */}
+              {/* HIGH DEF Button */}
               <TouchableOpacity
                 style={[
-                  styles.styleCard,
-                  selectedVersion === 'heavy' && styles.styleCardSelected,
-                  !stencilVersions.heavy && styles.styleCardDisabled
+                  styles.styleButtonWrapper,
+                  selectedVersion === 'heavy' && styles.styleButtonSelected,
+                  !stencilVersions.heavy && styles.styleButtonDisabled
                 ]}
                 onPress={() => stencilVersions.heavy && selectVersion('heavy')}
                 disabled={!stencilVersions.heavy}
+                activeOpacity={0.8}
               >
-                <View style={styles.styleCardInner}>
-                  <Image 
-                    source={{ uri: 'https://images.unsplash.com/photo-1714939722699-ea720ea17b18?w=100&h=100&fit=crop' }}
-                    style={styles.styleSkullImage}
-                  />
-                  <Text style={styles.styleCardLabel}>HIGH DEF</Text>
-                  {stencilVersions.heavy && (
-                    <TouchableOpacity
-                      style={styles.styleRegenButton}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        regenerateSingleStyle('heavy');
-                      }}
-                      disabled={!!regeneratingStyle}
-                    >
-                      <Ionicons 
-                        name={regeneratingStyle === 'heavy' ? 'hourglass' : 'refresh'} 
-                        size={14} 
-                        color="#888" 
-                      />
-                    </TouchableOpacity>
-                  )}
-                </View>
+                <Image 
+                  source={{ uri: 'https://customer-assets.emergentagent.com/job_7aab69d1-18d7-492c-bf0e-47aa8d7232af/artifacts/3dplx323_1000040952.jpg' }}
+                  style={styles.styleButtonImage}
+                  resizeMode="contain"
+                />
+                {stencilVersions.heavy && (
+                  <TouchableOpacity
+                    style={styles.styleRegenButton}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      regenerateSingleStyle('heavy');
+                    }}
+                    disabled={!!regeneratingStyle}
+                  >
+                    <Ionicons 
+                      name={regeneratingStyle === 'heavy' ? 'hourglass' : 'refresh'} 
+                      size={14} 
+                      color="#C9A227" 
+                    />
+                  </TouchableOpacity>
+                )}
               </TouchableOpacity>
             </View>
           </View>
