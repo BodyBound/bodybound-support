@@ -2675,10 +2675,6 @@ export default function Index() {
               <View style={styles.photoLibraryContainer}>
                 <View style={styles.photoLibraryHeader}>
                   <Text style={styles.photoLibraryTitle}>Select a Photo</Text>
-                  <TouchableOpacity style={styles.cameraButton} onPress={takePhoto}>
-                    <Text style={styles.cameraButtonIcon}>📷</Text>
-                    <Text style={styles.cameraButtonText}>Camera</Text>
-                  </TouchableOpacity>
                 </View>
                 
                 {loadingPhotos && photoLibrary.length === 0 ? (
