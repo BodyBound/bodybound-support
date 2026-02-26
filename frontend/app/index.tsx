@@ -4346,23 +4346,25 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 12,
     overflow: 'hidden',
-    // 3D bezel effect
+    // Default brass 3D bezel border
     borderWidth: 3,
-    borderColor: '#555',
-    borderTopColor: '#666',
-    borderLeftColor: '#666',
-    borderBottomColor: '#222',
-    borderRightColor: '#222',
+    borderColor: '#8B7320',
+    borderTopColor: '#A68B26',
+    borderLeftColor: '#A68B26',
+    borderBottomColor: '#5C4D16',
+    borderRightColor: '#5C4D16',
   },
   styleButtonSelected: {
+    // Brighter brass when selected
+    borderWidth: 4,
     borderColor: '#C9A227',
-    borderTopColor: '#D4B035',
-    borderLeftColor: '#D4B035',
+    borderTopColor: '#E0B82E',
+    borderLeftColor: '#E0B82E',
     borderBottomColor: '#9A7B1E',
     borderRightColor: '#9A7B1E',
   },
   styleButtonDisabled: {
-    opacity: 0.35,
+    opacity: 0.5,
   },
   styleButtonImage: {
     width: '100%',
