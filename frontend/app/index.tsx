@@ -1047,6 +1047,47 @@ export default function Index() {
     }
   };
 
+  // Apply line weight adjustment to existing stencil (live update)
+  const applyLineWeight = async (newWeight: number) => {
+    if (!stencilImage || newWeight === lineWeight) return;
+    
+    setLineWeight(newWeight);
+    
+    // If weight is 0, restore original stencil
+    if (newWeight === 0 && selectedVersion && stencilVersions[selectedVersion]) {
+      setStencilImage(stencilVersions[selectedVersion]);
+      return;
+    }
+    
+    try {
+      console.log(`[LineWeight] Applying weight: ${newWeight}`);
+      
+      // Use the original generated stencil as base, not the adjusted one
+      const baseStencil = selectedVersion && stencilVersions[selectedVersion] 
+        ? stencilVersions[selectedVersion] 
+        : stencilImage;
+      
+      const response = await fetch(`${API_URL}/api/adjust-line-weight`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          stencil_base64: baseStencil,
+          line_weight: newWeight,
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`[LineWeight] Adjusted in ${data.processing_time_ms}ms`);
+        setStencilImage(data.stencil_base64);
+      } else {
+        console.error('[LineWeight] Failed to adjust');
+      }
+    } catch (error) {
+      console.error('[LineWeight] Error:', error);
+    }
+  };
+
   // Remove background function
   const removeBackground = async () => {
     if (!originalImage) {
