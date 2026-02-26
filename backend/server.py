@@ -1596,6 +1596,7 @@ class AsyncStencilRequest(BaseModel):
     image_base64: str
     line_color: str = "black"
     auto_enhance: bool = True  # Auto-enhance image before processing (AI upscaling)
+    single_style: Optional[str] = None  # If set, only generate this style (light, medium, or heavy)
 
 class AsyncStencilStartResponse(BaseModel):
     job_id: str
