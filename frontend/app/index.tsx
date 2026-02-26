@@ -2822,44 +2822,7 @@ export default function Index() {
           </View>
         )}
 
-        {/* Compact Tools Row - Crop + Generate side by side */}
-        {originalImage && (
-          <View style={styles.compactToolsContainer}>
-            {/* Crop Button - Compact */}
-            <TouchableOpacity 
-              style={styles.compactCropButton} 
-              onPress={openCropModal}
-            >
-              <Text style={styles.compactToolIcon}>✂️</Text>
-              <Text style={styles.compactToolText}>Crop</Text>
-            </TouchableOpacity>
-
-            {/* Generate Button - Takes most space */}
-            <Pressable
-              style={({ pressed }) => [
-                styles.compactGenerateButton,
-                isGeneratingAI && styles.buttonDisabled,
-                pressed && !isGeneratingAI && styles.buttonPressed
-              ]}
-              onPress={generateAIStencil}
-              disabled={isGeneratingAI}
-            >
-              {isGeneratingAI ? (
-                <>
-                  <ActivityIndicator size="small" color="#0A0A0A" />
-                  <Text style={styles.compactGenerateText}>Creating...</Text>
-                </>
-              ) : (
-                <>
-                  <Text style={styles.compactGenerateIcon}>✨</Text>
-                  <Text style={styles.compactGenerateText}>Generate Stencil</Text>
-                </>
-              )}
-            </Pressable>
-          </View>
-        )}
-
-        {/* Auto-Enhance Toggle - Only show when image is loaded */}
+        {/* Auto-Enhance Toggle - Only show when image is loaded and no stencils yet */}
         {originalImage && !stencilVersions.light && !stencilVersions.medium && !stencilVersions.heavy && (
           <View style={styles.autoEnhanceContainer}>
             <TouchableOpacity
