@@ -4464,6 +4464,17 @@ const styles = StyleSheet.create({
     color: '#0A0A0A',
     backgroundColor: '#C9A227',
   },
+  cvInfoRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#222',
+  },
+  cvInfoText: {
+    color: '#888',
+    fontSize: 11,
+    textAlign: 'center',
+  },
   sliderRow: {
     paddingHorizontal: 16,
     paddingVertical: 12,
