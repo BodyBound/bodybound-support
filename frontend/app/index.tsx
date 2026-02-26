@@ -2801,7 +2801,7 @@ export default function Index() {
                 <Text style={[
                   styles.compactVersionText,
                   selectedVersion === 'light' && styles.compactVersionTextSelected
-                ]}>Light</Text>
+                ]}>Raw</Text>
                 {stencilVersions.light && (
                   <TouchableOpacity
                     style={styles.regenButton}
