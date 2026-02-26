@@ -2088,23 +2088,53 @@ Generate pure black line art now - include dotted reference lines for contours -
         result_base64, mime_type = await generate_with_gemini(image_data, prompt)
         
         if result_base64:
-            # Resize to match original dimensions
+            # Align stencil to match original dimensions using centered fit (not stretch)
             try:
-                original_img_data = base64.b64decode(image_data)
+                # Get original image dimensions from job (the user's original input)
+                original_b64 = job.image_base64
+                if ',' in original_b64:
+                    original_b64 = original_b64.split(',')[1]
+                original_img_data = base64.b64decode(original_b64)
                 original_img = Image.open(BytesIO(original_img_data))
                 original_width, original_height = original_img.size
                 
                 stencil_img_data = base64.b64decode(result_base64)
                 stencil_img = Image.open(BytesIO(stencil_img_data))
+                stencil_width, stencil_height = stencil_img.size
+                
+                logger.info(f"[AsyncJob {job.job_id}] Original: {original_width}x{original_height}, Stencil: {stencil_width}x{stencil_height}")
                 
                 if stencil_img.size != (original_width, original_height):
-                    stencil_img = stencil_img.resize((original_width, original_height), Image.Resampling.LANCZOS)
+                    # Convert to RGB for proper compositing
+                    if stencil_img.mode == 'RGBA':
+                        bg = Image.new('RGB', stencil_img.size, (255, 255, 255))
+                        bg.paste(stencil_img, mask=stencil_img.split()[-1])
+                        stencil_img = bg
+                    elif stencil_img.mode != 'RGB':
+                        stencil_img = stencil_img.convert('RGB')
+                    
+                    # Scale to fit within original bounds while preserving aspect ratio
+                    scale_w = original_width / stencil_width
+                    scale_h = original_height / stencil_height
+                    scale = min(scale_w, scale_h)
+                    
+                    new_w = int(stencil_width * scale)
+                    new_h = int(stencil_height * scale)
+                    stencil_resized = stencil_img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+                    
+                    # Create white canvas and center the stencil
+                    aligned = Image.new('RGB', (original_width, original_height), (255, 255, 255))
+                    paste_x = (original_width - new_w) // 2
+                    paste_y = (original_height - new_h) // 2
+                    aligned.paste(stencil_resized, (paste_x, paste_y))
+                    
                     buffer = BytesIO()
-                    stencil_img.save(buffer, format='PNG')
+                    aligned.save(buffer, format='PNG')
                     result_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
                     mime_type = 'image/png'
+                    logger.info(f"[AsyncJob {job.job_id}] Stencil aligned: scaled to {new_w}x{new_h}, centered at ({paste_x}, {paste_y})")
             except Exception as resize_err:
-                logger.warning(f"[AsyncJob {job.job_id}] Resize warning: {resize_err}")
+                logger.warning(f"[AsyncJob {job.job_id}] Alignment warning: {resize_err}")
             
             job.result[style] = f"data:{mime_type};base64,{result_base64}"
             logger.info(f"[AsyncJob {job.job_id}] {style} version completed")
