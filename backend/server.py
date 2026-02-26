@@ -1780,67 +1780,44 @@ async def generate_ai_stencil(request: AIStencilRequest):
             "blue": "blue/indigo", 
             "black": "black"
         }
-        line_color = color_map.get(request.line_color, "black")
+        line_color = color_map.get(request.line_color, "purple/violet")
         
-        # Determine shading level - if regenerate_style is set, use that specific style
+        # Determine detail level based on style
         if request.regenerate_style:
-            # Map regenerate_style to shading_level
-            style_to_shading = {
+            style_to_detail = {
                 "light": "minimal",
-                "medium": "light", 
-                "heavy": "moderate"
+                "medium": "moderate", 
+                "heavy": "detailed"
             }
-            shading_level = style_to_shading.get(request.regenerate_style.lower(), "light")
-            logger.info(f"Regenerating single style: {request.regenerate_style} (shading: {shading_level})")
+            detail_level = style_to_detail.get(request.regenerate_style.lower(), "moderate")
+            logger.info(f"Regenerating single style: {request.regenerate_style} (detail: {detail_level})")
         else:
-            # Use shading_detail from request
-            shading_level = "minimal" if request.shading_detail < 20 else "light" if request.shading_detail < 40 else "moderate" if request.shading_detail < 60 else "heavy"
+            detail_level = "minimal" if request.shading_detail < 30 else "moderate" if request.shading_detail < 60 else "detailed"
         
-        fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
-        
-        # Create the prompt - THERMAFAX COMPATIBLE STENCIL
-        prompt = f"""⛔ CRITICAL: BLACK AND WHITE LINE ART ONLY ⛔
+        # Create the prompt - Original Feb 16 style that produced excellent stencils
+        prompt = f"""Transform this image into a professional tattoo stencil drawing.
 
-Convert this photo into a TATTOO STENCIL.
+CRITICAL REQUIREMENTS:
+1. Create clean, smooth, continuous lines - NO noise or scattered marks
+2. Use {line_color} colored lines on a pure white background
+3. Draw like a skilled tattoo artist would hand-draw a stencil:
+   - Main outline contours with solid, confident lines
+   - Inner detail lines for important features
+   - Use dotted or dashed lines to indicate shading/contour areas where the tattoo artist would add shading
+4. Simplify the image - remove unnecessary details, keep only the essential form
+5. Lines should be bold enough to transfer clearly to skin
+6. The output should look like a professional tattoo stencil/blueprint
+7. NO grayscale shading - only line work
+8. Ensure all lines are connected and flowing, not broken or pixelated
 
-🚫 ABSOLUTELY NO:
-- NO COLOR whatsoever - not pink, not red, not any color
-- NO gray pixels or gray shading
-- NO pixel-based shading or gradients
-- NO soft tones or mid-tones
-- NO pencil sketch look with gray values
-
-✅ ONLY THIS:
-- PURE BLACK lines (#000000)
-- PURE WHITE background (#FFFFFF)
-- Nothing else - literally only black and white
-
-Think of it like a rubber stamp or a coloring book outline:
-- Just crisp BLACK LINES on WHITE paper
-- If you were to print this, only black ink touches the paper
-
-📐 LINE STYLES TO USE:
-- SOLID LINES: For main outlines and strong edges
-- DASHED/DOTTED LINES: For contour references, subtle transitions, and contrast guides
-- Use dotted lines to indicate where shadows fall or where form changes direction
-- Dotted lines help the tattoo artist understand depth and placement
-
-🖼️ OUTPUT REQUIREMENTS:
-- Same dimensions as input - do not crop or zoom
-- Same composition - subject in same position
-- Monochrome only - zero color information
-
-🎨 DETAIL LEVEL: {shading_level.upper()}
-
+DETAIL LEVEL: {detail_level.upper()}
 {
-'''MINIMAL LINES: Simple outlines only. Solid lines for main edges. Light dotted lines for major contour references.''' if shading_level == "minimal" else
-'''MODERATE LINES: Outlines plus hatching. Use dotted/dashed lines for contour guides and shadow placement references. Solid lines for main features.''' if shading_level == "light" else
-'''MAXIMUM LINES: Dense linework with heavy hatching. Include dotted contour reference lines throughout to show form and depth. Mix solid and dotted lines strategically.'''
+"- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
+"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
+"- Maximum detail: Full detail with hatching, all contours, and shading guides"
 }
 
-Remember: The output goes to a thermal stencil machine. It can ONLY print pure black. Any gray or color will fail.
-
-Generate pure black line art now - include dotted reference lines for contours - NO COLOR, NO GRAY."""
+Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
         
         image_base64 = None
