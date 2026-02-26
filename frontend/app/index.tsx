@@ -2787,14 +2787,7 @@ export default function Index() {
         {/* Compact Version Selector - Only shows after generation */}
         {originalImage && (stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
           <View style={styles.stencilStyleSection}>
-            {/* Title Row */}
-            <View style={styles.styleHeaderRow}>
-              <Text style={styles.styleHeaderTitle}>LOW FIDELITY</Text>
-              <Text style={styles.styleHeaderTitle}>MID-RANGE</Text>
-              <Text style={styles.styleHeaderTitle}>HIGH DEF</Text>
-            </View>
-            
-            {/* Cards Row */}
+            {/* Cards Row with integrated labels */}
             <View style={styles.styleCardsRow}>
               {/* LOW FIDELITY Card */}
               <TouchableOpacity
@@ -2807,7 +2800,11 @@ export default function Index() {
                 disabled={!stencilVersions.light}
               >
                 <View style={styles.styleCardInner}>
-                  <Text style={styles.styleSkullIcon}>💀</Text>
+                  <Image 
+                    source={{ uri: 'https://images.unsplash.com/photo-1729339984410-38e345467454?w=100&h=100&fit=crop' }}
+                    style={[styles.styleSkullImage, { opacity: 0.5 }]}
+                  />
+                  <Text style={styles.styleCardLabel}>LOW FIDELITY</Text>
                   {stencilVersions.light && (
                     <TouchableOpacity
                       style={styles.styleRegenButton}
@@ -2817,9 +2814,11 @@ export default function Index() {
                       }}
                       disabled={!!regeneratingStyle}
                     >
-                      <Text style={styles.styleRegenText}>
-                        {regeneratingStyle === 'light' ? '⏳' : '🔄'}
-                      </Text>
+                      <Ionicons 
+                        name={regeneratingStyle === 'light' ? 'hourglass' : 'refresh'} 
+                        size={14} 
+                        color="#888" 
+                      />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -2836,7 +2835,11 @@ export default function Index() {
                 disabled={!stencilVersions.medium}
               >
                 <View style={styles.styleCardInner}>
-                  <Text style={styles.styleSkullIconMid}>💀</Text>
+                  <Image 
+                    source={{ uri: 'https://images.unsplash.com/photo-1725689587796-af783f04c0e1?w=100&h=100&fit=crop' }}
+                    style={[styles.styleSkullImage, { opacity: 0.7 }]}
+                  />
+                  <Text style={styles.styleCardLabel}>MID-RANGE</Text>
                   {stencilVersions.medium && (
                     <TouchableOpacity
                       style={styles.styleRegenButton}
@@ -2846,9 +2849,11 @@ export default function Index() {
                       }}
                       disabled={!!regeneratingStyle}
                     >
-                      <Text style={styles.styleRegenText}>
-                        {regeneratingStyle === 'medium' ? '⏳' : '🔄'}
-                      </Text>
+                      <Ionicons 
+                        name={regeneratingStyle === 'medium' ? 'hourglass' : 'refresh'} 
+                        size={14} 
+                        color="#888" 
+                      />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -2865,7 +2870,11 @@ export default function Index() {
                 disabled={!stencilVersions.heavy}
               >
                 <View style={styles.styleCardInner}>
-                  <Text style={styles.styleSkullIconHigh}>💀</Text>
+                  <Image 
+                    source={{ uri: 'https://images.unsplash.com/photo-1714939722699-ea720ea17b18?w=100&h=100&fit=crop' }}
+                    style={styles.styleSkullImage}
+                  />
+                  <Text style={styles.styleCardLabel}>HIGH DEF</Text>
                   {stencilVersions.heavy && (
                     <TouchableOpacity
                       style={styles.styleRegenButton}
@@ -2875,29 +2884,15 @@ export default function Index() {
                       }}
                       disabled={!!regeneratingStyle}
                     >
-                      <Text style={styles.styleRegenText}>
-                        {regeneratingStyle === 'heavy' ? '⏳' : '🔄'}
-                      </Text>
+                      <Ionicons 
+                        name={regeneratingStyle === 'heavy' ? 'hourglass' : 'refresh'} 
+                        size={14} 
+                        color="#888" 
+                      />
                     </TouchableOpacity>
                   )}
                 </View>
               </TouchableOpacity>
-            </View>
-            
-            {/* Description Row */}
-            <View style={styles.styleDescRow}>
-              <View style={styles.styleDescContainer}>
-                <Text style={styles.styleDescTitle}>CLEAN OUTLINES</Text>
-                <Text style={styles.styleDescSubtitle}>THE BONES</Text>
-              </View>
-              <View style={styles.styleDescContainer}>
-                <Text style={styles.styleDescTitle}>FORM & SHAPE</Text>
-                <Text style={styles.styleDescSubtitle}>MUSCLE & MEAT</Text>
-              </View>
-              <View style={styles.styleDescContainer}>
-                <Text style={styles.styleDescTitle}>FULL SHADING</Text>
-                <Text style={styles.styleDescSubtitle}>FULLY SATURATED</Text>
-              </View>
             </View>
           </View>
         )}
