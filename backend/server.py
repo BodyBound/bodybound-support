@@ -1640,11 +1640,14 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
         job.current_style = style
         logger.info(f"[AsyncJob {job.job_id}] Generating {style} version...")
         
-        # Get image data and enhance it for better AI results
-        raw_image = job.image_base64
-        enhanced_image = enhance_photo_for_ai(raw_image)
+        # Use the enhanced image if available, otherwise use original
+        if job.enhanced_image:
+            image_data = job.enhanced_image
+            logger.info(f"[AsyncJob {job.job_id}] Using AI-enhanced image")
+        else:
+            raw_image = job.image_base64
+            image_data = enhance_photo_basic(raw_image)  # Use basic enhancement as fallback
         
-        image_data = enhanced_image
         if ',' in image_data:
             image_data = image_data.split(',')[1]
         
