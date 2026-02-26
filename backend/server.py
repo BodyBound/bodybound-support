@@ -565,12 +565,12 @@ def resize_image_if_needed(base64_string: str, max_dimension: int = 2000, max_fi
         logger.error(f"Error resizing image: {str(e)}")
         return base64_string  # Return original if resize fails
 
-def enhance_photo_for_ai(base64_string: str) -> str:
-    """Automatically enhance photo before AI processing for better stencil results.
+def enhance_photo_basic(base64_string: str) -> str:
+    """Basic photo enhancement using OpenCV (no AI, fast).
     
-    This preprocessing step helps the AI capture finer details by:
+    This preprocessing step helps capture finer details by:
     1. Boosting contrast to make edges more defined
-    2. Applying sharpening to bring out fine details (hair, jewelry, subtle features)
+    2. Applying sharpening to bring out fine details
     3. Using CLAHE for adaptive local contrast enhancement
     4. Subtle edge enhancement to make contours more visible
     
@@ -578,10 +578,10 @@ def enhance_photo_for_ai(base64_string: str) -> str:
         base64_string: The original base64 encoded image
         
     Returns:
-        Base64 encoded enhanced image ready for AI processing
+        Base64 encoded enhanced image
     """
     try:
-        logger.info("[PhotoEnhance] Starting automatic photo enhancement...")
+        logger.info("[PhotoEnhance] Starting basic photo enhancement...")
         
         # Remove data URL prefix if present
         prefix = ""
@@ -606,67 +606,157 @@ def enhance_photo_for_ai(base64_string: str) -> str:
         logger.info(f"[PhotoEnhance] Original image: {original_shape[1]}x{original_shape[0]}")
         
         # === STEP 1: CONTRAST ENHANCEMENT ===
-        # Convert to LAB color space for better contrast manipulation
         lab = cv2.cvtColor(img_cv, cv2.COLOR_BGR2LAB)
         l_channel, a_channel, b_channel = cv2.split(lab)
-        
-        # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization) to L channel
-        # This enhances local contrast without over-amplifying noise
         clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
         l_enhanced = clahe.apply(l_channel)
-        
-        # Merge back and convert to BGR
         lab_enhanced = cv2.merge([l_enhanced, a_channel, b_channel])
         img_contrast = cv2.cvtColor(lab_enhanced, cv2.COLOR_LAB2BGR)
         
         # === STEP 2: SHARPENING (Unsharp Mask) ===
-        # This brings out fine details like hair strands, jewelry, facial features
         gaussian = cv2.GaussianBlur(img_contrast, (0, 0), 2.0)
-        # Unsharp mask: original + (original - blurred) * amount
-        sharpening_amount = 0.7  # Moderate sharpening
+        sharpening_amount = 0.7
         img_sharp = cv2.addWeighted(img_contrast, 1 + sharpening_amount, gaussian, -sharpening_amount, 0)
         
         # === STEP 3: SUBTLE EDGE ENHANCEMENT ===
-        # Enhance edges slightly to help AI detect contours better
-        # Using a subtle Laplacian edge enhancement
         gray = cv2.cvtColor(img_sharp, cv2.COLOR_BGR2GRAY)
         edges = cv2.Laplacian(gray, cv2.CV_64F)
         edges = np.uint8(np.absolute(edges))
-        
-        # Create a subtle edge overlay (very light - just to boost existing edges)
         edges_3channel = cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
-        edge_boost = 0.08  # Very subtle - we don't want visible halos
+        edge_boost = 0.08
         img_edge_enhanced = cv2.addWeighted(img_sharp, 1.0, edges_3channel, edge_boost, 0)
         
         # === STEP 4: FINAL CONTRAST BOOST ===
-        # Slight additional contrast to make darks darker, lights lighter
-        # This helps the AI distinguish features more clearly
-        alpha = 1.15  # Contrast boost (1.0 = no change)
-        beta = -10    # Brightness adjustment (negative = slightly darker midtones)
+        alpha = 1.15
+        beta = -10
         img_final = cv2.convertScaleAbs(img_edge_enhanced, alpha=alpha, beta=beta)
-        
-        # Ensure we don't clip too much - keep details in highlights and shadows
         img_final = np.clip(img_final, 0, 255).astype(np.uint8)
         
         # Convert back to PIL and then to base64
         img_final_rgb = cv2.cvtColor(img_final, cv2.COLOR_BGR2RGB)
         result_img = Image.fromarray(img_final_rgb)
         
-        # Save as high-quality JPEG
         buffer = BytesIO()
         result_img.save(buffer, format='JPEG', quality=95, optimize=True)
         enhanced_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
         
-        logger.info(f"[PhotoEnhance] Enhancement complete - contrast boosted, sharpened, edges enhanced")
+        logger.info(f"[PhotoEnhance] Basic enhancement complete")
         
         return f"data:image/jpeg;base64,{enhanced_base64}"
         
     except Exception as e:
-        logger.error(f"[PhotoEnhance] Error enhancing photo: {str(e)}")
+        logger.error(f"[PhotoEnhance] Error in basic enhancement: {str(e)}")
         import traceback
         traceback.print_exc()
-        # Return original if enhancement fails
         return base64_string
+
+
+async def enhance_photo_with_ai(base64_string: str) -> str:
+    """AI-powered photo enhancement using Gemini for upscaling and quality improvement.
+    
+    This uses Gemini to:
+    1. Upscale low-resolution images
+    2. Sharpen and enhance details
+    3. Improve overall image quality for better stencil generation
+    
+    Args:
+        base64_string: The original base64 encoded image
+        
+    Returns:
+        Base64 encoded AI-enhanced image
+    """
+    import google.generativeai as genai
+    
+    try:
+        logger.info("[AIEnhance] Starting AI-powered photo enhancement...")
+        
+        # Remove data URL prefix if present
+        if ',' in base64_string:
+            base64_data = base64_string.split(',')[1]
+        else:
+            base64_data = base64_string
+        
+        # Decode to check resolution
+        img_data = base64.b64decode(base64_data)
+        img = Image.open(BytesIO(img_data))
+        width, height = img.size
+        logger.info(f"[AIEnhance] Original resolution: {width}x{height}")
+        
+        # Configure Gemini
+        genai.configure(api_key=AI_API_KEY)
+        model = genai.GenerativeModel('gemini-2.5-flash-image')
+        
+        # Create enhancement prompt based on image issues
+        needs_upscale = width < 1500 or height < 1500
+        
+        enhancement_prompt = """PHOTO ENHANCEMENT FOR TATTOO STENCIL CREATION
+
+You are enhancing a photo that will be converted into a professional tattoo stencil.
+
+ENHANCEMENT GOALS:
+1. SHARPEN all details - especially fine features like hair strands, facial features, jewelry, and texture
+2. ENHANCE CONTRAST to make edges and contours more defined
+3. REDUCE NOISE while preserving important details
+4. IMPROVE CLARITY so the AI stencil generator can trace clean lines"""
+        
+        if needs_upscale:
+            enhancement_prompt += f"""
+5. UPSCALE the image to approximately 2000 pixels on the longest edge (current: {width}x{height})
+   - Maintain aspect ratio
+   - Add realistic detail during upscaling, not just interpolation
+   - Make sure small details become clearer, not blurry"""
+        
+        enhancement_prompt += """
+
+IMPORTANT:
+- Keep the subject EXACTLY as it is - do NOT change pose, expression, or composition
+- Do NOT add, remove, or modify any elements in the photo
+- Do NOT apply artistic filters or style changes
+- Just enhance the QUALITY of the existing photo
+- Output should be a high-quality photo, NOT a stencil or drawing
+
+Output the enhanced photo now."""
+
+        # Call Gemini for enhancement
+        image_bytes = base64.b64decode(base64_data)
+        
+        response = model.generate_content([
+            enhancement_prompt,
+            {"mime_type": "image/png", "data": image_bytes}
+        ])
+        
+        # Extract the enhanced image
+        if response.candidates and response.candidates[0].content.parts:
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, 'inline_data') and part.inline_data:
+                    enhanced_base64 = base64.b64encode(part.inline_data.data).decode('utf-8')
+                    mime_type = part.inline_data.mime_type or 'image/png'
+                    
+                    # Verify the enhanced image
+                    enhanced_img = Image.open(BytesIO(part.inline_data.data))
+                    new_width, new_height = enhanced_img.size
+                    logger.info(f"[AIEnhance] Enhanced resolution: {new_width}x{new_height}")
+                    
+                    return f"data:{mime_type};base64,{enhanced_base64}"
+        
+        logger.warning("[AIEnhance] Gemini did not return enhanced image, falling back to basic enhancement")
+        return enhance_photo_basic(base64_string)
+        
+    except Exception as e:
+        logger.error(f"[AIEnhance] Error in AI enhancement: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # Fall back to basic enhancement
+        logger.info("[AIEnhance] Falling back to basic enhancement")
+        return enhance_photo_basic(base64_string)
+
+
+def enhance_photo_for_ai(base64_string: str) -> str:
+    """Wrapper that uses basic enhancement (sync version for backward compatibility).
+    
+    For AI enhancement, use enhance_photo_with_ai() directly.
+    """
+    return enhance_photo_basic(base64_string)
 
 def process_image_to_stencil(img: np.ndarray, settings: StencilSettings) -> np.ndarray:
     """Process image to create tattoo stencil using advanced edge detection
