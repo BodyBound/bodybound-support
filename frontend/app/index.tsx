@@ -2866,17 +2866,6 @@ export default function Index() {
           </View>
         )}
 
-        {/* Info - Shows before generation */}
-        {originalImage && !stencilVersions.light && !stencilVersions.medium && !stencilVersions.heavy && (
-          <View style={styles.autoEnhanceContainer}>
-            <View style={styles.cvInfoRow}>
-              <Text style={styles.cvInfoText}>
-                🎯 Tap a style below to generate your stencil
-              </Text>
-            </View>
-          </View>
-        )}
-
         {/* Custom Button Style Selector - Always visible when image loaded */}
         {originalImage && (
           <View style={styles.stencilStyleSection}>
