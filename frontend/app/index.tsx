@@ -919,14 +919,33 @@ export default function Index() {
       
       // Get base64 from original image
       let imageBase64 = originalImage;
-      if (!imageBase64.startsWith('data:')) {
-        const base64Data = await FileSystem.readAsStringAsync(imageBase64, {
-          encoding: 'base64',
-        });
-        imageBase64 = `data:image/jpeg;base64,${base64Data}`;
+      
+      // Safety check - make sure we have an image
+      if (!imageBase64) {
+        console.error('[GenerateSingle] No original image available');
+        Alert.alert('Error', 'No image selected. Please select an image first.');
+        return;
       }
       
-      console.log(`[GenerateSingle] Generating ${style} version...`);
+      console.log(`[GenerateSingle] Image source type: ${imageBase64.substring(0, 30)}...`);
+      
+      // If the image is not already base64 (e.g., file:// or ph:// URI), convert it
+      if (!imageBase64.startsWith('data:')) {
+        try {
+          console.log(`[GenerateSingle] Converting image from URI to base64...`);
+          const base64Data = await FileSystem.readAsStringAsync(imageBase64, {
+            encoding: 'base64',
+          });
+          imageBase64 = `data:image/jpeg;base64,${base64Data}`;
+          console.log(`[GenerateSingle] Converted to base64, length: ${imageBase64.length}`);
+        } catch (readError: any) {
+          console.error('[GenerateSingle] Failed to read image file:', readError);
+          Alert.alert('Error', 'Could not read image. Please try selecting the photo again.');
+          return;
+        }
+      }
+      
+      console.log(`[GenerateSingle] Generating ${style} version, image base64 length: ${imageBase64.length}`);
       
       // Use the original AI async endpoint
       const response = await fetch(`${API_URL}/api/ai-stencil-async`, {
