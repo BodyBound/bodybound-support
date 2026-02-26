@@ -2727,6 +2727,14 @@ export default function Index() {
                   resizeMode="contain"
                 />
                 
+                {/* Crop button - Small button in left corner above compare */}
+                <TouchableOpacity
+                  style={styles.cropCornerButton}
+                  onPress={openCropModal}
+                >
+                  <Text style={styles.cropCornerIcon}>✂️</Text>
+                </TouchableOpacity>
+                
                 {/* Compare toggle button - shows when stencil exists */}
                 {stencilImage && (
                   <TouchableOpacity
