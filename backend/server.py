@@ -1546,6 +1546,75 @@ Style: Clean black line art on pure white background. No colors, no shading - ju
     image_base64 = base64.b64encode(images[0]).decode('utf-8')
     return image_base64, 'image/png'
 
+
+# ============================================
+# COMPUTER VISION STENCIL ENDPOINT
+# ============================================
+
+class CVStencilRequest(BaseModel):
+    image_base64: str
+    detail_level: str = "medium"  # light, medium, heavy
+    method: str = "hybrid"  # "cv" for pure edge detection, "hybrid" for CV + hatching
+
+class CVStencilResponse(BaseModel):
+    stencil_base64: str
+    method: str
+    processing_time_ms: float
+
+@api_router.post("/cv-stencil", response_model=CVStencilResponse)
+async def generate_cv_stencil_endpoint(request: CVStencilRequest):
+    """Generate a stencil using computer vision techniques.
+    
+    This endpoint uses traditional image processing instead of AI:
+    - Canny edge detection with auto-tuned thresholds
+    - Adaptive thresholding for local contrast adjustment
+    - Morphological operations for clean lines
+    - Skeletonization for consistent line width
+    - Optional hatching patterns for shading
+    
+    Methods:
+    - "cv": Pure edge detection (cleanest lines, minimal detail)
+    - "hybrid": Edge detection + algorithmic hatching for shading
+    
+    Detail levels:
+    - "light": Minimal lines, strong edges only
+    - "medium": Balanced detail with moderate hatching
+    - "heavy": Maximum detail with dense hatching/cross-hatching
+    """
+    import time
+    start_time = time.time()
+    
+    try:
+        # Decode image
+        img = base64_to_cv2(request.image_base64)
+        if img is None:
+            raise HTTPException(status_code=400, detail="Invalid image data")
+        
+        logger.info(f"[CV-Endpoint] Processing image {img.shape} with method={request.method}, detail={request.detail_level}")
+        
+        # Generate stencil based on method
+        if request.method == "cv":
+            stencil = generate_cv_stencil(img, request.detail_level)
+        else:  # hybrid
+            stencil = generate_hybrid_stencil(img, request.detail_level)
+        
+        # Convert to base64
+        stencil_base64 = cv2_to_base64(stencil)
+        
+        processing_time = (time.time() - start_time) * 1000
+        logger.info(f"[CV-Endpoint] Complete in {processing_time:.1f}ms")
+        
+        return CVStencilResponse(
+            stencil_base64=stencil_base64,
+            method=request.method,
+            processing_time_ms=processing_time
+        )
+        
+    except Exception as e:
+        logger.error(f"[CV-Endpoint] Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Stencil generation failed: {str(e)}")
+
+
 @api_router.post("/ai-stencil", response_model=AIStencilResponse)
 async def generate_ai_stencil(request: AIStencilRequest):
     """Generate a professional tattoo stencil using AI with fallback providers
