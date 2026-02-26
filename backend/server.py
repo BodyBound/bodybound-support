@@ -1172,6 +1172,83 @@ async def validate_image_endpoint(request: ValidateImageRequest):
             resolution_height=0
         )
 
+# Image Enhancement Endpoint
+class EnhanceImageRequest(BaseModel):
+    image_base64: str
+    use_ai: bool = Field(default=True)  # Use AI enhancement (slower but better) or basic (fast)
+
+class EnhanceImageResponse(BaseModel):
+    enhanced_base64: str
+    original_resolution: tuple
+    enhanced_resolution: tuple
+    enhancement_type: str  # "ai" or "basic"
+    processing_time_ms: float
+
+@api_router.post("/enhance-image", response_model=EnhanceImageResponse)
+async def enhance_image_endpoint(request: EnhanceImageRequest):
+    """Enhance an image for better stencil generation.
+    
+    Uses AI (Gemini) to upscale and enhance low-quality images, or falls back
+    to basic OpenCV enhancement for faster processing.
+    
+    - AI Enhancement: Upscales, sharpens, improves contrast (~3-8 seconds)
+    - Basic Enhancement: Sharpens and improves contrast only (~0.5 seconds)
+    """
+    import time
+    start_time = time.time()
+    
+    try:
+        # Get original resolution
+        if ',' in request.image_base64:
+            base64_data = request.image_base64.split(',')[1]
+        else:
+            base64_data = request.image_base64
+        
+        img_data = base64.b64decode(base64_data)
+        original_img = Image.open(BytesIO(img_data))
+        original_resolution = original_img.size
+        
+        logger.info(f"[EnhanceImage] Original resolution: {original_resolution}")
+        
+        if request.use_ai:
+            # Use AI enhancement (includes upscaling)
+            logger.info("[EnhanceImage] Using AI enhancement...")
+            enhanced_base64 = await enhance_photo_with_ai(request.image_base64)
+            enhancement_type = "ai"
+        else:
+            # Use basic enhancement (fast, no upscaling)
+            logger.info("[EnhanceImage] Using basic enhancement...")
+            enhanced_base64 = enhance_photo_basic(request.image_base64)
+            enhancement_type = "basic"
+        
+        # Get enhanced resolution
+        if ',' in enhanced_base64:
+            enhanced_data = enhanced_base64.split(',')[1]
+        else:
+            enhanced_data = enhanced_base64
+        
+        enhanced_img_data = base64.b64decode(enhanced_data)
+        enhanced_img = Image.open(BytesIO(enhanced_img_data))
+        enhanced_resolution = enhanced_img.size
+        
+        processing_time = (time.time() - start_time) * 1000
+        
+        logger.info(f"[EnhanceImage] Enhanced: {original_resolution} -> {enhanced_resolution} in {processing_time:.0f}ms ({enhancement_type})")
+        
+        return EnhanceImageResponse(
+            enhanced_base64=enhanced_base64,
+            original_resolution=original_resolution,
+            enhanced_resolution=enhanced_resolution,
+            enhancement_type=enhancement_type,
+            processing_time_ms=round(processing_time, 2)
+        )
+        
+    except Exception as e:
+        logger.error(f"[EnhanceImage] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error enhancing image: {str(e)}")
+
 # AI-Powered Stencil Generation
 class AIStencilRequest(BaseModel):
     image_base64: str
