@@ -2883,27 +2883,20 @@ export default function Index() {
           </View>
         )}
 
-        {/* Custom Button Style Selector - Dark Charcoal with Brass Labels */}
-        {originalImage && (stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
+        {/* Custom Button Style Selector - Always visible when image loaded */}
+        {originalImage && (
           <View style={styles.stencilStyleSection}>
-            {/* Brass Labels Row */}
-            <View style={styles.styleLabelRow}>
-              <Text style={styles.styleBrassLabel}>LOW FIDELITY</Text>
-              <Text style={styles.styleBrassLabel}>MID-RANGE</Text>
-              <Text style={styles.styleBrassLabel}>HIGH DEF</Text>
-            </View>
-            
-            {/* Custom Button Images Row */}
+            {/* Custom Button Images Row - Tap to generate that style */}
             <View style={styles.styleButtonsRow}>
               {/* LOW FIDELITY Button */}
               <TouchableOpacity
                 style={[
                   styles.styleButtonWrapper,
-                  selectedVersion === 'light' && styles.styleButtonSelected,
-                  !stencilVersions.light && styles.styleButtonDisabled
+                  selectedVersion === 'light' && stencilVersions.light && styles.styleButtonSelected,
+                  (isGeneratingAI || regeneratingStyle) && styles.styleButtonDisabled
                 ]}
-                onPress={() => stencilVersions.light && selectVersion('light')}
-                disabled={!stencilVersions.light}
+                onPress={() => generateSingleStyle('light')}
+                disabled={isGeneratingAI || !!regeneratingStyle}
                 activeOpacity={0.8}
               >
                 <Image 
@@ -2911,7 +2904,12 @@ export default function Index() {
                   style={styles.styleButtonImage}
                   resizeMode="contain"
                 />
-                {stencilVersions.light && (
+                {regeneratingStyle === 'light' && (
+                  <View style={styles.styleGeneratingOverlay}>
+                    <ActivityIndicator size="small" color="#C9A227" />
+                  </View>
+                )}
+                {stencilVersions.light && !regeneratingStyle && (
                   <TouchableOpacity
                     style={styles.styleRegenButton}
                     onPress={(e) => {
@@ -2920,11 +2918,7 @@ export default function Index() {
                     }}
                     disabled={!!regeneratingStyle}
                   >
-                    <Ionicons 
-                      name={regeneratingStyle === 'light' ? 'hourglass' : 'refresh'} 
-                      size={14} 
-                      color="#C9A227" 
-                    />
+                    <Ionicons name="refresh" size={14} color="#C9A227" />
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
@@ -2933,11 +2927,11 @@ export default function Index() {
               <TouchableOpacity
                 style={[
                   styles.styleButtonWrapper,
-                  selectedVersion === 'medium' && styles.styleButtonSelected,
-                  !stencilVersions.medium && styles.styleButtonDisabled
+                  selectedVersion === 'medium' && stencilVersions.medium && styles.styleButtonSelected,
+                  (isGeneratingAI || regeneratingStyle) && styles.styleButtonDisabled
                 ]}
-                onPress={() => stencilVersions.medium && selectVersion('medium')}
-                disabled={!stencilVersions.medium}
+                onPress={() => generateSingleStyle('medium')}
+                disabled={isGeneratingAI || !!regeneratingStyle}
                 activeOpacity={0.8}
               >
                 <Image 
@@ -2945,7 +2939,12 @@ export default function Index() {
                   style={styles.styleButtonImage}
                   resizeMode="contain"
                 />
-                {stencilVersions.medium && (
+                {regeneratingStyle === 'medium' && (
+                  <View style={styles.styleGeneratingOverlay}>
+                    <ActivityIndicator size="small" color="#C9A227" />
+                  </View>
+                )}
+                {stencilVersions.medium && !regeneratingStyle && (
                   <TouchableOpacity
                     style={styles.styleRegenButton}
                     onPress={(e) => {
@@ -2954,11 +2953,7 @@ export default function Index() {
                     }}
                     disabled={!!regeneratingStyle}
                   >
-                    <Ionicons 
-                      name={regeneratingStyle === 'medium' ? 'hourglass' : 'refresh'} 
-                      size={14} 
-                      color="#C9A227" 
-                    />
+                    <Ionicons name="refresh" size={14} color="#C9A227" />
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
@@ -2967,11 +2962,11 @@ export default function Index() {
               <TouchableOpacity
                 style={[
                   styles.styleButtonWrapper,
-                  selectedVersion === 'heavy' && styles.styleButtonSelected,
-                  !stencilVersions.heavy && styles.styleButtonDisabled
+                  selectedVersion === 'heavy' && stencilVersions.heavy && styles.styleButtonSelected,
+                  (isGeneratingAI || regeneratingStyle) && styles.styleButtonDisabled
                 ]}
-                onPress={() => stencilVersions.heavy && selectVersion('heavy')}
-                disabled={!stencilVersions.heavy}
+                onPress={() => generateSingleStyle('heavy')}
+                disabled={isGeneratingAI || !!regeneratingStyle}
                 activeOpacity={0.8}
               >
                 <Image 
@@ -2979,7 +2974,12 @@ export default function Index() {
                   style={styles.styleButtonImage}
                   resizeMode="contain"
                 />
-                {stencilVersions.heavy && (
+                {regeneratingStyle === 'heavy' && (
+                  <View style={styles.styleGeneratingOverlay}>
+                    <ActivityIndicator size="small" color="#C9A227" />
+                  </View>
+                )}
+                {stencilVersions.heavy && !regeneratingStyle && (
                   <TouchableOpacity
                     style={styles.styleRegenButton}
                     onPress={(e) => {
@@ -2988,11 +2988,7 @@ export default function Index() {
                     }}
                     disabled={!!regeneratingStyle}
                   >
-                    <Ionicons 
-                      name={regeneratingStyle === 'heavy' ? 'hourglass' : 'refresh'} 
-                      size={14} 
-                      color="#C9A227" 
-                    />
+                    <Ionicons name="refresh" size={14} color="#C9A227" />
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
