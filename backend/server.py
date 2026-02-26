@@ -1656,6 +1656,66 @@ class CVStencilResponse(BaseModel):
     method: str
     processing_time_ms: float
 
+class LineWeightRequest(BaseModel):
+    stencil_base64: str  # Existing stencil to adjust
+    line_weight: int  # -5 to +5
+
+class LineWeightResponse(BaseModel):
+    stencil_base64: str
+    line_weight: int
+    processing_time_ms: float
+
+@api_router.post("/adjust-line-weight", response_model=LineWeightResponse)
+async def adjust_line_weight(request: LineWeightRequest):
+    """Adjust line weight on an existing stencil in real-time.
+    
+    This is a fast operation (~50ms) that applies morphological
+    dilation/erosion to thicken or thin the lines.
+    
+    Parameters:
+    - stencil_base64: The existing stencil image
+    - line_weight: -5 (thinnest) to +5 (thickest), 0 = original
+    """
+    import time
+    start_time = time.time()
+    
+    try:
+        # Decode stencil
+        img = base64_to_cv2(request.stencil_base64)
+        if img is None:
+            raise HTTPException(status_code=400, detail="Invalid stencil data")
+        
+        # Convert to grayscale if needed
+        if len(img.shape) == 3:
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = img
+        
+        # Apply line weight adjustment
+        adjusted = apply_line_weight_control(gray, request.line_weight)
+        
+        # Ensure binary
+        _, adjusted = cv2.threshold(adjusted, 127, 255, cv2.THRESH_BINARY)
+        
+        # Convert back to BGR
+        adjusted_bgr = cv2.cvtColor(adjusted, cv2.COLOR_GRAY2BGR)
+        
+        # Convert to base64
+        result_base64 = cv2_to_base64(adjusted_bgr)
+        
+        processing_time = (time.time() - start_time) * 1000
+        logger.info(f"[LineWeight] Adjusted to {request.line_weight} in {processing_time:.1f}ms")
+        
+        return LineWeightResponse(
+            stencil_base64=result_base64,
+            line_weight=request.line_weight,
+            processing_time_ms=processing_time
+        )
+        
+    except Exception as e:
+        logger.error(f"[LineWeight] Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Line weight adjustment failed: {str(e)}")
+
 @api_router.post("/cv-stencil", response_model=CVStencilResponse)
 async def generate_cv_stencil_endpoint(request: CVStencilRequest):
     """Generate a professional stencil using computer vision pipeline.
