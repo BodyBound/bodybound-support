@@ -936,14 +936,16 @@ export default function Index() {
       
       // Check if using CV (Computer Vision) method
       if (stencilMethod === 'cv') {
-        // Use the CV endpoint - instant results, no polling needed
+        // Use the professional CV endpoint with U2-Net + edge detection
         const response = await fetch(`${API_URL}/api/cv-stencil`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             image_base64: imageBase64,
             detail_level: style,
-            method: 'hybrid', // Use hybrid for hatching support
+            line_weight: lineWeight,
+            remove_background: true,  // Use U2-Net background removal
+            ai_cleanup: aiCleanup,    // Optional AI refinement
           }),
         });
         
