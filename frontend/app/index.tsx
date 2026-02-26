@@ -2783,10 +2783,10 @@ export default function Index() {
                           onPress={() => selectPhotoFromLibrary(asset)}
                           activeOpacity={0.7}
                         >
-                          <Image
+                          <ExpoImage
                             source={{ uri: asset.uri }}
                             style={styles.photoGridImage}
-                            resizeMode="cover"
+                            contentFit="cover"
                           />
                         </TouchableOpacity>
                       ))}
