@@ -644,10 +644,10 @@ def post_process_stencil(base64_string: str) -> str:
     """Post-process AI-generated stencil to ensure quality.
     
     This function:
-    1. Boosts line weight if lines are too thin
-    2. Cleans up stray pixels/artifacts
-    3. Ensures consistent line darkness
-    4. Removes noise while preserving detail
+    1. Removes ANY color - converts to pure grayscale
+    2. Forces TRUE BINARY output - only black and white pixels
+    3. Cleans up stray pixels/artifacts
+    4. Ensures consistent line darkness
     """
     try:
         logger.info("[PostProcess] Starting stencil post-processing...")
@@ -665,59 +665,30 @@ def post_process_stencil(base64_string: str) -> str:
         
         # Convert to OpenCV format
         img_cv = cv2.cvtColor(np.array(img.convert('RGB')), cv2.COLOR_RGB2BGR)
+        
+        # === STEP 1: Force grayscale to remove any color ===
         gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
+        logger.info("[PostProcess] Converted to grayscale (removed any color)")
         
-        # === STEP 1: Analyze current line darkness ===
-        # Find dark pixels (lines)
-        dark_mask = gray < 128
-        if np.sum(dark_mask) > 0:
-            avg_line_darkness = np.mean(gray[dark_mask])
-            logger.info(f"[PostProcess] Average line darkness: {avg_line_darkness:.1f}")
-        else:
-            avg_line_darkness = 128
+        # === STEP 2: Force true binary with aggressive threshold ===
+        # Use a high threshold to eliminate all gray pixels
+        # Anything darker than 180 becomes black, lighter becomes white
+        _, binary = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY)
+        logger.info("[PostProcess] Applied binary threshold (no gray pixels)")
         
-        # === STEP 2: Boost line weight if too thin/light ===
-        # If lines are too light (gray instead of black), make them darker
-        if avg_line_darkness > 60:  # Lines should be closer to 0 (black)
-            logger.info("[PostProcess] Boosting line darkness...")
-            # Increase contrast to make lines darker
-            # Apply a curve that makes darks darker while keeping whites white
-            lut = np.zeros(256, dtype=np.uint8)
-            for i in range(256):
-                if i < 180:  # Dark to mid tones - make darker
-                    lut[i] = max(0, int(i * 0.7))
-                else:  # Keep whites white
-                    lut[i] = i
-            gray = cv2.LUT(gray, lut)
-        
-        # === STEP 3: Clean up artifacts ===
-        # Remove small isolated pixels (noise)
-        # Use morphological opening to remove small white noise in black areas
+        # === STEP 3: Clean up small noise artifacts ===
         kernel_small = np.ones((2, 2), np.uint8)
-        
         # Invert for morphological operations (lines become white)
-        inverted = 255 - gray
-        
-        # Remove small noise
+        inverted = 255 - binary
+        # Remove small isolated pixels
         cleaned = cv2.morphologyEx(inverted, cv2.MORPH_OPEN, kernel_small)
-        
-        # Slight dilation to ensure lines are bold enough
-        kernel_dilate = np.ones((2, 2), np.uint8)
-        # Only dilate if lines are thin
-        line_pixels = np.sum(cleaned > 128)
-        total_pixels = cleaned.shape[0] * cleaned.shape[1]
-        line_ratio = line_pixels / total_pixels
-        
-        if line_ratio < 0.05:  # Less than 5% of image is lines - they're thin
-            logger.info("[PostProcess] Lines appear thin, applying slight thickening...")
-            cleaned = cv2.dilate(cleaned, kernel_dilate, iterations=1)
-        
         # Invert back
-        gray = 255 - cleaned
+        binary = 255 - cleaned
         
-        # === STEP 4: Ensure pure black and white ===
-        # Threshold to ensure crisp black/white output
-        _, binary = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY)
+        # === STEP 4: Ensure lines are solid black ===
+        # Any remaining dark pixels should be pure black
+        binary[binary < 200] = 0
+        binary[binary >= 200] = 255
         
         # Convert back to 3-channel for consistency
         result = cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
@@ -726,7 +697,7 @@ def post_process_stencil(base64_string: str) -> str:
         _, buffer = cv2.imencode('.png', result)
         result_base64 = base64.b64encode(buffer).decode('utf-8')
         
-        logger.info("[PostProcess] Stencil post-processing complete")
+        logger.info("[PostProcess] Stencil post-processing complete - pure black & white output")
         
         return f"data:image/png;base64,{result_base64}"
         
