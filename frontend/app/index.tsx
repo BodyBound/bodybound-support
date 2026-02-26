@@ -2932,29 +2932,13 @@ export default function Index() {
               </View>
             </TouchableOpacity>
             
-            {/* CV-specific controls - Before Generation */}
+            {/* CV mode info */}
             {stencilMethod === 'cv' && (
-              <>
-                {/* AI Cleanup Toggle */}
-                <TouchableOpacity
-                  style={styles.autoEnhanceRow}
-                  onPress={() => setAiCleanup(!aiCleanup)}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.autoEnhanceLeft}>
-                    <Text style={styles.autoEnhanceIcon}>✨</Text>
-                    <View style={styles.autoEnhanceTextContainer}>
-                      <Text style={styles.autoEnhanceLabel}>AI Line Cleanup</Text>
-                      <Text style={styles.autoEnhanceDescription}>
-                        {aiCleanup ? 'Gemini will refine lines (adds ~10s)' : 'Pure algorithmic output'}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={[styles.autoEnhanceToggle, aiCleanup && styles.autoEnhanceToggleOn]}>
-                    <View style={[styles.autoEnhanceToggleKnob, aiCleanup && styles.autoEnhanceToggleKnobOn]} />
-                  </View>
-                </TouchableOpacity>
-              </>
+              <View style={styles.cvInfoRow}>
+                <Text style={styles.cvInfoText}>
+                  🎯 Pro Mode: U2-Net isolation → AI line art → Binary post-processing
+                </Text>
+              </View>
             )}
             
             {/* AI Enhance Toggle - only show when AI method is selected */}
