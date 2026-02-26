@@ -956,40 +956,7 @@ export default function Index() {
       setSelectedVersion(style);
       setStencilImage(data.stencil_base64);
       setHasGeneratedOnce(true);
-          
-          if (statusData.status === 'completed') {
-            completed = true;
-            console.log(`[GenerateSingle] Generation completed!`);
-            
-            // Get the generated style from result (backend returns job.result)
-            const generatedStencil = statusData.result?.[style];
-            console.log(`[GenerateSingle] Got stencil for ${style}:`, generatedStencil ? 'yes' : 'no');
-            if (generatedStencil) {
-              setStencilVersions(prev => ({
-                ...prev,
-                [style]: generatedStencil
-              }));
-              setSelectedVersion(style);
-              setStencilImage(generatedStencil);
-              setHasGeneratedOnce(true);
-            } else {
-              console.error(`[GenerateSingle] No stencil in result for style ${style}`);
-              Alert.alert('Generation Issue', 'Stencil was generated but not received properly.');
-            }
-            
-            // Clean up job
-            try {
-              await fetch(`${API_URL}/api/ai-stencil-job/${jobId}`, { method: 'DELETE' });
-            } catch (e) {
-              console.log('Job cleanup failed (non-critical)');
-            }
-          } else if (statusData.status === 'failed') {
-            completed = true;
-            console.error(`[GenerateSingle] Job failed:`, statusData.error);
-            Alert.alert('Generation Failed', statusData.error || 'Could not generate stencil.');
-          }
-        }
-      }
+      
     } catch (error: any) {
       console.error(`Error generating ${style} version:`, error);
       Alert.alert('Connection Issue', 'Failed to generate. Please check your internet connection.');
