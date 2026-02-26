@@ -172,19 +172,19 @@ def cv2_to_base64(img: np.ndarray) -> str:
 
 # ============================================
 # PROFESSIONAL STENCIL PIPELINE
-# U2-Net Background Removal + Edge Detection + Morphological Control
+# Hybrid: U2-Net Background Removal + AI Line Art Conversion + CV Post-Processing
 # ============================================
 
 from rembg import remove as rembg_remove
 from PIL import Image as PILImage
 
-def remove_background_u2net(image: np.ndarray) -> np.ndarray:
+def remove_background_u2net(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Remove background using U2-Net (via rembg).
     Isolates the subject completely, removing all background noise.
     
     Returns:
-        Image with transparent background (BGRA format)
+        Tuple of (image with transparent background BGRA, binary mask)
     """
     logger.info("[U2Net] Starting background removal...")
     
@@ -197,272 +197,110 @@ def remove_background_u2net(image: np.ndarray) -> np.ndarray:
     # Convert back to OpenCV format (BGRA)
     result_np = np.array(result)
     
-    # If the result has an alpha channel, convert RGBA to BGRA
+    # Extract mask from alpha channel
     if result_np.shape[2] == 4:
+        mask = result_np[:, :, 3]
         result_bgra = cv2.cvtColor(result_np, cv2.COLOR_RGBA2BGRA)
     else:
+        mask = np.ones(result_np.shape[:2], dtype=np.uint8) * 255
         result_bgra = cv2.cvtColor(result_np, cv2.COLOR_RGB2BGR)
     
     logger.info(f"[U2Net] Background removal complete - output shape: {result_bgra.shape}")
-    return result_bgra
+    return result_bgra, mask
 
 
-def create_subject_mask(image_bgra: np.ndarray) -> np.ndarray:
+def create_isolated_subject_image(image: np.ndarray) -> str:
     """
-    Create a binary mask from the alpha channel of a BGRA image.
+    Create an image with the subject isolated on a clean white background.
+    This is fed to AI for line art conversion.
     """
-    if image_bgra.shape[2] == 4:
-        # Use alpha channel as mask
-        alpha = image_bgra[:, :, 3]
-        _, mask = cv2.threshold(alpha, 127, 255, cv2.THRESH_BINARY)
-        return mask
-    else:
-        # No alpha, create full mask
-        return np.ones(image_bgra.shape[:2], dtype=np.uint8) * 255
+    # Remove background
+    image_bgra, mask = remove_background_u2net(image)
+    
+    # Create white background
+    h, w = image_bgra.shape[:2]
+    white_bg = np.ones((h, w, 3), dtype=np.uint8) * 255
+    
+    # Extract BGR from BGRA
+    image_bgr = image_bgra[:, :, :3]
+    
+    # Composite subject onto white background using mask
+    mask_3ch = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR) / 255.0
+    composited = (image_bgr * mask_3ch + white_bg * (1 - mask_3ch)).astype(np.uint8)
+    
+    # Convert to base64
+    return cv2_to_base64(composited), mask
 
 
-def apply_canny_edge_detection(gray: np.ndarray, sensitivity: str = "medium") -> np.ndarray:
+async def ai_convert_to_line_art(image_base64: str, detail_level: str = "medium") -> str:
     """
-    Apply Canny edge detection with auto-tuned thresholds.
+    Use Gemini AI to convert an isolated subject into clean line art.
     
-    Args:
-        gray: Grayscale image
-        sensitivity: "low" (fewer edges), "medium", "high" (more edges)
-    
-    Returns:
-        Binary edge image
+    This is the CORE conversion step - AI does the artistic interpretation
+    of translating complex shadows and textures into clean lines.
     """
-    # Calculate optimal thresholds based on image statistics
-    median_val = np.median(gray)
-    sigma = 0.33
-    
-    if sensitivity == "low":
-        lower = int(max(0, (1.0 + sigma) * median_val))
-        upper = int(min(255, (1.0 + sigma * 2) * median_val))
-    elif sensitivity == "medium":
-        lower = int(max(0, (1.0 - sigma * 0.3) * median_val))
-        upper = int(min(255, (1.0 + sigma) * median_val))
-    else:  # high
-        lower = int(max(0, (1.0 - sigma) * median_val))
-        upper = int(min(255, (1.0 + sigma * 0.5) * median_val))
-    
-    logger.info(f"[Canny] Sensitivity={sensitivity}, thresholds: {lower}-{upper}")
-    edges = cv2.Canny(gray, lower, upper)
-    
-    return edges
-
-
-def apply_adaptive_threshold(gray: np.ndarray, detail_level: str = "medium") -> np.ndarray:
-    """
-    Apply adaptive thresholding for true binary output.
-    Captures detail based on local contrast - no gray pixels.
-    
-    Args:
-        gray: Grayscale image
-        detail_level: "light", "medium", "heavy"
-    
-    Returns:
-        Binary thresholded image (0 or 255 only)
-    """
-    if detail_level == "light":
-        block_size = 25
-        c_value = 12
-    elif detail_level == "medium":
-        block_size = 17
-        c_value = 8
-    else:  # heavy
-        block_size = 11
-        c_value = 4
-    
-    # Ensure block_size is odd
-    if block_size % 2 == 0:
-        block_size += 1
-    
-    adaptive = cv2.adaptiveThreshold(
-        gray, 255, 
-        cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-        cv2.THRESH_BINARY_INV, 
-        block_size, c_value
-    )
-    
-    logger.info(f"[AdaptiveThreshold] Detail={detail_level}, block={block_size}, C={c_value}")
-    return adaptive
-
-
-def apply_line_weight_control(binary: np.ndarray, weight: int = 0) -> np.ndarray:
-    """
-    Apply morphological dilation/erosion to control line thickness.
-    Uses Pillow-style morphology for smooth results.
-    
-    Args:
-        binary: Binary image (black lines on white or vice versa)
-        weight: -5 to +5 (-5 = thinnest, 0 = original, +5 = thickest)
-    
-    Returns:
-        Binary image with adjusted line weight
-    """
-    if weight == 0:
-        return binary
-    
-    # Create kernel based on weight magnitude
-    kernel_size = abs(weight) + 1
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
-    
-    if weight > 0:
-        # Positive weight = thicker lines (dilate the black)
-        # Since lines are black (0), we need to dilate the inverse
-        inverted = cv2.bitwise_not(binary)
-        dilated = cv2.dilate(inverted, kernel, iterations=1)
-        result = cv2.bitwise_not(dilated)
-        logger.info(f"[LineWeight] Thickening lines: +{weight}")
-    else:
-        # Negative weight = thinner lines (erode the black)
-        inverted = cv2.bitwise_not(binary)
-        eroded = cv2.erode(inverted, kernel, iterations=1)
-        result = cv2.bitwise_not(eroded)
-        logger.info(f"[LineWeight] Thinning lines: {weight}")
-    
-    return result
-
-
-def generate_professional_stencil(
-    image: np.ndarray, 
-    detail_level: str = "medium",
-    line_weight: int = 0,
-    remove_background: bool = True,
-    use_ai_cleanup: bool = False
-) -> np.ndarray:
-    """
-    Professional stencil generation pipeline:
-    1. U2-Net background removal (isolate subject)
-    2. Canny edge detection (find contours)
-    3. Adaptive thresholding (capture detail with local contrast)
-    4. Combine edges + threshold
-    5. Morphological line weight control
-    6. Optional AI cleanup (Gemini as enhancer, not generator)
-    
-    Args:
-        image: BGR input image
-        detail_level: "light", "medium", "heavy"
-        line_weight: -5 to +5 for line thickness control
-        remove_background: Whether to use U2-Net background removal
-        use_ai_cleanup: Whether to use AI as final cleanup pass
-    
-    Returns:
-        Binary stencil (black lines on white background, no gray pixels)
-    """
-    logger.info(f"[ProStencil] Starting pipeline - detail={detail_level}, weight={line_weight}, bg_remove={remove_background}")
-    
-    original_h, original_w = image.shape[:2]
-    
-    # Step 1: Background Removal (U2-Net)
-    if remove_background:
-        image_bgra = remove_background_u2net(image)
-        subject_mask = create_subject_mask(image_bgra)
-        # Convert to BGR for processing
-        if image_bgra.shape[2] == 4:
-            image_bgr = cv2.cvtColor(image_bgra, cv2.COLOR_BGRA2BGR)
-        else:
-            image_bgr = image_bgra
-    else:
-        image_bgr = image
-        subject_mask = np.ones((original_h, original_w), dtype=np.uint8) * 255
-    
-    # Step 2: Convert to grayscale with contrast enhancement
-    gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
-    
-    # Apply CLAHE for better local contrast
-    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
-    gray = clahe.apply(gray)
-    
-    # Light bilateral filtering to reduce noise while preserving edges
-    gray = cv2.bilateralFilter(gray, 5, 50, 50)
-    
-    # Step 3: Canny Edge Detection
-    sensitivity_map = {"light": "low", "medium": "medium", "heavy": "high"}
-    edges = apply_canny_edge_detection(gray, sensitivity_map.get(detail_level, "medium"))
-    
-    # Step 4: Adaptive Thresholding
-    adaptive = apply_adaptive_threshold(gray, detail_level)
-    
-    # Step 5: Combine edges and adaptive threshold
-    if detail_level == "light":
-        # Light: primarily edges with minimal adaptive
-        combined = edges
-    elif detail_level == "medium":
-        # Medium: weighted combination
-        combined = cv2.bitwise_or(edges, adaptive)
-        # Clean up small noise
-        kernel_clean = np.ones((2, 2), np.uint8)
-        combined = cv2.morphologyEx(combined, cv2.MORPH_OPEN, kernel_clean)
-    else:  # heavy
-        # Heavy: full combination for maximum detail
-        combined = cv2.bitwise_or(edges, adaptive)
-    
-    # Step 6: Apply subject mask (remove any background artifacts)
-    if remove_background:
-        combined = cv2.bitwise_and(combined, combined, mask=subject_mask)
-    
-    # Step 7: Close small gaps in lines
-    kernel_close = np.ones((2, 2), np.uint8)
-    combined = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, kernel_close)
-    
-    # Step 8: Create final stencil (black lines on white background)
-    stencil = 255 - combined  # Invert: white background, black lines
-    
-    # Step 9: Apply line weight control (dilation/erosion)
-    stencil = apply_line_weight_control(stencil, line_weight)
-    
-    # Ensure true binary output (no gray pixels)
-    _, stencil = cv2.threshold(stencil, 127, 255, cv2.THRESH_BINARY)
-    
-    # Convert to BGR for output
-    stencil_bgr = cv2.cvtColor(stencil, cv2.COLOR_GRAY2BGR)
-    
-    logger.info(f"[ProStencil] Pipeline complete - output: {stencil_bgr.shape}")
-    return stencil_bgr
-
-
-async def enhance_stencil_with_ai(stencil_base64: str, detail_level: str = "medium") -> str:
-    """
-    Use Gemini AI as an optional enhancer/cleanup pass for algorithmic stencils.
-    This refines the lines rather than regenerating from scratch.
-    
-    Args:
-        stencil_base64: The algorithmically generated stencil
-        detail_level: Guides the AI on how much to preserve vs clean
-    
-    Returns:
-        Enhanced stencil as base64
-    """
-    logger.info(f"[AI-Enhance] Starting AI cleanup pass...")
+    logger.info(f"[AI-LineArt] Converting to line art - detail: {detail_level}")
     
     try:
         model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
         
         # Extract base64 data
-        if ',' in stencil_base64:
-            base64_data = stencil_base64.split(',')[1]
+        if ',' in image_base64:
+            base64_data = image_base64.split(',')[1]
         else:
-            base64_data = stencil_base64
+            base64_data = image_base64
         
-        prompt = f"""You are a professional stencil line cleaner. Your job is to REFINE and CLEAN UP the existing stencil, NOT to redraw it.
+        # Detail-specific instructions
+        if detail_level == "light":
+            detail_instructions = """
+- Draw ONLY the essential outer contours and major feature boundaries
+- Use single, clean lines - no double lines or parallel strokes
+- Minimal internal detail - just key defining features
+- Lines should be consistent 2-3px weight
+- Think "minimalist tattoo outline" - less is more"""
+        elif detail_level == "medium":
+            detail_instructions = """
+- Draw clear contours and important internal details
+- Show form through strategic line placement
+- Include key shadows as single contour lines (NOT shading)
+- Balanced detail - enough to recognize features clearly
+- Lines should be consistent 2-3px weight
+- Think "clean tattoo stencil" - clear and readable"""
+        else:  # heavy
+            detail_instructions = """
+- Draw detailed contours including fine features
+- Include subtle details that define character
+- Show depth through line weight variation (thicker for shadows)
+- Maximum detail while maintaining clarity
+- Think "detailed tattoo flash" - rich but clean"""
+        
+        prompt = f"""You are a professional tattoo stencil artist. Convert this image into a CLEAN LINE ART STENCIL.
 
-RULES:
-1. PRESERVE all existing lines and their positions
-2. CLEAN UP any noise, stray pixels, or broken lines
-3. SMOOTH jagged edges where appropriate
-4. ENSURE output is PURE BLACK AND WHITE - no gray pixels
-5. DO NOT add any new details, shading, or gradients
-6. DO NOT change the composition or add background elements
-7. The output must be Thermafax-ready: clean, crisp black lines on pure white
+ABSOLUTE REQUIREMENTS:
+1. OUTPUT: Pure BLACK LINES on pure WHITE background - NOTHING ELSE
+2. NO gray pixels, NO gradients, NO soft edges, NO shading, NO fills
+3. NO halftones, NO stippling, NO cross-hatching, NO texture
+4. Lines must be CLEAN and CRISP - suitable for thermal stencil transfer
+5. The background has already been removed - draw ONLY the subject
 
-Detail level: {detail_level}
-- If light: Be aggressive in removing small details, keep only main contours
-- If medium: Balance cleaning with detail preservation
-- If heavy: Preserve maximum detail, only remove obvious noise
+LINE ART STYLE:
+{detail_instructions}
 
-Output: A cleaned-up version of this stencil with pure black lines on pure white background."""
+WHAT TO DRAW:
+- Clean contour lines that define the form
+- Important feature boundaries
+- Structural lines that show the shape
+
+WHAT TO AVOID:
+- Any form of shading or gradient
+- Soft or fuzzy edges
+- Gray areas or fills
+- Background elements
+- Decorative additions not in the original
+
+The output must be THERMAFAX-COMPATIBLE: clean black lines that will transfer perfectly to skin.
+
+Generate ONLY the line art image - no text, no explanations."""
 
         response = model.generate_content([
             prompt,
@@ -473,16 +311,150 @@ Output: A cleaned-up version of this stencil with pure black lines on pure white
         if response.candidates and response.candidates[0].content.parts:
             for part in response.candidates[0].content.parts:
                 if hasattr(part, 'inline_data') and part.inline_data:
-                    enhanced_base64 = base64.b64encode(part.inline_data.data).decode('utf-8')
-                    logger.info("[AI-Enhance] Cleanup complete")
-                    return f"data:image/png;base64,{enhanced_base64}"
+                    result_base64 = base64.b64encode(part.inline_data.data).decode('utf-8')
+                    logger.info("[AI-LineArt] Line art conversion complete")
+                    return f"data:image/png;base64,{result_base64}"
         
-        logger.warning("[AI-Enhance] No image in response, returning original")
-        return stencil_base64
+        logger.error("[AI-LineArt] No image in response")
+        return None
         
     except Exception as e:
-        logger.error(f"[AI-Enhance] Error: {str(e)}")
-        return stencil_base64
+        logger.error(f"[AI-LineArt] Error: {str(e)}")
+        return None
+
+
+def force_binary_output(image: np.ndarray, threshold: int = 200) -> np.ndarray:
+    """
+    Force image to true binary - pure black and white only.
+    Uses high threshold to eliminate any gray artifacts from AI.
+    """
+    # Convert to grayscale if needed
+    if len(image.shape) == 3:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = image
+    
+    # Apply threshold - anything above threshold becomes white
+    _, binary = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY)
+    
+    # Convert back to BGR
+    return cv2.cvtColor(binary, cv2.COLOR_GRAY2BGR)
+
+
+def apply_line_weight_control(binary: np.ndarray, weight: int = 0) -> np.ndarray:
+    """
+    Apply morphological dilation/erosion to control line thickness.
+    
+    Args:
+        binary: Binary image (black lines on white)
+        weight: -5 to +5 (-5 = thinnest, 0 = original, +5 = thickest)
+    
+    Returns:
+        Binary image with adjusted line weight
+    """
+    if weight == 0:
+        return binary
+    
+    # Convert to grayscale if needed
+    if len(binary.shape) == 3:
+        gray = cv2.cvtColor(binary, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = binary
+    
+    # Create kernel based on weight magnitude
+    kernel_size = abs(weight) + 1
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+    
+    if weight > 0:
+        # Positive weight = thicker lines (dilate the black)
+        inverted = cv2.bitwise_not(gray)
+        dilated = cv2.dilate(inverted, kernel, iterations=1)
+        result = cv2.bitwise_not(dilated)
+        logger.info(f"[LineWeight] Thickening lines: +{weight}")
+    else:
+        # Negative weight = thinner lines (erode the black)
+        inverted = cv2.bitwise_not(gray)
+        eroded = cv2.erode(inverted, kernel, iterations=1)
+        result = cv2.bitwise_not(eroded)
+        logger.info(f"[LineWeight] Thinning lines: {weight}")
+    
+    # Ensure binary
+    _, result = cv2.threshold(result, 127, 255, cv2.THRESH_BINARY)
+    
+    return cv2.cvtColor(result, cv2.COLOR_GRAY2BGR)
+
+
+def apply_mask_to_stencil(stencil: np.ndarray, mask: np.ndarray) -> np.ndarray:
+    """
+    Apply the original subject mask to the stencil to remove any
+    background artifacts that AI might have added.
+    """
+    # Ensure mask is the right size
+    if stencil.shape[:2] != mask.shape[:2]:
+        mask = cv2.resize(mask, (stencil.shape[1], stencil.shape[0]))
+    
+    # Dilate mask slightly to include edge lines
+    kernel = np.ones((5, 5), np.uint8)
+    dilated_mask = cv2.dilate(mask, kernel, iterations=2)
+    
+    # Convert stencil to grayscale
+    if len(stencil.shape) == 3:
+        gray = cv2.cvtColor(stencil, cv2.COLOR_BGR2GRAY)
+    else:
+        gray = stencil
+    
+    # Create white background
+    result = np.ones_like(gray) * 255
+    
+    # Apply stencil only where mask exists
+    result = np.where(dilated_mask > 127, gray, 255).astype(np.uint8)
+    
+    return cv2.cvtColor(result, cv2.COLOR_GRAY2BGR)
+
+
+async def generate_professional_stencil(
+    image: np.ndarray, 
+    detail_level: str = "medium",
+    line_weight: int = 0
+) -> np.ndarray:
+    """
+    Professional stencil generation pipeline:
+    1. U2-Net isolates subject from background
+    2. AI converts isolated subject to clean line art
+    3. Force binary output (no gray pixels)
+    4. Apply subject mask to remove any background artifacts
+    5. Apply line weight adjustment
+    
+    This hybrid approach uses AI for artistic interpretation while
+    ensuring clean, Thermafax-compatible output.
+    """
+    logger.info(f"[ProStencil] Starting hybrid pipeline - detail={detail_level}, weight={line_weight}")
+    
+    # Step 1: Isolate subject with U2-Net
+    isolated_base64, mask = create_isolated_subject_image(image)
+    
+    # Step 2: AI converts to line art
+    line_art_base64 = await ai_convert_to_line_art(isolated_base64, detail_level)
+    
+    if not line_art_base64:
+        logger.error("[ProStencil] AI line art conversion failed")
+        raise Exception("AI line art conversion failed")
+    
+    # Step 3: Convert result to OpenCV and force binary
+    line_art_cv = base64_to_cv2(line_art_base64)
+    binary_stencil = force_binary_output(line_art_cv)
+    
+    # Step 4: Apply mask to remove any background artifacts
+    masked_stencil = apply_mask_to_stencil(binary_stencil, mask)
+    
+    # Step 5: Apply line weight adjustment
+    if line_weight != 0:
+        final_stencil = apply_line_weight_control(masked_stencil, line_weight)
+    else:
+        final_stencil = masked_stencil
+    
+    logger.info("[ProStencil] Hybrid pipeline complete")
+    return final_stencil
 
 
 # ============================================
