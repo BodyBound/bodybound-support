@@ -4151,6 +4151,65 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+  // Auto-Enhance Toggle Styles
+  autoEnhanceContainer: {
+    marginTop: 10,
+    marginHorizontal: 0,
+  },
+  autoEnhanceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1A1A1A',
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  autoEnhanceLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  autoEnhanceIcon: {
+    fontSize: 18,
+    marginRight: 10,
+  },
+  autoEnhanceTextContainer: {
+    flex: 1,
+  },
+  autoEnhanceLabel: {
+    color: '#E5E5E5',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  autoEnhanceDescription: {
+    color: '#888',
+    fontSize: 11,
+    marginTop: 2,
+  },
+  autoEnhanceToggle: {
+    width: 46,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#333',
+    padding: 2,
+    justifyContent: 'center',
+  },
+  autoEnhanceToggleOn: {
+    backgroundColor: '#C9A227',
+  },
+  autoEnhanceToggleKnob: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#888',
+  },
+  autoEnhanceToggleKnobOn: {
+    backgroundColor: '#FFF',
+    alignSelf: 'flex-end',
+  },
   compactVersionSection: {
     marginTop: 10,
   },
