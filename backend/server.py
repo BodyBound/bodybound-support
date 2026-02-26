@@ -1833,65 +1833,42 @@ async def generate_ai_stencil(request: AIStencilRequest):
         fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
         
         # Create the prompt - THERMAFAX COMPATIBLE STENCIL
-        prompt = f"""⚠️ STRICT REQUIREMENTS - READ CAREFULLY ⚠️
+        prompt = f"""⛔ CRITICAL: BLACK AND WHITE LINE ART ONLY ⛔
 
-You are converting a photo into a TATTOO STENCIL for a Thermafax machine.
+Convert this photo into a TATTOO STENCIL.
 
-🔴 ABSOLUTE NON-NEGOTIABLE RULES:
-1. OUTPUT ONLY BLACK LINES ON WHITE BACKGROUND
-2. ZERO gray pixels - every pixel must be pure black (#000000) or pure white (#FFFFFF)
-3. NO gradients, NO shading, NO blending, NO tonal variation
-4. NO soft edges - all lines must be crisp and hard
-5. The output is for a THERMAL TRANSFER MACHINE - soft shading will NOT transfer
+🚫 ABSOLUTELY NO:
+- NO COLOR whatsoever - not pink, not red, not any color
+- NO gray pixels or gray shading
+- NO pixel-based shading or gradients
+- NO soft tones or mid-tones
+- NO pencil sketch look with gray values
 
-🔴 DIMENSION RULES (CRITICAL FOR ALIGNMENT):
-- Output MUST be EXACTLY the same dimensions as the input image
-- DO NOT crop, zoom, pan, or shift the image
-- The subject's position must be PIXEL-PERFECT identical to the input
-- If input is 1000x1500, output MUST be 1000x1500
+✅ ONLY THIS:
+- PURE BLACK lines (#000000)
+- PURE WHITE background (#FFFFFF)
+- Nothing else - literally only black and white
 
-🔴 WHAT THIS IS NOT:
-- NOT a pencil sketch
-- NOT a drawing with shading
-- NOT an artistic interpretation
-- NOT a grayscale image
+Think of it like a rubber stamp or a coloring book outline:
+- Just crisp BLACK LINES on WHITE paper
+- If you were to print this, only black ink touches the paper
 
-🔴 WHAT THIS IS:
-- A PURE LINE DRAWING
-- Like a coloring book outline
-- Every mark is a DISTINCT BLACK LINE
-- Background is PURE WHITE
+🖼️ OUTPUT REQUIREMENTS:
+- Same dimensions as input - do not crop or zoom
+- Same composition - subject in same position
+- Monochrome only - zero color information
 
 🎨 DETAIL LEVEL: {shading_level.upper()}
 
 {
-'''LOW FIDELITY (Minimal Lines):
-- ONLY the main outlines/contours
-- Single-weight clean lines tracing edges
-- NO internal detail, NO shading lines
-- Just the basic shape outline
-- Think: Simple coloring book outline''' if shading_level == "minimal" else
-
-'''MID-RANGE (Moderate Lines):  
-- Main outlines PLUS important internal lines
-- Use HATCHING (parallel lines) to suggest shadow areas
-- Each hatch line must be SEPARATE with white space between
-- More detail than Low but still clean lines only''' if shading_level == "light" else
-
-'''HIGH DEF (Maximum Lines):
-- Detailed linework capturing all features
-- Heavy HATCHING and CROSS-HATCHING for shadow areas
-- Dense linework but each line remains DISTINCT
-- Rich detail through LINE DENSITY, not gray tones'''
+'''MINIMAL LINES: Simple outlines only. Just trace the main edges with single black lines. No internal shading lines.''' if shading_level == "minimal" else
+'''MODERATE LINES: Outlines plus some hatching (parallel black lines) to suggest shadows. Each line separate and distinct.''' if shading_level == "light" else
+'''MAXIMUM LINES: Dense linework with heavy hatching/cross-hatching. Lots of lines but each one is pure black, not gray.'''
 }
 
-📋 FINAL CHECK:
-□ Is every pixel either pure black or pure white?
-□ Is the composition identical to the input (no cropping/shifting)?
-□ Are there ZERO gradients or soft shading areas?
-□ Would this transfer cleanly on a thermal stencil machine?
+Remember: The output goes to a thermal stencil machine. It can ONLY print pure black. Any gray or color will fail.
 
-Generate the stencil now."""
+Generate pure black line art now - NO COLOR, NO GRAY."""
 
         
         image_base64 = None
