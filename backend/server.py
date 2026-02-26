@@ -2018,6 +2018,12 @@ Think of it like a rubber stamp or a coloring book outline:
 - Just crisp BLACK LINES on WHITE paper
 - If you were to print this, only black ink touches the paper
 
+📐 LINE STYLES TO USE:
+- SOLID LINES: For main outlines and strong edges
+- DASHED/DOTTED LINES: For contour references, subtle transitions, and contrast guides
+- Use dotted lines to indicate where shadows fall or where form changes direction
+- Dotted lines help the tattoo artist understand depth and placement
+
 🖼️ OUTPUT REQUIREMENTS:
 - Same dimensions as input - do not crop or zoom
 - Same composition - subject in same position
@@ -2026,14 +2032,14 @@ Think of it like a rubber stamp or a coloring book outline:
 🎨 DETAIL LEVEL: {shading_level.upper()}
 
 {
-'''MINIMAL LINES: Simple outlines only. Just trace the main edges with single black lines. No internal shading lines.''' if shading_level == "minimal" else
-'''MODERATE LINES: Outlines plus some hatching (parallel black lines) to suggest shadows. Each line separate and distinct.''' if shading_level == "light" else
-'''MAXIMUM LINES: Dense linework with heavy hatching/cross-hatching. Lots of lines but each one is pure black, not gray.'''
+'''MINIMAL LINES: Simple outlines only. Solid lines for main edges. Light dotted lines for major contour references.''' if shading_level == "minimal" else
+'''MODERATE LINES: Outlines plus hatching. Use dotted/dashed lines for contour guides and shadow placement references. Solid lines for main features.''' if shading_level == "light" else
+'''MAXIMUM LINES: Dense linework with heavy hatching. Include dotted contour reference lines throughout to show form and depth. Mix solid and dotted lines strategically.'''
 }
 
 Remember: The output goes to a thermal stencil machine. It can ONLY print pure black. Any gray or color will fail.
 
-Generate pure black line art now - NO COLOR, NO GRAY."""
+Generate pure black line art now - include dotted reference lines for contours - NO COLOR, NO GRAY."""
 
         # Generate using Gemini
         result_base64, mime_type = await generate_with_gemini(image_data, prompt)
