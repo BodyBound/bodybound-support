@@ -1885,35 +1885,78 @@ Generate pure black line art now - include dotted reference lines for contours -
                 detail="Unable to generate stencil. AI services may be experiencing issues. Please check your internet connection and try again."
             )
         
-        # CRITICAL: Resize the generated stencil to match the original image dimensions
-        # This ensures perfect alignment in the edit mode overlay
+        # CRITICAL: Align generated stencil to match original image for overlay
+        # The AI generates at its own dimensions - we must carefully align, not just stretch
         try:
-            # Get original image dimensions from the input
-            original_img_data = base64.b64decode(image_data)
+            # Get original image dimensions from the INPUT (before any enhancement/resize)
+            # Use the ORIGINAL request image, not the enhanced one
+            original_b64 = request.image_base64
+            if ',' in original_b64:
+                original_b64 = original_b64.split(',')[1]
+            original_img_data = base64.b64decode(original_b64)
             original_img = Image.open(BytesIO(original_img_data))
             original_width, original_height = original_img.size
-            logger.info(f"Original image dimensions: {original_width}x{original_height}")
+            logger.info(f"Original input image dimensions: {original_width}x{original_height}")
             
             # Decode the generated stencil
             stencil_img_data = base64.b64decode(image_base64)
             stencil_img = Image.open(BytesIO(stencil_img_data))
             stencil_width, stencil_height = stencil_img.size
-            logger.info(f"Generated stencil dimensions: {stencil_width}x{stencil_height}")
+            logger.info(f"AI-generated stencil dimensions: {stencil_width}x{stencil_height}")
             
-            # Resize stencil to match original if dimensions differ
+            # If dimensions differ, use smart alignment (not simple stretch)
             if stencil_width != original_width or stencil_height != original_height:
-                logger.info(f"Resizing stencil from {stencil_width}x{stencil_height} to {original_width}x{original_height}")
-                stencil_img = stencil_img.resize((original_width, original_height), Image.Resampling.LANCZOS)
+                logger.info(f"Aligning stencil from {stencil_width}x{stencil_height} to {original_width}x{original_height}")
+                
+                # Calculate aspect ratios
+                original_aspect = original_width / original_height
+                stencil_aspect = stencil_width / stencil_height
+                
+                # Convert stencil to RGB if needed (for proper compositing)
+                if stencil_img.mode == 'RGBA':
+                    # Paste on white background
+                    bg = Image.new('RGB', stencil_img.size, (255, 255, 255))
+                    bg.paste(stencil_img, mask=stencil_img.split()[-1] if stencil_img.mode == 'RGBA' else None)
+                    stencil_img = bg
+                elif stencil_img.mode != 'RGB':
+                    stencil_img = stencil_img.convert('RGB')
+                
+                # Scale the stencil to fit within original dimensions while preserving aspect ratio
+                # Then center it on a white canvas of the original size
+                
+                # Calculate scale to fit
+                scale_w = original_width / stencil_width
+                scale_h = original_height / stencil_height
+                scale = min(scale_w, scale_h)  # Fit entirely within original bounds
+                
+                # Calculate new dimensions for the stencil
+                new_stencil_w = int(stencil_width * scale)
+                new_stencil_h = int(stencil_height * scale)
+                
+                # Resize stencil to fit
+                stencil_resized = stencil_img.resize((new_stencil_w, new_stencil_h), Image.Resampling.LANCZOS)
+                
+                # Create white canvas at original dimensions
+                aligned_stencil = Image.new('RGB', (original_width, original_height), (255, 255, 255))
+                
+                # Center the resized stencil on the canvas
+                paste_x = (original_width - new_stencil_w) // 2
+                paste_y = (original_height - new_stencil_h) // 2
+                aligned_stencil.paste(stencil_resized, (paste_x, paste_y))
+                
+                logger.info(f"Stencil scaled to {new_stencil_w}x{new_stencil_h} and centered at ({paste_x}, {paste_y})")
                 
                 # Convert back to base64
                 buffer = BytesIO()
-                stencil_img.save(buffer, format='PNG')
+                aligned_stencil.save(buffer, format='PNG')
                 image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
                 mime_type = 'image/png'
-                logger.info("Stencil resized successfully for alignment")
+                logger.info("Stencil aligned successfully using centered fit method")
         except Exception as resize_error:
-            logger.warning(f"Could not resize stencil (non-critical): {resize_error}")
-            # Continue with original stencil if resize fails
+            logger.warning(f"Could not align stencil (non-critical): {resize_error}")
+            import traceback
+            traceback.print_exc()
+            # Continue with original stencil if alignment fails
         
         # Format as data URL
         stencil_base64 = f"data:{mime_type};base64,{image_base64}"
