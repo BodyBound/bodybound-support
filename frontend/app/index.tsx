@@ -962,8 +962,8 @@ export default function Index() {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`[GenerateSingle] Failed to start job:`, errorText);
-        Alert.alert('Generation Failed', 'Could not start stencil generation.');
+        console.error(`[GenerateSingle] Failed to start job. Status: ${response.status}, Error:`, errorText);
+        Alert.alert('Generation Failed', `Could not start stencil generation. Status: ${response.status}`);
         return;
       }
       
