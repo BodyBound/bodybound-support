@@ -2906,7 +2906,7 @@ export default function Index() {
         {isGeneratingVersions && (
           <View style={styles.compactProgressSection}>
             <Text style={styles.compactProgressText}>
-              Generating {generationProgress}/3: {generationProgress === 1 ? 'Raw' : generationProgress === 2 ? 'Rugged' : generationProgress === 3 ? 'Refined' : '...'}
+              Generating {generationProgress}/3: {generationProgress === 1 ? 'Low Fidelity' : generationProgress === 2 ? 'Mid-Range' : generationProgress === 3 ? 'High Def' : '...'}
             </Text>
             <View style={styles.compactProgressDots}>
               <View style={[styles.compactDot, generationProgress >= 1 && styles.compactDotComplete]} />
