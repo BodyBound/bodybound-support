@@ -3284,14 +3284,16 @@ export default function Index() {
               <Text style={styles.procreateBrushLabel}>Size</Text>
               <View style={styles.procreateBrushSliderWrapper}>
                 <Slider
-                  style={styles.procreateBrushSlider}
+                  style={[styles.procreateBrushSlider, { transform: [{ rotate: '-90deg' }] }]}
                   minimumValue={1}
                   maximumValue={20}
-                  value={21 - brushSize}
-                  onValueChange={(val) => setBrushSize(21 - val)}
+                  step={1}
+                  value={brushSize}
+                  onValueChange={(val) => setBrushSize(val)}
                   minimumTrackTintColor="#C9A227"
                   maximumTrackTintColor="#555"
                   thumbTintColor="#C9A227"
+                  vertical={true}
                 />
               </View>
               <Text style={styles.procreateBrushValue}>{Math.round(brushSize)}</Text>
@@ -3302,14 +3304,16 @@ export default function Index() {
               <Text style={styles.procreateBrushLabel}>Opacity</Text>
               <View style={styles.procreateBrushSliderWrapper}>
                 <Slider
-                  style={styles.procreateBrushSlider}
+                  style={[styles.procreateBrushSlider, { transform: [{ rotate: '-90deg' }] }]}
                   minimumValue={0}
                   maximumValue={100}
-                  value={100 - (editOpacity * 100)}
-                  onValueChange={(val) => setEditOpacity((100 - val) / 100)}
+                  step={1}
+                  value={editOpacity * 100}
+                  onValueChange={(val) => setEditOpacity(val / 100)}
                   minimumTrackTintColor="#C9A227"
                   maximumTrackTintColor="#555"
                   thumbTintColor="#C9A227"
+                  vertical={true}
                 />
               </View>
               <Text style={styles.procreateBrushValue}>{Math.round(editOpacity * 100)}%</Text>
