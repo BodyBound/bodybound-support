@@ -1635,44 +1635,36 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
         else:
             shading_level = "moderate"
         
-        # Create the detailed prompt - STENCIL AI STYLE
-        prompt = f"""PROFESSIONAL TATTOO STENCIL GENERATOR - STENCIL AI STYLE
+        # Create the detailed prompt - THERMAFAX COMPATIBLE STENCIL
+        prompt = f"""PROFESSIONAL TATTOO STENCIL - THERMAFAX MACHINE COMPATIBLE
 
-You are creating a professional tattoo stencil. Your goal is to produce CRYSTAL-CLEAR, FINE LINE ART that captures ALL details from the reference image.
+You are creating a tattoo stencil that MUST work with a Thermafax thermal transfer machine.
 
-🎯 CORE PRINCIPLES (STENCIL AI APPROACH):
-1. **FINE, CLEAN LINES** - NOT thick/bold. Use delicate, precise linework
-2. **CAPTURE EVERYTHING** - Every detail: hair strands, jewelry, background elements, textures
-3. **PRESERVE COMPLEXITY** - Don't simplify. Keep intricate details like chains, feathers, patterns
-4. **HIGH CONTRAST** - Pure black lines on pure white background
-5. **TRANSFER-READY** - Lines that will transfer perfectly to thermal stencil paper
+🚨 CRITICAL THERMAFAX REQUIREMENTS:
+- ONLY pure BLACK lines on pure WHITE background
+- ZERO gradients, ZERO soft shading, ZERO gray tones
+- Every mark must be a DISTINCT BLACK LINE
+- NO airbrushed effects, NO blending, NO tonal variations
+- If it's not a clean black line, DON'T include it
 
-⚠️ WHAT NOT TO DO:
-- ❌ NO thick, chunky outlines
-- ❌ NO oversimplification of details
-- ❌ NO removing background elements
-- ❌ NO solid black filled areas (unless explicitly in the reference)
-- ❌ NO cartoon-like bold borders
+⚠️ WHAT WILL FAIL ON THERMAFAX (DO NOT DO):
+- ❌ Soft shading or gradients (will blur/smear)
+- ❌ Gray tones or semi-transparent areas (won't transfer)
+- ❌ Blended edges or feathered lines (will blob together)
+- ❌ Stippling that's too dense (becomes solid blob)
+- ❌ Any "drawing-like" or "artistic" shading
 
-✅ WHAT TO DO:
-- ✅ Use FINE, DELICATE lines (think technical pen, 0.1-0.3mm weight)
-- ✅ Capture EVERY strand of hair with individual fine lines
-- ✅ Include ALL jewelry details - every chain link, every bead
-- ✅ Preserve background elements - smoke, flames, patterns, textures
-- ✅ Show facial features with subtle, precise lines
-- ✅ Include fine texture details - skin texture, fabric folds, surface details
+✅ WHAT WORKS ON THERMAFAX (DO THIS):
+- ✅ Clean, crisp black lines
+- ✅ Hatching (parallel lines) for shadow indication
+- ✅ Cross-hatching (crossed lines) for darker areas
+- ✅ Clear spacing between all lines
+- ✅ Pure white space between line work
 
 🖼️ ALIGNMENT (CRITICAL):
-- Output MUST be the EXACT SAME dimensions as input
-- Subject position MUST match EXACTLY (same x,y coordinates)
+- Output MUST be EXACT SAME dimensions as input
+- Subject position MUST match EXACTLY
 - DO NOT crop, zoom, or shift the composition
-- TRACE directly over the reference - pixel-perfect alignment
-
-📐 LINE HIERARCHY:
-- **Defining contours**: Slightly heavier lines for main outlines (face shape, major forms)
-- **Secondary details**: Medium-fine lines for features (eyes, nose, lips, ears)
-- **Fine details**: Very fine lines for textures (hair strands, jewelry, background)
-- **ALL lines should be THIN compared to typical "bold stencil" style**
 
 🎨 DETAIL LEVEL: {shading_level.upper()}
 
