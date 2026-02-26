@@ -4418,12 +4418,12 @@ const styles = StyleSheet.create({
   },
   // Custom Button Style Selection - Dark Charcoal with Brass Labels
   stencilStyleSection: {
-    marginTop: 16,
-    paddingHorizontal: 12,
+    marginTop: 12,
+    paddingHorizontal: 16,
     backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    paddingVertical: 16,
-    marginHorizontal: 8,
+    borderRadius: 12,
+    paddingVertical: 12,
+    marginHorizontal: 12,
     // 3D bezel effect
     borderWidth: 2,
     borderColor: '#333',
@@ -4452,15 +4452,17 @@ const styles = StyleSheet.create({
   },
   styleButtonsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 12,
   },
   styleButtonWrapper: {
-    flex: 1,
-    borderRadius: 12,
+    width: 80,
+    height: 100,
+    borderRadius: 8,
     overflow: 'hidden',
     // Default brass 3D bezel border
-    borderWidth: 3,
+    borderWidth: 2,
     borderColor: '#8B7320',
     borderTopColor: '#A68B26',
     borderLeftColor: '#A68B26',
@@ -4469,7 +4471,7 @@ const styles = StyleSheet.create({
   },
   styleButtonSelected: {
     // Brighter brass when selected
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: '#C9A227',
     borderTopColor: '#E0B82E',
     borderLeftColor: '#E0B82E',
@@ -4481,17 +4483,17 @@ const styles = StyleSheet.create({
   },
   styleButtonImage: {
     width: '100%',
-    aspectRatio: 0.75,
+    height: '100%',
     backgroundColor: '#0A0A0A',
   },
   styleRegenButton: {
     position: 'absolute',
-    top: 6,
-    right: 6,
+    top: 4,
+    right: 4,
     backgroundColor: 'rgba(26,26,26,0.9)',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
+    borderRadius: 10,
+    width: 20,
+    height: 20,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
