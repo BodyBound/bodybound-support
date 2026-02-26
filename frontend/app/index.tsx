@@ -4388,21 +4388,24 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  cropCornerButton: {
-    position: 'absolute',
-    left: 8,
-    bottom: 56,
+  cropTopButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'rgba(26,26,26,0.9)',
     borderRadius: 8,
-    width: 36,
-    height: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderWidth: 1,
     borderColor: '#444',
   },
-  cropCornerIcon: {
-    fontSize: 18,
+  cropTopIcon: {
+    fontSize: 14,
+    marginRight: 5,
+  },
+  cropTopText: {
+    color: '#C9A227',
+    fontSize: 12,
+    fontWeight: '600',
   },
   compactVersionRow: {
     flexDirection: 'row',
