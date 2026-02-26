@@ -2623,35 +2623,31 @@ export default function Index() {
           </View>
         </View>
         <View style={styles.headerRight}>
-          {/* Stencil action icons - only show when stencil exists */}
-          {stencilImage && (
-            <>
-              <TouchableOpacity
-                style={styles.headerIconButton}
-                onPress={() => setShowPreviewModal(true)}
-              >
-                <Text style={styles.headerIconText}>🔍</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.headerIconButton}
-                onPress={openEditMode}
-              >
-                <Text style={styles.headerIconText}>✏️</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.headerIconButton}
-                onPress={printStencil}
-              >
-                <Text style={styles.headerIconText}>🖨️</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.headerIconButton}
-                onPress={showSaveOptions}
-              >
-                <Text style={styles.headerIconText}>💾</Text>
-              </TouchableOpacity>
-            </>
-          )}
+          {/* Action icons - always visible */}
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => setShowPreviewModal(true)}
+          >
+            <Text style={styles.headerIconText}>🔍</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={openEditMode}
+          >
+            <Text style={styles.headerIconText}>✏️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={printStencil}
+          >
+            <Text style={styles.headerIconText}>🖨️</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={showSaveOptions}
+          >
+            <Text style={styles.headerIconText}>💾</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.helpButton}
             onPress={showOnboardingTutorial}
