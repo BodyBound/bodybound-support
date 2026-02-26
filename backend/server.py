@@ -1750,7 +1750,7 @@ Generate the stencil now with FINE LINES and COMPLETE DETAIL CAPTURE."""
         return False
 
 async def process_stencil_job(job_id: str):
-    """Background task to process all 3 stencil versions"""
+    """Background task to process stencil versions (all 3 or single style)"""
     job = stencil_jobs.get(job_id)
     if not job:
         logger.error(f"[AsyncJob {job_id}] Job not found")
@@ -1778,35 +1778,64 @@ async def process_stencil_job(job_id: str):
         job.status = "processing"
         logger.info(f"[AsyncJob {job_id}] Starting stencil generation...")
         
-        # Generate Light version (progress 10-33%)
-        job.progress = 10
-        success = await generate_single_stencil_for_job(job, "light", 5, 0)
-        job.progress = 33
-        
-        # Small delay between generations
-        await asyncio.sleep(0.5)
-        
-        # Generate Medium version (progress 33-66%)
-        job.progress = 40
-        success = await generate_single_stencil_for_job(job, "medium", 30, 0)
-        job.progress = 66
-        
-        # Small delay between generations
-        await asyncio.sleep(0.5)
-        
-        # Generate Heavy version (progress 66-100%)
-        job.progress = 75
-        success = await generate_single_stencil_for_job(job, "heavy", 50, 30)
-        job.progress = 100
-        
-        # Check if at least one version succeeded
-        if job.result["light"] or job.result["medium"] or job.result["heavy"]:
-            job.status = "completed"
-            logger.info(f"[AsyncJob {job_id}] All versions completed successfully")
+        # Check if we're generating a single style or all styles
+        if job.single_style:
+            # Generate only the requested style
+            style = job.single_style
+            job.progress = 20
+            
+            if style == "light":
+                success = await generate_single_stencil_for_job(job, "light", 5, 0)
+            elif style == "medium":
+                success = await generate_single_stencil_for_job(job, "medium", 30, 0)
+            elif style == "heavy":
+                success = await generate_single_stencil_for_job(job, "heavy", 50, 30)
+            else:
+                logger.error(f"[AsyncJob {job_id}] Unknown style: {style}")
+                job.status = "failed"
+                job.error = f"Unknown style: {style}"
+                return
+            
+            job.progress = 100
+            
+            if job.result[style]:
+                job.status = "completed"
+                logger.info(f"[AsyncJob {job_id}] Single style '{style}' completed successfully")
+            else:
+                job.status = "failed"
+                job.error = f"Failed to generate {style} stencil"
+                logger.error(f"[AsyncJob {job_id}] Single style '{style}' failed")
         else:
-            job.status = "failed"
-            job.error = "Failed to generate any stencil versions"
-            logger.error(f"[AsyncJob {job_id}] All versions failed")
+            # Generate all 3 versions
+            # Generate Light version (progress 10-33%)
+            job.progress = 10
+            success = await generate_single_stencil_for_job(job, "light", 5, 0)
+            job.progress = 33
+            
+            # Small delay between generations
+            await asyncio.sleep(0.5)
+            
+            # Generate Medium version (progress 33-66%)
+            job.progress = 40
+            success = await generate_single_stencil_for_job(job, "medium", 30, 0)
+            job.progress = 66
+            
+            # Small delay between generations
+            await asyncio.sleep(0.5)
+            
+            # Generate Heavy version (progress 66-100%)
+            job.progress = 75
+            success = await generate_single_stencil_for_job(job, "heavy", 50, 30)
+            job.progress = 100
+            
+            # Check if at least one version succeeded
+            if job.result["light"] or job.result["medium"] or job.result["heavy"]:
+                job.status = "completed"
+                logger.info(f"[AsyncJob {job_id}] All versions completed successfully")
+            else:
+                job.status = "failed"
+                job.error = "Failed to generate any stencil versions"
+                logger.error(f"[AsyncJob {job_id}] All versions failed")
         
         job.completed_at = datetime.utcnow()
         job.current_style = None
