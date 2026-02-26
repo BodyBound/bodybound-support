@@ -2861,7 +2861,7 @@ export default function Index() {
                 <Text style={[
                   styles.compactVersionText,
                   selectedVersion === 'heavy' && styles.compactVersionTextSelected
-                ]}>Heavy</Text>
+                ]}>Refined</Text>
                 {stencilVersions.heavy && (
                   <TouchableOpacity
                     style={styles.regenButton}
