@@ -1784,6 +1784,52 @@ export default function Index() {
   };
 
   // Helper: Create smooth bezier curve from points
+  // Procreate-style StreamLine smoothing parameters
+  const streamLineAmount = 0.5; // 0 = no smoothing, 1 = max smoothing (like Procreate's StreamLine)
+  const stabilizationFactor = 0.3; // Motion filtering strength
+  
+  // Refs for StreamLine smoothing (like Procreate's monoline brush)
+  const smoothedPointRef = useRef<{x: number, y: number} | null>(null);
+  const velocityRef = useRef<{x: number, y: number}>({x: 0, y: 0});
+  const lastRawPointRef = useRef<{x: number, y: number} | null>(null);
+  
+  // Apply StreamLine smoothing - exponential moving average like Procreate
+  const applyStreamLine = (rawX: number, rawY: number): {x: number, y: number} => {
+    if (!smoothedPointRef.current) {
+      smoothedPointRef.current = {x: rawX, y: rawY};
+      lastRawPointRef.current = {x: rawX, y: rawY};
+      return {x: rawX, y: rawY};
+    }
+    
+    // Calculate velocity for motion filtering
+    if (lastRawPointRef.current) {
+      const dx = rawX - lastRawPointRef.current.x;
+      const dy = rawY - lastRawPointRef.current.y;
+      velocityRef.current = {
+        x: velocityRef.current.x * stabilizationFactor + dx * (1 - stabilizationFactor),
+        y: velocityRef.current.y * stabilizationFactor + dy * (1 - stabilizationFactor)
+      };
+    }
+    lastRawPointRef.current = {x: rawX, y: rawY};
+    
+    // StreamLine smoothing - exponential moving average
+    // Higher streamLineAmount = more smoothing (catches up slower)
+    const smoothingFactor = 1 - streamLineAmount;
+    smoothedPointRef.current = {
+      x: smoothedPointRef.current.x + (rawX - smoothedPointRef.current.x) * smoothingFactor,
+      y: smoothedPointRef.current.y + (rawY - smoothedPointRef.current.y) * smoothingFactor
+    };
+    
+    return smoothedPointRef.current;
+  };
+  
+  // Reset smoothing state when starting a new stroke
+  const resetStreamLine = () => {
+    smoothedPointRef.current = null;
+    velocityRef.current = {x: 0, y: 0};
+    lastRawPointRef.current = null;
+  };
+
   const createSmoothPath = (points: {x: number, y: number}[]): string => {
     if (points.length < 2) return '';
     if (points.length === 2) {
@@ -1792,27 +1838,22 @@ export default function Index() {
     
     let path = `M${points[0].x},${points[0].y}`;
     
-    for (let i = 1; i < points.length - 1; i++) {
-      const prev = points[i - 1];
-      const curr = points[i];
-      const next = points[i + 1];
+    // Use Catmull-Rom to cubic Bezier conversion for ultra-smooth strokes
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[Math.max(0, i - 1)];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[Math.min(points.length - 1, i + 2)];
       
-      // Use quadratic bezier for smoother strokes
-      const midX = (prev.x + curr.x) / 2;
-      const midY = (prev.y + curr.y) / 2;
+      // Catmull-Rom to Bezier control points (tension = 0.5 for smooth curves)
+      const tension = 0.5;
+      const cp1x = p1.x + (p2.x - p0.x) * tension / 3;
+      const cp1y = p1.y + (p2.y - p0.y) * tension / 3;
+      const cp2x = p2.x - (p3.x - p1.x) * tension / 3;
+      const cp2y = p2.y - (p3.y - p1.y) * tension / 3;
       
-      if (i === 1) {
-        path += ` Q${prev.x},${prev.y} ${midX},${midY}`;
-      }
-      
-      const nextMidX = (curr.x + next.x) / 2;
-      const nextMidY = (curr.y + next.y) / 2;
-      path += ` Q${curr.x},${curr.y} ${nextMidX},${nextMidY}`;
+      path += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`;
     }
-    
-    // End at the last point
-    const last = points[points.length - 1];
-    path += ` L${last.x},${last.y}`;
     
     return path;
   };
