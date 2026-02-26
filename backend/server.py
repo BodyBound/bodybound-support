@@ -1407,108 +1407,95 @@ async def generate_ai_stencil(request: AIStencilRequest):
         
         fill_level = "none" if request.solid_fill < 15 else "minimal" if request.solid_fill < 40 else "moderate"
         
-        # Create the prompt for EXACT tracing - PROFESSIONAL TATTOO STENCILS
-        # This is for real tattoo artists - precision is critical
-        prompt = f"""PROFESSIONAL TATTOO STENCIL - EXACT STYLE REPLICATION
+        # Create the prompt - STENCIL AI STYLE: Fine lines, detail preservation, background capture
+        prompt = f"""PROFESSIONAL TATTOO STENCIL GENERATOR - STENCIL AI STYLE
 
-You are creating a tattoo stencil for professional tattoo artists. Your output MUST match this EXACT style:
+You are creating a professional tattoo stencil. Your goal is to produce CRYSTAL-CLEAR, FINE LINE ART that captures ALL details from the reference image.
 
-🎨 MASTER STYLE REFERENCE (FOLLOW THIS EXACTLY):
-- THICK, BOLD BLACK OUTLINES for all primary contours (face shape, jawline, nose profile, lips, hair outline, accessories)
-- MEDIUM WEIGHT LINES for secondary features (ear structure, eye details, eyebrows)
-- DASHED/DOTTED LINES for shading guides and form indication
-- HIGH CONTRAST black lines on pure white - NO gray, NO faint lines
-- Lines should be CONFIDENT and BOLD - not sketchy or light
+🎯 CORE PRINCIPLES (STENCIL AI APPROACH):
+1. **FINE, CLEAN LINES** - NOT thick/bold. Use delicate, precise linework
+2. **CAPTURE EVERYTHING** - Every detail: hair strands, jewelry, background elements, textures
+3. **PRESERVE COMPLEXITY** - Don't simplify. Keep intricate details like chains, feathers, patterns
+4. **HIGH CONTRAST** - Pure black lines on pure white background
+5. **TRANSFER-READY** - Lines that will transfer perfectly to thermal stencil paper
 
-🚨🚨🚨 CRITICAL: PIXEL-PERFECT ALIGNMENT 🚨🚨🚨
-This stencil will be OVERLAID on the reference photo. ZERO misalignment allowed.
+⚠️ WHAT NOT TO DO:
+- ❌ NO thick, chunky outlines
+- ❌ NO oversimplification of details
+- ❌ NO removing background elements
+- ❌ NO solid black filled areas (unless explicitly in the reference)
+- ❌ NO cartoon-like bold borders
 
-ALIGNMENT RULES (MANDATORY - READ CAREFULLY):
-1. DO NOT shift subject left, right, up, or down - EXACT same position
-2. DO NOT zoom in or zoom out - EXACT same scale  
-3. DO NOT add margins or borders - edge-to-edge matching
-4. The LEFT EYE center must be at EXACTLY the same (x,y) coordinates
-5. The RIGHT EYE center must be at EXACTLY the same (x,y) coordinates
-6. The NOSE TIP must be at EXACTLY the same (x,y) coordinates
-7. The CHIN must be at EXACTLY the same (x,y) coordinates
-8. The TOP OF HEAD must be the same distance from top edge
-9. TRACE OVER the photo - do not redraw from memory or interpretation
+✅ WHAT TO DO:
+- ✅ Use FINE, DELICATE lines (think technical pen, 0.1-0.3mm weight)
+- ✅ Capture EVERY strand of hair with individual fine lines
+- ✅ Include ALL jewelry details - every chain link, every bead
+- ✅ Preserve background elements - smoke, flames, patterns, textures
+- ✅ Show facial features with subtle, precise lines
+- ✅ Include fine texture details - skin texture, fabric folds, surface details
 
-⚠️ CANVAS & DIMENSIONS:
-- Output MUST be the EXACT SAME pixel dimensions as input
-- FILL the entire canvas - subject in SAME position
-- If input has negative space, preserve it EXACTLY
+🖼️ ALIGNMENT (CRITICAL):
+- Output MUST be the EXACT SAME dimensions as input
+- Subject position MUST match EXACTLY (same x,y coordinates)
+- DO NOT crop, zoom, or shift the composition
+- TRACE directly over the reference - pixel-perfect alignment
 
-📐 LINE WEIGHT SPECIFICATIONS:
-- THICKEST LINES (3-4pt equivalent): Face outline, jawline, main hair outline, nose bridge/profile, lip outline, major accessory outlines
-- MEDIUM LINES (2pt equivalent): Eye outlines, ear details, eyebrow shapes, secondary hair strands, jewelry
-- THIN LINES (1pt equivalent): Dashed contour lines, shading guides, texture details
+📐 LINE HIERARCHY:
+- **Defining contours**: Slightly heavier lines for main outlines (face shape, major forms)
+- **Secondary details**: Medium-fine lines for features (eyes, nose, lips, ears)
+- **Fine details**: Very fine lines for textures (hair strands, jewelry, background)
+- **ALL lines should be THIN compared to typical "bold stencil" style**
 
-STEP 1: TRACE THE EXACT POSITIONS
-Before drawing, mentally note:
-- Exact distance from top edge to top of head
-- Exact distance from bottom edge to chin
-- Exact horizontal position of each eye
-- Exact spacing on left and right sides
-YOUR STENCIL MUST MATCH THESE EXACTLY.
-
-STEP 2: DRAW WITH BOLD, CONFIDENT LINES
-- Use THICK, DARK strokes - not light or sketchy
-- Lines should be suitable for thermal transfer paper
-- Every line should be clearly visible and professional
-
-STEP 3: APPLY DETAIL LEVEL - {shading_level.upper()}
+🎨 DETAIL LEVEL: {shading_level.upper()}
 
 {
-'''LIGHT VERSION - CLEAN OUTLINES ONLY (NO SOLID BLACK FILLS):
-- CLEAN, MEDIUM-WEIGHT outlines ONLY - NOT thick/bold filled areas
-- Outline the face shape, jawline, profile with single stroke lines
-- Outline hair silhouette with single stroke lines (NO filled black areas)
-- Outline all accessories (feathers, jewelry, headwear) with single strokes
-- Clean defined eyes with outline strokes only
-- Simple eyebrow outlines
-- ⚠️ ABSOLUTELY NO SOLID BLACK FILLS anywhere
-- ⚠️ NO internal shading lines, NO dots, NO dashes
-- ⚠️ NO hatching or crosshatching whatsoever
-- Just CLEAN SINGLE-STROKE OUTLINES that define shapes
-- Think: Simple line drawing, NOT a coloring book with thick borders
-- Every dark area should just be an outline, NOT a filled shape''' if shading_level == "minimal" else
+'''OUTLINE STYLE - Clean linework, maximum detail capture:
+- FINE, CLEAN LINES tracing every contour and detail
+- Capture ALL elements: subject + background + accessories + textures
+- Hair: Individual strands with fine flowing lines
+- Jewelry: Every link, bead, and detail preserved
+- Background: Include smoke, flames, patterns, atmospheric elements
+- Facial features: Subtle, precise lines - not bold cartoon outlines
+- NO shading - pure linework only
+- Result should look like a highly detailed technical illustration''' if shading_level == "minimal" else
 
-'''MEDIUM VERSION - BOLD OUTLINES + DASHED SHADING GUIDES:
-- THICK bold outlines for all primary shapes (face, jawline, hair outline)
-- ADD DASHED LINES (- - - -) to indicate shadow placement:
-  * Dashed contour under cheekbones following the bone structure
-  * Dashed line under the nose indicating shadow
-  * Dashed lines around eye sockets showing depth
-  * Dashed lines on lips showing volume
-- ADD DOTTED LINES (....) for subtle form indicators
-- Hair should have internal line detail showing flow direction
-- Feathers should have internal vein lines
-- The dashed lines guide where the tattoo artist should shade
-- ⚠️ NO solid black filled areas - keep all shading as dashed/dotted guides
-- This is the IDEAL balance of outline and shading reference''' if shading_level == "light" else
+'''SIMPLE STYLE - Fine lines with light shading indication:
+- Same FINE LINE approach as Outline style
+- Add subtle contour lines to indicate form/depth:
+  * Light parallel lines in shadow areas
+  * Fine hatching to show volume
+- Keep lines FINE and DELICATE - not bold
+- Capture ALL details including background elements
+- Hair: Fine strands with subtle directional flow lines
+- Jewelry: Complete detail with light dimensional shading
+- The shading helps artist understand form without being heavy''' if shading_level == "light" else
 
-'''HEAVY VERSION - MEDIUM STYLE + CROSSHATCH SHADING MARKS:
-- SAME as MEDIUM version: Bold outlines + dashed shading guides
-- ADD CONTROLLED CROSSHATCHING marks to show shading intensity:
-  * Light crosshatch (X patterns) in medium shadow areas
-  * Denser crosshatch patterns in darker shadow areas
-  * Use crosshatch to indicate WHERE and HOW DARK to shade
-- ⚠️ IMPORTANT: Crosshatching should be MARKS/GUIDES, NOT solid black fills
-- ⚠️ NO solid black filled areas - all shading via line patterns
-- Keep crosshatching SPARSE and CONTROLLED - NOT dense black masses
-- The crosshatch tells the artist "shade here with this intensity"
-- Should look like MEDIUM version with additional hatching marks added'''
+'''DETAILED STYLE - Maximum detail with refined shading:
+- FINE LINES capturing every possible detail
+- Comprehensive shading using fine line techniques:
+  * Delicate hatching and cross-hatching for shadows
+  * Stippling or fine dots for softer gradients
+  * Contour lines following form
+- IMPORTANT: Shading should be FINE LINE PATTERNS, not solid black
+- Capture EVERYTHING: 
+  * Every hair strand with flow and volume
+  * Complete jewelry with dimensional detail
+  * Full background elements (smoke, flames, patterns)
+  * Skin texture and subtle facial features
+  * Clothing/fabric details and folds
+- This should be the MOST detailed version with rich line work
+- Think: Highly detailed engraving or technical illustration style'''
 }
 
-FINAL CHECKS BEFORE OUTPUT:
-- Are lines BOLD and THICK enough? (not light or sketchy)
-- Is alignment PERFECT with reference? (overlay test would match)
-- Is contrast HIGH? (pure black on pure white)
-- Does it look like a PROFESSIONAL tattoo stencil?
-- Would this transfer cleanly to skin?
+📋 FINAL CHECKLIST:
+□ Are ALL details captured? (hair, jewelry, background, textures)
+□ Are lines FINE and DELICATE (not thick/bold)?
+□ Is the composition IDENTICAL to reference? (no cropping/shifting)
+□ Is contrast HIGH? (pure black on pure white)
+□ Would this capture the FULL richness of the reference image?
+□ Does it look like professional Stencil AI output?
 
-Generate the stencil now. BOLD LINES + PERFECT ALIGNMENT are mandatory."""
+Generate the stencil now with FINE LINES and COMPLETE DETAIL CAPTURE."""
 
         
         image_base64 = None
