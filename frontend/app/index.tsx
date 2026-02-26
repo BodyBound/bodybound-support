@@ -903,7 +903,7 @@ export default function Index() {
     }
   };
 
-  // Generate a single stencil style (for initial generation - saves user cost)
+  // Generate a single stencil style using unified hybrid pipeline
   const generateSingleStyle = async (style: 'light' | 'medium' | 'heavy') => {
     if (!originalImage || isGeneratingAI || regeneratingStyle) return;
     
@@ -926,78 +926,36 @@ export default function Index() {
         imageBase64 = `data:image/jpeg;base64,${base64Data}`;
       }
       
-      console.log(`[GenerateSingle] Generating ${style} version using ${stencilMethod.toUpperCase()} method...`);
+      console.log(`[GenerateSingle] Generating ${style} version...`);
       
-      // Check if using CV (Computer Vision) method
-      if (stencilMethod === 'cv') {
-        // Use the professional CV endpoint with U2-Net + edge detection
-        const response = await fetch(`${API_URL}/api/cv-stencil`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            image_base64: imageBase64,
-            detail_level: style,
-            line_weight: lineWeight,
-            remove_background: true,  // Use U2-Net background removal
-            ai_cleanup: aiCleanup,    // Optional AI refinement
-          }),
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`[GenerateSingle CV] Failed:`, errorText);
-          Alert.alert('Generation Failed', 'Could not generate stencil using CV method.');
-          return;
-        }
-        
-        const data = await response.json();
-        console.log(`[GenerateSingle CV] Complete in ${data.processing_time_ms}ms`);
-        
-        setStencilVersions(prev => ({
-          ...prev,
-          [style]: data.stencil_base64
-        }));
-        setSelectedVersion(style);
-        setStencilImage(data.stencil_base64);
-        setHasGeneratedOnce(true);
-        
-      } else {
-        // Use the AI async endpoint (existing flow)
-        const response = await fetch(`${API_URL}/api/ai-stencil-async`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            image_base64: imageBase64,
-            style: 'tattoo',
-            line_color: 'black',
-            auto_enhance: autoEnhance,
-            single_style: style, // Only generate this style
-          }),
-        });
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`[GenerateSingle] Failed to start job:`, errorText);
-          Alert.alert('Generation Failed', 'Could not start stencil generation.');
-          return;
-        }
-        
-        const { job_id: jobId } = await response.json();
-        console.log(`[GenerateSingle] Job started:`, jobId);
-        
-        // Poll for completion
-        let completed = false;
-        while (!completed) {
-          await new Promise(resolve => setTimeout(resolve, 1500));
-          
-          const statusResponse = await fetch(`${API_URL}/api/ai-stencil-status/${jobId}`);
-          if (!statusResponse.ok) {
-            console.error(`[GenerateSingle] Status check failed`);
-            continue;
-          }
-          
-          const statusData = await statusResponse.json();
-          console.log(`[GenerateSingle] Status: ${statusData.status}, Progress: ${statusData.progress}%`);
+      // Use the hybrid pipeline endpoint (U2-Net + AI line art + binary post-processing)
+      const response = await fetch(`${API_URL}/api/cv-stencil`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image_base64: imageBase64,
+          detail_level: style,
+          line_weight: 0,  // Apply line weight adjustment after generation
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[GenerateSingle] Failed:`, errorText);
+        Alert.alert('Generation Failed', 'Could not generate stencil. Please try again.');
+        return;
+      }
+      
+      const data = await response.json();
+      console.log(`[GenerateSingle] Complete in ${data.processing_time_ms}ms`);
+      
+      setStencilVersions(prev => ({
+        ...prev,
+        [style]: data.stencil_base64
+      }));
+      setSelectedVersion(style);
+      setStencilImage(data.stencil_base64);
+      setHasGeneratedOnce(true);
           
           if (statusData.status === 'completed') {
             completed = true;
