@@ -4234,6 +4234,108 @@ const styles = StyleSheet.create({
   compactVersionSection: {
     marginTop: 10,
   },
+  // NEW: Stencil Style Section (matches reference image)
+  stencilStyleSection: {
+    marginTop: 12,
+    paddingHorizontal: 4,
+  },
+  styleHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 8,
+  },
+  styleHeaderTitle: {
+    color: '#E8E8E8',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    flex: 1,
+    textAlign: 'center',
+  },
+  styleCardsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  styleCard: {
+    flex: 1,
+    aspectRatio: 1,
+    backgroundColor: '#0A0A0A',
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: '#4A4A4A',
+    overflow: 'hidden',
+  },
+  styleCardSelected: {
+    borderColor: '#C9A227',
+    borderWidth: 3,
+  },
+  styleCardDisabled: {
+    opacity: 0.35,
+  },
+  styleCardInner: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#111',
+  },
+  styleSkullIcon: {
+    fontSize: 32,
+    opacity: 0.6,
+  },
+  styleSkullIconMid: {
+    fontSize: 32,
+    opacity: 0.8,
+  },
+  styleSkullIconHigh: {
+    fontSize: 32,
+    opacity: 1,
+  },
+  styleRegenButton: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: 'rgba(40,40,40,0.9)',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  styleRegenText: {
+    fontSize: 12,
+  },
+  styleDescRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+    gap: 8,
+  },
+  styleDescContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  styleDescTitle: {
+    color: '#E8E8E8',
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  styleDescSubtitle: {
+    color: '#888',
+    fontSize: 8,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    marginTop: 2,
+  },
   compactVersionRow: {
     flexDirection: 'row',
     gap: 8,
