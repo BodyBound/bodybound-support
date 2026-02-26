@@ -2775,32 +2775,6 @@ export default function Index() {
                   </TouchableOpacity>
                 )}
 
-                {/* Export buttons below main image when stencil exists */}
-                {stencilImage && (
-                  <View style={styles.exportButtons}>
-                    <TouchableOpacity 
-                      style={styles.exportButton} 
-                      onPress={() => setShowPreviewModal(true)}
-                    >
-                      <Text style={styles.exportIconText}>🔍</Text>
-                      <Text style={styles.exportButtonText}>Full View</Text>
-                    </TouchableOpacity>
-                    {/* Edit button - available on all iOS devices */}
-                    <TouchableOpacity style={styles.exportButton} onPress={openEditMode}>
-                      <Text style={[styles.exportIconText, { color: '#10B981' }]}>✏️</Text>
-                      <Text style={styles.exportButtonText}>Edit</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.exportButton} onPress={printStencil}>
-                      <Text style={[styles.exportIconText, { color: '#3B82F6' }]}>🖨️</Text>
-                      <Text style={styles.exportButtonText}>Print</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.exportButton} onPress={showSaveOptions}>
-                      <Text style={[styles.exportIconText, { color: '#10B981' }]}>💾</Text>
-                      <Text style={styles.exportButtonText}>Save</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-                
                 {/* Revert button - only show if user has edited the stencil */}
                 {editedStencil && originalAIStencil && (
                   <TouchableOpacity style={styles.revertButton} onPress={revertToOriginal}>
