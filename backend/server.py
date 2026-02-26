@@ -1868,6 +1868,8 @@ async def start_async_stencil(request: AsyncStencilRequest):
     
     Use GET /api/ai-stencil-status/{job_id} to poll for results.
     This avoids gateway timeouts by not waiting for generation to complete.
+    
+    Set auto_enhance=true (default) to use AI upscaling/enhancement before stencil generation.
     """
     try:
         # Create job
@@ -1875,11 +1877,13 @@ async def start_async_stencil(request: AsyncStencilRequest):
         job = StencilJob(
             job_id=job_id,
             image_base64=request.image_base64,
-            settings={"line_color": request.line_color}
+            settings={"line_color": request.line_color},
+            auto_enhance=request.auto_enhance
         )
         stencil_jobs[job_id] = job
         
-        logger.info(f"[AsyncJob {job_id}] Job created, starting background processing...")
+        enhance_msg = "with AI enhancement" if request.auto_enhance else "without AI enhancement"
+        logger.info(f"[AsyncJob {job_id}] Job created {enhance_msg}, starting background processing...")
         
         # Start background task (don't await it)
         asyncio.create_task(process_stencil_job(job_id))
