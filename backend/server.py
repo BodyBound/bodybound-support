@@ -171,225 +171,318 @@ def cv2_to_base64(img: np.ndarray) -> str:
     return f"data:image/png;base64,{base64_string}"
 
 # ============================================
-# COMPUTER VISION STENCIL PIPELINE
+# PROFESSIONAL STENCIL PIPELINE
+# U2-Net Background Removal + Edge Detection + Morphological Control
 # ============================================
 
-def generate_cv_stencil(image: np.ndarray, detail_level: str = "medium") -> np.ndarray:
+from rembg import remove as rembg_remove
+from PIL import Image as PILImage
+
+def remove_background_u2net(image: np.ndarray) -> np.ndarray:
     """
-    Generate a Thermafax-compatible stencil using computer vision techniques:
-    - Edge detection (Canny with auto-tuning)
-    - Adaptive thresholding for local contrast adjustment
-    - Morphological operations for clean lines
-    - Line thinning for consistent stroke width
-    
-    Args:
-        image: BGR input image (OpenCV format)
-        detail_level: "light" (minimal lines), "medium" (balanced), "heavy" (maximum detail)
+    Remove background using U2-Net (via rembg).
+    Isolates the subject completely, removing all background noise.
     
     Returns:
-        Binary stencil image (black lines on white background)
+        Image with transparent background (BGRA format)
     """
-    logger.info(f"[CV-Stencil] Starting computer vision pipeline - detail: {detail_level}")
+    logger.info("[U2Net] Starting background removal...")
     
-    # Get original dimensions
-    original_h, original_w = image.shape[:2]
-    logger.info(f"[CV-Stencil] Input dimensions: {original_w}x{original_h}")
+    # Convert OpenCV BGR to PIL RGB
+    pil_image = PILImage.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
     
-    # Step 1: Convert to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Remove background using U2-Net
+    result = rembg_remove(pil_image)
     
-    # Step 2: Noise reduction with edge-preserving filter
-    # Bilateral filter preserves edges while smoothing
-    if detail_level == "light":
-        gray = cv2.bilateralFilter(gray, 9, 75, 75)
-    elif detail_level == "medium":
-        gray = cv2.bilateralFilter(gray, 7, 50, 50)
-    else:  # heavy - preserve more detail
-        gray = cv2.bilateralFilter(gray, 5, 30, 30)
+    # Convert back to OpenCV format (BGRA)
+    result_np = np.array(result)
     
-    # Step 3: Contrast enhancement using CLAHE (Contrast Limited Adaptive Histogram Equalization)
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
-    gray = clahe.apply(gray)
+    # If the result has an alpha channel, convert RGBA to BGRA
+    if result_np.shape[2] == 4:
+        result_bgra = cv2.cvtColor(result_np, cv2.COLOR_RGBA2BGRA)
+    else:
+        result_bgra = cv2.cvtColor(result_np, cv2.COLOR_RGB2BGR)
     
-    # Step 4: Edge Detection - Auto-tuned Canny
+    logger.info(f"[U2Net] Background removal complete - output shape: {result_bgra.shape}")
+    return result_bgra
+
+
+def create_subject_mask(image_bgra: np.ndarray) -> np.ndarray:
+    """
+    Create a binary mask from the alpha channel of a BGRA image.
+    """
+    if image_bgra.shape[2] == 4:
+        # Use alpha channel as mask
+        alpha = image_bgra[:, :, 3]
+        _, mask = cv2.threshold(alpha, 127, 255, cv2.THRESH_BINARY)
+        return mask
+    else:
+        # No alpha, create full mask
+        return np.ones(image_bgra.shape[:2], dtype=np.uint8) * 255
+
+
+def apply_canny_edge_detection(gray: np.ndarray, sensitivity: str = "medium") -> np.ndarray:
+    """
+    Apply Canny edge detection with auto-tuned thresholds.
+    
+    Args:
+        gray: Grayscale image
+        sensitivity: "low" (fewer edges), "medium", "high" (more edges)
+    
+    Returns:
+        Binary edge image
+    """
     # Calculate optimal thresholds based on image statistics
     median_val = np.median(gray)
     sigma = 0.33
     
-    if detail_level == "light":
-        # Higher thresholds = fewer edges
+    if sensitivity == "low":
         lower = int(max(0, (1.0 + sigma) * median_val))
         upper = int(min(255, (1.0 + sigma * 2) * median_val))
-    elif detail_level == "medium":
-        lower = int(max(0, (1.0 - sigma * 0.5) * median_val))
+    elif sensitivity == "medium":
+        lower = int(max(0, (1.0 - sigma * 0.3) * median_val))
         upper = int(min(255, (1.0 + sigma) * median_val))
-    else:  # heavy - more edges
+    else:  # high
         lower = int(max(0, (1.0 - sigma) * median_val))
         upper = int(min(255, (1.0 + sigma * 0.5) * median_val))
     
-    logger.info(f"[CV-Stencil] Canny thresholds: lower={lower}, upper={upper}")
+    logger.info(f"[Canny] Sensitivity={sensitivity}, thresholds: {lower}-{upper}")
     edges = cv2.Canny(gray, lower, upper)
     
-    # Step 5: Adaptive Thresholding for additional detail
-    # This captures details that pure edge detection might miss
+    return edges
+
+
+def apply_adaptive_threshold(gray: np.ndarray, detail_level: str = "medium") -> np.ndarray:
+    """
+    Apply adaptive thresholding for true binary output.
+    Captures detail based on local contrast - no gray pixels.
+    
+    Args:
+        gray: Grayscale image
+        detail_level: "light", "medium", "heavy"
+    
+    Returns:
+        Binary thresholded image (0 or 255 only)
+    """
     if detail_level == "light":
-        block_size = 21
-        c_value = 10
+        block_size = 25
+        c_value = 12
     elif detail_level == "medium":
-        block_size = 15
+        block_size = 17
         c_value = 8
     else:  # heavy
         block_size = 11
-        c_value = 5
+        c_value = 4
+    
+    # Ensure block_size is odd
+    if block_size % 2 == 0:
+        block_size += 1
     
     adaptive = cv2.adaptiveThreshold(
-        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-        cv2.THRESH_BINARY_INV, block_size, c_value
+        gray, 255, 
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+        cv2.THRESH_BINARY_INV, 
+        block_size, c_value
     )
     
-    # Step 6: Combine edge detection and adaptive threshold
-    # This gives us both strong contours and fine details
-    if detail_level == "light":
-        # Primarily edges, minimal adaptive
-        combined = edges
-    elif detail_level == "medium":
-        # Blend both
-        combined = cv2.bitwise_or(edges, adaptive)
-        # Clean up noise
-        kernel_small = np.ones((2, 2), np.uint8)
-        combined = cv2.morphologyEx(combined, cv2.MORPH_OPEN, kernel_small)
-    else:  # heavy
-        # Maximum detail from both sources
-        combined = cv2.bitwise_or(edges, adaptive)
-    
-    # Step 7: Morphological operations for clean lines
-    # Closing fills small gaps in lines
-    kernel = np.ones((2, 2), np.uint8)
-    combined = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, kernel)
-    
-    # Step 8: Line thinning (skeletonization) for consistent line width
-    # This ensures lines are 1 pixel wide - perfect for Thermafax
-    try:
-        from skimage.morphology import skeletonize
-        # Convert to binary (0 and 1)
-        binary = combined > 0
-        skeleton = skeletonize(binary)
-        # Convert back to 0-255
-        thinned = (skeleton * 255).astype(np.uint8)
-        logger.info("[CV-Stencil] Skeletonization complete")
-    except ImportError:
-        logger.warning("[CV-Stencil] skimage not available, using morphological thinning")
-        thinned = combined
-    
-    # Step 9: Optional line thickening based on detail level
-    # Thermafax needs visible lines, not single-pixel
-    if detail_level == "light":
-        line_kernel = np.ones((2, 2), np.uint8)
-    elif detail_level == "medium":
-        line_kernel = np.ones((2, 2), np.uint8)
-    else:  # heavy
-        line_kernel = np.ones((3, 3), np.uint8)
-    
-    # Dilate to make lines visible
-    final_lines = cv2.dilate(thinned, line_kernel, iterations=1)
-    
-    # Step 10: Create final stencil (black lines on white background)
-    stencil = 255 - final_lines  # Invert: white background, black lines
-    
-    # Convert to 3-channel for consistency
-    stencil_bgr = cv2.cvtColor(stencil, cv2.COLOR_GRAY2BGR)
-    
-    logger.info(f"[CV-Stencil] Pipeline complete - output: {stencil_bgr.shape}")
-    return stencil_bgr
+    logger.info(f"[AdaptiveThreshold] Detail={detail_level}, block={block_size}, C={c_value}")
+    return adaptive
 
 
-def generate_hybrid_stencil(image: np.ndarray, detail_level: str = "medium") -> np.ndarray:
+def apply_line_weight_control(binary: np.ndarray, weight: int = 0) -> np.ndarray:
     """
-    Generate a stencil using hybrid approach:
-    - Uses computer vision for edge detection and line extraction
-    - Applies hatching patterns for shading areas
+    Apply morphological dilation/erosion to control line thickness.
+    Uses Pillow-style morphology for smooth results.
     
-    This produces clean, Thermafax-compatible output with artistic hatching.
+    Args:
+        binary: Binary image (black lines on white or vice versa)
+        weight: -5 to +5 (-5 = thinnest, 0 = original, +5 = thickest)
+    
+    Returns:
+        Binary image with adjusted line weight
     """
-    logger.info(f"[Hybrid-Stencil] Starting hybrid pipeline - detail: {detail_level}")
+    if weight == 0:
+        return binary
+    
+    # Create kernel based on weight magnitude
+    kernel_size = abs(weight) + 1
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
+    
+    if weight > 0:
+        # Positive weight = thicker lines (dilate the black)
+        # Since lines are black (0), we need to dilate the inverse
+        inverted = cv2.bitwise_not(binary)
+        dilated = cv2.dilate(inverted, kernel, iterations=1)
+        result = cv2.bitwise_not(dilated)
+        logger.info(f"[LineWeight] Thickening lines: +{weight}")
+    else:
+        # Negative weight = thinner lines (erode the black)
+        inverted = cv2.bitwise_not(binary)
+        eroded = cv2.erode(inverted, kernel, iterations=1)
+        result = cv2.bitwise_not(eroded)
+        logger.info(f"[LineWeight] Thinning lines: {weight}")
+    
+    return result
+
+
+def generate_professional_stencil(
+    image: np.ndarray, 
+    detail_level: str = "medium",
+    line_weight: int = 0,
+    remove_background: bool = True,
+    use_ai_cleanup: bool = False
+) -> np.ndarray:
+    """
+    Professional stencil generation pipeline:
+    1. U2-Net background removal (isolate subject)
+    2. Canny edge detection (find contours)
+    3. Adaptive thresholding (capture detail with local contrast)
+    4. Combine edges + threshold
+    5. Morphological line weight control
+    6. Optional AI cleanup (Gemini as enhancer, not generator)
+    
+    Args:
+        image: BGR input image
+        detail_level: "light", "medium", "heavy"
+        line_weight: -5 to +5 for line thickness control
+        remove_background: Whether to use U2-Net background removal
+        use_ai_cleanup: Whether to use AI as final cleanup pass
+    
+    Returns:
+        Binary stencil (black lines on white background, no gray pixels)
+    """
+    logger.info(f"[ProStencil] Starting pipeline - detail={detail_level}, weight={line_weight}, bg_remove={remove_background}")
     
     original_h, original_w = image.shape[:2]
     
-    # Convert to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # Step 1: Background Removal (U2-Net)
+    if remove_background:
+        image_bgra = remove_background_u2net(image)
+        subject_mask = create_subject_mask(image_bgra)
+        # Convert to BGR for processing
+        if image_bgra.shape[2] == 4:
+            image_bgr = cv2.cvtColor(image_bgra, cv2.COLOR_BGRA2BGR)
+        else:
+            image_bgr = image_bgra
+    else:
+        image_bgr = image
+        subject_mask = np.ones((original_h, original_w), dtype=np.uint8) * 255
     
-    # Edge-preserving smoothing
-    smooth = cv2.bilateralFilter(gray, 9, 75, 75)
+    # Step 2: Convert to grayscale with contrast enhancement
+    gray = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2GRAY)
     
-    # CLAHE for better contrast
-    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
-    enhanced = clahe.apply(smooth)
+    # Apply CLAHE for better local contrast
+    clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
+    gray = clahe.apply(gray)
     
-    # Create output canvas (white background)
-    output = np.ones((original_h, original_w), dtype=np.uint8) * 255
+    # Light bilateral filtering to reduce noise while preserving edges
+    gray = cv2.bilateralFilter(gray, 5, 50, 50)
     
-    # --- LAYER 1: Strong contour edges ---
-    # Canny edge detection for main outlines
-    median_val = np.median(enhanced)
-    edges = cv2.Canny(enhanced, int(median_val * 0.5), int(median_val * 1.2))
+    # Step 3: Canny Edge Detection
+    sensitivity_map = {"light": "low", "medium": "medium", "heavy": "high"}
+    edges = apply_canny_edge_detection(gray, sensitivity_map.get(detail_level, "medium"))
     
-    # Dilate edges slightly
-    kernel = np.ones((2, 2), np.uint8)
-    edges = cv2.dilate(edges, kernel, iterations=1)
+    # Step 4: Adaptive Thresholding
+    adaptive = apply_adaptive_threshold(gray, detail_level)
     
-    # Apply edges to output
-    output[edges > 0] = 0
+    # Step 5: Combine edges and adaptive threshold
+    if detail_level == "light":
+        # Light: primarily edges with minimal adaptive
+        combined = edges
+    elif detail_level == "medium":
+        # Medium: weighted combination
+        combined = cv2.bitwise_or(edges, adaptive)
+        # Clean up small noise
+        kernel_clean = np.ones((2, 2), np.uint8)
+        combined = cv2.morphologyEx(combined, cv2.MORPH_OPEN, kernel_clean)
+    else:  # heavy
+        # Heavy: full combination for maximum detail
+        combined = cv2.bitwise_or(edges, adaptive)
     
-    # --- LAYER 2: Hatching for shadows (medium and heavy only) ---
-    if detail_level in ["medium", "heavy"]:
-        # Create shadow map (darker areas)
-        # Invert so shadows are high values
-        shadow_map = 255 - enhanced
+    # Step 6: Apply subject mask (remove any background artifacts)
+    if remove_background:
+        combined = cv2.bitwise_and(combined, combined, mask=subject_mask)
+    
+    # Step 7: Close small gaps in lines
+    kernel_close = np.ones((2, 2), np.uint8)
+    combined = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, kernel_close)
+    
+    # Step 8: Create final stencil (black lines on white background)
+    stencil = 255 - combined  # Invert: white background, black lines
+    
+    # Step 9: Apply line weight control (dilation/erosion)
+    stencil = apply_line_weight_control(stencil, line_weight)
+    
+    # Ensure true binary output (no gray pixels)
+    _, stencil = cv2.threshold(stencil, 127, 255, cv2.THRESH_BINARY)
+    
+    # Convert to BGR for output
+    stencil_bgr = cv2.cvtColor(stencil, cv2.COLOR_GRAY2BGR)
+    
+    logger.info(f"[ProStencil] Pipeline complete - output: {stencil_bgr.shape}")
+    return stencil_bgr
+
+
+async def enhance_stencil_with_ai(stencil_base64: str, detail_level: str = "medium") -> str:
+    """
+    Use Gemini AI as an optional enhancer/cleanup pass for algorithmic stencils.
+    This refines the lines rather than regenerating from scratch.
+    
+    Args:
+        stencil_base64: The algorithmically generated stencil
+        detail_level: Guides the AI on how much to preserve vs clean
+    
+    Returns:
+        Enhanced stencil as base64
+    """
+    logger.info(f"[AI-Enhance] Starting AI cleanup pass...")
+    
+    try:
+        model = genai.GenerativeModel('gemini-2.5-flash-preview-05-20')
         
-        # Threshold to find shadow regions
-        if detail_level == "medium":
-            _, shadow_mask = cv2.threshold(shadow_map, 100, 255, cv2.THRESH_BINARY)
-            hatch_spacing = 6
-        else:  # heavy
-            _, shadow_mask = cv2.threshold(shadow_map, 70, 255, cv2.THRESH_BINARY)
-            hatch_spacing = 4
+        # Extract base64 data
+        if ',' in stencil_base64:
+            base64_data = stencil_base64.split(',')[1]
+        else:
+            base64_data = stencil_base64
         
-        # Generate diagonal hatching lines
-        hatch_lines = np.ones((original_h, original_w), dtype=np.uint8) * 255
+        prompt = f"""You are a professional stencil line cleaner. Your job is to REFINE and CLEAN UP the existing stencil, NOT to redraw it.
+
+RULES:
+1. PRESERVE all existing lines and their positions
+2. CLEAN UP any noise, stray pixels, or broken lines
+3. SMOOTH jagged edges where appropriate
+4. ENSURE output is PURE BLACK AND WHITE - no gray pixels
+5. DO NOT add any new details, shading, or gradients
+6. DO NOT change the composition or add background elements
+7. The output must be Thermafax-ready: clean, crisp black lines on pure white
+
+Detail level: {detail_level}
+- If light: Be aggressive in removing small details, keep only main contours
+- If medium: Balance cleaning with detail preservation
+- If heavy: Preserve maximum detail, only remove obvious noise
+
+Output: A cleaned-up version of this stencil with pure black lines on pure white background."""
+
+        response = model.generate_content([
+            prompt,
+            {"mime_type": "image/png", "data": base64_data}
+        ])
         
-        # Draw diagonal lines (top-left to bottom-right)
-        for i in range(-original_h, original_w, hatch_spacing):
-            cv2.line(hatch_lines, (i, 0), (i + original_h, original_h), 0, 1)
+        # Extract image from response
+        if response.candidates and response.candidates[0].content.parts:
+            for part in response.candidates[0].content.parts:
+                if hasattr(part, 'inline_data') and part.inline_data:
+                    enhanced_base64 = base64.b64encode(part.inline_data.data).decode('utf-8')
+                    logger.info("[AI-Enhance] Cleanup complete")
+                    return f"data:image/png;base64,{enhanced_base64}"
         
-        # Apply hatching only in shadow areas
-        shadow_hatched = np.where(shadow_mask > 0, hatch_lines, 255).astype(np.uint8)
+        logger.warning("[AI-Enhance] No image in response, returning original")
+        return stencil_base64
         
-        # Combine with output
-        output = np.minimum(output, shadow_hatched)
-    
-    # --- LAYER 3: Cross-hatching for deep shadows (heavy only) ---
-    if detail_level == "heavy":
-        # Find very dark areas
-        _, deep_shadow = cv2.threshold(shadow_map, 120, 255, cv2.THRESH_BINARY)
-        
-        # Generate cross-hatching (opposite diagonal)
-        cross_hatch = np.ones((original_h, original_w), dtype=np.uint8) * 255
-        for i in range(-original_h, original_w + original_h, 5):
-            cv2.line(cross_hatch, (i, original_h), (i + original_h, 0), 0, 1)
-        
-        # Apply cross-hatching only in deep shadow areas
-        cross_hatched = np.where(deep_shadow > 0, cross_hatch, 255).astype(np.uint8)
-        output = np.minimum(output, cross_hatched)
-    
-    # Clean up small noise
-    kernel_clean = np.ones((2, 2), np.uint8)
-    output = cv2.morphologyEx(output, cv2.MORPH_OPEN, kernel_clean)
-    
-    # Convert to BGR
-    output_bgr = cv2.cvtColor(output, cv2.COLOR_GRAY2BGR)
-    
-    logger.info(f"[Hybrid-Stencil] Pipeline complete")
-    return output_bgr
+    except Exception as e:
+        logger.error(f"[AI-Enhance] Error: {str(e)}")
+        return stencil_base64
 
 
 # ============================================
