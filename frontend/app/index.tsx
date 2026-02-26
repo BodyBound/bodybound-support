@@ -2831,7 +2831,7 @@ export default function Index() {
                 <Text style={[
                   styles.compactVersionText,
                   selectedVersion === 'medium' && styles.compactVersionTextSelected
-                ]}>Medium</Text>
+                ]}>Rugged</Text>
                 {stencilVersions.medium && (
                   <TouchableOpacity
                     style={styles.regenButton}
