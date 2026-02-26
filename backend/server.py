@@ -1647,7 +1647,9 @@ Style: Clean black line art on pure white background. No colors, no shading - ju
 class CVStencilRequest(BaseModel):
     image_base64: str
     detail_level: str = "medium"  # light, medium, heavy
-    method: str = "hybrid"  # "cv" for pure edge detection, "hybrid" for CV + hatching
+    line_weight: int = 0  # -5 to +5 (thinner to thicker)
+    remove_background: bool = True  # Use U2-Net background removal
+    ai_cleanup: bool = False  # Optional AI cleanup pass
 
 class CVStencilResponse(BaseModel):
     stencil_base64: str
@@ -1656,23 +1658,22 @@ class CVStencilResponse(BaseModel):
 
 @api_router.post("/cv-stencil", response_model=CVStencilResponse)
 async def generate_cv_stencil_endpoint(request: CVStencilRequest):
-    """Generate a stencil using computer vision techniques.
+    """Generate a professional stencil using computer vision pipeline.
     
-    This endpoint uses traditional image processing instead of AI:
-    - Canny edge detection with auto-tuned thresholds
-    - Adaptive thresholding for local contrast adjustment
-    - Morphological operations for clean lines
-    - Skeletonization for consistent line width
-    - Optional hatching patterns for shading
+    Pipeline:
+    1. U2-Net background removal (isolate subject, remove noise)
+    2. Canny edge detection (find contours)
+    3. Adaptive thresholding (capture detail with local contrast)
+    4. Morphological line weight control (dilation/erosion)
+    5. Optional AI cleanup pass (Gemini as enhancer, not generator)
     
-    Methods:
-    - "cv": Pure edge detection (cleanest lines, minimal detail)
-    - "hybrid": Edge detection + algorithmic hatching for shading
+    This produces TRUE BINARY output - no gray pixels, Thermafax-ready.
     
-    Detail levels:
-    - "light": Minimal lines, strong edges only
-    - "medium": Balanced detail with moderate hatching
-    - "heavy": Maximum detail with dense hatching/cross-hatching
+    Parameters:
+    - detail_level: "light" (minimal), "medium" (balanced), "heavy" (maximum)
+    - line_weight: -5 to +5 (-5 = thinnest, 0 = normal, +5 = thickest)
+    - remove_background: Use U2-Net to isolate subject (recommended)
+    - ai_cleanup: Use Gemini AI to clean up the algorithmic output
     """
     import time
     start_time = time.time()
@@ -1683,28 +1684,38 @@ async def generate_cv_stencil_endpoint(request: CVStencilRequest):
         if img is None:
             raise HTTPException(status_code=400, detail="Invalid image data")
         
-        logger.info(f"[CV-Endpoint] Processing image {img.shape} with method={request.method}, detail={request.detail_level}")
+        logger.info(f"[CV-Pro] Processing {img.shape} - detail={request.detail_level}, weight={request.line_weight}, bg_remove={request.remove_background}")
         
-        # Generate stencil based on method
-        if request.method == "cv":
-            stencil = generate_cv_stencil(img, request.detail_level)
-        else:  # hybrid
-            stencil = generate_hybrid_stencil(img, request.detail_level)
+        # Generate stencil using professional pipeline
+        stencil = generate_professional_stencil(
+            img, 
+            detail_level=request.detail_level,
+            line_weight=request.line_weight,
+            remove_background=request.remove_background,
+            use_ai_cleanup=False  # We'll do this separately if requested
+        )
         
         # Convert to base64
         stencil_base64 = cv2_to_base64(stencil)
         
+        # Optional AI cleanup pass
+        if request.ai_cleanup:
+            logger.info("[CV-Pro] Running AI cleanup pass...")
+            stencil_base64 = await enhance_stencil_with_ai(stencil_base64, request.detail_level)
+        
         processing_time = (time.time() - start_time) * 1000
-        logger.info(f"[CV-Endpoint] Complete in {processing_time:.1f}ms")
+        logger.info(f"[CV-Pro] Complete in {processing_time:.1f}ms")
         
         return CVStencilResponse(
             stencil_base64=stencil_base64,
-            method=request.method,
+            method="professional" + ("+ai" if request.ai_cleanup else ""),
             processing_time_ms=processing_time
         )
         
     except Exception as e:
-        logger.error(f"[CV-Endpoint] Error: {str(e)}")
+        logger.error(f"[CV-Pro] Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Stencil generation failed: {str(e)}")
 
 
