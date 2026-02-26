@@ -126,6 +126,9 @@ export default function Index() {
   // Simplified: Only Handmade Stencil mode with black lines
   const lineColor = 'black'; // Fixed to black
   
+  // Auto-enhance image before generation (AI upscaling)
+  const [autoEnhance, setAutoEnhance] = useState(true);
+  
   // 3-Version Stencil Generation
   const [stencilVersions, setStencilVersions] = useState<{
     light: string | null;
