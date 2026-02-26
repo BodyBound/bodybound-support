@@ -97,13 +97,15 @@ def get_cached_stencil(cache_key: str) -> Optional[str]:
     return None
 
 class StencilJob:
-    def __init__(self, job_id: str, image_base64: str, settings: dict):
+    def __init__(self, job_id: str, image_base64: str, settings: dict, auto_enhance: bool = True):
         self.job_id = job_id
         self.image_base64 = image_base64
         self.settings = settings
-        self.status = "pending"  # pending, processing, completed, failed
+        self.auto_enhance = auto_enhance  # Whether to use AI enhancement
+        self.status = "pending"  # pending, enhancing, processing, completed, failed
         self.progress = 0  # 0-100
         self.current_style = None  # light, medium, heavy
+        self.enhanced_image = None  # Store enhanced image for all stencil generations
         self.result = {
             "light": None,
             "medium": None,
