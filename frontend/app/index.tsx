@@ -35,7 +35,7 @@ import Animated, { useSharedValue, useAnimatedStyle, useAnimatedProps, runOnJS, 
 import { captureRef } from 'react-native-view-shot';
 
 // Production fallback URL - used when EXPO_PUBLIC_BACKEND_URL is not set (TestFlight builds)
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://tattoo-stencil-app-1.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://a2e5e03a-f3ae-40ff-a210-67227d588abf.preview.emergentagent.com';
 
 // Animated SVG Path for zero-lag drawing - updates directly on UI thread via Reanimated
 const AnimatedSVGPath = Animated.createAnimatedComponent(Path);
