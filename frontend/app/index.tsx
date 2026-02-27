@@ -2157,17 +2157,12 @@ export default function Index() {
         const rawX = x * cos - y * sin + cx;
         const rawY = x * sin + y * cos + cy;
 
-        // StreamLine EMA smoothing (0.2 = very responsive, higher = smoother/slower)
-        const sl = 0.2;
-        const smX = lastSmX.value + (rawX - lastSmX.value) * (1 - sl);
-        const smY = lastSmY.value + (rawY - lastSmY.value) * (1 - sl);
-        lastSmX.value = smX;
-        lastSmY.value = smY;
-
-        // DIRECT UI-THREAD path update — zero bridge latency
-        currentPathSV.value = currentPathSV.value + ` L${smX.toFixed(1)},${smY.toFixed(1)}`;
-        // setNativeProps: bypasses React reconciler, dramatically reduces visual lag
-        runOnJS(updateLivePathDirect)(currentPathSV.value);
+        // DIRECT UI-THREAD path update — zero bridge latency via useAnimatedProps/JSI
+        // sl=0.0: NO smoothing = path tracks pencil perfectly with no visual lag
+        // (smoothing removed because it creates visible gap between cursor and path)
+        lastSmX.value = rawX;
+        lastSmY.value = rawY;
+        currentPathSV.value = currentPathSV.value + ` L${rawX.toFixed(1)},${rawY.toFixed(1)}`;
       } else {
         // Single-finger pan when not in draw mode
         translateX.value = savedTranslateX.value + event.translationX;
