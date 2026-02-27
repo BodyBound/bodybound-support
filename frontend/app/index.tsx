@@ -614,11 +614,10 @@ export default function Index() {
         const data = await response.json();
         console.log('[ValidateImage] Response:', JSON.stringify(data));
         
+        // Quality warnings disabled - PicsArt-style preprocessing (Clean, Sharpen, High Contrast)
+        // now handles blur and image quality issues automatically
         if (data.warnings && data.warnings.length > 0) {
-          setImageQualityWarnings(data.warnings);
-          setImageQualitySuggestions(data.suggestions || []);
-          setShowQualityWarning(true);
-          console.log('[ValidateImage] Warnings:', data.warnings);
+          console.log('[ValidateImage] Warnings (suppressed - handled by preprocessing):', data.warnings);
         }
       }
     } catch (error) {
