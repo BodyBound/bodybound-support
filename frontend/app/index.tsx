@@ -3547,10 +3547,10 @@ export default function Index() {
                     />
                   );
                 })}
-                {/* Live stroke - setNativeProps via ref bypasses React reconciler, ~5ms latency */}
-                <Path
-                  ref={svgLivePathRef}
-                  d=""
+                {/* Live stroke - useAnimatedProps + JSI drives SVG on UI thread (New Arch).
+                    No smoothing = path tracks pencil exactly with zero visual gap */}
+                <AnimatedSVGPath
+                  animatedProps={animatedStrokeProps}
                   stroke={isEraser ? '#FFFFFF' : '#000000'}
                   strokeWidth={isEraser ? brushSize * 3 : brushSize}
                   fill="none"
