@@ -2123,6 +2123,8 @@ export default function Index() {
         strokeStartXSV.value = canvasX;
         strokeStartYSV.value = canvasY;
         currentPathSV.value = `M${canvasX.toFixed(1)},${canvasY.toFixed(1)}`;
+        // Direct setNativeProps - bypasses React reconciler, ~5ms vs ~20ms
+        runOnJS(updateLivePathDirect)(currentPathSV.value);
       }
     })
     .onStart((event) => {
