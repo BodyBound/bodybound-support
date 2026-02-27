@@ -845,6 +845,158 @@ def resize_image_if_needed(base64_string: str, max_dimension: int = 2000, max_fi
         logger.error(f"Error resizing image: {str(e)}")
         return base64_string  # Return original if resize fails
 
+
+def picsart_style_preprocess(base64_string: str) -> str:
+    """PicsArt-style image preprocessing for optimal stencil generation.
+    
+    This applies three filters inspired by PicsArt:
+    1. CLEAN filter - Edge-preserving noise reduction (bilateral filter)
+    2. BLACK & WHITE HIGH CONTRAST - Dramatic B&W with S-curve contrast
+    3. SHARPEN at 100% fade - Strong unsharp mask for crisp details
+    
+    These filters prepare the image for cleaner, more defined stencil output.
+    
+    Args:
+        base64_string: The original base64 encoded image
+        
+    Returns:
+        Base64 encoded preprocessed image (still in color for AI processing)
+    """
+    try:
+        logger.info("[PicsArt-Preprocess] Starting PicsArt-style preprocessing...")
+        
+        # Remove data URL prefix if present
+        if ',' in base64_string:
+            prefix_parts = base64_string.split(',')
+            base64_data = prefix_parts[1]
+        else:
+            base64_data = base64_string
+        
+        # Decode the image
+        img_data = base64.b64decode(base64_data)
+        img = Image.open(BytesIO(img_data))
+        
+        # Convert to RGB if necessary
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # Convert to OpenCV format (BGR)
+        img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        logger.info(f"[PicsArt-Preprocess] Image size: {img_cv.shape[1]}x{img_cv.shape[0]}")
+        
+        # ============================================================
+        # STEP 1: CLEAN FILTER (Edge-preserving noise reduction)
+        # Mimics PicsArt's "Clean" tool in Adjust menu
+        # Uses bilateral filter which smooths while preserving edges
+        # ============================================================
+        logger.info("[PicsArt-Preprocess] Applying CLEAN filter (bilateral denoising)...")
+        
+        # Bilateral filter: preserves edges while reducing noise
+        # d=9: diameter of pixel neighborhood
+        # sigmaColor=75: filter sigma in color space (larger = more colors mixed)
+        # sigmaSpace=75: filter sigma in coordinate space (larger = farther pixels influence)
+        img_clean = cv2.bilateralFilter(img_cv, d=9, sigmaColor=75, sigmaSpace=75)
+        
+        # Additional pass with fastNlMeansDenoisingColored for extra cleaning
+        # This removes fine grain/noise while keeping edges sharp
+        img_clean = cv2.fastNlMeansDenoisingColored(img_clean, None, h=8, hForColorComponents=8, 
+                                                     templateWindowSize=7, searchWindowSize=21)
+        
+        logger.info("[PicsArt-Preprocess] CLEAN filter applied")
+        
+        # ============================================================
+        # STEP 2: BLACK & WHITE HIGH CONTRAST
+        # Mimics PicsArt's "B&W HDR" filter effect
+        # Converts to grayscale with enhanced contrast via S-curve
+        # ============================================================
+        logger.info("[PicsArt-Preprocess] Applying B&W HIGH CONTRAST filter...")
+        
+        # Convert to grayscale using luminance-preserving formula
+        gray = cv2.cvtColor(img_clean, cv2.COLOR_BGR2GRAY)
+        
+        # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization)
+        # This mimics HDR-like local contrast enhancement
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        gray_clahe = clahe.apply(gray)
+        
+        # Apply S-curve for dramatic high contrast (like PicsArt B&W HDR)
+        # S-curve: darks get darker, lights get lighter, midtones shift
+        def apply_s_curve(img, strength=1.5):
+            """Apply S-curve contrast enhancement"""
+            # Normalize to 0-1
+            normalized = img.astype(np.float32) / 255.0
+            # S-curve formula: shifts midtones, crushes blacks, lifts whites
+            # Using sigmoid-like curve with adjustable strength
+            midpoint = 0.5
+            curved = 1 / (1 + np.exp(-strength * 10 * (normalized - midpoint)))
+            # Scale back to 0-255
+            return np.clip(curved * 255, 0, 255).astype(np.uint8)
+        
+        gray_contrast = apply_s_curve(gray_clahe, strength=1.2)
+        
+        # Additional contrast boost - stretch histogram
+        # This ensures full dynamic range usage
+        min_val, max_val = np.percentile(gray_contrast, [2, 98])
+        gray_stretched = np.clip((gray_contrast - min_val) * 255 / (max_val - min_val), 0, 255).astype(np.uint8)
+        
+        # Convert back to BGR for next processing step
+        img_bw_contrast = cv2.cvtColor(gray_stretched, cv2.COLOR_GRAY2BGR)
+        
+        logger.info("[PicsArt-Preprocess] B&W HIGH CONTRAST filter applied")
+        
+        # ============================================================
+        # STEP 3: SHARPEN at 100% FADE
+        # Mimics PicsArt's Sharpen tool at maximum intensity
+        # Uses unsharp mask technique for professional sharpening
+        # ============================================================
+        logger.info("[PicsArt-Preprocess] Applying SHARPEN at 100% fade...")
+        
+        # Method 1: Kernel-based sharpening (strong)
+        # This kernel emphasizes the center pixel while subtracting neighbors
+        sharpen_kernel = np.array([[0, -1, 0],
+                                   [-1, 5, -1],
+                                   [0, -1, 0]], dtype=np.float32)
+        img_sharp1 = cv2.filter2D(img_bw_contrast, -1, sharpen_kernel)
+        
+        # Method 2: Unsharp mask at 100% (full strength blend)
+        # Subtract blurred version from original to enhance edges
+        gaussian = cv2.GaussianBlur(img_sharp1, (0, 0), sigma=2.0)
+        # At 100% fade: amount = 1.5 original - 0.5 blurred (strong unsharp mask)
+        img_sharp2 = cv2.addWeighted(img_sharp1, 1.5, gaussian, -0.5, 0)
+        
+        # Method 3: One more pass with Laplacian edge enhancement
+        # This adds extra edge definition for tattoo stencils
+        laplacian = cv2.Laplacian(cv2.cvtColor(img_sharp2, cv2.COLOR_BGR2GRAY), cv2.CV_64F)
+        laplacian = np.uint8(np.clip(np.absolute(laplacian), 0, 255))
+        laplacian_3ch = cv2.cvtColor(laplacian, cv2.COLOR_GRAY2BGR)
+        
+        # Blend edges with sharpened image
+        img_final = cv2.addWeighted(img_sharp2, 1.0, laplacian_3ch, 0.15, 0)
+        
+        logger.info("[PicsArt-Preprocess] SHARPEN at 100% applied")
+        
+        # Final clip to valid range
+        img_final = np.clip(img_final, 0, 255).astype(np.uint8)
+        
+        # Convert back to PIL and encode as base64
+        img_final_rgb = cv2.cvtColor(img_final, cv2.COLOR_BGR2RGB)
+        result_img = Image.fromarray(img_final_rgb)
+        
+        buffer = BytesIO()
+        result_img.save(buffer, format='JPEG', quality=95, optimize=True)
+        preprocessed_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        
+        logger.info("[PicsArt-Preprocess] Preprocessing complete - image optimized for stencil generation")
+        
+        return f"data:image/jpeg;base64,{preprocessed_base64}"
+        
+    except Exception as e:
+        logger.error(f"[PicsArt-Preprocess] Error in preprocessing: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return base64_string  # Return original if preprocessing fails
+
+
 def enhance_photo_basic(base64_string: str) -> str:
     """Basic photo enhancement using OpenCV (no AI, fast).
     
