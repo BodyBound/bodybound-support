@@ -5668,6 +5668,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingBottom: 30,
   },
+  welcomeBottomSectionNew: {
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
   welcomeButtonNew: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -5677,7 +5683,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 60,
     borderRadius: 35,
     gap: 12,
-    marginBottom: 24,
+    marginBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
