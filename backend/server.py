@@ -899,8 +899,14 @@ def picsart_style_preprocess(base64_string: str) -> str:
         
         # Additional pass with fastNlMeansDenoisingColored for extra cleaning
         # This removes fine grain/noise while keeping edges sharp
-        img_clean = cv2.fastNlMeansDenoisingColored(img_clean, None, h=8, hForColorComponents=8, 
-                                                     templateWindowSize=7, searchWindowSize=21)
+        try:
+            # Ensure image is uint8 and contiguous for OpenCV
+            img_clean_uint8 = np.ascontiguousarray(img_clean, dtype=np.uint8)
+            img_clean = cv2.fastNlMeansDenoisingColored(img_clean_uint8, None, h=8, hForColorComponents=8, 
+                                                         templateWindowSize=7, searchWindowSize=21)
+        except Exception as denoise_error:
+            logger.warning(f"[PicsArt-Preprocess] fastNlMeansDenoisingColored failed, skipping: {denoise_error}")
+            # Continue with bilateral filter result only
         
         logger.info("[PicsArt-Preprocess] CLEAN filter applied")
         
