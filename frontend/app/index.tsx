@@ -1697,52 +1697,34 @@ export default function Index() {
       
       console.log('[SaveBoth] Stencil resized to match original');
 
-      // Step 3: Read the stencil image and make white pixels transparent
-      // This is done by reading the image data and creating a new PNG with alpha channel
+      // Step 3: The stencil is already a transparent PNG from the AI generation
+      // We just need to save it directly without conversion
+      console.log('[SaveBoth] Reading stencil image...');
       const stencilBase64 = await FileSystem.readAsStringAsync(stencilResized.uri, {
         encoding: 'base64',
       });
       
-      // Create transparent PNG by calling our backend helper
-      // The backend will convert white/near-white pixels to transparent
-      console.log('[SaveBoth] Converting stencil to transparent PNG...');
+      // Step 4: Save the stencil PNG directly (already transparent)
+      console.log('[SaveBoth] Saving stencil PNG...');
       
-      const transparentResponse = await fetch(`${API_URL}/api/make-transparent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image_base64: `data:image/png;base64,${stencilBase64}`,
-          target_width: originalSize.width,
-          target_height: originalSize.height,
-        }),
-      });
-      
-      if (!transparentResponse.ok) {
-        throw new Error('Failed to create transparent stencil');
-      }
-      
-      const transparentData = await transparentResponse.json();
-      const transparentStencilBase64 = transparentData.image_base64;
-      
-      // Step 4: Save the transparent stencil PNG
-      console.log('[SaveBoth] Saving transparent stencil PNG...');
-      
-      // Write transparent stencil to file
+      // Write stencil to file
       const stencilFilename = `stencil_${Date.now()}.png`;
       const stencilFileUri = `${FileSystem.cacheDirectory}${stencilFilename}`;
       
-      // Remove data URL prefix if present
-      const stencilPngBase64 = transparentStencilBase64.includes(',') 
-        ? transparentStencilBase64.split(',')[1] 
-        : transparentStencilBase64;
-      
-      await FileSystem.writeAsStringAsync(stencilFileUri, stencilPngBase64, {
+      await FileSystem.writeAsStringAsync(stencilFileUri, stencilBase64, {
         encoding: 'base64',
       });
       
       // Save stencil to gallery
       const stencilAsset = await MediaLibrary.createAssetAsync(stencilFileUri);
       console.log('[SaveBoth] Stencil saved:', stencilAsset.filename);
+      
+      // Clean up temp file
+      try {
+        await FileSystem.deleteAsync(stencilFileUri, { idempotent: true });
+      } catch (e) {
+        // Ignore cleanup errors
+      }
       
       // Step 5: Save the reference JPEG
       console.log('[SaveBoth] Saving reference JPEG...');
