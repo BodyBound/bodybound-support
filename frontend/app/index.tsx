@@ -2166,6 +2166,8 @@ export default function Index() {
 
         // DIRECT UI-THREAD path update — zero bridge latency
         currentPathSV.value = currentPathSV.value + ` L${smX.toFixed(1)},${smY.toFixed(1)}`;
+        // setNativeProps: bypasses React reconciler, dramatically reduces visual lag
+        runOnJS(updateLivePathDirect)(currentPathSV.value);
       } else {
         // Single-finger pan when not in draw mode
         translateX.value = savedTranslateX.value + event.translationX;
