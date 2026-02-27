@@ -3301,6 +3301,10 @@ export default function Index() {
                 )}
               </TouchableOpacity>
             </View>
+            {/* Regeneration hint text in golden */}
+            <Text style={styles.regenHintText}>
+              If the generated stencil is not to your liking, press the regeneration button in the top corner of your desired option.
+            </Text>
           </View>
         )}
 
