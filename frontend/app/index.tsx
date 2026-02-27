@@ -4110,6 +4110,7 @@ const styles = StyleSheet.create({
   previewImage: {
     width: '100%',
     flex: 1,
+    alignSelf: 'stretch',
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
   },
