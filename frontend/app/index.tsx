@@ -3295,20 +3295,8 @@ export default function Index() {
           </View>
         )}
 
-        {/* Minimal Share Section - Just icons */}
-        <View style={styles.minimalShareRow}>
-          <TouchableOpacity style={styles.minimalShareButton} onPress={requestAppReview}>
-            <Text style={styles.minimalShareIcon}>⭐</Text>
-          </TouchableOpacity>
-          <Text style={styles.minimalShareDivider}>|</Text>
-          <TouchableOpacity style={styles.minimalShareButton} onPress={shareAppWithFriends}>
-            <Text style={styles.minimalShareIcon}>🔗</Text>
-          </TouchableOpacity>
-          <Text style={styles.minimalShareText}>Rate & Share</Text>
         </View>
-
-        <View style={styles.bottomSpacer} />
-      </ScrollView>
+      </View>
 
       {renderGalleryModal()}
       {renderSaveModal()}
