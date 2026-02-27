@@ -4082,14 +4082,16 @@ const styles = StyleSheet.create({
   },
   previewImage: {
     width: '100%',
-    height: 650,
+    flex: 1,
     borderRadius: 12,
     backgroundColor: '#FFFFFF',
   },
   sourceButtons: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 12,
+    paddingHorizontal: 12,
+    paddingTop: 6,
+    paddingBottom: 2,
   },
   sourceButton: {
     flex: 1,
