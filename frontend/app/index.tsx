@@ -4798,8 +4798,8 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   styleButtonWrapper: {
-    width: Math.min(80, (SCREEN_WIDTH - 80) / 3),
-    height: Math.min(100, (SCREEN_WIDTH - 80) / 3 * 1.25),
+    width: Math.min(96, (SCREEN_WIDTH - 80) / 3),
+    height: Math.min(120, (SCREEN_WIDTH - 80) / 3 * 1.25),
     borderRadius: 8,
     overflow: 'hidden',
     borderWidth: 2,
