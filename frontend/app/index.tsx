@@ -5633,7 +5633,7 @@ const styles = StyleSheet.create({
   },
   welcomeBottomButtonOnly: {
     alignItems: 'center',
-    paddingBottom: 30,
+    paddingBottom: 220,
   },
   welcomeTopSpacer: {
     flex: 0.15,
