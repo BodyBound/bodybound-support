@@ -1767,6 +1767,11 @@ export default function Index() {
   
   // Open edit modal and reset drawing state
   const openEditMode = () => {
+    console.log('[EditMode] ========== OPENING EDIT MODE ==========');
+    console.log('[EditMode] originalImage exists:', !!originalImage);
+    console.log('[EditMode] persistentReferencePhotoRef.current exists:', !!persistentReferencePhotoRef.current);
+    console.log('[EditMode] stencilImage exists:', !!stencilImage);
+    
     // Store the original AI stencil if not already stored (for revert functionality)
     if (!originalAIStencil && stencilImage) {
       setOriginalAIStencil(stencilImage);
@@ -1776,15 +1781,16 @@ export default function Index() {
     // Using ref instead of state to avoid async timing issues
     if (!persistentReferencePhotoRef.current && originalImage) {
       persistentReferencePhotoRef.current = originalImage;
-      console.log('[EditMode] Saved reference photo to ref');
+      console.log('[EditMode] SAVED reference photo to ref (first time)');
+    } else if (persistentReferencePhotoRef.current) {
+      console.log('[EditMode] USING existing reference from ref (subsequent time)');
     }
     
     // Use the ref value (which persists across renders)
     const referenceToUse = persistentReferencePhotoRef.current || originalImage;
     
-    console.log('[EditMode] Opening with reference photo:', referenceToUse ? 'YES' : 'NO');
-    console.log('[EditMode] persistentReferencePhotoRef.current:', persistentReferencePhotoRef.current ? 'SET' : 'NULL');
-    console.log('[EditMode] originalImage:', originalImage ? 'SET' : 'NULL');
+    console.log('[EditMode] referenceToUse exists:', !!referenceToUse);
+    console.log('[EditMode] referenceToUse length:', referenceToUse ? referenceToUse.length : 0);
     
     // Freeze the images for edit mode
     setEditModeStencilImage(stencilImage);
@@ -1802,6 +1808,7 @@ export default function Index() {
     translateY.value = 0;
     rotation.value = 0;
     setShowEditModal(true);
+    console.log('[EditMode] ========== EDIT MODE OPENED ==========');
   };
 
   // Revert to original AI stencil (removes all edits)
