@@ -3875,17 +3875,17 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   headerIconButton: {
-    width: 24,
-    height: 24,
+    width: 36,
+    height: 36,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(26,26,26,0.8)',
-    borderRadius: 4,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: '#444',
   },
   headerIconText: {
-    fontSize: 11,
+    fontSize: 18,
   },
   headerLogo: {
     width: 42,
