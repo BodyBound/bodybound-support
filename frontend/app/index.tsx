@@ -3113,6 +3113,10 @@ export default function Index() {
             </View>
           )}
         </View>
+      </View>
+
+      {/* Bottom Control Bar - all buttons here, image area gets maximum space */}
+      <View style={styles.bottomBar}>
 
         {/* Image Source Buttons */}
         <View style={styles.sourceButtons}>
