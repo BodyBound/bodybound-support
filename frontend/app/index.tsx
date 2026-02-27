@@ -4774,9 +4774,10 @@ const styles = StyleSheet.create({
   },
   styleButtonsRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-evenly',
     alignItems: 'center',
-    gap: 12,
+    paddingHorizontal: 20,
+    width: '100%',
   },
   regenHintText: {
     color: '#C9A227',
@@ -4789,9 +4790,9 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
   styleButtonWrapper: {
-    width: Math.min(96, (SCREEN_WIDTH - 80) / 3),
-    height: Math.min(120, (SCREEN_WIDTH - 80) / 3 * 1.25),
-    borderRadius: 8,
+    width: Math.min(110, (SCREEN_WIDTH - 60) / 3),
+    height: Math.min(138, (SCREEN_WIDTH - 60) / 3 * 1.25),
+    borderRadius: 10,
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: '#8B7320',
