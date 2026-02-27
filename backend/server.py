@@ -1406,6 +1406,10 @@ def adjust_stencil_line_weight(base64_string: str, adjustment: int) -> str:
     This is a POST-AI-GENERATION adjustment that thins or thickens lines
     without changing the AI prompts or generation process.
     
+    The stencil format is: BLACK lines on TRANSPARENT background.
+    - Alpha channel: 255 where lines are, 0 where transparent
+    - RGB channels: Black (0,0,0) where lines are
+    
     Args:
         base64_string: The stencil image (transparent PNG with black lines)
         adjustment: Line weight adjustment from -5 (thinner) to +5 (thicker)
@@ -1435,64 +1439,63 @@ def adjust_stencil_line_weight(base64_string: str, adjustment: int) -> str:
             logger.error("[LineWeight] Failed to decode image")
             return base64_string
         
+        logger.info(f"[LineWeight] Image shape: {img.shape}")
+        
         # Check if image has alpha channel (transparent PNG)
-        has_alpha = img.shape[2] == 4 if len(img.shape) == 3 else False
+        has_alpha = len(img.shape) == 3 and img.shape[2] == 4
         
         if has_alpha:
-            # Split into color and alpha channels
-            bgr = img[:, :, :3]
-            alpha = img[:, :, 3]
-            
-            # Work on the alpha channel (where the lines are)
-            # Invert alpha so lines are white (255) for morphology operations
-            alpha_inverted = 255 - alpha
+            # Extract the alpha channel - this is where the lines are defined
+            # Alpha = 255 means opaque (line), Alpha = 0 means transparent (background)
+            alpha = img[:, :, 3].copy()
             
             # Create morphological kernel - circular for smoother results
             kernel_size = abs(adjustment)
-            if kernel_size > 0:
-                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size * 2 + 1, kernel_size * 2 + 1))
-                
-                if adjustment > 0:
-                    # Positive = dilate = thicker lines
-                    # Dilating the inverted alpha makes lines thicker
-                    alpha_adjusted = cv2.dilate(alpha_inverted, kernel, iterations=1)
-                    logger.info(f"[LineWeight] Applied dilation (thicker) with kernel size {kernel_size * 2 + 1}")
-                else:
-                    # Negative = erode = thinner lines
-                    # Eroding the inverted alpha makes lines thinner
-                    alpha_adjusted = cv2.erode(alpha_inverted, kernel, iterations=1)
-                    logger.info(f"[LineWeight] Applied erosion (thinner) with kernel size {kernel_size * 2 + 1}")
-                
-                # Invert back
-                alpha = 255 - alpha_adjusted
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size * 2 + 1, kernel_size * 2 + 1))
             
-            # Recombine
-            result = cv2.merge([bgr[:, :, 0], bgr[:, :, 1], bgr[:, :, 2], alpha])
+            if adjustment > 0:
+                # Positive = dilate the alpha = thicker lines
+                alpha_adjusted = cv2.dilate(alpha, kernel, iterations=1)
+                logger.info(f"[LineWeight] Applied dilation (thicker) with kernel size {kernel_size * 2 + 1}")
+            else:
+                # Negative = erode the alpha = thinner lines
+                alpha_adjusted = cv2.erode(alpha, kernel, iterations=1)
+                logger.info(f"[LineWeight] Applied erosion (thinner) with kernel size {kernel_size * 2 + 1}")
+            
+            # Create result image - keep original BGR, update alpha
+            # Lines should remain BLACK, just the alpha (coverage) changes
+            result = img.copy()
+            result[:, :, 3] = alpha_adjusted
+            
+            # Ensure RGB stays black where there are lines
+            # Only apply black color where alpha > 0
+            result[:, :, 0] = np.where(alpha_adjusted > 0, 0, 0).astype(np.uint8)  # B
+            result[:, :, 1] = np.where(alpha_adjusted > 0, 0, 0).astype(np.uint8)  # G
+            result[:, :, 2] = np.where(alpha_adjusted > 0, 0, 0).astype(np.uint8)  # R
+            
         else:
-            # Grayscale or RGB without alpha - work directly on the image
+            # No alpha channel - need to create transparent PNG from grayscale/RGB
             if len(img.shape) == 2:
                 gray = img
             else:
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             
-            # Invert so lines are white
-            inverted = 255 - gray
+            # Assume dark pixels are lines, light pixels are background
+            # Threshold to get line mask
+            _, line_mask = cv2.threshold(gray, 128, 255, cv2.THRESH_BINARY_INV)
             
             kernel_size = abs(adjustment)
-            if kernel_size > 0:
-                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size * 2 + 1, kernel_size * 2 + 1))
-                
-                if adjustment > 0:
-                    adjusted = cv2.dilate(inverted, kernel, iterations=1)
-                else:
-                    adjusted = cv2.erode(inverted, kernel, iterations=1)
-                
-                gray = 255 - adjusted
+            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size * 2 + 1, kernel_size * 2 + 1))
             
-            # Convert to BGRA with transparency
-            result = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGRA)
-            # Make white pixels transparent
-            result[:, :, 3] = np.where(gray > 200, 0, 255).astype(np.uint8)
+            if adjustment > 0:
+                line_mask = cv2.dilate(line_mask, kernel, iterations=1)
+            else:
+                line_mask = cv2.erode(line_mask, kernel, iterations=1)
+            
+            # Create BGRA with black lines and transparency
+            result = np.zeros((gray.shape[0], gray.shape[1], 4), dtype=np.uint8)
+            result[:, :, 3] = line_mask  # Alpha from line mask
+            # RGB stays 0 (black) where lines are
         
         # Encode as PNG
         _, buffer = cv2.imencode('.png', result)
