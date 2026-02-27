@@ -1094,7 +1094,12 @@ export default function Index() {
     
     // If weight is 0, restore original stencil
     if (newWeight === 0 && selectedVersion && stencilVersions[selectedVersion]) {
-      setStencilImage(stencilVersions[selectedVersion]);
+      const originalStencil = stencilVersions[selectedVersion];
+      setStencilImage(originalStencil);
+      // Also update edit mode stencil if in edit mode
+      if (showEditModal) {
+        setEditModeStencilImage(originalStencil);
+      }
       return;
     }
     
@@ -1119,6 +1124,10 @@ export default function Index() {
         const data = await response.json();
         console.log(`[LineWeight] Adjustment applied: ${data.adjustment_applied}`);
         setStencilImage(data.adjusted_image);
+        // Also update edit mode stencil if in edit mode
+        if (showEditModal) {
+          setEditModeStencilImage(data.adjusted_image);
+        }
       } else {
         console.error('[LineWeight] Failed to adjust');
       }
