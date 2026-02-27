@@ -493,6 +493,11 @@ export default function Index() {
         setStencilImage(null);
         setStencilVersions({ light: null, medium: null, heavy: null });
         setHasGeneratedOnce(false);
+        // Reset persistent reference for new photo
+        setPersistentReferencePhoto(null);
+        setOriginalAIStencil(null);
+        setDrawingPaths([]);
+        setDotMarks([]);
         // Validate the image quality
         validateImageQuality(base64Image);
       } else {
@@ -512,6 +517,11 @@ export default function Index() {
           setStencilImage(null);
           setStencilVersions({ light: null, medium: null, heavy: null });
           setHasGeneratedOnce(false);
+          // Reset persistent reference for new photo
+          setPersistentReferencePhoto(null);
+          setOriginalAIStencil(null);
+          setDrawingPaths([]);
+          setDotMarks([]);
           validateImageQuality(base64Image);
         } else {
           Alert.alert('Error', 'Could not process the selected photo. Please try using the Gallery button instead.');
