@@ -1772,11 +1772,11 @@ export default function Index() {
 
   // ============ EDIT MODE FUNCTIONS ============
   
-  // Open edit modal and reset drawing state
+  // Open edit modal with Procreate-style layer system
   const openEditMode = () => {
     console.log('[EditMode] ========== OPENING EDIT MODE ==========');
+    console.log('[EditMode] referencePhotoLayer exists:', !!referencePhotoLayer);
     console.log('[EditMode] originalImage exists:', !!originalImage);
-    console.log('[EditMode] persistentReferencePhotoRef.current exists:', !!persistentReferencePhotoRef.current);
     console.log('[EditMode] stencilImage exists:', !!stencilImage);
     
     // Store the original AI stencil if not already stored (for revert functionality)
@@ -1784,20 +1784,11 @@ export default function Index() {
       setOriginalAIStencil(stencilImage);
     }
     
-    // Store the reference photo in ref ONCE - never overwrite it
-    // Using ref instead of state to avoid async timing issues
-    if (!persistentReferencePhotoRef.current && originalImage) {
-      persistentReferencePhotoRef.current = originalImage;
-      console.log('[EditMode] SAVED reference photo to ref (first time)');
-    } else if (persistentReferencePhotoRef.current) {
-      console.log('[EditMode] USING existing reference from ref (subsequent time)');
-    }
+    // Use the saved reference photo layer (set when stencil was generated)
+    // Fall back to originalImage if referencePhotoLayer isn't set
+    const referenceToUse = referencePhotoLayer || originalImage;
     
-    // Use the ref value (which persists across renders)
-    const referenceToUse = persistentReferencePhotoRef.current || originalImage;
-    
-    console.log('[EditMode] referenceToUse exists:', !!referenceToUse);
-    console.log('[EditMode] referenceToUse length:', referenceToUse ? referenceToUse.length : 0);
+    console.log('[EditMode] Using reference:', referenceToUse ? 'YES' : 'NO');
     
     // Freeze the images for edit mode
     setEditModeStencilImage(stencilImage);
