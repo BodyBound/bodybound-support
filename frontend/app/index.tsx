@@ -3535,18 +3535,17 @@ export default function Index() {
                     />
                   );
                 })}
-                {currentPath && (
-                  <Path
-                    d={currentPath}
-                    stroke={isEraser ? '#FFFFFF' : '#000000'}
-                    strokeWidth={isEraser ? brushSize * 3 : brushSize}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity={isEraser && !isCapturingForExport ? 0.7 : 1}
-                    strokeDasharray={isEraser && !isCapturingForExport ? '5,3' : undefined}
-                  />
-                )}
+                {/* Live stroke - updated directly on UI thread via useAnimatedProps, zero lag */}
+                <AnimatedSVGPath
+                  animatedProps={animatedStrokeProps}
+                  stroke={isEraser ? '#FFFFFF' : '#000000'}
+                  strokeWidth={isEraser ? brushSize * 3 : brushSize}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={isEraser && !isCapturingForExport ? 0.7 : 1}
+                  strokeDasharray={isEraser && !isCapturingForExport ? '5,3' : undefined}
+                />
               </Svg>
               </Animated.View>
             </Animated.View>
