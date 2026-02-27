@@ -1452,22 +1452,34 @@ export default function Index() {
 
       console.log('[SaveToGallery] Permission granted, processing image...');
       
-      // Use ImageManipulator to convert base64 to a file URI
-      // This is the most reliable method for Expo SDK 54
-      const manipulatedImage = await ImageManipulator.manipulateAsync(
-        imageBase64,
-        [], // No transformations needed
-        { 
-          format: ImageManipulator.SaveFormat.PNG,
-          compress: 1, // Full quality for stencils
-        }
-      );
+      // Determine if this is a PNG (transparent stencil) or JPEG
+      const isPNG = imageBase64.includes('data:image/png');
+      const fileExtension = isPNG ? 'png' : 'jpg';
       
-      console.log('[SaveToGallery] Image manipulated, URI:', manipulatedImage.uri);
+      // Extract base64 data (remove data URL prefix)
+      let base64Data = imageBase64;
+      if (base64Data.includes(',')) {
+        base64Data = base64Data.split(',')[1];
+      }
+      
+      // Write directly to file to preserve transparency for PNGs
+      const fileUri = FileSystem.documentDirectory + `${filename}_${Date.now()}.${fileExtension}`;
+      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      console.log('[SaveToGallery] File written to:', fileUri);
 
       // Save directly to photo gallery using MediaLibrary
-      const asset = await MediaLibrary.createAssetAsync(manipulatedImage.uri);
+      const asset = await MediaLibrary.createAssetAsync(fileUri);
       console.log('[SaveToGallery] Asset created:', asset.id, 'filename:', asset.filename);
+      
+      // Clean up temp file
+      try {
+        await FileSystem.deleteAsync(fileUri, { idempotent: true });
+      } catch (e) {
+        console.log('[SaveToGallery] Cleanup warning:', e);
+      }
       
       // Try to create/use album, but don't fail if it doesn't work
       try {
