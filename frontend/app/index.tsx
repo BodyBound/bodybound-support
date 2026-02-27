@@ -103,6 +103,8 @@ export default function Index() {
   
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
+  // Layer System: Store reference photo separately so it persists through edit sessions
+  const [referencePhotoLayer, setReferencePhotoLayer] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLiveUpdating, setIsLiveUpdating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
