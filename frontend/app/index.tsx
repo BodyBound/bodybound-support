@@ -3642,7 +3642,7 @@ export default function Index() {
                   maximumValue={5}
                   step={1}
                   value={lineWeight}
-                  onSlidingComplete={(val) => applyLineWeight(val)}
+                  onValueChange={(val) => applyLineWeightDebounced(val)}
                   minimumTrackTintColor="#C9A227"
                   maximumTrackTintColor="#555"
                   thumbTintColor="#C9A227"
