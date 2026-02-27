@@ -3314,7 +3314,6 @@ export default function Index() {
           </View>
         )}
 
-        </View>
       </View>
 
       {renderGalleryModal()}
