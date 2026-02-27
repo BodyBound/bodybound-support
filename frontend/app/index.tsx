@@ -4744,24 +4744,13 @@ const styles = StyleSheet.create({
   },
   // Custom Button Style Selection - Dark Charcoal with Brass Labels
   stencilStyleSection: {
-    marginTop: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    paddingVertical: 12,
-    marginHorizontal: 12,
-    // 3D bezel effect
-    borderWidth: 2,
-    borderColor: '#333',
-    borderTopColor: '#444',
-    borderLeftColor: '#444',
-    borderBottomColor: '#111',
-    borderRightColor: '#111',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
   },
   styleLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 12,
+    marginBottom: 4,
   },
   styleBrassLabel: {
     color: '#C9A227',
@@ -4770,9 +4759,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'sans-serif',
-    textShadowColor: 'rgba(201, 162, 39, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
     flex: 1,
     textAlign: 'center',
   },
@@ -4783,11 +4769,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   styleButtonWrapper: {
-    width: 80,
-    height: 100,
+    width: Math.min(80, (SCREEN_WIDTH - 80) / 3),
+    height: Math.min(100, (SCREEN_WIDTH - 80) / 3 * 1.25),
     borderRadius: 8,
     overflow: 'hidden',
-    // Default brass 3D bezel border
     borderWidth: 2,
     borderColor: '#8B7320',
     borderTopColor: '#A68B26',
