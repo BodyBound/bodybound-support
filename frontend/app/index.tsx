@@ -5711,6 +5711,22 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(201, 162, 39, 0.3)',
     backdropFilter: 'blur(10px)',
   },
+  disclaimerContainerWide: {
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+    width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(201, 162, 39, 0.25)',
+  },
+  disclaimerTextWide: {
+    fontSize: 10,
+    color: '#AAAAAA',
+    lineHeight: 16,
+    textAlign: 'center',
+  },
   disclaimerTitleNew: {
     fontSize: 11,
     fontWeight: '700',
