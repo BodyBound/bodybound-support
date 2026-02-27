@@ -2126,6 +2126,19 @@ export default function Index() {
     ]
   }));
 
+  // Animated style for instant touch cursor (renders on UI thread - no delay!)
+  const animatedCursorStyle = useAnimatedStyle(() => ({
+    position: 'absolute',
+    left: touchX.value - brushSize / 2,
+    top: touchY.value - brushSize / 2,
+    width: brushSize,
+    height: brushSize,
+    borderRadius: brushSize / 2,
+    backgroundColor: isEraser ? 'white' : 'black',
+    opacity: isDrawingActive.value ? 1 : 0,
+    pointerEvents: 'none' as const,
+  }));
+
   // Calculate distance between two touch points (for pinch zoom) - legacy
   const getDistance = (touches: any[]): number => {
     if (touches.length < 2) return 0;
