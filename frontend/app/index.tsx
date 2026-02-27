@@ -1999,46 +1999,24 @@ export default function Index() {
   
   // Single-finger gesture with proper pencil vs finger detection
   // Uses pointerType to differentiate between stylus (pencil) and touch (finger)
-  // OPTIMIZED for instant response - builds Skia path directly on UI thread
+  // OPTIMIZED: Uses worklets to minimize runOnJS calls
   const drawGesture = Gesture.Pan()
     .minPointers(1)
     .maxPointers(1)
-    .minDistance(0) // CRITICAL: 0 = instant response, no drag threshold
-    .activeOffsetX(0) // No offset required to activate
-    .activeOffsetY(0) // No offset required to activate
+    .minDistance(0) // CRITICAL: 0 = instant response
+    .activeOffsetX(0)
+    .activeOffsetY(0)
     .hitSlop({ left: 0, right: 0, top: 0, bottom: 0 })
     .shouldCancelWhenOutside(false)
     .onBegin((event) => {
-      // onBegin fires BEFORE onStart - use for instant feedback
       const isPencil = event.pointerType === PointerType.STYLUS;
       const shouldDraw = isPencil || enableFingerPaintingRef.current;
       
       if (shouldDraw) {
-        // INSTANT: Update shared values on UI thread (no JS bridge)
+        // INSTANT feedback on UI thread
         isDrawingActive.value = true;
         touchX.value = event.x;
         touchY.value = event.y;
-        
-        // Start a new Skia path immediately on UI thread
-        const newPath = Skia.Path.Make();
-        
-        // Convert screen to canvas coordinates (with rotation)
-        const { width, height } = Dimensions.get('window');
-        const centerX = width / 2;
-        const centerY = height / 2;
-        
-        let x = event.x - centerX - translateX.value;
-        let y = event.y - centerY - translateY.value;
-        x = x / scale.value;
-        y = y / scale.value;
-        
-        const cos = Math.cos(-rotation.value);
-        const sin = Math.sin(-rotation.value);
-        const canvasX = x * cos - y * sin + centerX;
-        const canvasY = x * sin + y * cos + centerY;
-        
-        newPath.moveTo(canvasX, canvasY);
-        skiaCurrentPath.value = newPath;
       }
     })
     .onStart((event) => {
@@ -2046,7 +2024,6 @@ export default function Index() {
       const shouldDraw = isPencil || enableFingerPaintingRef.current;
       
       if (shouldDraw) {
-        // Also update JS state for final path storage
         runOnJS(startDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value, rotation.value);
       } else {
         savedTranslateX.value = translateX.value;
@@ -2058,31 +2035,10 @@ export default function Index() {
       const shouldDraw = isPencil || enableFingerPaintingRef.current;
       
       if (shouldDraw) {
-        // INSTANT: Update touch position and Skia path on UI thread
+        // Update touch position on UI thread
         touchX.value = event.x;
         touchY.value = event.y;
-        
-        // Convert screen to canvas coordinates
-        const { width, height } = Dimensions.get('window');
-        const centerX = width / 2;
-        const centerY = height / 2;
-        
-        let x = event.x - centerX - translateX.value;
-        let y = event.y - centerY - translateY.value;
-        x = x / scale.value;
-        y = y / scale.value;
-        
-        const cos = Math.cos(-rotation.value);
-        const sin = Math.sin(-rotation.value);
-        const canvasX = x * cos - y * sin + centerX;
-        const canvasY = x * sin + y * cos + centerY;
-        
-        // Add point to Skia path (UI thread - instant!)
-        const currentPath = skiaCurrentPath.value;
-        currentPath.lineTo(canvasX, canvasY);
-        skiaCurrentPath.value = currentPath;
-        
-        // Also update JS state for path smoothing and storage
+        // Update path on JS thread
         runOnJS(continueDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value, rotation.value);
       } else {
         translateX.value = savedTranslateX.value + event.translationX;
@@ -2094,16 +2050,13 @@ export default function Index() {
       const shouldDraw = isPencil || enableFingerPaintingRef.current;
       
       if (shouldDraw) {
-        // Hide touch indicator and clear Skia path
         isDrawingActive.value = false;
         touchX.value = -1000;
         touchY.value = -1000;
-        skiaCurrentPath.value = Skia.Path.Make(); // Clear for next stroke
         runOnJS(endDrawing)();
       }
     })
     .onFinalize(() => {
-      // Safety: ensure touch indicator is hidden
       isDrawingActive.value = false;
       touchX.value = -1000;
       touchY.value = -1000;
