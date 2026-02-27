@@ -2522,15 +2522,17 @@ export default function Index() {
     pendingDrawRef.current = false;
     touchCountRef.current = 0;
     
-    if (currentPath && currentPoints.length > 1) {
-      // Create final smooth path
-      const smoothPath = createSmoothPath(currentPoints);
-      
-      if (isEraser) {
-        setDrawingPaths(prev => [...prev, `ERASER:${smoothPath}`]);
-      } else {
-        setDrawingPaths(prev => [...prev, smoothPath]);
+    if (currentPathSV.value) {
+      // Finalize any in-progress stroke before capture
+      const inProgressPath = currentPathSV.value;
+      if (inProgressPath.includes(' L')) {
+        if (isEraser) {
+          setDrawingPaths(prev => [...prev, `ERASER:${inProgressPath}`]);
+        } else {
+          setDrawingPaths(prev => [...prev, inProgressPath]);
+        }
       }
+      currentPathSV.value = '';
     }
     setCurrentPath('');
     setCurrentPoints([]);
