@@ -4049,13 +4049,12 @@ const styles = StyleSheet.create({
   },
   imagesContainer: {
     flex: 1,
-    gap: 12,
   },
   imageWrapper: {
     flex: 1,
     backgroundColor: '#1A1A1A',
     borderRadius: 12,
-    padding: 10,
+    padding: 8,
   },
   imageLabelRow: {
     flexDirection: 'row',
