@@ -2004,26 +2004,35 @@ export default function Index() {
   
   // Single-finger gesture with proper pencil vs finger detection
   // Uses pointerType to differentiate between stylus (pencil) and touch (finger)
+  // OPTIMIZED for instant response - minimal runOnJS calls
   const drawGesture = Gesture.Pan()
     .minPointers(1)
     .maxPointers(1)
-    .minDistance(0) // CRITICAL: Set to 0 for maximum sensitivity - picks up taps and dots!
-    .hitSlop({ left: 0, right: 0, top: 0, bottom: 0 }) // No slop for instant response
-    .shouldCancelWhenOutside(false) // Keep drawing even if finger moves outside
-    .onStart((event) => {
-      // Check if this is Apple Pencil using pointerType
+    .minDistance(0) // CRITICAL: 0 = instant response, no drag threshold
+    .activeOffsetX(0) // No offset required to activate
+    .activeOffsetY(0) // No offset required to activate
+    .hitSlop({ left: 0, right: 0, top: 0, bottom: 0 })
+    .shouldCancelWhenOutside(false)
+    .onBegin((event) => {
+      // onBegin fires BEFORE onStart - use for instant feedback
       const isPencil = event.pointerType === PointerType.STYLUS;
-      
-      // DRAW if: 
-      // 1. It's Apple Pencil (STYLUS) - ALWAYS draws
-      // 2. OR "Finger Drawing" toggle is ON (enableFingerPainting)
       const shouldDraw = isPencil || enableFingerPaintingRef.current;
       
       if (shouldDraw) {
-        // Draw mode - start drawing INSTANTLY (pass rotation for proper coordinate transform)
+        // INSTANT: Update shared values on UI thread (no JS bridge)
+        isDrawingActive.value = true;
+        touchX.value = event.x;
+        touchY.value = event.y;
+      }
+    })
+    .onStart((event) => {
+      const isPencil = event.pointerType === PointerType.STYLUS;
+      const shouldDraw = isPencil || enableFingerPaintingRef.current;
+      
+      if (shouldDraw) {
+        // Start the actual path drawing (needs JS for state)
         runOnJS(startDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value, rotation.value);
       } else {
-        // Finger touch without finger drawing enabled - PAN mode
         savedTranslateX.value = translateX.value;
         savedTranslateY.value = translateY.value;
       }
@@ -2033,10 +2042,12 @@ export default function Index() {
       const shouldDraw = isPencil || enableFingerPaintingRef.current;
       
       if (shouldDraw) {
-        // Drawing - pass current transform values INCLUDING rotation
+        // INSTANT: Update touch position on UI thread
+        touchX.value = event.x;
+        touchY.value = event.y;
+        // Continue path (needs JS for SVG path building)
         runOnJS(continueDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value, rotation.value);
       } else {
-        // Panning with finger
         translateX.value = savedTranslateX.value + event.translationX;
         translateY.value = savedTranslateY.value + event.translationY;
       }
@@ -2046,8 +2057,18 @@ export default function Index() {
       const shouldDraw = isPencil || enableFingerPaintingRef.current;
       
       if (shouldDraw) {
+        // Hide touch indicator
+        isDrawingActive.value = false;
+        touchX.value = -1000;
+        touchY.value = -1000;
         runOnJS(endDrawing)();
       }
+    })
+    .onFinalize(() => {
+      // Safety: ensure touch indicator is hidden
+      isDrawingActive.value = false;
+      touchX.value = -1000;
+      touchY.value = -1000;
     });
 
   // PINCH gesture for zooming (always works with 2 fingers)
