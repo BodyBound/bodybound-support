@@ -2974,9 +2974,9 @@ export default function Index() {
         {/* Middle Spacer - Let the artwork show */}
         <View style={styles.welcomeMiddleSpacer} />
         
-        {/* Bottom Section - Just the button, positioned low */}
-        <View style={styles.welcomeBottomButtonOnly}>
-          {/* Get Started Button - positioned below Body Bound text */}
+        {/* Bottom Section - Button at very bottom */}
+        <View style={styles.welcomeBottomSimple}>
+          {/* Get Started Button */}
           <TouchableOpacity
             style={styles.welcomeButtonNew}
             onPress={() => setShowWelcome(false)}
