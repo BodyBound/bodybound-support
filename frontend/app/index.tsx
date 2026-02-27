@@ -36,6 +36,9 @@ import { captureRef } from 'react-native-view-shot';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
+// Animated SVG Path for zero-lag drawing - updates directly on UI thread via Reanimated
+const AnimatedSVGPath = Animated.createAnimatedComponent(Path);
+
 // Onboarding tutorial slides
 const ONBOARDING_SLIDES = [
   {
