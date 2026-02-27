@@ -2085,37 +2085,30 @@ export default function Index() {
   // - Two fingers = Zoom + Pan (navigation)
   // - enableFingerPainting toggle: when ON, finger also draws like Procreate's option
   
-  // ZERO-LAG drawing gesture using MANUAL ACTIVATION:
-  // We use manualActivation(true) to immediately activate when pencil touches.
-  // This bypasses the gesture recognizer's internal delay for detecting pan direction.
+  // ZERO-LAG drawing gesture:
   // Path is accumulated directly on the UI thread via SharedValues + useAnimatedProps.
+  // No runOnJS during draw = no bridge crossing per frame = instant response.
+  // Using activeOffsetX/Y of [-1,1] to activate with minimal movement (almost immediate).
   const drawGesture = Gesture.Pan()
-    .manualActivation(true)
     .minPointers(1)
     .maxPointers(1)
+    .activeOffsetX([-1, 1])
+    .activeOffsetY([-1, 1])
     .shouldCancelWhenOutside(false)
-    .onTouchesDown((event, stateManager) => {
-      // Immediately check if this is a pencil touch
-      const touch = event.allTouches[0];
-      if (!touch) return;
-      
-      // Check pointer type - activate immediately for pencil, or if finger painting is enabled
-      const isPencil = touch.touchType === 1; // 1 = stylus in RNGH
+    .onBegin((event) => {
+      const isPencil = event.pointerType === PointerType.STYLUS;
       const shouldDraw = isPencil || enableFPSV.value;
-      
-      if (shouldDraw && event.numberOfTouches === 1) {
-        // IMMEDIATELY activate the gesture - no waiting!
-        stateManager.activate();
-        
+
+      if (shouldDraw) {
         isDrawingActive.value = true;
-        touchX.value = touch.x;
-        touchY.value = touch.y;
+        touchX.value = event.x;
+        touchY.value = event.y;
 
         // Transform screen → canvas coordinates (UI thread, zero lag)
         const cx = screenCX.value;
         const cy = screenCY.value;
-        let x = touch.x - cx - translateX.value;
-        let y = touch.y - cy - translateY.value;
+        let x = event.x - cx - translateX.value;
+        let y = event.y - cy - translateY.value;
         x = x / scale.value;
         y = y / scale.value;
         const cos = Math.cos(-rotation.value);
@@ -2123,28 +2116,15 @@ export default function Index() {
         const canvasX = x * cos - y * sin + cx;
         const canvasY = x * sin + y * cos + cy;
 
-        // Init path state
+        // Init path immediately at touch point
         lastSmX.value = canvasX;
         lastSmY.value = canvasY;
         strokeStartXSV.value = canvasX;
         strokeStartYSV.value = canvasY;
         currentPathSV.value = `M${canvasX.toFixed(1)},${canvasY.toFixed(1)}`;
-      } else if (!shouldDraw) {
-        // For finger (when not drawing): fail this gesture so pan/pinch can take over
-        stateManager.fail();
-      }
-    })
-    .onTouchesMove((event, stateManager) => {
-      // Just let it through - actual handling in onUpdate
-    })
-    .onTouchesUp((event, stateManager) => {
-      // Touch ended
-      if (event.numberOfTouches === 0) {
-        stateManager.end();
       }
     })
     .onStart((event) => {
-      // This fires after activation - for finger pan mode
       const isPencil = event.pointerType === PointerType.STYLUS;
       const shouldDraw = isPencil || enableFPSV.value;
       if (!shouldDraw) {
