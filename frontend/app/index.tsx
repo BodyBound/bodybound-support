@@ -1039,6 +1039,11 @@ export default function Index() {
             setSelectedVersion(style);
             setStencilImage(generatedStencil);
             setHasGeneratedOnce(true);
+            // Save the reference photo for edit mode layers
+            if (originalImage) {
+              setReferencePhotoLayer(originalImage);
+              console.log('[GenerateSingle] Saved reference photo layer');
+            }
           } else {
             console.error(`[GenerateSingle] No stencil in result for style ${style}`);
             Alert.alert('Generation Issue', 'Stencil was generated but not received properly.');
