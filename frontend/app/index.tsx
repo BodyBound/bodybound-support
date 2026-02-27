@@ -2944,54 +2944,62 @@ export default function Index() {
 
   // Welcome Screen Component
   const renderWelcomeScreen = () => (
-    <SafeAreaView style={styles.welcomeContainer}>
-      <View style={styles.welcomeContent}>
-        {/* Logo */}
-        <Image 
-          source={require('../assets/images/logo.png')} 
-          style={styles.welcomeLogo}
-          resizeMode="contain"
-        />
+    <View style={styles.welcomeContainer}>
+      {/* Full-screen Background Image */}
+      <Image 
+        source={require('../assets/images/splash-background.png')} 
+        style={styles.welcomeBackgroundImage}
+        resizeMode="cover"
+      />
+      
+      {/* Dark Gradient Overlay for text readability */}
+      <View style={styles.welcomeOverlay} />
+      
+      {/* Content Container */}
+      <SafeAreaView style={styles.welcomeContentOverlay}>
+        {/* Top Spacer */}
+        <View style={styles.welcomeTopSpacer} />
         
-        {/* App Title */}
-        <Text style={styles.welcomeTitle}>BODY BOUND</Text>
-        <Text style={styles.welcomeSubtitle}>Stencil Generator</Text>
-        
-        {/* Tagline */}
-        <Text style={styles.welcomeTagline}>
-          Transform photos into{'\n'}tattoo stencils as good as handmade
-        </Text>
-        
-        {/* Get Started Button */}
-        <TouchableOpacity
-          style={styles.welcomeButton}
-          onPress={() => setShowWelcome(false)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.welcomeButtonText}>Get Started</Text>
-          <Text style={styles.welcomeButtonArrow}>→</Text>
-        </TouchableOpacity>
-        
-        {/* Disclaimer */}
-        <View style={styles.disclaimerContainer}>
-          <Text style={styles.disclaimerTitle}>Please Note</Text>
-          <Text style={styles.disclaimerText}>
-            • WiFi connection required to generate stencils{'\n'}
-            • This app uses AI services for stencil generation{'\n'}
-            • AI servers may occasionally be unavailable{'\n'}
-            • Results may sometimes vary — if you notice any inconsistencies, simply tap "Generate" again
+        {/* Main Content - Centered */}
+        <View style={styles.welcomeMainContent}>
+          {/* App Title */}
+          <Text style={styles.welcomeTitleNew}>BODY BOUND</Text>
+          <Text style={styles.welcomeSubtitleNew}>STENCIL GENERATOR</Text>
+          
+          {/* Tagline */}
+          <Text style={styles.welcomeTaglineNew}>
+            Made for tattooers,{'\n'}by tattooers
           </Text>
         </View>
         
-        {/* Footer Note */}
-        <Text style={styles.welcomeFooter}>
-          for tattoo artists • developed by a tattoo artist
-        </Text>
-        
-        {/* Version Number */}
-        <Text style={styles.welcomeVersion}>v2.2.0</Text>
-      </View>
-    </SafeAreaView>
+        {/* Bottom Section */}
+        <View style={styles.welcomeBottomSection}>
+          {/* Get Started Button */}
+          <TouchableOpacity
+            style={styles.welcomeButtonNew}
+            onPress={() => setShowWelcome(false)}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.welcomeButtonTextNew}>Let's Get Started</Text>
+            <Text style={styles.welcomeButtonArrowNew}>→</Text>
+          </TouchableOpacity>
+          
+          {/* Disclaimer */}
+          <View style={styles.disclaimerContainerNew}>
+            <Text style={styles.disclaimerTitleNew}>Please Note</Text>
+            <Text style={styles.disclaimerTextNew}>
+              • WiFi connection required to generate stencils{'\n'}
+              • This app uses AI services for stencil generation{'\n'}
+              • AI servers may occasionally be unavailable{'\n'}
+              • Results may vary — tap "Generate" again if needed
+            </Text>
+          </View>
+          
+          {/* Version Number */}
+          <Text style={styles.welcomeVersionNew}>v2.2.0</Text>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 
   // Show welcome screen if active
