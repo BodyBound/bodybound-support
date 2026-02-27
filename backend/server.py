@@ -1399,7 +1399,148 @@ def cv2_to_base64_png(img: np.ndarray) -> str:
     base64_string = base64.b64encode(buffer).decode('utf-8')
     return f"data:image/png;base64,{base64_string}"
 
+
+def adjust_stencil_line_weight(base64_string: str, adjustment: int) -> str:
+    """Adjust the line weight of a stencil using morphological operations.
+    
+    This is a POST-AI-GENERATION adjustment that thins or thickens lines
+    without changing the AI prompts or generation process.
+    
+    Args:
+        base64_string: The stencil image (transparent PNG with black lines)
+        adjustment: Line weight adjustment from -5 (thinner) to +5 (thicker)
+                   0 = no change, negative = erode (thin), positive = dilate (thick)
+        
+    Returns:
+        Base64 encoded adjusted stencil PNG
+    """
+    try:
+        logger.info(f"[LineWeight] Adjusting line weight by {adjustment}")
+        
+        if adjustment == 0:
+            return base64_string  # No change needed
+        
+        # Remove data URL prefix if present
+        if ',' in base64_string:
+            base64_data = base64_string.split(',')[1]
+        else:
+            base64_data = base64_string
+        
+        # Decode the image
+        img_data = base64.b64decode(base64_data)
+        img_array = np.frombuffer(img_data, np.uint8)
+        img = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
+        
+        if img is None:
+            logger.error("[LineWeight] Failed to decode image")
+            return base64_string
+        
+        # Check if image has alpha channel (transparent PNG)
+        has_alpha = img.shape[2] == 4 if len(img.shape) == 3 else False
+        
+        if has_alpha:
+            # Split into color and alpha channels
+            bgr = img[:, :, :3]
+            alpha = img[:, :, 3]
+            
+            # Work on the alpha channel (where the lines are)
+            # Invert alpha so lines are white (255) for morphology operations
+            alpha_inverted = 255 - alpha
+            
+            # Create morphological kernel - circular for smoother results
+            kernel_size = abs(adjustment)
+            if kernel_size > 0:
+                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size * 2 + 1, kernel_size * 2 + 1))
+                
+                if adjustment > 0:
+                    # Positive = dilate = thicker lines
+                    # Dilating the inverted alpha makes lines thicker
+                    alpha_adjusted = cv2.dilate(alpha_inverted, kernel, iterations=1)
+                    logger.info(f"[LineWeight] Applied dilation (thicker) with kernel size {kernel_size * 2 + 1}")
+                else:
+                    # Negative = erode = thinner lines
+                    # Eroding the inverted alpha makes lines thinner
+                    alpha_adjusted = cv2.erode(alpha_inverted, kernel, iterations=1)
+                    logger.info(f"[LineWeight] Applied erosion (thinner) with kernel size {kernel_size * 2 + 1}")
+                
+                # Invert back
+                alpha = 255 - alpha_adjusted
+            
+            # Recombine
+            result = cv2.merge([bgr[:, :, 0], bgr[:, :, 1], bgr[:, :, 2], alpha])
+        else:
+            # Grayscale or RGB without alpha - work directly on the image
+            if len(img.shape) == 2:
+                gray = img
+            else:
+                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            
+            # Invert so lines are white
+            inverted = 255 - gray
+            
+            kernel_size = abs(adjustment)
+            if kernel_size > 0:
+                kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size * 2 + 1, kernel_size * 2 + 1))
+                
+                if adjustment > 0:
+                    adjusted = cv2.dilate(inverted, kernel, iterations=1)
+                else:
+                    adjusted = cv2.erode(inverted, kernel, iterations=1)
+                
+                gray = 255 - adjusted
+            
+            # Convert to BGRA with transparency
+            result = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGRA)
+            # Make white pixels transparent
+            result[:, :, 3] = np.where(gray > 200, 0, 255).astype(np.uint8)
+        
+        # Encode as PNG
+        _, buffer = cv2.imencode('.png', result)
+        adjusted_base64 = base64.b64encode(buffer).decode('utf-8')
+        
+        logger.info("[LineWeight] Line weight adjustment complete")
+        return f"data:image/png;base64,{adjusted_base64}"
+        
+    except Exception as e:
+        logger.error(f"[LineWeight] Error adjusting line weight: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return base64_string
+
+
+class AdjustLineWeightRequest(BaseModel):
+    image_base64: str = Field(..., description="Base64 encoded stencil image")
+    adjustment: int = Field(..., ge=-5, le=5, description="Line weight adjustment: -5 (thinnest) to +5 (thickest)")
+
+
+class AdjustLineWeightResponse(BaseModel):
+    adjusted_image: str = Field(..., description="Base64 encoded adjusted stencil")
+    adjustment_applied: int = Field(..., description="The adjustment value that was applied")
+
+
 # API Routes
+@api_router.post("/adjust-line-weight", response_model=AdjustLineWeightResponse)
+async def adjust_line_weight_endpoint(request: AdjustLineWeightRequest):
+    """Adjust the line weight of a generated stencil.
+    
+    This is a post-processing operation that thins or thickens the stencil lines
+    using morphological operations. It does not affect AI generation.
+    
+    - Negative values (-5 to -1): Thin the lines (erosion)
+    - Zero (0): No change
+    - Positive values (1 to 5): Thicken the lines (dilation)
+    """
+    try:
+        adjusted = adjust_stencil_line_weight(request.image_base64, request.adjustment)
+        return AdjustLineWeightResponse(
+            adjusted_image=adjusted,
+            adjustment_applied=request.adjustment
+        )
+    except Exception as e:
+        logger.error(f"[API] Line weight adjustment error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/")
 async def root():
     return {"message": "Tattoo Stencil API", "version": "1.0"}
