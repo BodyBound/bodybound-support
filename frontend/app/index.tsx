@@ -3003,15 +3003,6 @@ export default function Index() {
           >
             <Text style={styles.helpButtonText}>?</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.galleryButton}
-            onPress={() => {
-              loadGallery();
-              setShowGallery(true);
-            }}
-          >
-            <Text style={styles.iconText}>📁</Text>
-          </TouchableOpacity>
         </View>
       </View>
 
