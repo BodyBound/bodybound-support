@@ -1109,15 +1109,15 @@ export default function Index() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          stencil_base64: baseStencil,
-          line_weight: newWeight,
+          image_base64: baseStencil,
+          adjustment: newWeight,
         }),
       });
       
       if (response.ok) {
         const data = await response.json();
-        console.log(`[LineWeight] Adjusted in ${data.processing_time_ms}ms`);
-        setStencilImage(data.stencil_base64);
+        console.log(`[LineWeight] Adjustment applied: ${data.adjustment_applied}`);
+        setStencilImage(data.adjusted_image);
       } else {
         console.error('[LineWeight] Failed to adjust');
       }
