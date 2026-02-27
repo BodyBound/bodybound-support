@@ -3961,7 +3961,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 650,
     borderRadius: 12,
-    backgroundColor: '#0F0F0F',
+    backgroundColor: '#FFFFFF',
   },
   sourceButtons: {
     flexDirection: 'row',
