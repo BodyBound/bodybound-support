@@ -1800,9 +1800,9 @@ export default function Index() {
   };
 
   // Helper: Create smooth bezier curve from points
-  // Procreate-style StreamLine smoothing parameters
-  const streamLineAmount = 0.5; // 0 = no smoothing, 1 = max smoothing (like Procreate's StreamLine)
-  const stabilizationFactor = 0.3; // Motion filtering strength
+  // Procreate-style StreamLine smoothing parameters - REDUCED for faster response
+  const streamLineAmount = 0.2; // 0 = no smoothing, 1 = max smoothing (was 0.5, now more responsive)
+  const stabilizationFactor = 0.15; // Motion filtering strength (was 0.3, now faster)
   
   // Refs for StreamLine smoothing (like Procreate's monoline brush)
   const smoothedPointRef = useRef<{x: number, y: number} | null>(null);
