@@ -2180,7 +2180,6 @@ export default function Index() {
         const startX = strokeStartXSV.value;
         const startY = strokeStartYSV.value;
         currentPathSV.value = '';
-        runOnJS(clearLivePath)();
         runOnJS(finalizeStrokePath)(finalPath, startX, startY);
       }
     })
