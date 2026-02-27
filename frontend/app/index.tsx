@@ -1760,6 +1760,11 @@ export default function Index() {
     setBrushSize(3);
     setIsEraser(false);
     setShowEditHint(true); // Show hint each time edit mode opens
+    // Reset canvas transforms (zoom, pan, rotation) for fresh start
+    scale.value = 1;
+    translateX.value = 0;
+    translateY.value = 0;
+    rotation.value = 0;
     setShowEditModal(true);
   };
 
