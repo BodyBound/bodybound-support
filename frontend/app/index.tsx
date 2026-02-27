@@ -2047,9 +2047,10 @@ export default function Index() {
       runOnJS(undoLastPath)();
     });
 
-  // Combine all gestures - pinch and two-finger pan run simultaneously
+  // Combine all gestures - pinch, rotation, and two-finger pan run simultaneously
   const combinedGesture = Gesture.Simultaneous(
     pinchGesture,
+    rotationGesture,
     twoFingerPan
   );
 
