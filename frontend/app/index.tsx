@@ -3988,10 +3988,20 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
-  previewSection: {
-    marginTop: 12,
+  imageArea: {
     flex: 1,
-    minHeight: 300,
+    overflow: 'hidden',
+  },
+  bottomBar: {
+    backgroundColor: '#0D0D0D',
+    borderTopWidth: 1,
+    borderTopColor: '#2A2A2A',
+    paddingTop: 4,
+    paddingBottom: 8,
+  },
+  previewSection: {
+    flex: 1,
+    marginHorizontal: 12,
   },
   placeholderContainer: {
     flex: 1,
