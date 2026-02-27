@@ -2957,23 +2957,18 @@ export default function Index() {
       
       {/* Content Container */}
       <SafeAreaView style={styles.welcomeContentOverlay}>
-        {/* Top Spacer */}
-        <View style={styles.welcomeTopSpacer} />
-        
-        {/* Main Content - Centered */}
-        <View style={styles.welcomeMainContent}>
-          {/* App Title */}
-          <Text style={styles.welcomeTitleNew}>BODY BOUND</Text>
-          <Text style={styles.welcomeSubtitleNew}>STENCIL GENERATOR</Text>
-          
-          {/* Tagline */}
-          <Text style={styles.welcomeTaglineNew}>
-            Made for tattooers,{'\n'}by tattooers
+        {/* Top Section - Tagline */}
+        <View style={styles.welcomeTopSection}>
+          <Text style={styles.welcomeTaglineTop}>
+            Made for Tattooers,{'\n'}By Tattooers
           </Text>
         </View>
         
-        {/* Bottom Section */}
-        <View style={styles.welcomeBottomSection}>
+        {/* Middle Spacer - Let the artwork show */}
+        <View style={styles.welcomeMiddleSpacer} />
+        
+        {/* Bottom Section - Button and Disclaimer */}
+        <View style={styles.welcomeBottomSectionNew}>
           {/* Get Started Button */}
           <TouchableOpacity
             style={styles.welcomeButtonNew}
@@ -2984,14 +2979,11 @@ export default function Index() {
             <Text style={styles.welcomeButtonArrowNew}>→</Text>
           </TouchableOpacity>
           
-          {/* Disclaimer */}
-          <View style={styles.disclaimerContainerNew}>
+          {/* Disclaimer - Wide and at the bottom */}
+          <View style={styles.disclaimerContainerWide}>
             <Text style={styles.disclaimerTitleNew}>Please Note</Text>
-            <Text style={styles.disclaimerTextNew}>
-              • WiFi connection required to generate stencils{'\n'}
-              • This app uses AI services for stencil generation{'\n'}
-              • AI servers may occasionally be unavailable{'\n'}
-              • Results may vary — tap "Generate" again if needed
+            <Text style={styles.disclaimerTextWide}>
+              WiFi connection required  •  AI-powered stencil generation  •  Servers may occasionally be unavailable  •  Results may vary — tap "Generate" again if needed
             </Text>
           </View>
           
