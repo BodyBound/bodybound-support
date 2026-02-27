@@ -1049,6 +1049,7 @@ export default function Index() {
             }));
             setSelectedVersion(style);
             setStencilImage(generatedStencil);
+            setLineWeight(0); // Reset line weight for new stencil
             setHasGeneratedOnce(true);
             // Save the reference photo for edit mode layers
             if (originalImage) {
