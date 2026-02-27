@@ -2194,6 +2194,11 @@ export default function Index() {
     pointerEvents: 'none' as const,
   }));
 
+  // Zero-lag animated props - drives SVG path directly on UI thread
+  const animatedStrokeProps = useAnimatedProps(() => ({
+    d: currentPathSV.value,
+  }));
+
   // Calculate distance between two touch points (for pinch zoom) - legacy
   const getDistance = (touches: any[]): number => {
     if (touches.length < 2) return 0;
