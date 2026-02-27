@@ -4796,6 +4796,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  regenHintText: {
+    color: '#C9A227',
+    fontSize: 11,
+    textAlign: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 5,
+    paddingBottom: 2,
+    fontStyle: 'italic',
+    opacity: 0.85,
+  },
   styleButtonWrapper: {
     width: Math.min(80, (SCREEN_WIDTH - 80) / 3),
     height: Math.min(100, (SCREEN_WIDTH - 80) / 3 * 1.25),
