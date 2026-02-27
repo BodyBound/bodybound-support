@@ -1772,31 +1772,31 @@ export default function Index() {
       setOriginalAIStencil(stencilImage);
     }
     
-    // Determine which reference photo to use
-    // Priority: persistentReferencePhoto (if already saved) > originalImage
-    let referenceToUse = persistentReferencePhoto;
-    
-    // If no persistent reference yet, save the current originalImage
-    if (!persistentReferencePhoto && originalImage) {
-      setPersistentReferencePhoto(originalImage);
-      referenceToUse = originalImage; // Use it immediately since state update is async
+    // Store the reference photo in ref ONCE - never overwrite it
+    // Using ref instead of state to avoid async timing issues
+    if (!persistentReferencePhotoRef.current && originalImage) {
+      persistentReferencePhotoRef.current = originalImage;
+      console.log('[EditMode] Saved reference photo to ref');
     }
     
-    // Freeze the images for edit mode - prevents new generations from interfering
-    setEditModeStencilImage(stencilImage);
-    setEditModeOriginalImage(referenceToUse);
+    // Use the ref value (which persists across renders)
+    const referenceToUse = persistentReferencePhotoRef.current || originalImage;
     
     console.log('[EditMode] Opening with reference photo:', referenceToUse ? 'YES' : 'NO');
-    console.log('[EditMode] persistentReferencePhoto:', persistentReferencePhoto ? 'SET' : 'NULL');
+    console.log('[EditMode] persistentReferencePhotoRef.current:', persistentReferencePhotoRef.current ? 'SET' : 'NULL');
     console.log('[EditMode] originalImage:', originalImage ? 'SET' : 'NULL');
+    
+    // Freeze the images for edit mode
+    setEditModeStencilImage(stencilImage);
+    setEditModeOriginalImage(referenceToUse);
     
     // Don't reset drawings - preserve them for continued editing
     setCurrentPath('');
     setEditOpacity(0.5);
     setBrushSize(3);
     setIsEraser(false);
-    setShowEditHint(true); // Show hint each time edit mode opens
-    // Reset canvas transforms (zoom, pan, rotation) for fresh start
+    setShowEditHint(true);
+    // Reset canvas transforms
     scale.value = 1;
     translateX.value = 0;
     translateY.value = 0;
