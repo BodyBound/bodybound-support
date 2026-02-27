@@ -1871,15 +1871,29 @@ export default function Index() {
   const currentTranslateYRef = useRef(0);
 
   // Helper functions for gesture callbacks (must be regular functions to use with runOnJS)
-  const startDrawing = (screenX: number, screenY: number, currentScale: number, currentTX: number, currentTY: number) => {
-    // Convert screen coordinates to canvas coordinates
+  const startDrawing = (screenX: number, screenY: number, currentScale: number, currentTX: number, currentTY: number, currentRotation: number) => {
+    // Convert screen coordinates to canvas coordinates (accounting for scale, translation, AND rotation)
     const { width, height } = Dimensions.get('window');
     const centerX = width / 2;
     const centerY = height / 2;
     
-    // Apply inverse transform
-    const rawX = (screenX - centerX - currentTX) / currentScale + centerX;
-    const rawY = (screenY - centerY - currentTY) / currentScale + centerY;
+    // Step 1: Remove translation
+    let x = screenX - centerX - currentTX;
+    let y = screenY - centerY - currentTY;
+    
+    // Step 2: Remove scale
+    x = x / currentScale;
+    y = y / currentScale;
+    
+    // Step 3: Remove rotation (rotate by negative angle around origin)
+    const cos = Math.cos(-currentRotation);
+    const sin = Math.sin(-currentRotation);
+    const rotatedX = x * cos - y * sin;
+    const rotatedY = x * sin + y * cos;
+    
+    // Step 4: Add back center offset
+    const rawX = rotatedX + centerX;
+    const rawY = rotatedY + centerY;
     
     // Reset StreamLine smoothing for new stroke
     resetStreamLine();
@@ -1899,16 +1913,31 @@ export default function Index() {
     setCurrentPath(`M${smoothed.x},${smoothed.y}`);
   };
 
-  const continueDrawing = (screenX: number, screenY: number, currentScale: number, currentTX: number, currentTY: number) => {
+  const continueDrawing = (screenX: number, screenY: number, currentScale: number, currentTX: number, currentTY: number, currentRotation: number) => {
     if (!isDrawingRef.current) return;
     
-    // Convert screen coordinates to canvas coordinates
+    // Convert screen coordinates to canvas coordinates (accounting for scale, translation, AND rotation)
     const { width, height } = Dimensions.get('window');
     const centerX = width / 2;
     const centerY = height / 2;
     
-    const rawX = (screenX - centerX - currentTX) / currentScale + centerX;
-    const rawY = (screenY - centerY - currentTY) / currentScale + centerY;
+    // Step 1: Remove translation
+    let x = screenX - centerX - currentTX;
+    let y = screenY - centerY - currentTY;
+    
+    // Step 2: Remove scale
+    x = x / currentScale;
+    y = y / currentScale;
+    
+    // Step 3: Remove rotation (rotate by negative angle around origin)
+    const cos = Math.cos(-currentRotation);
+    const sin = Math.sin(-currentRotation);
+    const rotatedX = x * cos - y * sin;
+    const rotatedY = x * sin + y * cos;
+    
+    // Step 4: Add back center offset
+    const rawX = rotatedX + centerX;
+    const rawY = rotatedY + centerY;
     
     // Apply StreamLine smoothing for silky smooth lines
     const smoothed = applyStreamLine(rawX, rawY);
