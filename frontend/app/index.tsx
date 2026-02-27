@@ -1781,19 +1781,27 @@ export default function Index() {
     console.log('[EditMode] originalImage exists:', !!originalImage);
     console.log('[EditMode] stencilImage exists:', !!stencilImage);
     
-    // Store the original AI stencil if not already stored (for revert functionality)
-    if (!originalAIStencil && stencilImage) {
-      setOriginalAIStencil(stencilImage);
-    }
-    
     // Use the saved reference photo layer (set when stencil was generated)
     // Fall back to originalImage if referencePhotoLayer isn't set
     const referenceToUse = referencePhotoLayer || originalImage;
     
     console.log('[EditMode] Using reference:', referenceToUse ? 'YES' : 'NO');
     
+    // CRITICAL FIX: Always use the original transparent PNG stencil as the edit base.
+    // stencilVersions[selectedVersion] = the raw AI-generated transparent PNG.
+    // We must NOT use stencilImage because after saving edits it becomes an
+    // opaque white-background merged image, which covers the reference photo layer.
+    const transparentBaseStencil = stencilVersions[selectedVersion] || originalAIStencil || stencilImage;
+    
+    // Ensure originalAIStencil is always pointing at the clean transparent base
+    if (!originalAIStencil || stencilVersions[selectedVersion]) {
+      setOriginalAIStencil(stencilVersions[selectedVersion] || stencilImage);
+    }
+    
+    console.log('[EditMode] Using transparent base stencil:', transparentBaseStencil ? 'YES' : 'NO');
+    
     // Freeze the images for edit mode
-    setEditModeStencilImage(stencilImage);
+    setEditModeStencilImage(transparentBaseStencil);
     setEditModeOriginalImage(referenceToUse);
     
     // Don't reset drawings - preserve them for continued editing
