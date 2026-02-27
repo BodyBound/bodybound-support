@@ -494,8 +494,8 @@ export default function Index() {
         setStencilImage(null);
         setStencilVersions({ light: null, medium: null, heavy: null });
         setHasGeneratedOnce(false);
-        // Reset persistent reference for new photo
-        persistentReferencePhotoRef.current = null;
+        // Reset reference photo layer for new photo
+        setReferencePhotoLayer(null);
         setOriginalAIStencil(null);
         setDrawingPaths([]);
         setDotMarks([]);
@@ -518,8 +518,8 @@ export default function Index() {
           setStencilImage(null);
           setStencilVersions({ light: null, medium: null, heavy: null });
           setHasGeneratedOnce(false);
-          // Reset persistent reference for new photo
-          persistentReferencePhotoRef.current = null;
+          // Reset reference photo layer for new photo
+          setReferencePhotoLayer(null);
           setOriginalAIStencil(null);
           setDrawingPaths([]);
           setDotMarks([]);
