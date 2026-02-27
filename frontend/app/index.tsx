@@ -3290,6 +3290,33 @@ export default function Index() {
           </View>
         )}
 
+        {/* Line Weight Adjustment Slider - Shows after stencil generation */}
+        {stencilImage && (
+          <View style={styles.lineWeightSection}>
+            <View style={styles.lineWeightHeader}>
+              <Text style={styles.lineWeightLabel}>Line Weight</Text>
+              <Text style={styles.lineWeightValue}>
+                {lineWeight === 0 ? 'Original' : lineWeight > 0 ? `+${lineWeight} (Thicker)` : `${lineWeight} (Thinner)`}
+              </Text>
+            </View>
+            <Slider
+              style={styles.lineWeightSlider}
+              minimumValue={-5}
+              maximumValue={5}
+              step={1}
+              value={lineWeight}
+              onSlidingComplete={(value) => applyLineWeight(value)}
+              minimumTrackTintColor="#C9A227"
+              maximumTrackTintColor="#444"
+              thumbTintColor="#C9A227"
+            />
+            <View style={styles.lineWeightLabels}>
+              <Text style={styles.lineWeightEndLabel}>Thinner</Text>
+              <Text style={styles.lineWeightEndLabel}>Thicker</Text>
+            </View>
+          </View>
+        )}
+
         {/* Generation Progress - Compact */}
         {isGeneratingVersions && (
           <View style={styles.compactProgressSection}>
