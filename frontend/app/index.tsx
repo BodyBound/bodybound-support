@@ -1874,11 +1874,6 @@ export default function Index() {
     return path;
   };
 
-  // Refs to track current transform for coordinate conversion
-  const currentScaleRef = useRef(1);
-  const currentTranslateXRef = useRef(0);
-  const currentTranslateYRef = useRef(0);
-
   // Helper functions for gesture callbacks (must be regular functions to use with runOnJS)
   const startDrawing = (screenX: number, screenY: number, currentScale: number, currentTX: number, currentTY: number, currentRotation: number) => {
     // Convert screen coordinates to canvas coordinates (accounting for scale, translation, AND rotation)
