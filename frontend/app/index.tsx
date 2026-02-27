@@ -3546,6 +3546,9 @@ export default function Index() {
               }
             </Text>
           </View>
+          
+          {/* Instant Touch Cursor - Animated on UI thread for zero delay */}
+          <Animated.View style={animatedCursorStyle} pointerEvents="none" />
         </GestureHandlerRootView>
       </Modal>
 
