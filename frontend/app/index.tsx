@@ -2236,10 +2236,11 @@ export default function Index() {
   );
 
   // Race between single-finger draw and the combined two-finger gestures
-  // Also include double-tap for undo
+  // IMPORTANT: Use Simultaneous for doubleTap + drawGesture so drawing starts IMMEDIATELY
+  // Double-tap undo will still work - it fires independently when detected
   const allGestures = Gesture.Race(
     combinedGesture,
-    Gesture.Exclusive(doubleTapGesture, drawGesture)
+    Gesture.Simultaneous(doubleTapGesture, drawGesture)
   );
 
   // Animated style for the canvas transform
