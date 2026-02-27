@@ -31,9 +31,8 @@ import Slider from '@react-native-community/slider';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path, Circle } from 'react-native-svg';
 import { Gesture, GestureDetector, GestureHandlerRootView, PointerType } from 'react-native-gesture-handler';
-import Animated, { useSharedValue, useAnimatedStyle, runOnJS, useDerivedValue } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, runOnJS, useDerivedValue, withSpring } from 'react-native-reanimated';
 import { captureRef } from 'react-native-view-shot';
-import { Canvas, Path as SkiaPath, Skia, useCanvasRef, Circle as SkiaCircle } from '@shopify/react-native-skia';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
