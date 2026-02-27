@@ -2052,63 +2052,105 @@ export default function Index() {
   // - Two fingers = Zoom + Pan (navigation)
   // - enableFingerPainting toggle: when ON, finger also draws like Procreate's option
   
-  // Single-finger gesture with proper pencil vs finger detection
-  // Uses pointerType to differentiate between stylus (pencil) and touch (finger)
-  // OPTIMIZED: Uses worklets to minimize runOnJS calls
+  // ZERO-LAG drawing gesture:
+  // Path is accumulated directly on the UI thread via SharedValues + useAnimatedProps.
+  // No runOnJS during draw = no bridge crossing per frame = instant response.
   const drawGesture = Gesture.Pan()
     .minPointers(1)
     .maxPointers(1)
-    .minDistance(0) // CRITICAL: 0 = instant response
+    .minDistance(0)
     .activeOffsetX(0)
     .activeOffsetY(0)
     .hitSlop({ left: 0, right: 0, top: 0, bottom: 0 })
     .shouldCancelWhenOutside(false)
     .onBegin((event) => {
       const isPencil = event.pointerType === PointerType.STYLUS;
-      const shouldDraw = isPencil || enableFingerPaintingRef.current;
-      
+      const shouldDraw = isPencil || enableFPSV.value;
+
       if (shouldDraw) {
-        // INSTANT feedback on UI thread
         isDrawingActive.value = true;
         touchX.value = event.x;
         touchY.value = event.y;
+
+        // Transform screen → canvas coordinates (UI thread, zero lag)
+        const cx = screenCX.value;
+        const cy = screenCY.value;
+        let x = event.x - cx - translateX.value;
+        let y = event.y - cy - translateY.value;
+        x = x / scale.value;
+        y = y / scale.value;
+        const cos = Math.cos(-rotation.value);
+        const sin = Math.sin(-rotation.value);
+        const canvasX = x * cos - y * sin + cx;
+        const canvasY = x * sin + y * cos + cy;
+
+        // Init StreamLine state and path
+        lastSmX.value = canvasX;
+        lastSmY.value = canvasY;
+        strokeStartXSV.value = canvasX;
+        strokeStartYSV.value = canvasY;
+        currentPathSV.value = `M${canvasX.toFixed(1)},${canvasY.toFixed(1)}`;
       }
     })
     .onStart((event) => {
       const isPencil = event.pointerType === PointerType.STYLUS;
-      const shouldDraw = isPencil || enableFingerPaintingRef.current;
-      
-      if (shouldDraw) {
-        runOnJS(startDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value, rotation.value);
-      } else {
+      const shouldDraw = isPencil || enableFPSV.value;
+      if (!shouldDraw) {
+        // Init saved position for single-finger pan
         savedTranslateX.value = translateX.value;
         savedTranslateY.value = translateY.value;
       }
     })
     .onUpdate((event) => {
       const isPencil = event.pointerType === PointerType.STYLUS;
-      const shouldDraw = isPencil || enableFingerPaintingRef.current;
-      
+      const shouldDraw = isPencil || enableFPSV.value;
+
       if (shouldDraw) {
-        // Update touch position on UI thread
+        // Update cursor dot (instant)
         touchX.value = event.x;
         touchY.value = event.y;
-        // Update path on JS thread
-        runOnJS(continueDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value, rotation.value);
+
+        // Transform screen → canvas (UI thread)
+        const cx = screenCX.value;
+        const cy = screenCY.value;
+        let x = event.x - cx - translateX.value;
+        let y = event.y - cy - translateY.value;
+        x = x / scale.value;
+        y = y / scale.value;
+        const cos = Math.cos(-rotation.value);
+        const sin = Math.sin(-rotation.value);
+        const rawX = x * cos - y * sin + cx;
+        const rawY = x * sin + y * cos + cy;
+
+        // StreamLine EMA smoothing (0.2 = very responsive, higher = smoother/slower)
+        const sl = 0.2;
+        const smX = lastSmX.value + (rawX - lastSmX.value) * (1 - sl);
+        const smY = lastSmY.value + (rawY - lastSmY.value) * (1 - sl);
+        lastSmX.value = smX;
+        lastSmY.value = smY;
+
+        // DIRECT UI-THREAD path update — zero bridge latency
+        currentPathSV.value = currentPathSV.value + ` L${smX.toFixed(1)},${smY.toFixed(1)}`;
       } else {
+        // Single-finger pan when not in draw mode
         translateX.value = savedTranslateX.value + event.translationX;
         translateY.value = savedTranslateY.value + event.translationY;
       }
     })
     .onEnd((event) => {
       const isPencil = event.pointerType === PointerType.STYLUS;
-      const shouldDraw = isPencil || enableFingerPaintingRef.current;
-      
+      const shouldDraw = isPencil || enableFPSV.value;
+
       if (shouldDraw) {
         isDrawingActive.value = false;
         touchX.value = -1000;
         touchY.value = -1000;
-        runOnJS(endDrawing)();
+        // Finalize stroke on JS thread (only once per stroke)
+        const finalPath = currentPathSV.value;
+        const startX = strokeStartXSV.value;
+        const startY = strokeStartYSV.value;
+        currentPathSV.value = '';
+        runOnJS(finalizeStrokePath)(finalPath, startX, startY);
       }
     })
     .onFinalize(() => {
