@@ -2380,8 +2380,8 @@ export default function Index() {
 
   // Save edited stencil - captures stencil + drawings and shows on main screen (no auto-save to gallery)
   const saveEditedStencil = async () => {
-    // If no drawings, just close
-    if (drawingPaths.length === 0) {
+    // If no drawings AND no dots, just close
+    if (drawingPaths.length === 0 && dotMarks.length === 0) {
       setShowEditModal(false);
       return;
     }
@@ -2396,11 +2396,17 @@ export default function Index() {
     try {
       console.log('[SaveEdit] Starting capture...');
       
+      // Reset canvas transforms before capture (so we get the full image, not zoomed/rotated view)
+      scale.value = 1;
+      translateX.value = 0;
+      translateY.value = 0;
+      rotation.value = 0;
+      
       // Set capture mode - hides original photo, shows stencil at full opacity
       setIsCapturingForExport(true);
       
-      // Small delay to let the UI update
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Longer delay to let transforms and UI update
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       // Capture the canvas as an image (stencil + drawings on white bg)
       const uri = await captureRef(editCanvasRef, {
