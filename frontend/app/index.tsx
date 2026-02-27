@@ -212,6 +212,10 @@ export default function Index() {
   const touchY = useSharedValue(-1000);
   const isDrawingActive = useSharedValue(false);
   
+  // Skia path for instant UI-thread rendering (no JS bridge delay)
+  const skiaCurrentPath = useSharedValue(Skia.Path.Make());
+  const skiaPathString = useSharedValue('');
+  
   // Refs for drawing state (to avoid stale closures in gestures)
   const currentPointsRef = useRef<{x: number, y: number}[]>([]);
   const isDrawingRef = useRef(false);
