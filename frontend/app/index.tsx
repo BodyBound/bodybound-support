@@ -2017,6 +2017,16 @@ export default function Index() {
       scale.value = Math.min(Math.max(savedScale.value * event.scale, 0.1), 10);
     });
 
+  // ROTATION gesture for rotating canvas with two fingers
+  const rotationGesture = Gesture.Rotation()
+    .onStart(() => {
+      savedRotation.value = rotation.value;
+    })
+    .onUpdate((event) => {
+      // Smooth rotation - follows finger rotation
+      rotation.value = savedRotation.value + event.rotation;
+    });
+
   // Two-finger PAN for moving while zooming
   const twoFingerPan = Gesture.Pan()
     .minPointers(2)
