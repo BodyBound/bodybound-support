@@ -5599,6 +5599,26 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'space-between',
   },
+  welcomeTopSection: {
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  welcomeTaglineTop: {
+    fontSize: 26,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    lineHeight: 36,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textShadowColor: 'rgba(0, 0, 0, 0.9)',
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 10,
+    textTransform: 'uppercase',
+  },
+  welcomeMiddleSpacer: {
+    flex: 1,
+  },
   welcomeTopSpacer: {
     flex: 0.15,
   },
