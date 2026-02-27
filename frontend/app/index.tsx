@@ -2037,12 +2037,19 @@ export default function Index() {
     setCurrentPoints([]);
   };
 
-  const undoLastPath = () => {
-    // Undo dots first if there are any, otherwise undo paths
-    if (dotMarks.length > 0) {
-      setDotMarks(prev => prev.slice(0, -1));
-    } else {
-      setDrawingPaths(prev => prev.slice(0, -1));
+  const svgLivePathRef = useRef<any>(null);
+
+  // Called from UI-thread gesture worklet via runOnJS:
+  // setNativeProps bypasses React reconciler entirely — ~5ms vs ~20ms for setState
+  const updateLivePathDirect = (d: string) => {
+    if (svgLivePathRef.current) {
+      svgLivePathRef.current.setNativeProps({ d });
+    }
+  };
+
+  const clearLivePath = () => {
+    if (svgLivePathRef.current) {
+      svgLivePathRef.current.setNativeProps({ d: '' });
     }
   };
 
