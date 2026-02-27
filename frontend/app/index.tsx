@@ -3361,25 +3361,27 @@ export default function Index() {
                 <View style={[styles.procreateBackgroundImage, { backgroundColor: '#FFFFFF' }]} />
               )}
               
-              {/* Original image as background - use frozen editModeOriginalImage */}
+              {/* WHITE BACKGROUND for reference photo layer */}
+              {!isCapturingForExport && (
+                <View style={[styles.procreateBackgroundImage, { backgroundColor: '#FFFFFF' }]} />
+              )}
+              
+              {/* Original image as background - opacity controlled by slider */}
               {/* Hidden during capture - only the stencil and drawings are exported */}
               {editModeOriginalImage && !isCapturingForExport && (
                 <Image
                   source={{ uri: editModeOriginalImage }}
-                  style={styles.procreateBackgroundImage}
+                  style={[styles.procreateBackgroundImage, { opacity: editOpacity }]}
                   resizeMode="contain"
                 />
               )}
               
               {/* Stencil overlay - TRANSPARENT PNG with just black linework */}
-              {/* Shown on top of reference photo during editing, on white during capture */}
+              {/* Always at FULL OPACITY so linework is always visible */}
               {editModeStencilImage && (
                 <Image
                   source={{ uri: editModeStencilImage }}
-                  style={[
-                    styles.procreateStencilImage, 
-                    { opacity: isCapturingForExport ? 1 : editOpacity }
-                  ]}
+                  style={styles.procreateStencilImage}
                   resizeMode="contain"
                 />
               )}
