@@ -22,7 +22,7 @@
         "NSPhotoLibraryUsageDescription": "Select reference photos to convert into stencils",
         "NSPhotoLibraryAddUsageDescription": "Save generated stencils to export to Procreate"
       },
-      "bundleIdentifier": "app.emergent.tattoostencils115373ef8"
+      "bundleIdentifier": "com.bodybound.stencilgenerator"
     },
     "android": {
       "adaptiveIcon": {
