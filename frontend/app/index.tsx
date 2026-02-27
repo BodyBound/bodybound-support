@@ -3454,6 +3454,19 @@ export default function Index() {
                   />
                 )}
               </Svg>
+              
+              {/* Skia Canvas for INSTANT drawing feedback (renders on UI thread) */}
+              <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+                <SkiaPath 
+                  path={skiaCurrentPath} 
+                  color="black" 
+                  style="stroke" 
+                  strokeWidth={brushSize}
+                  strokeCap="round"
+                  strokeJoin="round"
+                />
+              </Canvas>
+              
               </Animated.View>
             </Animated.View>
           </GestureDetector>
