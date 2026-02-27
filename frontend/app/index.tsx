@@ -2011,8 +2011,8 @@ export default function Index() {
       const shouldDraw = isPencil || enableFingerPaintingRef.current;
       
       if (shouldDraw) {
-        // Draw mode - start drawing INSTANTLY
-        runOnJS(startDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value);
+        // Draw mode - start drawing INSTANTLY (pass rotation for proper coordinate transform)
+        runOnJS(startDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value, rotation.value);
       } else {
         // Finger touch without finger drawing enabled - PAN mode
         savedTranslateX.value = translateX.value;
@@ -2024,8 +2024,8 @@ export default function Index() {
       const shouldDraw = isPencil || enableFingerPaintingRef.current;
       
       if (shouldDraw) {
-        // Drawing - pass current transform values
-        runOnJS(continueDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value);
+        // Drawing - pass current transform values INCLUDING rotation
+        runOnJS(continueDrawing)(event.x, event.y, scale.value, translateX.value, translateY.value, rotation.value);
       } else {
         // Panning with finger
         translateX.value = savedTranslateX.value + event.translationX;
