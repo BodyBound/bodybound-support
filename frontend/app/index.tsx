@@ -2957,19 +2957,26 @@ export default function Index() {
       
       {/* Content Container */}
       <SafeAreaView style={styles.welcomeContentOverlay}>
-        {/* Top Section - Tagline */}
+        {/* Top Section - Tagline + Disclaimer */}
         <View style={styles.welcomeTopSection}>
           <Text style={styles.welcomeTaglineTop}>
             Made for Tattooers,{'\n'}By Tattooers
           </Text>
+          
+          {/* Disclaimer right under tagline */}
+          <View style={styles.disclaimerUnderTagline}>
+            <Text style={styles.disclaimerTextLegible}>
+              WiFi required  •  AI-powered  •  Servers may occasionally be unavailable  •  Results may vary
+            </Text>
+          </View>
         </View>
         
         {/* Middle Spacer - Let the artwork show */}
         <View style={styles.welcomeMiddleSpacer} />
         
-        {/* Bottom Section - Button and Disclaimer */}
-        <View style={styles.welcomeBottomSectionNew}>
-          {/* Get Started Button */}
+        {/* Bottom Section - Just the button, positioned low */}
+        <View style={styles.welcomeBottomButtonOnly}>
+          {/* Get Started Button - positioned below Body Bound text */}
           <TouchableOpacity
             style={styles.welcomeButtonNew}
             onPress={() => setShowWelcome(false)}
@@ -2978,14 +2985,6 @@ export default function Index() {
             <Text style={styles.welcomeButtonTextNew}>Let's Get Started</Text>
             <Text style={styles.welcomeButtonArrowNew}>→</Text>
           </TouchableOpacity>
-          
-          {/* Disclaimer - Wide and at the bottom */}
-          <View style={styles.disclaimerContainerWide}>
-            <Text style={styles.disclaimerTitleNew}>Please Note</Text>
-            <Text style={styles.disclaimerTextWide}>
-              WiFi connection required  •  AI-powered stencil generation  •  Servers may occasionally be unavailable  •  Results may vary — tap "Generate" again if needed
-            </Text>
-          </View>
           
           {/* Version Number */}
           <Text style={styles.welcomeVersionNew}>v2.2.0</Text>
