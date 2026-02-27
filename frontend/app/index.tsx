@@ -1761,9 +1761,18 @@ export default function Index() {
     if (!originalAIStencil && stencilImage) {
       setOriginalAIStencil(stencilImage);
     }
+    
+    // Store the reference photo ONCE - never overwrite it
+    // This ensures the reference is always available even after multiple edit sessions
+    if (!persistentReferencePhoto && originalImage) {
+      setPersistentReferencePhoto(originalImage);
+    }
+    
     // Freeze the images for edit mode - prevents new generations from interfering
     setEditModeStencilImage(stencilImage);
-    setEditModeOriginalImage(originalImage);
+    // Use persistent reference photo if available, otherwise fall back to originalImage
+    setEditModeOriginalImage(persistentReferencePhoto || originalImage);
+    
     // Don't reset drawings - preserve them for continued editing
     setCurrentPath('');
     setEditOpacity(0.5);
