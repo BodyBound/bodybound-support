@@ -200,9 +200,11 @@ export default function Index() {
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
+  const rotation = useSharedValue(0); // Canvas rotation in radians
   const savedScale = useSharedValue(1);
   const savedTranslateX = useSharedValue(0);
   const savedTranslateY = useSharedValue(0);
+  const savedRotation = useSharedValue(0);
   
   // Refs for drawing state (to avoid stale closures in gestures)
   const currentPointsRef = useRef<{x: number, y: number}[]>([]);
