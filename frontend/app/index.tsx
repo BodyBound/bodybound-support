@@ -2046,6 +2046,23 @@ export default function Index() {
     }
   };
 
+  // Called from drawGesture.onEnd (JS thread) - finalizes a completed stroke
+  // pathStr: accumulated SVG path from UI thread, startX/Y: first point for dot detection
+  const finalizeStrokePath = (pathStr: string, startX: number, startY: number) => {
+    if (!pathStr) return;
+    // Single tap = path is just "M x,y" with no L segments → create dot
+    const hasLineTo = pathStr.includes(' L');
+    if (!hasLineTo) {
+      setDotMarks(prev => [...prev, { x: startX, y: startY, size: brushSize }]);
+    } else {
+      if (isEraser) {
+        setDrawingPaths(prev => [...prev, `ERASER:${pathStr}`]);
+      } else {
+        setDrawingPaths(prev => [...prev, pathStr]);
+      }
+    }
+  };
+
   // PROCREATE-STYLE BEHAVIOR:
   // - Apple Pencil (stylus) = ALWAYS draws
   // - Single finger = PANS (navigation) by default, unless "Finger Drawing" is ON
