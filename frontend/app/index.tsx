@@ -189,7 +189,7 @@ export default function Index() {
   const [enableFingerPainting, setEnableFingerPainting] = useState(false); // Like Procreate: OFF = pencil only
   const [editedStencil, setEditedStencil] = useState<string | null>(null); // Saved edited version
   const [originalAIStencil, setOriginalAIStencil] = useState<string | null>(null); // Original AI stencil (for revert)
-  const [persistentReferencePhoto, setPersistentReferencePhoto] = useState<string | null>(null); // NEVER changes once set - for edit mode
+  const persistentReferencePhotoRef = useRef<string | null>(null); // NEVER changes once set - for edit mode (using ref for reliability)
   const [isCapturingForExport, setIsCapturingForExport] = useState(false); // Hide original when saving
   const [showEditHint, setShowEditHint] = useState(true); // Show double-tap hint on first entry
   const [editModeStencilImage, setEditModeStencilImage] = useState<string | null>(null); // Frozen stencil for edit mode
