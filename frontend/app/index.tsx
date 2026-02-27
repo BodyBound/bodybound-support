@@ -1086,55 +1086,71 @@ export default function Index() {
     }
   };
 
-  // Apply line weight adjustment to existing stencil (live update)
-  const applyLineWeight = async (newWeight: number) => {
-    if (!stencilImage || newWeight === lineWeight) return;
-    
+  // Ref for debouncing line weight API calls
+  const lineWeightTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [lineWeightPreview, setLineWeightPreview] = useState(0); // For immediate UI feedback
+  
+  // Apply line weight adjustment to existing stencil (live update with debounce)
+  const applyLineWeightDebounced = useCallback((newWeight: number) => {
+    // Update preview immediately for responsive UI
+    setLineWeightPreview(newWeight);
     setLineWeight(newWeight);
     
-    // If weight is 0, restore original stencil
+    // Clear any pending timeout
+    if (lineWeightTimeoutRef.current) {
+      clearTimeout(lineWeightTimeoutRef.current);
+    }
+    
+    // If weight is 0, restore original stencil immediately
     if (newWeight === 0 && selectedVersion && stencilVersions[selectedVersion]) {
       const originalStencil = stencilVersions[selectedVersion];
       setStencilImage(originalStencil);
-      // Also update edit mode stencil if in edit mode
       if (showEditModal) {
         setEditModeStencilImage(originalStencil);
       }
       return;
     }
     
-    try {
-      console.log(`[LineWeight] Applying weight: ${newWeight}`);
-      
-      // Use the original generated stencil as base, not the adjusted one
-      const baseStencil = selectedVersion && stencilVersions[selectedVersion] 
-        ? stencilVersions[selectedVersion] 
-        : stencilImage;
-      
-      const response = await fetch(`${API_URL}/api/adjust-line-weight`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image_base64: baseStencil,
-          adjustment: newWeight,
-        }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`[LineWeight] Adjustment applied: ${data.adjustment_applied}`);
-        setStencilImage(data.adjusted_image);
-        // Also update edit mode stencil if in edit mode
-        if (showEditModal) {
-          setEditModeStencilImage(data.adjusted_image);
+    // Debounce the API call (150ms delay)
+    lineWeightTimeoutRef.current = setTimeout(async () => {
+      try {
+        console.log(`[LineWeight] Applying weight: ${newWeight}`);
+        
+        // Use the original generated stencil as base, not the adjusted one
+        const baseStencil = selectedVersion && stencilVersions[selectedVersion] 
+          ? stencilVersions[selectedVersion] 
+          : stencilImage;
+        
+        if (!baseStencil) return;
+        
+        const response = await fetch(`${API_URL}/api/adjust-line-weight`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image_base64: baseStencil,
+            adjustment: newWeight,
+          }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`[LineWeight] Adjustment applied: ${data.adjustment_applied}`);
+          setStencilImage(data.adjusted_image);
+          // Also update edit mode stencil if in edit mode
+          if (showEditModal) {
+            setEditModeStencilImage(data.adjusted_image);
+          }
+        } else {
+          console.error('[LineWeight] Failed to adjust');
         }
-      } else {
-        console.error('[LineWeight] Failed to adjust');
+      } catch (error) {
+        console.error('[LineWeight] Error:', error);
       }
-    } catch (error) {
-      console.error('[LineWeight] Error:', error);
-    }
-  };
+    }, 150);
+  }, [selectedVersion, stencilVersions, stencilImage, showEditModal]);
+
+  // Legacy function for compatibility
+  const applyLineWeight = applyLineWeightDebounced;
 
   // Remove background function
   const removeBackground = async () => {
