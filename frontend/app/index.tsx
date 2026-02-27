@@ -3454,9 +3454,9 @@ export default function Index() {
               <Text style={styles.procreateBrushValue}>{Math.round(brushSize)}</Text>
             </View>
             
-            {/* Opacity Slider */}
+            {/* Opacity Slider - Controls REFERENCE PHOTO opacity */}
             <View style={styles.procreateBrushSliderContainer}>
-              <Text style={styles.procreateBrushLabel}>Opacity</Text>
+              <Text style={styles.procreateBrushLabel}>Ref</Text>
               <View style={styles.procreateBrushSliderWrapper}>
                 <Slider
                   style={[styles.procreateBrushSlider, { transform: [{ rotate: '-90deg' }] }]}
