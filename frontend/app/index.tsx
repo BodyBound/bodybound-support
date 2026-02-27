@@ -1043,6 +1043,9 @@ export default function Index() {
               setReferencePhotoLayer(originalImage);
               console.log('[GenerateSingle] Saved reference photo layer');
             }
+            // Always save the freshly generated transparent stencil as the base for edit mode
+            setOriginalAIStencil(generatedStencil);
+            console.log('[GenerateSingle] Saved originalAIStencil (transparent PNG base)');
           } else {
             console.error(`[GenerateSingle] No stencil in result for style ${style}`);
             Alert.alert('Generation Issue', 'Stencil was generated but not received properly.');
