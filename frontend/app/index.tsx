@@ -1772,16 +1772,23 @@ export default function Index() {
       setOriginalAIStencil(stencilImage);
     }
     
-    // Store the reference photo ONCE - never overwrite it
-    // This ensures the reference is always available even after multiple edit sessions
+    // Determine which reference photo to use
+    // Priority: persistentReferencePhoto (if already saved) > originalImage
+    let referenceToUse = persistentReferencePhoto;
+    
+    // If no persistent reference yet, save the current originalImage
     if (!persistentReferencePhoto && originalImage) {
       setPersistentReferencePhoto(originalImage);
+      referenceToUse = originalImage; // Use it immediately since state update is async
     }
     
     // Freeze the images for edit mode - prevents new generations from interfering
     setEditModeStencilImage(stencilImage);
-    // Use persistent reference photo if available, otherwise fall back to originalImage
-    setEditModeOriginalImage(persistentReferencePhoto || originalImage);
+    setEditModeOriginalImage(referenceToUse);
+    
+    console.log('[EditMode] Opening with reference photo:', referenceToUse ? 'YES' : 'NO');
+    console.log('[EditMode] persistentReferencePhoto:', persistentReferencePhoto ? 'SET' : 'NULL');
+    console.log('[EditMode] originalImage:', originalImage ? 'SET' : 'NULL');
     
     // Don't reset drawings - preserve them for continued editing
     setCurrentPath('');
