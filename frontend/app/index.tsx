@@ -3401,6 +3401,8 @@ export default function Index() {
                       fill="none"
                       strokeLinecap="round"
                       strokeLinejoin="round"
+                      opacity={isEraserPath && !isCapturingForExport ? 0.7 : 1}
+                      strokeDasharray={isEraserPath && !isCapturingForExport ? '5,3' : undefined}
                     />
                   );
                 })}
@@ -3412,6 +3414,8 @@ export default function Index() {
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    opacity={isEraser && !isCapturingForExport ? 0.7 : 1}
+                    strokeDasharray={isEraser && !isCapturingForExport ? '5,3' : undefined}
                   />
                 )}
               </Svg>
