@@ -2957,7 +2957,7 @@ export default function Index() {
       
       {/* Content Container */}
       <SafeAreaView style={styles.welcomeContentOverlay}>
-        {/* Top Section - Tagline + Disclaimer */}
+        {/* Top Section - Tagline + Disclaimer + Button */}
         <View style={styles.welcomeTopSection}>
           <Text style={styles.welcomeTaglineTop}>
             Made for Tattooers,{'\n'}By Tattooers
@@ -2969,24 +2969,23 @@ export default function Index() {
               WiFi required  •  AI-powered  •  Servers may occasionally be unavailable  •  Results may vary
             </Text>
           </View>
-        </View>
-        
-        {/* Middle Spacer - Let the artwork show */}
-        <View style={styles.welcomeMiddleSpacer} />
-        
-        {/* Bottom Section - Button at very bottom */}
-        <View style={styles.welcomeBottomSimple}>
-          {/* Get Started Button */}
+          
+          {/* Get Started Button - right after disclaimer */}
           <TouchableOpacity
-            style={styles.welcomeButtonNew}
+            style={styles.welcomeButtonTop}
             onPress={() => setShowWelcome(false)}
             activeOpacity={0.9}
           >
             <Text style={styles.welcomeButtonTextNew}>Let's Get Started</Text>
             <Text style={styles.welcomeButtonArrowNew}>→</Text>
           </TouchableOpacity>
-          
-          {/* Version Number */}
+        </View>
+        
+        {/* Middle Spacer - Let the artwork show */}
+        <View style={styles.welcomeMiddleSpacer} />
+        
+        {/* Bottom - Just version */}
+        <View style={styles.welcomeBottomVersion}>
           <Text style={styles.welcomeVersionNew}>v2.2.0</Text>
         </View>
       </SafeAreaView>
