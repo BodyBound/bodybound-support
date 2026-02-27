@@ -237,6 +237,7 @@ export default function Index() {
   // Keep ref in sync with state
   useEffect(() => {
     enableFingerPaintingRef.current = enableFingerPainting;
+    enableFPSV.value = enableFingerPainting; // sync to SharedValue for UI-thread access
     console.log('[EditMode] enableFingerPainting changed to:', enableFingerPainting);
   }, [enableFingerPainting]);
   
