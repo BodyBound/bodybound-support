@@ -206,10 +206,19 @@ export default function Index() {
   const savedTranslateY = useSharedValue(0);
   const savedRotation = useSharedValue(0);
   
+  // Shared values for INSTANT touch feedback (no JS bridge delay)
+  const touchX = useSharedValue(-1000);
+  const touchY = useSharedValue(-1000);
+  const isDrawingActive = useSharedValue(false);
+  
   // Refs for drawing state (to avoid stale closures in gestures)
   const currentPointsRef = useRef<{x: number, y: number}[]>([]);
   const isDrawingRef = useRef(false);
   const enableFingerPaintingRef = useRef(false);
+  const currentScaleRef = useRef(1);
+  const currentTranslateXRef = useRef(0);
+  const currentTranslateYRef = useRef(0);
+  const currentRotationRef = useRef(0);
   
   // Keep ref in sync with state
   useEffect(() => {
