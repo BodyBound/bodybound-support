@@ -2066,7 +2066,8 @@ export default function Index() {
     transform: [
       { translateX: translateX.value },
       { translateY: translateY.value },
-      { scale: scale.value }
+      { scale: scale.value },
+      { rotate: `${rotation.value}rad` }
     ]
   }));
 
