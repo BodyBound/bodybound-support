@@ -3594,6 +3594,26 @@ export default function Index() {
               </View>
               <Text style={styles.procreateBrushValue}>{Math.round(editOpacity * 100)}%</Text>
             </View>
+            
+            {/* Line Weight Slider - Thin/Thicken stencil lines */}
+            <View style={styles.procreateBrushSliderContainer}>
+              <Text style={styles.procreateBrushLabel}>Line</Text>
+              <View style={styles.procreateBrushSliderWrapper}>
+                <Slider
+                  style={[styles.procreateBrushSlider, { transform: [{ rotate: '-90deg' }] }]}
+                  minimumValue={-5}
+                  maximumValue={5}
+                  step={1}
+                  value={lineWeight}
+                  onSlidingComplete={(val) => applyLineWeight(val)}
+                  minimumTrackTintColor="#C9A227"
+                  maximumTrackTintColor="#555"
+                  thumbTintColor="#C9A227"
+                  vertical={true}
+                />
+              </View>
+              <Text style={styles.procreateBrushValue}>{lineWeight > 0 ? `+${lineWeight}` : lineWeight}</Text>
+            </View>
           </View>
 
           {/* Top Bar - Done/Cancel */}
