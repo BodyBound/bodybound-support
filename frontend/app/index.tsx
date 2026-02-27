@@ -2053,6 +2053,15 @@ export default function Index() {
     }
   };
 
+  const undoLastPath = () => {
+    // Undo dots first if there are any, otherwise undo paths
+    if (dotMarks.length > 0) {
+      setDotMarks(prev => prev.slice(0, -1));
+    } else {
+      setDrawingPaths(prev => prev.slice(0, -1));
+    }
+  };
+
   // Called from drawGesture.onEnd (JS thread) - finalizes a completed stroke
   // pathStr: accumulated SVG path from UI thread, startX/Y: first point for dot detection
   const finalizeStrokePath = (pathStr: string, startX: number, startY: number) => {
