@@ -5615,8 +5615,25 @@ const styles = StyleSheet.create({
     textShadowRadius: 10,
     textTransform: 'uppercase',
   },
+  disclaimerUnderTagline: {
+    marginTop: 16,
+    paddingHorizontal: 10,
+  },
+  disclaimerTextLegible: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.75)',
+    textAlign: 'center',
+    lineHeight: 20,
+    textShadowColor: 'rgba(0, 0, 0, 0.8)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 4,
+  },
   welcomeMiddleSpacer: {
     flex: 1,
+  },
+  welcomeBottomButtonOnly: {
+    alignItems: 'center',
+    paddingBottom: 30,
   },
   welcomeTopSpacer: {
     flex: 0.15,
