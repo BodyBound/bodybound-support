@@ -3551,9 +3551,10 @@ export default function Index() {
                     />
                   );
                 })}
-                {/* Live stroke - updated directly on UI thread via useAnimatedProps, zero lag */}
-                <AnimatedSVGPath
-                  animatedProps={animatedStrokeProps}
+                {/* Live stroke - setNativeProps via ref bypasses React reconciler, ~5ms latency */}
+                <Path
+                  ref={svgLivePathRef}
+                  d=""
                   stroke={isEraser ? '#FFFFFF' : '#000000'}
                   strokeWidth={isEraser ? brushSize * 3 : brushSize}
                   fill="none"
