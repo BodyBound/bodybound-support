@@ -215,6 +215,15 @@ export default function Index() {
   const touchX = useSharedValue(-1000);
   const touchY = useSharedValue(-1000);
   const isDrawingActive = useSharedValue(false);
+  // Zero-lag drawing SharedValues - path accumulates on UI thread, no bridge crossing
+  const currentPathSV = useSharedValue('');
+  const lastSmX = useSharedValue(0);
+  const lastSmY = useSharedValue(0);
+  const enableFPSV = useSharedValue(false);
+  const strokeStartXSV = useSharedValue(0);
+  const strokeStartYSV = useSharedValue(0);
+  const screenCX = useSharedValue(SCREEN_WIDTH / 2);
+  const screenCY = useSharedValue(SCREEN_HEIGHT / 2);
   
   // Refs for drawing state (to avoid stale closures in gestures)
   const currentPointsRef = useRef<{x: number, y: number}[]>([]);
