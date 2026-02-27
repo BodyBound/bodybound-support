@@ -4767,13 +4767,42 @@ const styles = StyleSheet.create({
   },
   lineWeightSection: {
     marginTop: 12,
-    marginHorizontal: 8,
+    marginHorizontal: 12,
     backgroundColor: '#1A1A1A',
     borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 2,
+    paddingVertical: 12,
+    borderWidth: 1,
     borderColor: '#333',
+  },
+  lineWeightHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  lineWeightLabel: {
+    color: '#C9A227',
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  lineWeightValue: {
+    color: '#888',
+    fontSize: 12,
+  },
+  lineWeightSlider: {
+    width: '100%',
+    height: 40,
+  },
+  lineWeightLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: -4,
+  },
+  lineWeightEndLabel: {
+    color: '#666',
+    fontSize: 10,
   },
   compactVersionSection: {
     marginTop: 10,
