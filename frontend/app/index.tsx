@@ -3355,7 +3355,14 @@ export default function Index() {
                 styles.procreateCanvasInner,
                 animatedCanvasStyle
               ]}>
+              
+              {/* WHITE BACKGROUND - Only shown during capture for clean export */}
+              {isCapturingForExport && (
+                <View style={[styles.procreateBackgroundImage, { backgroundColor: '#FFFFFF' }]} />
+              )}
+              
               {/* Original image as background - use frozen editModeOriginalImage */}
+              {/* Hidden during capture - only the stencil and drawings are exported */}
               {editModeOriginalImage && !isCapturingForExport && (
                 <Image
                   source={{ uri: editModeOriginalImage }}
@@ -3364,7 +3371,8 @@ export default function Index() {
                 />
               )}
               
-              {/* Stencil overlay - use frozen editModeStencilImage */}
+              {/* Stencil overlay - TRANSPARENT PNG with just black linework */}
+              {/* Shown on top of reference photo during editing, on white during capture */}
               {editModeStencilImage && (
                 <Image
                   source={{ uri: editModeStencilImage }}
