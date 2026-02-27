@@ -3000,8 +3000,9 @@ export default function Index() {
         </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Image Preview Area - Stencil overlays Original with hold-to-compare */}
+      {/* Main Image Area - fills all available vertical space */}
+      <View style={styles.imageArea}>
+        {/* Image Preview Area */}
         <View style={styles.previewSection}>
           {!originalImage ? (
             <>
