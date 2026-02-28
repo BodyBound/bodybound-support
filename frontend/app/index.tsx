@@ -37,6 +37,13 @@ import { captureRef } from 'react-native-view-shot';
 // Backend URL - hardcoded to ensure TestFlight builds use the correct URL
 const API_URL = 'https://tattoo-stencil-app-1.preview.emergentagent.com';
 
+// DEBUG: Show URL on app start (remove after debugging)
+if (typeof Alert !== 'undefined') {
+  setTimeout(() => {
+    Alert.alert('Debug Info', `API URL: ${API_URL}\nEnv URL: ${process.env.EXPO_PUBLIC_BACKEND_URL || 'not set'}`);
+  }, 1000);
+}
+
 // Animated SVG Path for zero-lag drawing - updates directly on UI thread via Reanimated
 const AnimatedSVGPath = Animated.createAnimatedComponent(Path);
 
