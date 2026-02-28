@@ -34,8 +34,9 @@ import { Gesture, GestureDetector, GestureHandlerRootView, PointerType } from 'r
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedProps, runOnJS, useDerivedValue, withSpring } from 'react-native-reanimated';
 import { captureRef } from 'react-native-view-shot';
 
-// Production fallback URL - used when EXPO_PUBLIC_BACKEND_URL is not set (TestFlight builds)
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://a2e5e03a-f3ae-40ff-a210-67227d588abf.preview.emergentagent.com';
+// Backend URL from environment - NO HARDCODED FALLBACK
+// The EXPO_PUBLIC_BACKEND_URL must be set during build for production
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 // Animated SVG Path for zero-lag drawing - updates directly on UI thread via Reanimated
 const AnimatedSVGPath = Animated.createAnimatedComponent(Path);
