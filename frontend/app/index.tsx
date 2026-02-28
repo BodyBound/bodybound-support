@@ -34,9 +34,8 @@ import { Gesture, GestureDetector, GestureHandlerRootView, PointerType } from 'r
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedProps, runOnJS, useDerivedValue, withSpring } from 'react-native-reanimated';
 import { captureRef } from 'react-native-view-shot';
 
-// Backend URL from environment - NO HARDCODED FALLBACK
-// The EXPO_PUBLIC_BACKEND_URL must be set during build for production
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+// Backend URL - hardcoded to ensure TestFlight builds use the correct URL
+const API_URL = 'https://tattoo-stencil-app-1.preview.emergentagent.com';
 
 // Animated SVG Path for zero-lag drawing - updates directly on UI thread via Reanimated
 const AnimatedSVGPath = Animated.createAnimatedComponent(Path);
