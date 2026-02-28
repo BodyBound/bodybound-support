@@ -122,3 +122,10 @@ watchfiles==1.1.1
 websockets==15.0.1
 yarl==1.22.0
 zipp==3.23.0
+rembg==2.0.72
+onnxruntime==1.24.2
+scipy==1.17.1
+scikit-image==0.26.0
+PyMatting==1.1.15
+pooch==1.9.0
+ImageIO==2.37.2
