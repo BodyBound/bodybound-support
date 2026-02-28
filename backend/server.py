@@ -2378,12 +2378,9 @@ async def process_stencil_job(job_id: str):
             logger.info(f"[AsyncJob {job_id}] Starting AI image enhancement...")
             
             try:
-                # STEP 1: Apply PicsArt-style preprocessing (Clean, B&W High Contrast, Sharpen 100%)
-                logger.info(f"[AsyncJob {job_id}] Applying PicsArt-style preprocessing...")
-                preprocessed = picsart_style_preprocess(job.image_base64)
-                
-                # STEP 2: Apply AI enhancement on the preprocessed image
-                enhanced = await enhance_photo_with_ai(preprocessed)
+                # Skip PicsArt preprocessing - directly use AI enhancement
+                # (PicsArt filters causing OpenCV errors on some images)
+                enhanced = await enhance_photo_with_ai(job.image_base64)
                 job.enhanced_image = enhanced
                 logger.info(f"[AsyncJob {job_id}] AI enhancement complete")
             except Exception as e:
@@ -2391,12 +2388,8 @@ async def process_stencil_job(job_id: str):
                 # Fallback to basic enhancement without preprocessing
                 job.enhanced_image = enhance_photo_basic(job.image_base64)
         else:
-            # Use PicsArt preprocessing + basic enhancement
-            try:
-                preprocessed = picsart_style_preprocess(job.image_base64)
-                job.enhanced_image = enhance_photo_basic(preprocessed)
-            except:
-                job.enhanced_image = enhance_photo_basic(job.image_base64)
+            # Use basic enhancement only
+            job.enhanced_image = enhance_photo_basic(job.image_base64)
         
         job.status = "processing"
         logger.info(f"[AsyncJob {job_id}] Starting stencil generation...")
