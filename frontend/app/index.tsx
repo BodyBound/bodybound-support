@@ -3009,58 +3009,65 @@ export default function Index() {
   );
 
   // Welcome Screen Component
-  const renderWelcomeScreen = () => (
-    <View style={styles.welcomeContainer}>
-      {/* Full-screen Background Image */}
-      <Image 
-        source={require('../assets/images/splash-background.png')} 
-        style={styles.welcomeBackgroundImage}
-        resizeMode="cover"
-      />
-      
-      {/* Dark Gradient Overlay for text readability */}
-      <View style={styles.welcomeOverlay} />
-      
-      {/* Content Container */}
-      <SafeAreaView style={styles.welcomeContentOverlay}>
-        {/* Top Section - Tagline + Disclaimer + Button */}
-        <View style={styles.welcomeTopSection}>
-          <Text style={styles.welcomeTaglineTop}>
-            Made for Tattooers,{'\n'}By Tattooers
-          </Text>
-          
-          {/* Disclaimer right under tagline */}
-          <View style={styles.disclaimerUnderTagline}>
-            <Text style={styles.disclaimerTextLegible}>
-              WiFi required  •  AI-powered  •  Servers may occasionally be unavailable  •  Results may vary
-            </Text>
-          </View>
-          
-          {/* Get Started Button - right after disclaimer */}
-          <TouchableOpacity
-            style={styles.welcomeButtonTop}
-            onPress={() => setShowWelcome(false)}
-            activeOpacity={0.9}
-          >
-            <Text style={styles.welcomeButtonTextNew}>Let's Get Started</Text>
-            <Text style={styles.welcomeButtonArrowNew}>→</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {/* Middle Spacer - Let the artwork show */}
-        <View style={styles.welcomeMiddleSpacer} />
-        
-        {/* Bottom - Just version */}
-        <View style={styles.welcomeBottomVersion}>
-          <Text style={styles.welcomeVersionNew}>v2.2.0</Text>
-        </View>
-      </SafeAreaView>
-    </View>
-  );
+  // Auth loading check
+  if (isAuthChecking) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#0A0A0A', justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator color="#C9A227" size="large" />
+      </View>
+    );
+  }
 
-  // Show welcome screen if active
+  // Welcome screen
   if (showWelcome) {
-    return renderWelcomeScreen();
+    return <WelcomeScreen onGetStarted={() => { setShowWelcome(false); setShowAuth(true); }} />;
+  }
+
+  // Auth screen
+  if (showAuth) {
+    return (
+      <AuthScreen
+        onAuthSuccess={(user, token) => {
+          setCurrentUser(user);
+          setSessionToken(token);
+          setShowAuth(false);
+          refreshCredits(token);
+        }}
+      />
+    );
+  }
+
+  // Settings screen
+  if (showSettings) {
+    return (
+      <SettingsScreen
+        user={currentUser}
+        credits={currentUser ? { available_credits: availableCredits, tier: userTier as any, is_trial: false, renewal_date: null, revenuecat_customer_id: null } : null}
+        onSignOut={() => {
+          setCurrentUser(null);
+          setSessionToken(null);
+          setAvailableCredits(0);
+          setUserTier(null);
+          setShowSettings(false);
+          setShowWelcome(true);
+        }}
+        onClose={() => setShowSettings(false)}
+        onManageSubscription={() => { setShowSettings(false); setShowPaywall(true); }}
+      />
+    );
+  }
+
+  // Paywall screen
+  if (showPaywall) {
+    return (
+      <PaywallScreen
+        onPurchaseSuccess={() => {
+          setShowPaywall(false);
+          if (sessionToken) refreshCredits(sessionToken);
+        }}
+        onDismiss={() => setShowPaywall(false)}
+      />
+    );
   }
 
   return (
