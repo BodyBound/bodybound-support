@@ -18,7 +18,8 @@ import * as Linking from 'expo-linking';
 import { User } from '../types';
 import { storeToken } from '../../utils/tokenStore';
 
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+// API URL - use environment variable, with fallback for production builds
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://bodybound-launch.preview.emergentagent.com';
 
 // Get unique device identifier for anti-abuse tracking
 const getDeviceId = async (): Promise<string | null> => {
