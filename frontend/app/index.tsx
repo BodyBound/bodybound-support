@@ -438,10 +438,15 @@ export default function Index() {
 
   // Configure RevenueCat SDK
   useEffect(() => {
-    if (Platform.OS === 'ios') {
-      Purchases.configure({ apiKey: 'appl_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
-    } else if (Platform.OS === 'android') {
-      Purchases.configure({ apiKey: 'goog_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
+    try {
+      if (Platform.OS === 'ios') {
+        Purchases.configure({ apiKey: 'appl_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
+      } else if (Platform.OS === 'android') {
+        Purchases.configure({ apiKey: 'goog_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
+      }
+    } catch (e) {
+      // Expected failure in Expo Go — RevenueCat requires a custom dev build
+      console.log('[RevenueCat] Configure skipped (Expo Go or unsupported env):', e);
     }
   }, []);
 
