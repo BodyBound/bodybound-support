@@ -100,7 +100,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         }
 
         const data = await response.json();
-        await SecureStore.setItemAsync('session_token', data.session_token);
+        await storeToken(data.session_token);
         onAuthSuccess(data.user, data.session_token);
       }
     } catch (err: any) {
