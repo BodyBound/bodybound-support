@@ -2972,9 +2972,9 @@ async def delete_account(request: FastAPIRequest):
 REVENUECAT_WEBHOOK_AUTH = os.environ.get('REVENUECAT_WEBHOOK_AUTH', '')
 CRON_SECRET = os.environ.get('CRON_SECRET', '')
 PRODUCT_CREDIT_MAP = {
-    'bodybound_1499_1m_3d': {'tier': 'hobbyist', 'credits': 125},
-    'bodybound_2999_1m_3d': {'tier': 'pro', 'credits': 500},
-    'bodybound_9999_1m_3d': {'tier': 'studio', 'credits': 1500},
+    'bodybound_1499_1m_3d': {'tier': 'walk-in', 'credits': 125},
+    'bodybound_2999_1m_3d': {'tier': 'booked-out', 'credits': 500},
+    'bodybound_9999_1m_3d': {'tier': 'the-shop', 'credits': 1500},
 }
 
 @api_router.post("/webhooks/revenuecat")
@@ -3032,8 +3032,8 @@ async def tasks_refresh_credits(request: FastAPIRequest):
 async def _do_credit_refresh():
     """Shared credit refresh logic used by both cron endpoints."""
     now = datetime.now(timezone.utc)
-    active_tiers = ['hobbyist', 'pro', 'studio']
-    tier_credits = {'hobbyist': 125, 'pro': 500, 'studio': 1500}
+    active_tiers = ['walk-in', 'booked-out', 'the-shop']
+    tier_credits = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500}
 
     subs = await db.subscriptions.find(
         {'tier': {'$in': active_tiers}, 'is_trial': False}
@@ -3078,7 +3078,7 @@ async def demo_login():
         }
         await db.users.insert_one({**user})
         await db.subscriptions.insert_one({
-            'user_id': demo_id, 'tier': 'pro', 'available_credits': 100,
+            'user_id': demo_id, 'tier': 'booked-out', 'available_credits': 100,
             'is_trial': False, 'renewal_date': None, 'revenuecat_customer_id': None,
             'anti_abuse_key': 'demo',
             'created_at': datetime.now(timezone.utc).isoformat(),
