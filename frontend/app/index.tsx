@@ -141,6 +141,7 @@ export default function Index() {
   const [showAuth, setShowAuth] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showStudioTeam, setShowStudioTeam] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [availableCredits, setAvailableCredits] = useState<number>(0);
