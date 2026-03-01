@@ -338,6 +338,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionBtnText: { color: '#C9A227', fontSize: 15, fontWeight: '600' },
+  teamBtn: {
+    backgroundColor: 'rgba(201,162,39,0.1)',
+    borderColor: 'rgba(201,162,39,0.3)',
+  },
   deleteBtn: {
     backgroundColor: 'rgba(255,68,68,0.1)',
     borderWidth: 1, borderColor: '#FF4444',
