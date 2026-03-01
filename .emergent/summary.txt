@@ -4,7 +4,7 @@ The user wants to implement a complete Credit Management and Subscription System
 **PRODUCT REQUIREMENTS**:
 
 1.  **Authentication**:
-    *   Implement user sign-in, with a preference for **Apple Sign-In**.
+    *   Implement user sign-in, with a preference for **Apple Sign-In**, but the user has now approved **Emergent-managed Google Sign-In** as the primary method.
 
 2.  **Backend & Database**:
     *   Set up a database to manage user accounts and credits.
@@ -16,7 +16,7 @@ The user wants to implement a complete Credit Management and Subscription System
         *   Deduct 1 credit per successful stencil generation.
         *   Block generation if credits are zero.
         *   Refresh credits monthly on the renewal date.
-        *   Protect users from losing credits on technical errors (refund or do not charge).
+        *   Protect users from losing credits on technical errors.
     *   **Free Trial Logic**:
         *   Offer a 3-day free trial for Hobbyist/Pro tiers with 10 starter credits.
         *   Grant the full credit amount only after the first successful payment.
@@ -25,187 +25,181 @@ The user wants to implement a complete Credit Management and Subscription System
 3.  **RevenueCat Integration**:
     *   Integrate the RevenueCat SDK for Apple In-App Purchases.
     *   Use API Key: .
-    *   Set up entitlement checking for BODY BOUND Stencil Generator Pro.
+    *   Set up entitlement checking.
     *   Present a RevenueCat Paywall.
-    *   Implement Customer Center access.
-    *   Configure products (e.g., ).
+    *   Implement Customer Center access and Restore Purchase.
 
 4.  **UI/UX Tasks**:
-    *   **Paywall Screen**:
-        *   Show after the Get Started button and make it accessible from Settings.
-        *   Match the app's existing branding.
-        *   Display tiers, trial info, and credit counts.
-        *   Include Restore Purchase and legal links.
-    *   **Paywall Copy**: Use the specific headlines and disclaimers provided by the user.
-    *   **Credit Tracker UI**: Show remaining credits to the user.
+    *   **Paywall Screen**: Display tiers, trial info, and credit counts.
+    *   **Credit Tracker UI**: Show remaining credits.
     *   **Offline Handling**: Display a No Connection message.
-    *   **Permission Strings**: Add a clear explanation for photo library access.
 
 5.  **App Store Launch Readiness**:
-    *   **Delete Account**: Add a mandatory Delete Account button and backend logic.
-    *   **Review Prompt**: Ask for a rating only after the 5th successful generation.
-    *   **Reviewer Demo Account**: Create a test login with 100 credits for App Store review.
+    *   Implement Delete Account functionality.
+    *   Add a review prompt after the 5th successful generation.
+    *   Create a reviewer demo account.
 
 **User's preferred language**: English
 
 **what currently exists?**
-The application is a full-stack Expo (React Native) and FastAPI project for generating tattoo stencils from photos. The core stencil generation feature is functional. The UI includes a redesigned welcome screen, PicsArt-style image filters, and a line-weight adjustment slider.
-
-However, the app has no user authentication, no database for user data, and the entire frontend logic is contained in a single monolithic file () that is now over 6,600 lines long. A major recurring issue with deploying to TestFlight has been identified, where the production build fails to connect to the correct backend due to unstable URLs between development sessions.
+The agent has successfully completed a major refactor of the frontend, breaking down the monolithic  file into a structured architecture with  and  directories. On the backend, authentication endpoints using JWT and Emergent-managed Google Sign-In have been created and tested. A basic credit management system is in place, with endpoints to fetch and deduct credits. The frontend now includes a basic authentication flow, showing a , then an , and finally the main application upon successful login. The groundwork for RevenueCat integration has been laid by creating placeholder UI screens and installing the required SDKs.
 
 **Last working item**:
--   Last item agent was working: The user has requested to build a full-fledged Credit Management System using the **RevenueCat SDK**. The agent has just received detailed requirements, an API key, and confirmation on implementation choices (Apple Sign-In, anti-abuse methods). The agent was about to begin implementation after fetching integration playbooks.
--   Status: NOT STARTED
--   Agent Testing Done: N
--   Which testing method agent to use? both. This is a large feature requiring both backend API testing (curl) and a full frontend user journey test (testing_agent_v3_fork). Manual user verification of the purchase flow is also critical.
+-   Last item agent was working: The agent just completed fixing two critical issues identified by the testing agent:
+    1.  Replaced all  props with the correct  for React Native compatibility.
+    2.  Strengthened the backend JWT secret key to be 32 characters long.
+    The agent was about to confirm the fixes and finalize the task when the user sent a resume message.
+-   Status: IN PROGRESS
+-   Agent Testing Done: Y (For the fixes, not for the entire feature)
+-   Which testing method agent to use? . A full regression test is required to validate the fixes and ensure the major refactor and new auth flow have not introduced any new bugs before proceeding to the next phase of implementation.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1:  **TestFlight Builds Fail to Connect to Backend** (P0 - BLOCKER FOR LAUNCH)
--   Issue 2:  **Crop Tool is Inaccurate and Slow** (P2)
+-   Issue 1: **Crop tool is inaccurate and has a delay** (P2)
+-   Issue 2: **Full RevenueCat purchase flow is not implemented** (P0 - Part of current task)
 
 Issues Detail:
--   Issue 1: **TestFlight Builds Fail to Connect to Backend**
-    -   Attempted fixes: The previous agent spent significant time debugging this. Attempts included hardcoding different backend URLs, adding debug alerts to check the URL in the build, and changing the app's bundle ID. The issue was confirmed to be a platform-level problem: the backend URL changes with each new session, but the TestFlight build retains a baked-in URL from a previous deployment, causing connection failures or 400 errors.
-    -   Next debug checklist: This is not a code issue to be fixed by the agent. **The user must be directed to contact Emergent Support** to get a stable, permanent production backend URL that does not change between sessions. Do not spend more time trying to debug this.
-    -   Why fix this issue and what will be achieved with the fix? This is a **critical blocker for launching the app**. Without a stable connection, no user can use the production app.
-    -   Status: BLOCKED
-    -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Both.
-    -   Blocked on other issue: Blocked on Emergent Platform Support.
-
--   Issue 2: **Crop tool is inaccurate and has a delay**
+-   Issue 1:
     -   Attempted fixes: None. This is a long-standing issue that has not been prioritized.
-    -   Next debug checklist: Review the  function in . Profile the function to find the source of the delay and check the cropping calculations.
+    -   Next debug checklist: Review the  function in  (or wherever it was moved during the refactor). Profile the function to find the source of the delay and check the cropping calculations.
     -   Why fix this issue and what will be achieved with the fix? Improves a core editing feature's user experience.
     -   Status: NOT STARTED
-    -   Is recurring issue? N
+    -   Is recurring issue? Y
     -   Should Test frontend/backend/both after fix? Frontend.
-    -   Blocked on other issue: none.
+    -   Blocked on other issue: None.
+
+-   Issue 2:
+    -   Attempted fixes: The agent has created UI placeholders () and backend stubs ().
+    -   Next debug checklist:
+        1.  Implement the  and  logic in the frontend.
+        2.  Use 's  to display the paywall.
+        3.  Implement the purchase logic using .
+        4.  Create backend logic to handle the RevenueCat webhook to create subscriptions and grant credits in the database.
+    -   Why fix this issue and what will be achieved with the fix? This is the core of the monetization feature and is required for app launch.
+    -   Status: IN PROGRESS
+    -   Is recurring issue? N
+    -   Should Test frontend/backend/both after fix? Both.
+    -   Blocked on other issue: None.
 
 **In progress Task List**:
 -   Task 1: **Implement Credit Management & Subscription System** (P0)
-    -   Where to resume: Start by installing the RevenueCat SDKs (, ) into the frontend project.
-    -   What will be achieved with this? A complete monetization system, enabling the app to be launched on the App Store and generate revenue.
-    -   Status: NOT STARTED
+    -   Where to resume: The agent has completed the initial refactoring and auth implementation (Phase 1). The next step is to run the testing agent to verify the recent fixes and the overall stability. After a successful test, proceed to Phase 2: Full RevenueCat Integration.
+    -   What will be achieved with this? A complete monetization system, enabling the app to be launched on the App Store.
+    -   Status: IN PROGRESS
     -   Should Test frontend/backend/both after fix? Both.
     -   Blocked on something: No.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks (Credit System Implementation Plan):**
-    -   **(P0) Phase 1: Authentication & Database Setup**
-        -   Implement Apple Sign-In using the fetched playbook.
-        -   Set up MongoDB collections for , , and .
-        -   Create backend endpoints for user registration and fetching user data.
     -   **(P0) Phase 2: RevenueCat Integration**
-        -   Configure the SDK with the user's API key.
+        -   Configure the SDK with the user's API key in .
         -   Build the Paywall UI using .
         -   Implement logic to fetch offerings, handle purchases, and check for entitlements.
         -   Add Restore Purchase functionality.
     -   **(P1) Phase 3: Backend Credit & Trial Logic**
-        -   Create backend logic to manage credits: allocation on purchase, deduction on use, and monthly refresh.
+        -   Create backend logic to manage credits: allocation on purchase (via webhook), deduction on use, and monthly refresh.
         -   Implement the 3-day/10-credit free trial.
         -   Implement anti-abuse checks (Device ID & Email).
         -   Implement Studio tier logic (admin invites, shared credits).
     -   **(P2) Phase 4: App Store Launch Readiness**
-        -   Add Delete Account feature.
+        -   Add Delete Account feature (UI button and backend API).
         -   Add offline/connection error handling.
-        -   Implement the review prompt logic.
+        -   Implement the review prompt logic (after 5th successful generation).
 
 -   **Future Tasks**:
-    -   **(P1) Refactor **: This monolithic file is a critical piece of technical debt and must be broken down into smaller components and screens, especially before adding more UI for auth and subscriptions.
-    -   **(P3) Refactor **: Modularize the backend code into separate files for routes, services, and models.
+    -   **(P1) Refactor **: Modularize the backend code into separate files for routes, services, and models.
+    -   **(P2) Fix Crop tool is inaccurate and has a delay**.
 
 **Completed work in this session**
--   **Drawing Lag Fixed**: Resolved the long-standing pencil drawing lag by optimizing the gesture handler. User confirmed it works.
--   **PicsArt-Style Image Filters**: Added and later refined a backend preprocessing function to enhance images before stencil generation.
--   **Line Weight Adjustment Slider**: Implemented a feature to thin/thicken stencil lines, including moving it to the Edit UI and making it update live.
--   **Welcome Screen Redesign**: Overhauled the welcome screen with user-provided artwork and went through several layout revisions based on user feedback.
--   **Save to Gallery Bug Fix**: Fixed a critical bug where saved stencils were black squares by ensuring transparency was preserved.
--   **Deployment & Bundle ID Debugging**: Spent significant time investigating and attempting to resolve TestFlight deployment failures, correctly identifying the root cause as a platform-level URL mismatch.
+-   **CRITICAL: Frontend Monolith Refactor**: Decomposed the 6600+ line  into a clean architecture with , , and  directories.
+-   **Backend Auth & Credit System**: Implemented a full authentication flow with Emergent-managed Google Sign-In, using JWT for session management. Created user models and API endpoints (, , ) in .
+-   **Frontend Auth Flow**: Created the UI and logic for the Welcome -> Authentication -> Main App flow using  and .
+-   **Dependency Management**: Installed , , , , and .
+-   **Bug Fixes**:
+    -   Resolved a complex frontend rendering loop that prevented the auth screen from showing.
+    -   Fixed  props to  for React Native testing.
+    -   Strengthened the JWT secret key on the backend.
 
 **Earlier issues found/mentioned but not fixed**
--   Issue 1: **Crop tool is inaccurate and has a delay.** This was mentioned in the previous handoff and remains unaddressed.
+-   **Crop tool is inaccurate and has a delay.** This was mentioned in the previous handoff and remains unaddressed.
 
 **Known issue recurrence from previous fork**
--   **TestFlight Deployment Failures**: This is a highly recurrent issue that consumed a large part of the session. The problem is a platform limitation where the TestFlight build points to an old, inactive backend URL. The user has been advised multiple times to contact Emergent Support, as this cannot be fixed via code changes alone.
+-   **TestFlight Deployment Failures**: The user stated this has been figured out, so it is considered resolved. The agent should proceed with this assumption but be aware of the history if deployment issues re-emerge.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Frontend**: React Native (Expo), TypeScript, , .
--   **Backend**: FastAPI, Python, OpenCV for image processing.
--   **Monetization (New)**: The plan is to use **RevenueCat** for Apple In-App Purchases.
--   **Authentication (New)**: The plan is to use **Apple Sign-In**.
--   **Database (New)**: **MongoDB** will be used to store user and subscription data.
--   **Deployment**: Expo Application Services (EAS) for TestFlight builds. This process is currently **broken** due to unstable backend URLs.
+-   **Frontend**: React Native (Expo), TypeScript,  for Google Sign-In.
+-   **Backend**: FastAPI, Python, MongoDB, JWT () for authentication,  for password hashing.
+-   **Monetization**: RevenueCat (, ).
+-   **Architecture**: Refactored from monolithic frontend to a Component/Screen-based structure.
 
 **key DB schema**
-*To be implemented:*
--   **users**: , , , , 
--   **subscriptions**: , , , , , , 
--   **studio_teams**: , 
--   **studio_team_members**: , 
+-   **users**:  (primary key/id),  (for future extension), , , .
+-   *Note: Other schemas (, ) are planned but not yet implemented.*
 
 **changes in tech stack**
--   **RevenueCat**: The user has decided to use RevenueCat for handling subscriptions, requiring  and .
--   **Database**: MongoDB will be actively integrated for user and credit management.
+-   **Frontend**: Added , , .
+-   **Backend**: Added , .
 
 **All files of reference**
--   : Main application file, heavily modified and in critical need of refactoring.
--   : Modified to add new endpoints and image processing logic.
--   : Modified to manage the iOS bundle ID.
--   : Modified multiple times to debug backend URL issues.
+-   **Modified**:
+    -   : Major refactor, now serves as the main entry point and state manager.
+    -   : Added complete auth and credit management endpoints.
+    -   : Added new dependencies.
+    -   : Added new dependencies.
+-   **Created**:
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
 
 **Areas that need refactoring**:
--   **CRITICAL**: . At over 6,600 lines, it is extremely fragile. Implementing the new auth/subscription UI without first breaking this file into smaller components (, ) is highly discouraged and will introduce significant risk.
+-   : This is now a large monolithic file containing models, routes, and business logic. It should be broken down into a more modular structure (e.g., , , ).
 
 **key api endpoints**
--   **Existing**: , 
--   **To be created**:
-    -   Auth endpoints (e.g., )
-    -   User/credit management endpoints (e.g., )
-    -   RevenueCat webhook receiver (e.g., )
-    -   Account deletion endpoint (e.g., )
+-   **POST /api/auth/google**: Exchanges a Google auth code for a JWT token.
+-   **GET /api/users/me**: Retrieves the current user's data (including credits).
+-   **POST /api/credits/deduct**: Deducts a specified number of credits from the user.
+-   **POST /api/webhooks/revenuecat**: Placeholder endpoint for RevenueCat webhooks.
 
 **Critical Info for New Agent**
-1.  **START WITH AUTH & REVENUECAT**: The user's entire focus is now on implementing the credit and subscription system. This is the new P0 task. Begin with Apple Sign-In and setting up the database, then integrate RevenueCat.
-2.  **DO NOT DEBUG TESTFLIGHT**: The TestFlight deployment issue is a confirmed **platform-level problem**. The backend URL assigned to the environment changes, but the TestFlight build points to an old, baked-in URL. Do not waste time trying to fix this with code. If the user asks, gently reiterate that they must contact Emergent Support for a permanent production URL.
-3.  **ADVOCATE FOR REFACTORING**: Before adding the complex UI for the paywall, settings, and auth flow, you MUST strongly advise the user to refactor the  file. Propose creating a  directory (e.g., , , ) and a  directory. Continuing to build on the 6600-line monolith is unsustainable.
-4.  **FOLLOW THE NEW PLAN**: The user has provided a very detailed plan for the credit system. Follow it closely, starting with authentication, then the database schema, then RevenueCat integration.
+1.  **Verify First, Then Build**: The previous agent just applied fixes from a test report. Your first action should be to run the  to perform a full regression test and confirm the app is stable before adding new features.
+2.  **Focus on RevenueCat**: Once stability is confirmed, the top priority is implementing the full RevenueCat subscription flow (Phase 2). This includes showing the paywall, handling purchases, and processing backend webhooks.
+3.  **TestFlight Issue Resolved**: The user has confirmed the chronic TestFlight backend URL issue is fixed. You do not need to investigate this unless it reoccurs.
+4.  **Backend Refactor is Next Tech Debt**: With the frontend refactored,  is the next major piece of technical debt to be addressed in the future.
 
 **documents and test reports created in this job**
--   None.
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
--   The user provided detailed requirements for a comprehensive **Credit Management System**. (IN PROGRESS)
--   The user confirmed choices for the new system: **Apple Sign-In**, **Apple In-App Purchases**, and both **Device ID/Email** for anti-abuse. (COMPLETED)
--   The user then pivoted from native Apple IAP to **RevenueCat**, providing an API key and detailed instructions for implementation, including capping the Studio tier at 5 members. (IN PROGRESS)
--   The user asked to investigate why the bundle ID changed, which led to a git history investigation. (COMPLETED)
--   The user experienced a failure to appear error, which was traced back to a bug in the PicsArt preprocessing. The agent temporarily disabled it. (COMPLETED)
--   The user confirmed that Expo Go works but TestFlight fails, leading to the conclusion that it's a platform/deployment issue. (COMPLETED)
--   The user asked how to upload the new build to App Store Connect. (COMPLETED)
--   The agent ran a deployment health check and found a hardcoded fallback URL, which was removed. (COMPLETED)
+-   User approved the plan to refactor the monolith frontend first. (COMPLETED)
+-   User specified using Emergent-managed Google sign-in. (COMPLETED)
+-   User stated the testflight backend URL issue has been figured out. (COMPLETED)
+-   User sent a resume message, interrupting the agent's final summary. (PENDING - Requires a status update and plan confirmation).
 
 **Project Health Check:**
--   **Broken**: The deployment pipeline to TestFlight is non-functional due to the unstable backend URL issue. This is a platform-level blocker for launch.
--   **Needs Refactoring**: **CRITICAL**: The frontend is a single 6600+ line file () that is extremely difficult to maintain and extend.
+-   **Broken**: None. (User confirmed TestFlight issue is resolved).
+-   **Needs Refactoring**: **CRITICAL**: The backend logic is in a single monolithic file () and should be modularized.
 
 **3rd Party Integrations**
--   **Emergent LLM Integrations**: Uses  for stencil generation.
--   **Expo / React Native**: Core framework and libraries (, , , ).
--   **RevenueCat (To Be Added)**: For managing in-app subscriptions. Requires  and .
+-   **Emergent LLM Integrations**:  for stencil generation.
+-   **Emergent-managed Google Auth**: For user sign-in.
+-   **RevenueCat**: For managing in-app subscriptions (partially integrated).
 
 **Testing status**
--   Testing agent used after significant changes: NO
--   Troubleshoot agent used after agent stuck in loop: NO
+-   Testing agent used after significant changes: YES. The agent ran , which produced .
+-   Troubleshoot agent used after agent stuck in loop: YES. Used to identify a complex frontend rendering bug.
 -   Test files created: None.
--   Known regressions: The TestFlight deployment is broken.
+-   Known regressions: None. Fixes for the last test report have been applied.
 
 **Credentials to test flow:**
--   A  is in .
--   The user provided a RevenueCat API key: .
+-   RevenueCat API key: .
+-   A  and other necessary credentials for Google Sign-in are in the environment.
 
 **What agent forgot to execute**
-The previous agent was in the process of starting a large new feature request (Credit Management System) when the session ended. All prior tasks were either completed or blocked by external factors (platform support). The longstanding crop tool issue remains unaddressed from a much earlier session.</analysis>
+-   The agent was interrupted before it could update  with the completed refactor and auth implementation details. This should be done after the next task is completed.
+-   A full verification test run after applying the fixes from  has not been performed.</analysis>
