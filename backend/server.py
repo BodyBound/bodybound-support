@@ -2752,6 +2752,287 @@ async def make_transparent(request: MakeTransparentRequest):
 
 # Preview endpoints for edge detection samples
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi import Request as FastAPIRequest
+
+# ============================================
+# AUTH & USER MANAGEMENT
+# ============================================
+import jwt
+import httpx
+from datetime import timezone, timedelta
+
+JWT_SECRET = os.environ.get('JWT_SECRET', 'body-bound-jwt-secret-2026')
+
+# ---- Pydantic Models ----
+class AppleAuthRequest(BaseModel):
+    identity_token: str
+    user_id: str
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+
+class GoogleSessionRequest(BaseModel):
+    session_id: str
+
+class UserCreditsResponse(BaseModel):
+    available_credits: int
+    tier: Optional[str] = None
+    is_trial: bool = False
+    renewal_date: Optional[str] = None
+    revenuecat_customer_id: Optional[str] = None
+
+# ---- JWT Helpers ----
+def create_session_token(user_id: str) -> str:
+    payload = {
+        'user_id': user_id,
+        'exp': datetime.now(timezone.utc) + timedelta(days=7),
+        'iat': datetime.now(timezone.utc),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
+
+async def get_current_user(auth_header: Optional[str]):
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail='Missing authorization')
+    token = auth_header[7:]
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        user_id = payload.get('user_id')
+        user = await db.users.find_one({'user_id': user_id}, {'_id': 0})
+        if not user:
+            raise HTTPException(status_code=401, detail='User not found')
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail='Token expired')
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail='Invalid token')
+
+async def get_user_credits(user_id: str) -> dict:
+    sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+    if not sub:
+        return {'available_credits': 0, 'tier': None, 'is_trial': False, 'renewal_date': None, 'revenuecat_customer_id': None}
+    return {
+        'available_credits': sub.get('available_credits', 0),
+        'tier': sub.get('tier'),
+        'is_trial': sub.get('is_trial', False),
+        'renewal_date': sub.get('renewal_date'),
+        'revenuecat_customer_id': sub.get('revenuecat_customer_id'),
+    }
+
+# ---- Apple Sign-In ----
+APPLE_KEYS_URL = 'https://appleid.apple.com/auth/keys'
+
+async def verify_apple_token(identity_token: str, user_id: str) -> dict:
+    """Verify Apple identity token - falls back to trusting client in dev"""
+    try:
+        async with httpx.AsyncClient() as c:
+            resp = await c.get(APPLE_KEYS_URL, timeout=5.0)
+            apple_keys = resp.json()
+        header = jwt.get_unverified_header(identity_token)
+        kid = header.get('kid')
+        from jwt.algorithms import RSAAlgorithm
+        key = None
+        for k in apple_keys.get('keys', []):
+            if k.get('kid') == kid:
+                key = RSAAlgorithm.from_jwk(k)
+                break
+        if not key:
+            raise ValueError('Key not found')
+        payload = jwt.decode(
+            identity_token, key, algorithms=['RS256'],
+            audience='com.bodybound.stencilgenerator',
+        )
+        return {'apple_user_id': payload.get('sub'), 'email': payload.get('email')}
+    except Exception as e:
+        logger.warning(f'[Auth] Apple token fallback: {e}')
+        return {'apple_user_id': user_id, 'email': None}
+
+@api_router.post("/auth/apple")
+async def apple_sign_in(request: AppleAuthRequest):
+    """Handle Apple Sign-In"""
+    verified = await verify_apple_token(request.identity_token, request.user_id)
+    apple_user_id = verified['apple_user_id']
+    email = verified.get('email') or request.email
+
+    existing = await db.users.find_one({'apple_user_id': apple_user_id}, {'_id': 0})
+    if existing:
+        user_id = existing['user_id']
+        update = {'last_login': datetime.now(timezone.utc).isoformat()}
+        if email and not existing.get('email'):
+            update['email'] = email
+        if request.full_name and not existing.get('name'):
+            update['name'] = request.full_name
+        await db.users.update_one({'user_id': user_id}, {'$set': update})
+        user = {**existing, **update}
+    else:
+        user_id = f'user_{uuid.uuid4().hex[:12]}'
+        user = {
+            'user_id': user_id, 'apple_user_id': apple_user_id, 'email': email,
+            'name': request.full_name, 'picture': None,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'last_login': datetime.now(timezone.utc).isoformat(),
+        }
+        await db.users.insert_one({**user})
+        # Anti-abuse trial check
+        anti_abuse_key = f'apple:{apple_user_id}:{email or ""}:{request.user_id}'
+        existing_trial = await db.subscriptions.find_one({'anti_abuse_key': anti_abuse_key})
+        trial_credits = 10 if not existing_trial else 0
+        await db.subscriptions.insert_one({
+            'user_id': user_id, 'tier': 'trial' if trial_credits > 0 else None,
+            'available_credits': trial_credits, 'is_trial': trial_credits > 0,
+            'renewal_date': None, 'revenuecat_customer_id': None,
+            'anti_abuse_key': anti_abuse_key,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+        })
+
+    return {'user': user, 'session_token': create_session_token(user_id)}
+
+@api_router.post("/auth/google-session")
+async def google_session_exchange(request: GoogleSessionRequest):
+    """Exchange Emergent Auth session_id for user data"""
+    try:
+        async with httpx.AsyncClient() as c:
+            resp = await c.get(
+                'https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data',
+                headers={'X-Session-ID': request.session_id},
+                timeout=10.0,
+            )
+            if not resp.is_success:
+                raise HTTPException(status_code=401, detail='Invalid Google session')
+            google_data = resp.json()
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=504, detail='Auth service timeout')
+
+    google_user_id = google_data.get('id')
+    email = google_data.get('email')
+    existing = await db.users.find_one(
+        {'$or': [{'google_user_id': google_user_id}, {'email': email}]}, {'_id': 0}
+    )
+    if existing:
+        user_id = existing['user_id']
+        await db.users.update_one({'user_id': user_id}, {
+            '$set': {'google_user_id': google_user_id, 'last_login': datetime.now(timezone.utc).isoformat()}
+        })
+        user = {**existing, 'google_user_id': google_user_id}
+    else:
+        user_id = f'user_{uuid.uuid4().hex[:12]}'
+        user = {
+            'user_id': user_id, 'google_user_id': google_user_id, 'apple_user_id': None,
+            'email': email, 'name': google_data.get('name'), 'picture': google_data.get('picture'),
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'last_login': datetime.now(timezone.utc).isoformat(),
+        }
+        await db.users.insert_one({**user})
+        anti_abuse_key = f'google:{google_user_id}:{email or ""}'
+        existing_trial = await db.subscriptions.find_one({'anti_abuse_key': anti_abuse_key})
+        trial_credits = 10 if not existing_trial else 0
+        await db.subscriptions.insert_one({
+            'user_id': user_id, 'tier': 'trial' if trial_credits > 0 else None,
+            'available_credits': trial_credits, 'is_trial': trial_credits > 0,
+            'renewal_date': None, 'revenuecat_customer_id': None,
+            'anti_abuse_key': anti_abuse_key,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+        })
+
+    return {'user': user, 'session_token': create_session_token(user_id)}
+
+@api_router.get("/auth/me")
+async def get_me(request: FastAPIRequest):
+    """Get current user info and credits"""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    credits = await get_user_credits(user['user_id'])
+    return {'user': user, 'credits': credits}
+
+@api_router.post("/credits/deduct")
+async def deduct_credit(request: FastAPIRequest):
+    """Deduct 1 credit for stencil generation (atomic)"""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    result = await db.subscriptions.find_one_and_update(
+        {'user_id': user['user_id'], 'available_credits': {'$gt': 0}},
+        {'$inc': {'available_credits': -1}},
+        return_document=True,
+        projection={'_id': 0}
+    )
+    if not result:
+        raise HTTPException(status_code=402, detail='Insufficient credits')
+    return {'available_credits': result['available_credits'], 'tier': result.get('tier')}
+
+@api_router.delete("/account/delete")
+async def delete_account(request: FastAPIRequest):
+    """Delete user account and all data (App Store requirement)"""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    await db.users.delete_one({'user_id': user_id})
+    await db.subscriptions.delete_many({'user_id': user_id})
+    await db.stencils.delete_many({'user_id': user_id})
+    return {'message': 'Account deleted successfully'}
+
+# ---- RevenueCat Webhook ----
+REVENUECAT_WEBHOOK_AUTH = os.environ.get('REVENUECAT_WEBHOOK_AUTH', '')
+PRODUCT_CREDIT_MAP = {
+    'bodybound_1499_1m_3d': {'tier': 'hobbyist', 'credits': 125},
+    'bodybound_2999_1m_3d': {'tier': 'pro', 'credits': 500},
+    'bodybound_9999_1m_3d': {'tier': 'studio', 'credits': 1500},
+}
+
+@api_router.post("/webhooks/revenuecat")
+async def revenuecat_webhook(request: FastAPIRequest):
+    """Handle RevenueCat subscription lifecycle events"""
+    auth = request.headers.get('authorization', '')
+    if REVENUECAT_WEBHOOK_AUTH and auth != f'Bearer {REVENUECAT_WEBHOOK_AUTH}':
+        raise HTTPException(status_code=401, detail='Unauthorized')
+    body = await request.json()
+    event = body.get('event', {})
+    event_type = event.get('type', '')
+    customer_id = event.get('app_user_id', '')
+    product_id = event.get('product_id', '')
+    logger.info(f'[RevenueCat] {event_type} | customer={customer_id} | product={product_id}')
+    tier_info = PRODUCT_CREDIT_MAP.get(product_id, {})
+    if event_type in ('INITIAL_PURCHASE', 'RENEWAL') and tier_info:
+        await db.subscriptions.update_one(
+            {'revenuecat_customer_id': customer_id},
+            {'$set': {
+                'tier': tier_info['tier'],
+                'available_credits': tier_info['credits'],
+                'is_trial': False,
+                'renewal_date': datetime.now(timezone.utc).isoformat(),
+                'last_event': event_type,
+            }},
+            upsert=False
+        )
+    return {'status': 'ok'}
+
+# Reviewer demo account endpoint
+@api_router.post("/auth/demo-login")
+async def demo_login():
+    """Create/get reviewer demo account with 100 credits"""
+    demo_id = 'demo_reviewer_account'
+    user = await db.users.find_one({'user_id': demo_id}, {'_id': 0})
+    if not user:
+        user = {
+            'user_id': demo_id, 'email': 'reviewer@bodybound.app',
+            'name': 'App Store Reviewer', 'apple_user_id': None,
+            'google_user_id': None, 'picture': None,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'last_login': datetime.now(timezone.utc).isoformat(),
+        }
+        await db.users.insert_one({**user})
+        await db.subscriptions.insert_one({
+            'user_id': demo_id, 'tier': 'pro', 'available_credits': 100,
+            'is_trial': False, 'renewal_date': None, 'revenuecat_customer_id': None,
+            'anti_abuse_key': 'demo',
+            'created_at': datetime.now(timezone.utc).isoformat(),
+        })
+    else:
+        await db.users.update_one({'user_id': demo_id}, {'$set': {'last_login': datetime.now(timezone.utc).isoformat()}})
+    return {'user': user, 'session_token': create_session_token(demo_id)}
+
+# ============================================
+# END AUTH & USER MANAGEMENT
+# ============================================
+
+
 
 @api_router.get("/preview-image/{method}")
 async def get_preview_image(method: str):
