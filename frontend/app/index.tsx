@@ -387,6 +387,61 @@ export default function Index() {
     };
   }, []);
 
+  // Configure RevenueCat SDK
+  useEffect(() => {
+    if (Platform.OS === 'ios') {
+      Purchases.configure({ apiKey: 'appl_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
+    } else if (Platform.OS === 'android') {
+      Purchases.configure({ apiKey: 'goog_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
+    }
+  }, []);
+
+  // Check for stored auth token on startup
+  useEffect(() => {
+    const checkStoredAuth = async () => {
+      try {
+        const token = await SecureStore.getItemAsync('session_token');
+        if (token) {
+          const response = await fetch(`${API_URL}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setCurrentUser(data.user);
+            setSessionToken(token);
+            setAvailableCredits(data.credits?.available_credits ?? 0);
+            setUserTier(data.credits?.tier ?? null);
+            setIsAuthChecking(false);
+            return;
+          }
+          // Token invalid - clear it
+          await SecureStore.deleteItemAsync('session_token');
+        }
+      } catch (err) {
+        console.log('[Auth] Startup check failed:', err);
+      }
+      // No valid token - show welcome screen
+      setIsAuthChecking(false);
+      setShowWelcome(true);
+    };
+    checkStoredAuth();
+  }, []);
+
+  const refreshCredits = async (token: string) => {
+    try {
+      const r = await fetch(`${API_URL}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (r.ok) {
+        const d = await r.json();
+        setAvailableCredits(d.credits?.available_credits ?? 0);
+        setUserTier(d.credits?.tier ?? null);
+      }
+    } catch (e) { console.error('[Credits] Refresh failed:', e); }
+  };
+
+
+
   // Load photo library on mount (after welcome screen)
   useEffect(() => {
     if (!showWelcome) {
