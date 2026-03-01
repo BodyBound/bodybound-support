@@ -52,6 +52,12 @@ interface AuthScreenProps {
 export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
+
+  // Get device ID on mount
+  useEffect(() => {
+    getDeviceId().then(setDeviceId);
+  }, []);
 
   const handleAppleSignIn = async () => {
     setLoading(true);
@@ -63,7 +69,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         ],
       });
 
-      // Send Apple credential to backend
+      // Send Apple credential to backend with device_id
       const response = await fetch(`${API_URL}/api/auth/apple`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -74,6 +80,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
           full_name: credential.fullName
             ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim()
             : null,
+          device_id: deviceId,
         }),
       });
 
