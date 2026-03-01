@@ -3786,7 +3786,7 @@ export default function Index() {
 
       {/* Onboarding Tutorial Modal */}
       <Modal
-        visible={showOnboarding}
+        visible={showOnboarding && !showWelcome && !showAuth && !isAuthChecking}
         animationType="fade"
         transparent={true}
         statusBarTranslucent={true}
