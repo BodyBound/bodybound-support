@@ -112,9 +112,9 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       let redirectUri: string;
       
       if (Platform.OS === 'web') {
-        redirectUri = typeof window !== 'undefined'
-          ? `${window.location.origin}/auth`
-          : 'https://bodybound-launch.preview.emergentagent.com/auth';
+        // Use window.location.origin directly - no fallback needed
+        // This ensures auth works on any domain (preview, production, custom)
+        redirectUri = `${window.location.origin}/auth`;
       } else {
         // Use expo-linking to create the redirect URI for native
         redirectUri = Linking.createURL('auth', { scheme: 'body-bound-stencil' });
