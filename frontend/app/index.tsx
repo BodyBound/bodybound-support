@@ -35,7 +35,7 @@ import Animated, { useSharedValue, useAnimatedStyle, useAnimatedProps, runOnJS, 
 import { captureRef } from 'react-native-view-shot';
 
 // Backend URL - hardcoded to ensure TestFlight builds use the correct URL
-const API_URL = 'https://tattoo-stencil-app-1.preview.emergentagent.com';
+const API_URL = 'https://paywall-preview-1.preview.emergentagent.com';
 
 // DEBUG: Show URL on app start (remove after debugging)
 if (typeof Alert !== 'undefined') {

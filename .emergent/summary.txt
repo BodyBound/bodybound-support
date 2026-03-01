@@ -1,217 +1,211 @@
-<analysis>
-<original_problem_statement>
-The user is building a mobile app, BODY BOUND stencil generator, to convert photos into high-quality tattoo stencils.
+<analysis>original_problem_statement:
+The user wants to implement a complete Credit Management and Subscription System for the BODY BOUND stencil generator app to prepare it for App Store launch. This involves shifting from a free model to a subscription-based one using RevenueCat.
 
 **PRODUCT REQUIREMENTS**:
-1.  **Photo to Stencil Conversion**: The core feature is converting photos into Thermafax-friendly stencils. This means clean, crisp, purely black-and-white line drawings with no color, soft shading, or grayscale gradients. The user has also requested the re-introduction of dotted/dashed lines to represent contours and contrast.
-2.  **Stencil Quality & Alignment**: This is the most critical and persistent issue. The generated stencils must not contain artifacts from the original photo (like color or shading). Crucially, the generated stencil must align perfectly with the original photo when overlaid in the app's edit mode. This alignment issue has been a major point of failure.
-3.  **UI/UX & Workflow**:
-    *   The app should have a dark luxury theme.
-    *   The stencil style selection UI has been changed to use three specific button images provided by the user for Low Fidelity, Mid-Range, and High Def. These buttons must be significantly smaller to not dominate the screen, especially on iPad.
-    *   The generation workflow has been changed to remove the main Generate button. Instead, the three style buttons are always visible after a photo is selected, and tapping one generates only that specific style.
-    *   The  button has been moved to the top of the screen.
-    *   The  button has been moved from a small icon in the header to a larger, more prominent button at the bottom, next to the Gallery and Camera buttons.
-    *   Action buttons (, , ) are now small icons in the header.
-4.  **Cropping Tool**: The user has reported that the crop tool is inaccurate and has a noticeable delay.
 
-</original_problem_statement>
+1.  **Authentication**:
+    *   Implement user sign-in, with a preference for **Apple Sign-In**.
+
+2.  **Backend & Database**:
+    *   Set up a database to manage user accounts and credits.
+    *   **Subscription Tiers**:
+        *   Hobbyist (4.99/mo): 125 credits.
+        *   Pro (9.99/mo): 500 credits.
+        *   Studio (9.00/mo): 1,500 shared credits for a team of up to 5 members, managed by an admin.
+    *   **Credit Logic**:
+        *   Deduct 1 credit per successful stencil generation.
+        *   Block generation if credits are zero.
+        *   Refresh credits monthly on the renewal date.
+        *   Protect users from losing credits on technical errors (refund or do not charge).
+    *   **Free Trial Logic**:
+        *   Offer a 3-day free trial for Hobbyist/Pro tiers with 10 starter credits.
+        *   Grant the full credit amount only after the first successful payment.
+        *   Implement anti-abuse measures using both **Device ID and Email**.
+
+3.  **RevenueCat Integration**:
+    *   Integrate the RevenueCat SDK for Apple In-App Purchases.
+    *   Use API Key: .
+    *   Set up entitlement checking for BODY BOUND Stencil Generator Pro.
+    *   Present a RevenueCat Paywall.
+    *   Implement Customer Center access.
+    *   Configure products (e.g., ).
+
+4.  **UI/UX Tasks**:
+    *   **Paywall Screen**:
+        *   Show after the Get Started button and make it accessible from Settings.
+        *   Match the app's existing branding.
+        *   Display tiers, trial info, and credit counts.
+        *   Include Restore Purchase and legal links.
+    *   **Paywall Copy**: Use the specific headlines and disclaimers provided by the user.
+    *   **Credit Tracker UI**: Show remaining credits to the user.
+    *   **Offline Handling**: Display a No Connection message.
+    *   **Permission Strings**: Add a clear explanation for photo library access.
+
+5.  **App Store Launch Readiness**:
+    *   **Delete Account**: Add a mandatory Delete Account button and backend logic.
+    *   **Review Prompt**: Ask for a rating only after the 5th successful generation.
+    *   **Reviewer Demo Account**: Create a test login with 100 credits for App Store review.
+
 **User's preferred language**: English
 
 **what currently exists?**
-A full-stack Expo (React Native) and FastAPI application.
--   **Backend ()**: A large monolithic file. After multiple failed experiments with complex Computer Vision (CV) pipelines (including U2-Net, Canny edge detection, etc.), the code has been **reverted** to a simpler approach. It now relies heavily on detailed prompt engineering for the Google Gemini API to generate stencils, followed by a strict  function using Pillow and OpenCV to force the output into a pure black-and-white binary image, removing any color or grayscale artifacts the AI might produce. It has an endpoint for single-style generation () and an unused endpoint for live line weight adjustment.
--   **Frontend ()**: A massive (over 6000 lines) monolithic file containing all UI and application logic. It features a completely redesigned workflow where three custom image buttons trigger single-style stencil generation. The  button has been relocated to the bottom, and other action buttons are now icons in the header. It contains a bug preventing images from being loaded from the device's photo library ( error).
+The application is a full-stack Expo (React Native) and FastAPI project for generating tattoo stencils from photos. The core stencil generation feature is functional. The UI includes a redesigned welcome screen, PicsArt-style image filters, and a line-weight adjustment slider.
+
+However, the app has no user authentication, no database for user data, and the entire frontend logic is contained in a single monolithic file () that is now over 6,600 lines long. A major recurring issue with deploying to TestFlight has been identified, where the production build fails to connect to the correct backend due to unstable URLs between development sessions.
 
 **Last working item**:
--   Last item agent was working: Debugging a critical error reported by the user when testing on their iPad. The error message No suitable URL request handler found for ph:// indicates the app cannot handle native photo library asset URIs. The agent correctly identified the issue and was starting to investigate the image picker () and asset loading () logic in .
--   Status: IN PROGRESS
+-   Last item agent was working: The user has requested to build a full-fledged Credit Management System using the **RevenueCat SDK**. The agent has just received detailed requirements, an API key, and confirmation on implementation choices (Apple Sign-In, anti-abuse methods). The agent was about to begin implementation after fetching integration playbooks.
+-   Status: NOT STARTED
 -   Agent Testing Done: N
--   Which testing method agent to use? The agent must fix the code in . This is not a testable issue with automated tools; it requires a code fix and then manual verification by the user on a real device.
--   User Testing Done: Y (User found the bug).
+-   Which testing method agent to use? both. This is a large feature requiring both backend API testing (curl) and a full frontend user journey test (testing_agent_v3_fork). Manual user verification of the purchase flow is also critical.
+-   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1:  **App crashes on iPad when selecting a photo ( error)** (P0)
--   Issue 2:  **Stencil Alignment is Incorrect** (P1)
--   Issue 3:  **Stencil Quality is Inconsistent** (P1)
--   Issue 4:  **Crop tool is inaccurate and has a delay** (P2)
--   Issue 5:  **Style selection buttons are still too large on iPad** (P2)
+-   Issue 1:  **TestFlight Builds Fail to Connect to Backend** (P0 - BLOCKER FOR LAUNCH)
+-   Issue 2:  **Crop Tool is Inaccurate and Slow** (P2)
 
 Issues Detail:
--   Issue 1: **App crashes on iPad when selecting a photo ( error)**
-    -   Attempted fixes: The agent was in the process of investigating the cause. No fix has been applied yet.
-    -   Next debug checklist:
-        1.  Examine the  function in .
-        2.  Check how the  from  is being used.
-        3.  The  protocol is specific to iOS Photos library and cannot be used directly as a source for file operations or network requests. The asset needs to be copied to the app's local cache/filesystem first to get a usable  URI, or its base64 data must be read directly.
-        4.  Modify the code to correctly handle the  URI, likely by reading the file data into base64 before setting the  state.
-    -   Why fix this issue and what will be achieved with the fix? This is a complete blocker for the user. The app is unusable on their device until this is fixed.
-    -   Status: IN PROGRESS
-    -   Is recurring issue? N
-    -   Should Test frontend/backend/both after fix? Frontend. The user must verify on their iPad.
-    -   Blocked on other issue: None.
-
--   Issue 2: **Stencil Alignment is Incorrect**
-    -   Attempted fixes: The agent strengthened AI prompts to request the AI maintain original dimensions. This did not work. The root cause was identified: the Gemini API generates images at its own preferred dimensions (e.g., 768x1344) which are different from the input (e.g., 1109x2000), and also recomposes the image. The backend code's subsequent resizing just stretches this misaligned image.
-    -   Next debug checklist:
-        1.  This is a fundamental limitation of the current AI model/API. A robust solution is needed in .
-        2.  Investigate padding the AI-generated image to match the original aspect ratio *before* resizing it.
-        3.  Alternatively, crop the original image to match the AI's aspect ratio before sending it to the AI.
-        4.  Another option is to use a different AI image generation service that allows specifying output dimensions.
-    -   Why fix this issue and what will be achieved with the fix? This is a core functional requirement for the app to be a professional tool.
-    -   Status: NOT STARTED
+-   Issue 1: **TestFlight Builds Fail to Connect to Backend**
+    -   Attempted fixes: The previous agent spent significant time debugging this. Attempts included hardcoding different backend URLs, adding debug alerts to check the URL in the build, and changing the app's bundle ID. The issue was confirmed to be a platform-level problem: the backend URL changes with each new session, but the TestFlight build retains a baked-in URL from a previous deployment, causing connection failures or 400 errors.
+    -   Next debug checklist: This is not a code issue to be fixed by the agent. **The user must be directed to contact Emergent Support** to get a stable, permanent production backend URL that does not change between sessions. Do not spend more time trying to debug this.
+    -   Why fix this issue and what will be achieved with the fix? This is a **critical blocker for launching the app**. Without a stable connection, no user can use the production app.
+    -   Status: BLOCKED
     -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Backend.
-    -   Blocked on other issue: Issue 1 (user can't test until it's fixed).
+    -   Should Test frontend/backend/both after fix? Both.
+    -   Blocked on other issue: Blocked on Emergent Platform Support.
 
--   Issue 3: **Stencil Quality is Inconsistent**
-    -   Attempted fixes: Agent has repeatedly strengthened AI prompts and added a forceful server-side post-processing step to convert the image to grayscale and then to a binary black-and-white format. The user also requested dotted lines be added back via prompts.
-    -   Next debug checklist: This is tied to prompt engineering. The effectiveness of the latest prompts (with dotted lines) and post-processing needs to be verified by the user once Issue #1 is resolved.
-    -   Why fix this issue and what will be achieved with the fix? Achieves the primary goal of creating Thermafax-friendly stencils.
-    -   Status: USER VERIFICATION PENDING
-    -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Backend (user verification).
-    -   Blocked on other issue: Issue 1.
-
--   Issue 4: **Crop tool is inaccurate and has a delay**
-    -   Attempted fixes: None. The agent acknowledged the issue but attributed the delay to processing time.
-    -   Next debug checklist:
-        1.  Review the cropping logic in  in .
-        2.  Investigate the calculations for  to see why it might be inaccurate.
-        3.  For the delay, see if the processing can be optimized or if a loading indicator can be shown during the crop operation to improve UX.
-    -   Why fix this issue and what will be achieved with the fix? Improves user experience and a core editing feature.
+-   Issue 2: **Crop tool is inaccurate and has a delay**
+    -   Attempted fixes: None. This is a long-standing issue that has not been prioritized.
+    -   Next debug checklist: Review the  function in . Profile the function to find the source of the delay and check the cropping calculations.
+    -   Why fix this issue and what will be achieved with the fix? Improves a core editing feature's user experience.
     -   Status: NOT STARTED
     -   Is recurring issue? N
     -   Should Test frontend/backend/both after fix? Frontend.
-    -   Blocked on other issue: Issue 1.
-
--   Issue 5: **Style selection buttons are still too large on iPad**
-    -   Attempted fixes: Agent changed the styling from  to a fixed size of .
-    -   Next debug checklist:
-        1.  This fix might not be sufficient for a large iPad screen.
-        2.  Consider using a responsive unit, like a percentage of screen width, or  to set the size.
-        3.  Modify the  and  styles in .
-    -   Why fix this issue and what will be achieved with the fix? Improves the UI layout and addresses direct user feedback.
-    -   Status: USER VERIFICATION PENDING
-    -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Frontend.
-    -   Blocked on other issue: Issue 1.
+    -   Blocked on other issue: none.
 
 **In progress Task List**:
--   Task 1: **Fix Critical Bugs and UI Issues** (P0)
-    -   Where to resume:  to debug the  URI handling.
-    -   What will be achieved with this? Unblock the user from testing on their device and address their most recent feedback.
-    -   Status: IN PROGRESS
-    -   Should Test frontend/backend/both after fix? Both (Frontend for UI, Backend for quality/alignment).
+-   Task 1: **Implement Credit Management & Subscription System** (P0)
+    -   Where to resume: Start by installing the RevenueCat SDKs (, ) into the frontend project.
+    -   What will be achieved with this? A complete monetization system, enabling the app to be launched on the App Store and generate revenue.
+    -   Status: NOT STARTED
+    -   Should Test frontend/backend/both after fix? Both.
     -   Blocked on something: No.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks**:
-    -   **(P1) Resolve Stencil Alignment**: Implement a robust solution for the dimension mismatch from the AI API.
-    -   **(P2) Refine Crop Tool**: Address the inaccuracy and delay issues.
+-   **Upcoming Tasks (Credit System Implementation Plan):**
+    -   **(P0) Phase 1: Authentication & Database Setup**
+        -   Implement Apple Sign-In using the fetched playbook.
+        -   Set up MongoDB collections for , , and .
+        -   Create backend endpoints for user registration and fetching user data.
+    -   **(P0) Phase 2: RevenueCat Integration**
+        -   Configure the SDK with the user's API key.
+        -   Build the Paywall UI using .
+        -   Implement logic to fetch offerings, handle purchases, and check for entitlements.
+        -   Add Restore Purchase functionality.
+    -   **(P1) Phase 3: Backend Credit & Trial Logic**
+        -   Create backend logic to manage credits: allocation on purchase, deduction on use, and monthly refresh.
+        -   Implement the 3-day/10-credit free trial.
+        -   Implement anti-abuse checks (Device ID & Email).
+        -   Implement Studio tier logic (admin invites, shared credits).
+    -   **(P2) Phase 4: App Store Launch Readiness**
+        -   Add Delete Account feature.
+        -   Add offline/connection error handling.
+        -   Implement the review prompt logic.
+
 -   **Future Tasks**:
-    -   **(P3) Refactor **: Break the 6000+ line file into smaller, manageable components.
-    -   **(P4) Refactor **: Modularize the backend and remove dead code from the failed CV experiments.
-    -   **(P5) Implement Save to App Gallery**: A requested feature that has not been started.
+    -   **(P1) Refactor **: This monolithic file is a critical piece of technical debt and must be broken down into smaller components and screens, especially before adding more UI for auth and subscriptions.
+    -   **(P3) Refactor **: Modularize the backend code into separate files for routes, services, and models.
 
 **Completed work in this session**
--   **Complete UI/UX Workflow Overhaul**:
-    -   Replaced simple style buttons with user-provided custom image buttons.
-    -   Refactored the generation flow from a single Generate button to individual style buttons that are always visible.
-    -   Relocated the  button to the top of the screen.
-    -   Relocated the  button from the header to a prominent position at the bottom.
-    -   Moved action buttons (, , etc.) to the header as icons.
-    -   Fixed several UI layout bugs, including a duplicate camera button and header icon clipping.
--   **Reverted Multiple Stencil Generation Pipelines**:
-    -   Implemented and then discarded three different stencil generation pipelines (basic CV, professional CV with U2-Net, and a hybrid AI/CV pipeline) after user rejection.
-    -   Reverted the core logic back to the original Gemini prompt-based approach.
--   **Iterative Stencil Quality Improvement**:
-    -   Significantly strengthened AI prompts in  multiple times to enforce black-and-white output, no shading, and the inclusion of dotted contour lines.
-    -   Strengthened the server-side  function to forcefully remove color and grayscale artifacts.
--   **Bug Fixing**:
-    -   Fixed a bug where single-style generation was failing due to a  vs  key mismatch.
-    -   Fixed a bug where the hybrid pipeline was failing due to an incorrect Gemini model name.
-    -   Fixed a bug where the hybrid pipeline was failing due to a scope issue with the  import.
+-   **Drawing Lag Fixed**: Resolved the long-standing pencil drawing lag by optimizing the gesture handler. User confirmed it works.
+-   **PicsArt-Style Image Filters**: Added and later refined a backend preprocessing function to enhance images before stencil generation.
+-   **Line Weight Adjustment Slider**: Implemented a feature to thin/thicken stencil lines, including moving it to the Edit UI and making it update live.
+-   **Welcome Screen Redesign**: Overhauled the welcome screen with user-provided artwork and went through several layout revisions based on user feedback.
+-   **Save to Gallery Bug Fix**: Fixed a critical bug where saved stencils were black squares by ensuring transparency was preserved.
+-   **Deployment & Bundle ID Debugging**: Spent significant time investigating and attempting to resolve TestFlight deployment failures, correctly identifying the root cause as a platform-level URL mismatch.
 
 **Earlier issues found/mentioned but not fixed**
--   The critical issues of **Stencil Alignment** and **Crop Tool Inaccuracy** were raised by the user and are now tracked in the All Pending/In progress Issue list.
+-   Issue 1: **Crop tool is inaccurate and has a delay.** This was mentioned in the previous handoff and remains unaddressed.
 
 **Known issue recurrence from previous fork**
--   **Stencil Alignment**: HIGHLY RECURRENT. This has been a problem across multiple sessions. The root cause (AI generating at different dimensions) is now understood but not solved. Status: NOT STARTED.
--   **Stencil Quality (Shading/Artifacts)**: HIGHLY RECURRENT. The user frequently reports issues with the stencil output not being clean line art. The latest fix (stronger post-processing) is pending user verification. Status: USER VERIFICATION PENDING.
+-   **TestFlight Deployment Failures**: This is a highly recurrent issue that consumed a large part of the session. The problem is a platform limitation where the TestFlight build points to an old, inactive backend URL. The user has been advised multiple times to contact Emergent Support, as this cannot be fixed via code changes alone.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Frontend**: React Native (Expo SDK), TypeScript. All logic is in a single  file using  and  hooks. Uses .
--   **Backend**: FastAPI, Google Generative AI ().
--   **Image Processing**: Pillow and OpenCV are used on the backend for post-processing (grayscale conversion, binary thresholding, artifact removal) after the AI generates an image.  is installed but the functions using it have been reverted and are not currently called.
--   **Core Logic**: The primary method for stencil generation is now: Frontend sends image -> Backend uses Gemini API with a very detailed prompt to generate line art -> Backend post-processes the AI output to force it to be B&W -> Frontend displays the result.
+-   **Frontend**: React Native (Expo), TypeScript, , .
+-   **Backend**: FastAPI, Python, OpenCV for image processing.
+-   **Monetization (New)**: The plan is to use **RevenueCat** for Apple In-App Purchases.
+-   **Authentication (New)**: The plan is to use **Apple Sign-In**.
+-   **Database (New)**: **MongoDB** will be used to store user and subscription data.
+-   **Deployment**: Expo Application Services (EAS) for TestFlight builds. This process is currently **broken** due to unstable backend URLs.
 
 **key DB schema**
--   No database is actively used for app features.
+*To be implemented:*
+-   **users**: , , , , 
+-   **subscriptions**: , , , , , , 
+-   **studio_teams**: , 
+-   **studio_team_members**: , 
 
 **changes in tech stack**
--   New Python libraries were installed (, , ) for the experimental CV pipelines, but the code that uses them is currently inactive after the revert.
+-   **RevenueCat**: The user has decided to use RevenueCat for handling subscriptions, requiring  and .
+-   **Database**: MongoDB will be actively integrated for user and credit management.
 
 **All files of reference**
--   : The source of the current P0 bug ( error). Has been heavily modified throughout the session.
--   : Contains the reverted stencil generation logic, strengthened prompts, and post-processing functions. Also contains significant amounts of dead code from the abandoned CV experiments.
+-   : Main application file, heavily modified and in critical need of refactoring.
+-   : Modified to add new endpoints and image processing logic.
+-   : Modified to manage the iOS bundle ID.
+-   : Modified multiple times to debug backend URL issues.
 
 **Areas that need refactoring**:
--   **CRITICAL**:  is unmaintainable at over 6000 lines.
--   **CRITICAL**:  should be cleaned to remove the large, unused CV pipeline functions (, , etc.) to reduce complexity and confusion. The core logic should be modularized.
+-   **CRITICAL**: . At over 6,600 lines, it is extremely fragile. Implementing the new auth/subscription UI without first breaking this file into smaller components (, ) is highly discouraged and will introduce significant risk.
 
 **key api endpoints**
--   : The primary endpoint now used for generating a single stencil style. Accepts  ('light', 'medium', 'heavy').
--   : Exists on the backend but is unused by the frontend since the line-weight slider was removed.
--   : Polls for job progress.
+-   **Existing**: , 
+-   **To be created**:
+    -   Auth endpoints (e.g., )
+    -   User/credit management endpoints (e.g., )
+    -   RevenueCat webhook receiver (e.g., )
+    -   Account deletion endpoint (e.g., )
 
 **Critical Info for New Agent**
-1.  **IMMEDIATE PRIORITY (P0)**: You MUST fix the  error on iPad. The app is unusable for the user until this is resolved. Investigate  in  and ensure the image asset is correctly handled (e.g., copied to a local file path or read as base64) before being used.
-2.  **THE ALIGNMENT PROBLEM IS UNSOLVED**: This is the most important unresolved issue. Be aware that the Gemini API generates images at its own dimensions, causing misalignment when resized. Simply asking the AI in the prompt has not worked. You will need to devise a new backend strategy (e.g., padding or pre-cropping) to fix this. Do not attempt this until the P0 bug is fixed.
-3.  **DO NOT RE-IMPLEMENT COMPLEX CV**: The user has explicitly rejected multiple complex computer vision pipelines. The current accepted path is to refine the prompt-driven AI approach with strong server-side post-processing. Stick to this unless the user directs you otherwise. The old CV functions in  are dead code.
-4.  **ADDRESS OTHER PENDING UI FEEDBACK**: After the P0 bug is fixed, address the user's other feedback: the crop tool's inaccuracy and the style buttons being too large on iPad.
+1.  **START WITH AUTH & REVENUECAT**: The user's entire focus is now on implementing the credit and subscription system. This is the new P0 task. Begin with Apple Sign-In and setting up the database, then integrate RevenueCat.
+2.  **DO NOT DEBUG TESTFLIGHT**: The TestFlight deployment issue is a confirmed **platform-level problem**. The backend URL assigned to the environment changes, but the TestFlight build points to an old, baked-in URL. Do not waste time trying to fix this with code. If the user asks, gently reiterate that they must contact Emergent Support for a permanent production URL.
+3.  **ADVOCATE FOR REFACTORING**: Before adding the complex UI for the paywall, settings, and auth flow, you MUST strongly advise the user to refactor the  file. Propose creating a  directory (e.g., , , ) and a  directory. Continuing to build on the 6600-line monolith is unsustainable.
+4.  **FOLLOW THE NEW PLAN**: The user has provided a very detailed plan for the credit system. Follow it closely, starting with authentication, then the database schema, then RevenueCat integration.
 
-**documents created in this job**
+**documents and test reports created in this job**
 -   None.
 
 **Last 10 User Messages and any pending HUMAN messages**
--   10. User confirms the new dotted lines are good, but reports crop tool inaccuracy and wants the Edit button moved to the bottom. (COMPLETED - Edit button moved, crop issue pending)
--   9. **(CURRENT BUG)** User provides a screenshot of a  error on their iPad, blocking them from using the app. (IN PROGRESS)
--   8. User asks to add dotted lines back into the stencils for contour references. (COMPLETED - Prompts updated)
--   7. User confirms the AI is still including color and pixel shading in the output. (COMPLETED - Agent strengthened post-processing)
--   6. User points out critical quality and alignment issues with generated stencils. (IN PROGRESS - Alignment is unsolved, quality fix is pending verification)
--   5. User reports that after a revert, the style buttons are still way too big on their iPad. (IN PROGRESS - Agent made a size change, but it's pending user verification)
--   4. User completely rejects all the new CV/Hybrid work and asks to revert to the previous AI-only version. (COMPLETED - Agent reverted the code)
--   3. User reports the unified pipeline is not generating anything. (COMPLETED - Agent found and fixed a bug with the wrong AI model name)
--   2. User is confused by the AI/CV toggle and reports the CV side is not working. (COMPLETED - Agent removed the toggle and unified the pipeline)
--   1. User complains that the professional CV pipeline is still absolute garbage and gives new, more specific instructions. (COMPLETED - Agent implemented and then reverted this change)
+-   The user provided detailed requirements for a comprehensive **Credit Management System**. (IN PROGRESS)
+-   The user confirmed choices for the new system: **Apple Sign-In**, **Apple In-App Purchases**, and both **Device ID/Email** for anti-abuse. (COMPLETED)
+-   The user then pivoted from native Apple IAP to **RevenueCat**, providing an API key and detailed instructions for implementation, including capping the Studio tier at 5 members. (IN PROGRESS)
+-   The user asked to investigate why the bundle ID changed, which led to a git history investigation. (COMPLETED)
+-   The user experienced a failure to appear error, which was traced back to a bug in the PicsArt preprocessing. The agent temporarily disabled it. (COMPLETED)
+-   The user confirmed that Expo Go works but TestFlight fails, leading to the conclusion that it's a platform/deployment issue. (COMPLETED)
+-   The user asked how to upload the new build to App Store Connect. (COMPLETED)
+-   The agent ran a deployment health check and found a hardcoded fallback URL, which was removed. (COMPLETED)
 
 **Project Health Check:**
--   **Broken**:
-    -   Image selection from device photo library ( error). This is a critical P0 blocker.
-    -   Stencil Alignment. This is a core functional failure.
--   **Mocked**: None.
--   **Incomplete**:
-    -   Stencil Quality: The latest fixes (prompts + post-processing) are unverified by the user.
-    -   UI Layout: Button sizes on iPad are still a potential issue.
-    -   Crop Tool: Known to be inaccurate and slow.
+-   **Broken**: The deployment pipeline to TestFlight is non-functional due to the unstable backend URL issue. This is a platform-level blocker for launch.
+-   **Needs Refactoring**: **CRITICAL**: The frontend is a single 6600+ line file () that is extremely difficult to maintain and extend.
 
 **3rd Party Integrations**
--   **Google Gemini**: Uses  via the  library for stencil generation. Requires a user-provided .
--   **rembg**: Installed on the backend for background removal, but the code that calls it is currently inactive.
+-   **Emergent LLM Integrations**: Uses  for stencil generation.
+-   **Expo / React Native**: Core framework and libraries (, , , ).
+-   **RevenueCat (To Be Added)**: For managing in-app subscriptions. Requires  and .
 
 **Testing status**
 -   Testing agent used after significant changes: NO
 -   Troubleshoot agent used after agent stuck in loop: NO
 -   Test files created: None.
--   Known regressions: The critical stencil alignment issue persists. The introduction of  logic seems to have caused the  regression on real devices.
+-   Known regressions: The TestFlight deployment is broken.
 
 **Credentials to test flow:**
-The user's  is present in .
+-   A  is in .
+-   The user provided a RevenueCat API key: .
 
 **What agent forgot to execute**
--   The agent has not addressed the user's report about the **crop tool's inaccuracy and delay**. It was mentioned in message #437 but only the Edit button part of the request was fulfilled.
--   The agent did not verify its code for handling image picker results would work with native device URIs (), leading to the current P0 bug. It only tested in the web preview, which uses a different file handling mechanism.
-</analysis>
+The previous agent was in the process of starting a large new feature request (Credit Management System) when the session ended. All prior tasks were either completed or blocked by external factors (platform support). The longstanding crop tool issue remains unaddressed from a much earlier session.</analysis>
