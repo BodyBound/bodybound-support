@@ -3999,7 +3999,7 @@ export default function Index() {
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998 }}>
           <SettingsScreen
             user={currentUser}
-            credits={currentUser ? { available_credits: availableCredits, tier: userTier as any, is_trial: false, renewal_date: null, revenuecat_customer_id: null } : null}
+            credits={currentUser ? { available_credits: availableCredits, tier: userTier as any, is_trial: false, trial_expires_at: null, trial_days_remaining: null, renewal_date: null, revenuecat_customer_id: null } : null}
             onSignOut={() => {
               setCurrentUser(null);
               setSessionToken(null);
@@ -4010,6 +4010,21 @@ export default function Index() {
             }}
             onClose={() => setShowSettings(false)}
             onManageSubscription={() => { setShowSettings(false); setShowPaywall(true); }}
+            onManageTeam={() => { setShowSettings(false); setShowStudioTeam(true); }}
+          />
+        </View>
+      )}
+
+      {/* Studio Team Screen - Full-screen overlay (only for The Shop subscribers) */}
+      {showStudioTeam && sessionToken && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998 }}>
+          <StudioTeamScreen
+            sessionToken={sessionToken}
+            userTier={userTier}
+            onBack={() => { setShowStudioTeam(false); setShowSettings(true); }}
+            onTeamUpdated={() => {
+              if (sessionToken) refreshCredits(sessionToken);
+            }}
           />
         </View>
       )}
