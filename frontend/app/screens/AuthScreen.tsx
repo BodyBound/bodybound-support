@@ -13,6 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as SecureStore from 'expo-secure-store';
 import * as Application from 'expo-application';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
 import { User } from '../types';
 import { storeToken } from '../../utils/tokenStore';
 
