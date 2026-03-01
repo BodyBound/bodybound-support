@@ -3712,15 +3712,15 @@ export default function Index() {
                   minimumValue={1}
                   maximumValue={20}
                   step={1}
-                  value={brushSize}
-                  onValueChange={(val) => setBrushSize(val)}
+                  value={brushSizeDisplay}
+                  onValueChange={(val) => setBrushSizeDisplay(Math.round(val))}
+                  onSlidingComplete={(val) => { const v = Math.round(val); setBrushSizeDisplay(v); setBrushSize(v); }}
                   minimumTrackTintColor="#C9A227"
                   maximumTrackTintColor="#555"
                   thumbTintColor="#C9A227"
-                  vertical={true}
                 />
               </View>
-              <Text style={styles.procreateBrushValue}>{Math.round(brushSize)}</Text>
+              <Text style={styles.procreateBrushValue}>{brushSizeDisplay}</Text>
             </View>
             
             {/* Opacity Slider - Controls REFERENCE PHOTO opacity */}
@@ -3732,15 +3732,15 @@ export default function Index() {
                   minimumValue={0}
                   maximumValue={100}
                   step={1}
-                  value={editOpacity * 100}
-                  onValueChange={(val) => setEditOpacity(val / 100)}
+                  value={editOpacityDisplay}
+                  onValueChange={(val) => setEditOpacityDisplay(Math.round(val))}
+                  onSlidingComplete={(val) => { const v = Math.round(val); setEditOpacityDisplay(v); setEditOpacity(v / 100); }}
                   minimumTrackTintColor="#C9A227"
                   maximumTrackTintColor="#555"
                   thumbTintColor="#C9A227"
-                  vertical={true}
                 />
               </View>
-              <Text style={styles.procreateBrushValue}>{Math.round(editOpacity * 100)}%</Text>
+              <Text style={styles.procreateBrushValue}>{editOpacityDisplay}%</Text>
             </View>
             
             {/* Line Weight Slider - Thin/Thicken stencil lines */}
@@ -3752,15 +3752,15 @@ export default function Index() {
                   minimumValue={-5}
                   maximumValue={5}
                   step={1}
-                  value={lineWeight}
-                  onValueChange={(val) => applyLineWeightDebounced(val)}
+                  value={lineWeightDisplay}
+                  onValueChange={(val) => setLineWeightDisplay(Math.round(val))}
+                  onSlidingComplete={(val) => { const v = Math.round(val); setLineWeightDisplay(v); applyLineWeightDebounced(v); }}
                   minimumTrackTintColor="#C9A227"
                   maximumTrackTintColor="#555"
                   thumbTintColor="#C9A227"
-                  vertical={true}
                 />
               </View>
-              <Text style={styles.procreateBrushValue}>{lineWeight > 0 ? `+${lineWeight}` : lineWeight}</Text>
+              <Text style={styles.procreateBrushValue}>{lineWeightDisplay > 0 ? `+${lineWeightDisplay}` : lineWeightDisplay}</Text>
             </View>
           </View>
 
