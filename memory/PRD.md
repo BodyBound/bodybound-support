@@ -109,12 +109,15 @@ An iOS app (Expo/React Native + FastAPI backend) that generates tattoo stencils 
    - Android: `Application.getAndroidId()`
    - Web: UUID generated and stored in localStorage
 
-### 2026-03 - Studio Team Management (Phase 3) ✅ NEW
-10. **Team Creation**: Users with 'the-shop' subscription can create teams
-11. **Shared Credits**: 1500 credits shared among up to 5 team members
-12. **Invite System**: Admin generates invite codes (7-day expiry), members join via code
-13. **Member Management**: Admin can remove members, members can leave
-14. **Credit Deduction**: Automatically uses team shared pool for team members
+### 2026-03 - Studio Team Management UI (Phase 3) ✅ NEW
+11. **StudioTeamScreen.tsx**: Full frontend UI for team management
+    - View shared credits and member count
+    - Create team (for The Shop subscribers)
+    - Invite members by email (generates shareable invite code)
+    - View team members list with roles (admin/member)
+    - Remove members (admin only)
+    - Leave team (members only)
+12. **Settings Integration**: "Manage Studio Team" button appears only for The Shop tier
 
 ## Known Issues / Pending Work
 
