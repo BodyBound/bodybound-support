@@ -3026,6 +3026,11 @@ async def tasks_refresh_credits(request: FastAPIRequest):
     if secret_header != CRON_SECRET:
         raise HTTPException(status_code=401, detail='Unauthorized')
 
+    return await _do_credit_refresh()
+
+
+async def _do_credit_refresh():
+    """Shared credit refresh logic used by both cron endpoints."""
     now = datetime.now(timezone.utc)
     active_tiers = ['hobbyist', 'pro', 'studio']
     tier_credits = {'hobbyist': 125, 'pro': 500, 'studio': 1500}
