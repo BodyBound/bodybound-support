@@ -3953,7 +3953,8 @@ export default function Index() {
               setSessionToken(token);
               setShowAuth(false);
               refreshCredits(token);
-              // Link user to RevenueCat for purchase tracking
+              // Request push notification permission + link user to RevenueCat
+              setupNotifications();
               if (Platform.OS === 'ios' || Platform.OS === 'android') {
                 Purchases.logIn(user.user_id).catch(() => {});
               }
