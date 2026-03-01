@@ -106,10 +106,6 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     // Google Sign-In via Emergent Auth OAuth flow
     setGoogleLoading(true);
     try {
-      const { openAuthSessionAsync } = await import('expo-web-browser');
-      const { makeRedirectUri } = await import('expo-auth-session');
-      const { Platform } = await import('react-native');
-
       // On web: use the actual browser URL so maybeCompleteAuthSession() URL check passes.
       // On native: use the app deep-link scheme.
       const redirectUri =
@@ -121,7 +117,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
       const authUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUri)}`;
 
-      const result = await openAuthSessionAsync(authUrl, redirectUri);
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
 
       if (result.type === 'success' && result.url) {
         // Extract session_id from URL fragment
