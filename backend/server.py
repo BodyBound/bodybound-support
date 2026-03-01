@@ -2816,11 +2816,44 @@ async def get_current_user(auth_header: Optional[str]):
 async def get_user_credits(user_id: str) -> dict:
     sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
     if not sub:
-        return {'available_credits': 0, 'tier': None, 'is_trial': False, 'renewal_date': None, 'revenuecat_customer_id': None}
+        return {
+            'available_credits': 0, 'tier': None, 'is_trial': False,
+            'trial_expires_at': None, 'trial_days_remaining': None,
+            'renewal_date': None, 'revenuecat_customer_id': None
+        }
+    
+    # Calculate trial expiration info
+    is_trial = sub.get('is_trial', False)
+    trial_expires_at = sub.get('trial_expires_at')
+    trial_days_remaining = None
+    available_credits = sub.get('available_credits', 0)
+    
+    if is_trial and trial_expires_at:
+        try:
+            expires_dt = datetime.fromisoformat(trial_expires_at.replace('Z', '+00:00'))
+            now = datetime.now(timezone.utc)
+            if expires_dt <= now:
+                # Trial has expired - set credits to 0
+                available_credits = 0
+                trial_days_remaining = 0
+                # Update DB to reflect expired trial
+                await db.subscriptions.update_one(
+                    {'user_id': user_id},
+                    {'$set': {'available_credits': 0, 'tier': 'trial_expired'}}
+                )
+                logger.info(f'[Trial] User {user_id} trial expired')
+            else:
+                delta = expires_dt - now
+                trial_days_remaining = max(0, delta.days + (1 if delta.seconds > 0 else 0))
+        except Exception as e:
+            logger.error(f'[Trial] Error parsing trial_expires_at: {e}')
+    
     return {
-        'available_credits': sub.get('available_credits', 0),
+        'available_credits': available_credits,
         'tier': sub.get('tier'),
-        'is_trial': sub.get('is_trial', False),
+        'is_trial': is_trial,
+        'trial_expires_at': trial_expires_at,
+        'trial_days_remaining': trial_days_remaining,
         'renewal_date': sub.get('renewal_date'),
         'revenuecat_customer_id': sub.get('revenuecat_customer_id'),
     }
