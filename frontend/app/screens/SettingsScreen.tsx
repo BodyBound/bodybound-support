@@ -31,6 +31,7 @@ interface SettingsScreenProps {
   onSignOut: () => void;
   onClose: () => void;
   onManageSubscription: () => void;
+  onManageTeam?: () => void;
 }
 
 export function SettingsScreen({
@@ -39,9 +40,13 @@ export function SettingsScreen({
   onSignOut,
   onClose,
   onManageSubscription,
+  onManageTeam,
 }: SettingsScreenProps) {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [restoringPurchases, setRestoringPurchases] = useState(false);
+  
+  // Check if user has The Shop subscription (admin or member)
+  const isShopTier = credits?.tier === 'the-shop' || credits?.tier === 'the-shop-member';
 
   const handleRestorePurchases = async () => {
     setRestoringPurchases(true);
