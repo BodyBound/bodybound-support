@@ -3018,58 +3018,6 @@ export default function Index() {
     );
   }
 
-  // Welcome screen
-  if (showWelcome) {
-    return <WelcomeScreen onGetStarted={() => { setShowWelcome(false); setShowAuth(true); }} />;
-  }
-
-  // Auth screen
-  if (showAuth) {
-    return (
-      <AuthScreen
-        onAuthSuccess={(user, token) => {
-          setCurrentUser(user);
-          setSessionToken(token);
-          setShowAuth(false);
-          refreshCredits(token);
-        }}
-      />
-    );
-  }
-
-  // Settings screen
-  if (showSettings) {
-    return (
-      <SettingsScreen
-        user={currentUser}
-        credits={currentUser ? { available_credits: availableCredits, tier: userTier as any, is_trial: false, renewal_date: null, revenuecat_customer_id: null } : null}
-        onSignOut={() => {
-          setCurrentUser(null);
-          setSessionToken(null);
-          setAvailableCredits(0);
-          setUserTier(null);
-          setShowSettings(false);
-          setShowWelcome(true);
-        }}
-        onClose={() => setShowSettings(false)}
-        onManageSubscription={() => { setShowSettings(false); setShowPaywall(true); }}
-      />
-    );
-  }
-
-  // Paywall screen
-  if (showPaywall) {
-    return (
-      <PaywallScreen
-        onPurchaseSuccess={() => {
-          setShowPaywall(false);
-          if (sessionToken) refreshCredits(sessionToken);
-        }}
-        onDismiss={() => setShowPaywall(false)}
-      />
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
