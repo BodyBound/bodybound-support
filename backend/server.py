@@ -3077,11 +3077,37 @@ async def get_me(request: FastAPIRequest):
 
 @api_router.post("/credits/deduct")
 async def deduct_credit(request: FastAPIRequest):
-    """Deduct 1 credit for stencil generation (atomic)"""
+    """Deduct 1 credit for stencil generation (atomic).
+    
+    For studio team members, deducts from the shared team pool instead of individual credits.
+    """
     auth_header = request.headers.get('authorization')
     user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    
+    # Check if user is part of a studio team
+    sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+    studio_team_id = sub.get('studio_team_id') if sub else None
+    
+    if studio_team_id:
+        # User is part of a studio team - deduct from shared pool
+        team_result = await db.studio_teams.find_one_and_update(
+            {'team_id': studio_team_id, 'shared_credits': {'$gt': 0}},
+            {'$inc': {'shared_credits': -1}},
+            return_document=True,
+            projection={'_id': 0}
+        )
+        if not team_result:
+            raise HTTPException(status_code=402, detail='Studio team has no credits remaining')
+        return {
+            'available_credits': team_result['shared_credits'],
+            'tier': 'the-shop',
+            'is_studio_team': True,
+        }
+    
+    # Regular individual credit deduction
     result = await db.subscriptions.find_one_and_update(
-        {'user_id': user['user_id'], 'available_credits': {'$gt': 0}},
+        {'user_id': user_id, 'available_credits': {'$gt': 0}},
         {'$inc': {'available_credits': -1}},
         return_document=True,
         projection={'_id': 0}
