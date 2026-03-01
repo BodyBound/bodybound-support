@@ -468,7 +468,7 @@ class TestStudioTeamFullFlow:
         assert team_resp.status_code == 200
         team_info = team_resp.json()
         assert team_info['team_id'] == team_id
-        assert team_info['is_admin'] is True
+        assert team_info['admin_user_id'] == admin_id  # Verify admin is the creator
         assert team_info['shared_credits'] == 1500
         
         # Verify admin's /me now shows studio team
@@ -516,7 +516,7 @@ class TestStudioTeamFullFlow:
         assert member_team.status_code == 200
         member_team_info = member_team.json()
         assert member_team_info['team_id'] == team_id
-        assert member_team_info['is_admin'] is False
+        assert member_team_info['admin_user_id'] == admin_id  # Admin is still the creator
         
         # Verify member's /me shows studio team
         member_me = api_client.get(f"{BASE_URL}/api/auth/me", headers=member_headers)
