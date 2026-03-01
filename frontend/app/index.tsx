@@ -239,6 +239,7 @@ export default function Index() {
   const [editModeOriginalImage, setEditModeOriginalImage] = useState<string | null>(null); // Frozen original for edit mode
   const editCanvasRef = useRef<View>(null); // Ref for capturing the canvas
   const lastTapTimeRef = useRef<number>(0); // For double-tap detection
+  const lowCreditNotifiedRef = useRef<boolean>(false); // Prevent repeat low-credit notifications
   
   // Shared values for Reanimated (for smooth gesture handling)
   const scale = useSharedValue(1);
