@@ -17,7 +17,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, Image } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, Image, Platform } from 'react-native';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { storeToken } from '../utils/tokenStore';
@@ -26,7 +26,10 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 // MUST be at module top-level — signals the parent window in popup OAuth flow
 // and closes the popup. In full-page-redirect flow this is a no-op.
-WebBrowser.maybeCompleteAuthSession();
+// Only call on web to avoid expo-auth-session issues in Expo Go
+if (Platform.OS === 'web') {
+  WebBrowser.maybeCompleteAuthSession();
+}
 
 export default function AuthCallback() {
   const [status, setStatus] = useState<'loading' | 'error'>('loading');
