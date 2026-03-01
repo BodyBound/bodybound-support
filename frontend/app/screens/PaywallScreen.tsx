@@ -202,16 +202,16 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
           {/* CTA */}
           <TouchableOpacity
             testID="subscribe-btn"
-            style={[styles.subscribeBtn, (purchasing || !selectedPackage) && styles.subscribeBtnDisabled]}
+            style={[styles.subscribeBtn, ctaDisabled && styles.subscribeBtnDisabled]}
             onPress={handlePurchase}
-            disabled={purchasing || !selectedPackage}
+            disabled={ctaDisabled}
           >
             {purchasing ? (
               <ActivityIndicator color="#000" />
             ) : (
               <>
-                <Text style={styles.subscribeBtnText}>Start Free Trial</Text>
-                <Text style={styles.subscribeBtnSubtext}>3 days free, then cancel anytime</Text>
+                <Text style={styles.subscribeBtnText}>{ctaText}</Text>
+                <Text style={styles.subscribeBtnSubtext}>{ctaSubtext}</Text>
               </>
             )}
           </TouchableOpacity>
