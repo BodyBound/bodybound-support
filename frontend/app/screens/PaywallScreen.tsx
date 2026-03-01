@@ -129,6 +129,14 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
 
   return (
     <View style={styles.container}>
+      {/* Background image — same as WelcomeScreen */}
+      <Image
+        source={require('../../assets/images/splash-background.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      />
+      <View style={styles.overlay} />
+
       <SafeAreaView style={styles.safeArea}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           {/* Header */}
