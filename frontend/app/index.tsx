@@ -45,9 +45,8 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { PaywallScreen } from './screens/PaywallScreen';
 import { StudioTeamScreen } from './screens/StudioTeamScreen';
 
-// API URL - hardcoded for production builds
-// TODO: Move back to env var once build system is confirmed working
-const API_URL = 'https://bodybound-launch.preview.emergentagent.com';
+// API URL - use environment variable with fallback for builds where env isn't set
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://bodybound-launch.preview.emergentagent.com';
 
 // Check if running in Expo Go (where native modules like RevenueCat aren't available)
 const isExpoGo = Constants.appOwnership === 'expo';
