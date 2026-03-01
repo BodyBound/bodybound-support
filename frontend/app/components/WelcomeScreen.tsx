@@ -23,7 +23,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
       />
 
       {/* Dark Gradient Overlay for text readability */}
-      <View style={styles.welcomeOverlay} />
+      <View style={styles.welcomeOverlay} pointerEvents="none" />
 
       {/* Content Container */}
       <SafeAreaView style={styles.welcomeContentOverlay}>
