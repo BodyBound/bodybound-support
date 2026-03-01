@@ -44,6 +44,7 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import { AuthScreen } from './screens/AuthScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { PaywallScreen } from './screens/PaywallScreen';
+import { StudioTeamScreen } from './screens/StudioTeamScreen';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
