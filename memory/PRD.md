@@ -99,11 +99,11 @@ An iOS app (Expo/React Native + FastAPI backend) that generates tattoo stencils 
 
 ### P0 - Active
 - RevenueCat products need to be configured in App Store Connect (IDs: bodybound_1499_1m_3d, bodybound_2999_1m_3d, bodybound_9999_1m_3d)
-- Monthly credit refresh needs a scheduled task (cron) backend implementation
+- RevenueCat webhook URL needs to be configured in RevenueCat Dashboard → pointing to `/api/webhooks/revenuecat`
 - Studio tier team management (admin invite system, shared credits) not yet built
 
 ### P1 - Upcoming
-- Backend server.py refactoring (split into routes/, services/, models/)
+- Backend server.py refactoring (split into routes/, services/, models/) — currently ~3129 lines
 - Real Apple identity token verification with proper bundle ID
 - RevenueCat webhook auth token setup (REVENUECAT_WEBHOOK_AUTH env var)
 
@@ -111,6 +111,12 @@ An iOS app (Expo/React Native + FastAPI backend) that generates tattoo stencils 
 - Crop tool inaccuracy and delay fix
 - Offline/no-connection handling
 - textShadow/boxShadow deprecation warnings in React Native Web
+
+## GitHub Actions Setup (Monthly Credit Refresh)
+Workflow file: `/.github/workflows/monthly-credit-refresh.yml`
+Required GitHub Secrets:
+- `BACKEND_URL` = your production backend URL
+- `CRON_SECRET` = `bb-cron-2026-refresh-c7f3a1` (set in backend/.env)
 
 ## Environment Variables
 ### Backend (.env)
