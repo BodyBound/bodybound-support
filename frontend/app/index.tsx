@@ -792,6 +792,19 @@ export default function Index() {
       return;
     }
 
+    // Check credits before generating
+    if (currentUser && availableCredits <= 0) {
+      Alert.alert(
+        'No Credits Remaining',
+        'You have used all your credits for this period. Upgrade or wait for your monthly renewal.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Upgrade', onPress: () => setShowPaywall(true) },
+        ]
+      );
+      return;
+    }
+
     // Validate image data before sending
     console.log('[GenerateAI] Original image length:', originalImage.length);
     console.log('[GenerateAI] Image prefix:', originalImage.substring(0, 50));
