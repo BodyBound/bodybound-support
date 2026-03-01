@@ -449,7 +449,7 @@ export default function Index() {
   useEffect(() => {
     const checkStoredAuth = async () => {
       try {
-        const token = await SecureStore.getItemAsync('session_token');
+        const token = await getToken();
         if (token) {
           const response = await fetch(`${API_URL}/api/auth/me`, {
             headers: { 'Authorization': `Bearer ${token}` },
