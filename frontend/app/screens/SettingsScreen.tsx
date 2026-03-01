@@ -171,7 +171,20 @@ export function SettingsScreen({
               )}
               {credits?.is_trial && (
                 <View style={styles.trialBanner}>
-                  <Text style={styles.trialBannerText}>Free Trial Active</Text>
+                  <Text style={styles.trialBannerText}>
+                    {credits.trial_days_remaining !== undefined && credits.trial_days_remaining !== null
+                      ? credits.trial_days_remaining > 0
+                        ? `Free Trial • ${credits.trial_days_remaining} day${credits.trial_days_remaining === 1 ? '' : 's'} remaining`
+                        : 'Free Trial Expired'
+                      : 'Free Trial Active'}
+                  </Text>
+                </View>
+              )}
+              {credits?.tier === 'trial_expired' && (
+                <View style={[styles.trialBanner, { borderColor: '#FF4444', backgroundColor: 'rgba(255,68,68,0.1)' }]}>
+                  <Text style={[styles.trialBannerText, { color: '#FF4444' }]}>
+                    Trial Expired • Subscribe to continue
+                  </Text>
                 </View>
               )}
             </View>
