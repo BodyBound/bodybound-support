@@ -76,6 +76,10 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
   };
 
   const handlePurchase = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('iOS Only', 'Subscriptions are available in the iOS App Store. Download Body Bound on your iPhone or iPad to subscribe.');
+      return;
+    }
     if (!selectedPackage) {
       Alert.alert('No Plan Selected', 'Please select a subscription plan to continue.');
       return;
@@ -97,6 +101,10 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
   };
 
   const handleRestore = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('iOS Only', 'Restore Purchases is available on the iOS app.');
+      return;
+    }
     setRestoring(true);
     try {
       const customerInfo: CustomerInfo = await Purchases.restorePurchases();
@@ -112,6 +120,11 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
       setRestoring(false);
     }
   };
+
+  const isWeb = Platform.OS === 'web';
+  const ctaText = isWeb ? 'Subscribe in iOS App Store' : 'Start Free Trial';
+  const ctaSubtext = isWeb ? 'Download Body Bound on iPhone or iPad' : '3 days free, then cancel anytime';
+  const ctaDisabled = purchasing || (!isWeb && !selectedPackage);
 
   return (
     <View style={styles.container}>
