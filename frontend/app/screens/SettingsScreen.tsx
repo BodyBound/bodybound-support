@@ -18,9 +18,11 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 const TIER_LABELS: Record<string, string> = {
   trial: 'Free Trial',
+  trial_expired: 'Trial Expired',
   'walk-in': 'The Walk-In',
   'booked-out': 'Booked Out',
   'the-shop': 'The Shop',
+  'the-shop-member': 'The Shop (Team)',
 };
 
 interface SettingsScreenProps {
