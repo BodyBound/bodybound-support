@@ -95,6 +95,13 @@ An iOS app (Expo/React Native + FastAPI backend) that generates tattoo stencils 
 14. **Bug Fix**: Added `Platform` to imports in `mainStyles.ts` (critical — was causing app crash).
 15. **WelcomeScreen**: Added default export to eliminate Expo Router warning.
 
+### 2026-03 - Monthly Cron Endpoint + Push Notifications (Phase 3 cont.)
+16. **New endpoint** `POST /api/tasks/refresh-credits` — secured by `X-Cron-Secret` header. Reads `CRON_SECRET` env var.
+17. **Shared `_do_credit_refresh()`** — extracted logic; both cron endpoints call the same function.
+18. **GitHub Actions workflow** at `.github/workflows/monthly_refresh.yml` — runs 1st of each month 00:00 UTC or on manual trigger. Uses `X-Cron-Secret: ${{ secrets.CRON_SECRET }}`.
+19. **Low-credit push notification** — `expo-notifications` + `expo-device` installed. `setupNotifications()` requests permission on first login. `sendLowCreditsNotification()` fires local notification when credits drop below 10 (once per session, resets when credits recover).
+20. **expo-auth-session pinned to `~7.0.10`** — fixes SSR crash from accidental upgrade to 55.x (incompatible with expo@54).
+
 ## Known Issues / Pending Work
 
 ### P0 - Active
