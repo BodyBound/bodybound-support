@@ -2819,14 +2819,26 @@ async def get_user_credits(user_id: str) -> dict:
         return {
             'available_credits': 0, 'tier': None, 'is_trial': False,
             'trial_expires_at': None, 'trial_days_remaining': None,
-            'renewal_date': None, 'revenuecat_customer_id': None
+            'renewal_date': None, 'revenuecat_customer_id': None,
+            'is_studio_team': False, 'studio_team_id': None
         }
+    
+    # Check if user is part of a studio team
+    studio_team_id = sub.get('studio_team_id')
+    is_studio_team = False
+    available_credits = sub.get('available_credits', 0)
+    
+    if studio_team_id:
+        # Get credits from studio team shared pool
+        team = await db.studio_teams.find_one({'team_id': studio_team_id}, {'_id': 0})
+        if team:
+            available_credits = team.get('shared_credits', 0)
+            is_studio_team = True
     
     # Calculate trial expiration info
     is_trial = sub.get('is_trial', False)
     trial_expires_at = sub.get('trial_expires_at')
     trial_days_remaining = None
-    available_credits = sub.get('available_credits', 0)
     
     if is_trial and trial_expires_at:
         try:
@@ -2856,6 +2868,8 @@ async def get_user_credits(user_id: str) -> dict:
         'trial_days_remaining': trial_days_remaining,
         'renewal_date': sub.get('renewal_date'),
         'revenuecat_customer_id': sub.get('revenuecat_customer_id'),
+        'is_studio_team': is_studio_team,
+        'studio_team_id': studio_team_id,
     }
 
 # ---- Apple Sign-In ----
