@@ -2970,6 +2970,7 @@ async def delete_account(request: FastAPIRequest):
 
 # ---- RevenueCat Webhook ----
 REVENUECAT_WEBHOOK_AUTH = os.environ.get('REVENUECAT_WEBHOOK_AUTH', '')
+CRON_SECRET = os.environ.get('CRON_SECRET', '')
 PRODUCT_CREDIT_MAP = {
     'bodybound_1499_1m_3d': {'tier': 'hobbyist', 'credits': 125},
     'bodybound_2999_1m_3d': {'tier': 'pro', 'credits': 500},
@@ -2978,30 +2979,83 @@ PRODUCT_CREDIT_MAP = {
 
 @api_router.post("/webhooks/revenuecat")
 async def revenuecat_webhook(request: FastAPIRequest):
-    """Handle RevenueCat subscription lifecycle events"""
+    """Handle RevenueCat subscription lifecycle events.
+    app_user_id = our backend user_id (set via Purchases.logIn(userId) in the app).
+    """
     auth = request.headers.get('authorization', '')
     if REVENUECAT_WEBHOOK_AUTH and auth != f'Bearer {REVENUECAT_WEBHOOK_AUTH}':
         raise HTTPException(status_code=401, detail='Unauthorized')
     body = await request.json()
     event = body.get('event', {})
     event_type = event.get('type', '')
-    customer_id = event.get('app_user_id', '')
+    # app_user_id is our backend user_id (we call Purchases.logIn(userId) in the app)
+    user_id = event.get('app_user_id', '')
     product_id = event.get('product_id', '')
-    logger.info(f'[RevenueCat] {event_type} | customer={customer_id} | product={product_id}')
+    logger.info(f'[RevenueCat] {event_type} | user_id={user_id} | product={product_id}')
     tier_info = PRODUCT_CREDIT_MAP.get(product_id, {})
-    if event_type in ('INITIAL_PURCHASE', 'RENEWAL') and tier_info:
+    if event_type in ('INITIAL_PURCHASE', 'RENEWAL') and tier_info and user_id:
+        next_renewal = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
         await db.subscriptions.update_one(
-            {'revenuecat_customer_id': customer_id},
+            {'user_id': user_id},
             {'$set': {
                 'tier': tier_info['tier'],
                 'available_credits': tier_info['credits'],
                 'is_trial': False,
-                'renewal_date': datetime.now(timezone.utc).isoformat(),
+                'renewal_date': next_renewal,
                 'last_event': event_type,
-            }},
-            upsert=True
+            }}
+        )
+    elif event_type in ('CANCELLATION', 'EXPIRATION') and user_id:
+        # Keep remaining credits but mark tier as expired
+        await db.subscriptions.update_one(
+            {'user_id': user_id},
+            {'$set': {'tier': 'expired', 'last_event': event_type}}
         )
     return {'status': 'ok'}
+
+
+@api_router.post("/cron/refresh-credits")
+async def cron_refresh_credits(request: FastAPIRequest):
+    """Monthly credit refresh cron endpoint.
+    Triggered by an external scheduler (e.g. GitHub Actions).
+    Protected by CRON_SECRET env var.
+    """
+    if not CRON_SECRET:
+        raise HTTPException(status_code=503, detail='Cron not configured')
+    auth = request.headers.get('authorization', '')
+    if auth != f'Bearer {CRON_SECRET}':
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
+    now = datetime.now(timezone.utc)
+    active_tiers = ['hobbyist', 'pro', 'studio']
+    tier_credits = {'hobbyist': 125, 'pro': 500, 'studio': 1500}
+
+    subs = await db.subscriptions.find(
+        {'tier': {'$in': active_tiers}, 'is_trial': False}
+    ).to_list(None)
+
+    refreshed = 0
+    for sub in subs:
+        renewal_str = sub.get('renewal_date')
+        if not renewal_str:
+            continue
+        try:
+            renewal_date = datetime.fromisoformat(renewal_str.replace('Z', '+00:00'))
+        except Exception:
+            continue
+        if renewal_date <= now:
+            credits = tier_credits.get(sub.get('tier', ''), 0)
+            if credits:
+                next_renewal = (renewal_date + timedelta(days=30)).isoformat()
+                await db.subscriptions.update_one(
+                    {'user_id': sub['user_id']},
+                    {'$set': {'available_credits': credits, 'renewal_date': next_renewal}}
+                )
+                refreshed += 1
+                logger.info(f'[Cron] Refreshed credits for user {sub["user_id"]}: {credits} credits')
+
+    logger.info(f'[Cron] Credit refresh complete: {refreshed}/{len(subs)} subscriptions refreshed')
+    return {'refreshed': refreshed, 'checked': len(subs), 'timestamp': now.isoformat()}
 
 # Reviewer demo account endpoint
 @api_router.post("/auth/demo-login")
