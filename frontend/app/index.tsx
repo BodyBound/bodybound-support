@@ -51,56 +51,18 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const isExpoGo = Constants.appOwnership === 'expo';
 
 // ── Push Notification Helpers ───────────────────────────────────────────────
-// Push notifications are DISABLED in Expo Go to avoid PushNotificationIOS crashes
-// They will work in development builds and production
+// Push notifications are COMPLETELY DISABLED in this build
+// The expo-notifications module crashes Expo Go due to PushNotificationIOS
+// To enable: create a development build with `eas build`
 
-// Stub functions that do nothing in Expo Go
 const setupNotifications = async () => {
-  if (Platform.OS === 'web' || isExpoGo) {
-    console.log('[Notifications] Disabled - Expo Go or web');
-    return;
-  }
-  // Only load and use expo-notifications in development/production builds
-  // This code path is never reached in Expo Go
-  try {
-    const Notifications = require('expo-notifications');
-    await Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-      }),
-    });
-    if (Device.isDevice) {
-      const { status: existing } = await Notifications.getPermissionsAsync();
-      if (existing !== 'granted') {
-        await Notifications.requestPermissionsAsync();
-      }
-    }
-    console.log('[Notifications] Setup complete');
-  } catch (e) {
-    console.log('[Notifications] Setup failed:', e);
-  }
+  // Notifications disabled for Expo Go compatibility
+  console.log('[Notifications] Disabled for Expo Go compatibility');
 };
 
 const sendLowCreditsNotification = async (credits: number) => {
-  if (Platform.OS === 'web' || isExpoGo) return;
-  try {
-    const Notifications = require('expo-notifications');
-    const { status } = await Notifications.getPermissionsAsync();
-    if (status !== 'granted') return;
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: 'Credits Running Low',
-        body: `Only ${credits} credit${credits === 1 ? '' : 's'} remaining — top up to keep generating stencils.`,
-        sound: true,
-        data: { action: 'upgrade' },
-      },
-      trigger: null,
-    });
-  } catch (e) {
-    console.log('[Notifications] Send failed:', e);
-  }
+  // Notifications disabled for Expo Go compatibility
+  console.log('[Notifications] Low credits notification skipped (Expo Go)');
 };
 
 // Animated SVG Path for zero-lag drawing - updates directly on UI thread via Reanimated
