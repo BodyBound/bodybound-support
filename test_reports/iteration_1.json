@@ -1,0 +1,83 @@
+{
+  "summary": "Completed backend API testing (26/26 passing) and web preview frontend testing for BODY BOUND Stencil Generator. All auth endpoints, credits system, and account management APIs work correctly. Frontend loads without crash, welcome screen shows correctly. iOS-targeted app with known web preview limitations.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "All interactive components (TouchableOpacity, View, etc.)",
+        "issue": "data-testid attributes not rendered in DOM on React Native Web. Components use HTML attribute `data-testid='...'` instead of React Native prop `testID='...'`. React Native Web only maps `testID` → `data-testid` in DOM. Current usage results in NO data-testid attributes in DOM - zero testability via Playwright.",
+        "selector": "[data-testid]",
+        "priority": "MEDIUM",
+        "fix": "Change all `data-testid=\"...\"` to `testID=\"...\"` on React Native components (TouchableOpacity, View, Text, etc.)"
+      },
+      {
+        "component": "AuthScreen overlay",
+        "issue": "Auth screen does NOT appear after clicking 'Let's Get Started' on web. Auth elements ('Sign In', 'Continue with Google') absent from DOM after navigation. The onboarding tutorial modal appears instead. Root cause: likely React Native Web Modal rendering behavior - Modal with visible={false} still renders content in DOM, and the Auth screen overlay (zIndex 9998) may not appear due to React Native Web quirks with absolute positioned overlays OR an error in rendering the Auth screen. Note: App is iOS-targeted; this may only affect web preview.",
+        "selector": "text=Sign In",
+        "priority": "MEDIUM"
+      }
+    ],
+    "integration_issues": [
+      {
+        "flow": "Session persistence on web",
+        "issue": "expo-secure-store web implementation is empty (export default {}), so getItemAsync/setItemAsync throw TypeError on web. The catch block correctly falls back to showing welcome screen. This is a known expo-secure-store web limitation - not a bug, expected for iOS-targeted app.",
+        "affected_selectors": ["SecureStore.getItemAsync"]
+      }
+    ],
+    "design_issues": [
+      {
+        "screen": "All screens",
+        "issues": [
+          "Deprecation warnings in browser console: 'textShadow* style props are deprecated. Use textShadow.' and 'shadow* style props are deprecated. Use boxShadow.' These are React Native Web v0.19+ breaking changes for shadow/textShadow style props."
+        ]
+      }
+    ]
+  },
+  
+  "test_report_links": [
+    "/app/backend/tests/test_auth_credits.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  
+  "action_items": [
+    "Change all `data-testid='...'` HTML attributes to `testID='...'` React Native props on TouchableOpacity/View/Text components throughout codebase (WelcomeScreen.tsx, AuthScreen.tsx, SettingsScreen.tsx, PaywallScreen.tsx, index.tsx)",
+    "Investigate Auth screen not rendering on web preview after 'Let's Get Started' click - may need to test on actual iOS device to confirm this works as expected",
+    "Fix deprecated shadow/textShadow style props warnings for React Native Web compatibility (use boxShadow and textShadow CSS properties instead)"
+  ],
+  
+  "critical_code_review_comments": [
+    "data-testid vs testID: All React Native components use HTML `data-testid` attribute (not React Native's `testID` prop). React Native Web maps testID → data-testid in DOM, not the raw HTML attribute. Fix: replace `data-testid='foo'` with `testID='foo'` everywhere.",
+    "SecureStore on web: expo-secure-store web stub is empty so all SecureStore operations fail silently on web - the catch block handles this correctly. No fix needed unless web support is desired.",
+    "Auth screen web rendering: After welcome screen button click (setShowAuth=true), Auth screen content doesn't appear in DOM on web. Could be a React Native Web absolute positioning issue or an import that fails on web. The zIndex overlay system (9998/9999) works but may have edge cases on web.",
+    "server.py is 3075 lines - very large monolith, consider splitting auth/credits/webhooks into separate modules",
+    "RevenueCat webhook has no retry logic and uses upsert=False - if customer_id doesn't match, webhook silently does nothing (returns 200 but no DB update)"
+  ],
+  
+  "updated_files": [
+    "/app/backend/tests/test_auth_credits.py"
+  ],
+  
+  "success_rate": {
+    "backend": "100% (26/26 tests passing)",
+    "frontend": "60% (app loads, welcome screen works, gallery/camera visible; auth flow and logged-in state not testable on web)"
+  },
+  
+  "seed_data_creation": "Demo reviewer account created/verified via POST /api/auth/demo-login. Test Apple auth accounts created and cleaned up during tests.",
+  
+  "retest_needed": true,
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "Backend: All 26 auth/credits/webhook tests pass. Test file at /app/backend/tests/test_auth_credits.py. Frontend: This is an iOS-targeted React Native (Expo SDK 54) app with a web preview. Web preview has known limitations: (1) expo-secure-store doesn't work on web, (2) Auth screen not appearing on web after click (possible React Native Web overlay rendering issue), (3) data-testid attributes not in DOM (need testID prop). To test logged-in state: use a real iOS device or simulator. Backend URL: https://paywall-preview-1.preview.emergentagent.com. JWT_SECRET = 'body-bound-jwt-secret-2026'. Demo login endpoint: POST /api/auth/demo-login (no auth needed). All API endpoints work correctly.",
+  
+  "rca_of_issue": {
+    "issue": "Auth screen not appearing on web after clicking 'Let's Get Started'",
+    "reproduction": "1. Open web preview with no stored session token. 2. Welcome screen shows. 3. Click 'Let's Get Started'. 4. Auth screen not shown - onboarding tutorial appears instead.",
+    "root_cause_hypothesis": "Two possible causes: (A) React Native Web Modal with visible={false} renders content in DOM, making 'Welcome to BODY BOUND' text appear from onboarding modal even when showAuth=true (which should prevent modal). (B) The Auth screen overlay renders but immediately crashes or is hidden due to React Native Web absolute positioning/z-index handling. Since auth elements are entirely absent from DOM, the most likely cause is (B) - the Auth screen (showAuth && <View>) is rendering but its content is not added to DOM due to a React Native Web rendering issue.",
+    "mitigation": "Test the auth flow on iOS device/simulator where it's designed to work. For web support, consider using Platform.select() to show an alternative auth flow on web."
+  }
+}
