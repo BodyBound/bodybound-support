@@ -33,7 +33,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView, PointerType } from 'r
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedProps, runOnJS, useDerivedValue, withSpring } from 'react-native-reanimated';
 import { captureRef } from 'react-native-view-shot';
 import * as SecureStore from 'expo-secure-store';
-import { storeToken, getToken, deleteToken } from './utils/tokenStore';
+import { storeToken, getToken, deleteToken } from '../utils/tokenStore';
 import Purchases from 'react-native-purchases';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';

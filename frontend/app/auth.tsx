@@ -20,7 +20,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { router } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { storeToken } from './utils/tokenStore';
+import { storeToken } from '../utils/tokenStore';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 

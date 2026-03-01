@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { User } from '../types';
-import { storeToken } from '../utils/tokenStore';
+import { storeToken } from '../../utils/tokenStore';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
