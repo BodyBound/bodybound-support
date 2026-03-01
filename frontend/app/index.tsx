@@ -36,7 +36,6 @@ import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 import { storeToken, getToken, deleteToken } from '../utils/tokenStore';
 import Purchases from 'react-native-purchases';
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { styles } from './styles/mainStyles';
 import { StencilSettings, SavedStencil, StencilListItem, User, UserCredits } from './types';
@@ -50,6 +49,24 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 // Check if running in Expo Go (where native modules like RevenueCat aren't available)
 const isExpoGo = Constants.appOwnership === 'expo';
+
+// Notifications module - loaded dynamically to avoid Expo Go crashes
+let Notifications: typeof import('expo-notifications') | null = null;
+
+// Initialize notifications module only if not in Expo Go
+const initNotifications = async () => {
+  if (isExpoGo || Platform.OS === 'web') return;
+  try {
+    Notifications = await import('expo-notifications');
+  } catch (e) {
+    console.log('[Notifications] Module load failed:', e);
+  }
+};
+
+// Call initialization (non-blocking)
+if (!isExpoGo && Platform.OS !== 'web') {
+  initNotifications();
+}
 
 // ── Push Notification Helpers ───────────────────────────────────────────────
 // Show notifications only on real iOS/Android devices (not web/simulator)
