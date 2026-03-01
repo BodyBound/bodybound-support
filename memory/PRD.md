@@ -1,85 +1,128 @@
-# BODY BOUND Stencil Generator — PRD
+# BODY BOUND Stencil Generator - PRD
 
-## Original Problem Statement
-Mobile app to convert photos into high-quality "Thermafax-friendly" tattoo stencils.
-- Photo → clean, crisp, purely black-and-white line drawings
-- Transparent PNG stencils (white pixels removed)
-- Edit Mode: Procreate-style layered editor with drawing, erasing, pan/zoom/rotate
-- Dark luxury theme
+## Product Overview
+An iOS app (Expo/React Native + FastAPI backend) that generates tattoo stencils from photos using AI. Designed for tattoo artists.
 
-## Architecture
-- **Frontend**: Expo (React Native) + TypeScript — single file `/app/frontend/app/index.tsx` (~6400 lines)
-- **Backend**: FastAPI + Python — `/app/backend/server.py`
-- **AI Model**: `gemini-3-pro-image-preview` via `emergentintegrations`
-- **Key libs**: react-native-gesture-handler (RNGH v2), react-native-reanimated v4, react-native-svg 15, expo-image
+## Core Tech Stack
+- **Frontend**: React Native (Expo SDK 54), TypeScript, expo-router
+- **Backend**: FastAPI (Python), MongoDB
+- **AI**: Gemini gemini-3-pro-image-preview for stencil generation
+- **Auth**: Apple Sign-In (primary), Google OAuth via Emergent Auth (fallback)
+- **Subscriptions**: RevenueCat SDK (react-native-purchases v9.10.5)
+- **Storage**: MongoDB (tattoo_stencil DB)
+
+## Subscription Tiers
+| Tier | Price | Credits/Month |
+|------|-------|---------------|
+| Free Trial | Free (3 days) | 10 starter credits |
+| Hobbyist | $14.99/mo | 125 |
+| Pro | $29.99/mo | 500 |
+| Studio | $99.00/mo | 1,500 shared (up to 5 members) |
+
+## Code Architecture
+```
+/app
+├── backend/
+│   ├── server.py          # FastAPI (~3075 lines) - monolithic but working
+│   ├── requirements.txt
+│   └── tests/
+│       └── test_auth_credits.py  # 26 passing tests
+├── frontend/
+│   ├── assets/
+│   │   └── images/        # logo, splash-background, etc.
+│   ├── app/
+│   │   ├── index.tsx      # Main app (~3933 lines, reduced from 6661)
+│   │   ├── types.ts       # Shared TypeScript interfaces
+│   │   ├── styles/
+│   │   │   └── mainStyles.ts   # All styles (extracted from index.tsx)
+│   │   ├── components/
+│   │   │   └── WelcomeScreen.tsx  # Welcome/splash screen
+│   │   └── screens/
+│   │       ├── AuthScreen.tsx      # Apple + Google Sign-In
+│   │       ├── PaywallScreen.tsx   # RevenueCat subscription paywall
+│   │       └── SettingsScreen.tsx  # Credits, subscription mgmt, account
+│   ├── app.json
+│   ├── .env               # EXPO_PUBLIC_BACKEND_URL
+│   └── package.json
+└── memory/
+    └── PRD.md
+```
+
+## Key API Endpoints
+### Existing (Stencil Generation)
+- `POST /api/ai-stencil-async` - Generate stencil async
+- `GET /api/ai-stencil-status/{job_id}` - Check job status
+- `POST /api/adjust-line-weight` - Thin/thicken stencil lines
+- `GET/POST /api/stencils` - Stencil gallery CRUD
+
+### Auth & Credits (Added 2026-03)
+- `POST /api/auth/apple` - Apple Sign-In (verifies identity token)
+- `POST /api/auth/google-session` - Google Sign-In via Emergent Auth
+- `GET /api/auth/me` - Get current user + credits (Bearer auth)
+- `POST /api/auth/demo-login` - Reviewer demo account (100 credits)
+- `POST /api/credits/deduct` - Atomically deduct 1 credit
+- `DELETE /api/account/delete` - Delete user account (App Store req)
+- `POST /api/webhooks/revenuecat` - RevenueCat subscription events
+
+## MongoDB Collections
+- **users**: user_id, apple_user_id, google_user_id, email, name, picture, created_at, last_login
+- **subscriptions**: user_id, tier, available_credits, is_trial, renewal_date, revenuecat_customer_id, anti_abuse_key
+- **stencils**: id, user_id, original_image, stencil_image, settings, created_at, name
+- **studio_teams**: (TBD - Studio tier multi-user support)
 
 ## What's Been Implemented
 
-### 2025-02 (Session 1-3)
-- Core stencil generation (light/medium/heavy styles)
-- Transparent PNG post-processing (white → transparent)
-- Fixed `ph://` crash on iOS with expo-image
-- Edit Mode: pan/zoom/rotate canvas, drawing, erasing, opacity control
-- Layer system: reference photo + transparent stencil + SVG drawings
-- Reverted backend to "Feb 16" high-quality prompt
+### 2026-03 - Credit Management & Auth System (Phase 0-2)
+1. **Monolith Refactor**: `index.tsx` 6661 → 3933 lines
+   - Extracted styles → `styles/mainStyles.ts`
+   - Extracted WelcomeScreen → `components/WelcomeScreen.tsx`
+   - Created `types.ts` for shared interfaces
+   - Created new screens: AuthScreen, PaywallScreen, SettingsScreen
+2. **Backend Auth**: Apple Sign-In + Google OAuth, JWT sessions (7-day expiry), user CRUD
+3. **Credit System**: Atomic credit deduction, trial credits (10), blocking at 0, 402 response
+4. **RevenueCat**: SDK configured, PaywallScreen with tier selection, webhook handler
+5. **App Store Requirements**: Delete Account endpoint, demo reviewer account, store review prompt after 5 generations
+6. **Security**: JWT secret >32 bytes, anti-abuse key for trial prevention
+7. **Cleanup**: Removed debug alert, API_URL now from env var
 
-### 2026-02-27 (Current Session)
-- **P0 FIXED**: Reference photo disappears on 2nd Edit Mode entry
-  - Root cause: `saveEditedStencil` merged canvas to opaque PNG, overwrote stencil
-  - Fix: `openEditMode` now uses `stencilVersions[selectedVersion]` (original transparent PNG) not merged `stencilImage`
-  - `originalAIStencil` explicitly set in `generateSingleStyle`
-- **Pencil Lag (P1)**: Multiple optimization passes:
-  - Moved path accumulation from React state → Reanimated SharedValue (UI thread)
-  - Replaced `continueDrawing` runOnJS-per-frame with `useAnimatedProps` + JSI (New Arch)
-  - **Removed StreamLine smoothing** (was causing visible 3-frame visual gap)
-  - Net: path now tracks pencil with no visual gap (cursor = path tip)
-- **Layout Restructured**:
-  - Removed `ScrollView` wrapper
-  - `imageArea: flex:1` fills all available space above buttons
-  - `bottomBar` contains all controls (style buttons + source buttons)
-  - Image fills screen, buttons at very bottom
-  - Style buttons responsive: `Math.min(80, (SCREEN_WIDTH-80)/3)` for iPad
-- **Yellow Regen Hint Text**: Added golden italic text below style buttons
-- **Rate & Share row removed** (maximizes image space)
+## Known Issues / Pending Work
 
-## Key State Variables
-- `referencePhotoLayer`: Set on stencil generate, never cleared on edit save — the original photo for edit mode
-- `originalAIStencil`: Set on generate, used as `editModeStencilImage` (transparent base)
-- `currentPathSV`: SharedValue accumulates live stroke on UI thread
-- `animatedStrokeProps`: drives AnimatedSVGPath.d via JSI (New Arch, zero bridge)
-- `enableFPSV`: SharedValue synced to enableFingerPainting state for gesture worklets
+### P0 - Active
+- RevenueCat products need to be configured in App Store Connect (IDs: bodybound_1499_1m_3d, bodybound_2999_1m_3d, bodybound_9999_1m_3d)
+- Monthly credit refresh needs a scheduled task (cron) backend implementation
+- Studio tier team management (admin invite system, shared credits) not yet built
 
-## Pending / In-Progress
+### P1 - Upcoming
+- Backend server.py refactoring (split into routes/, services/, models/)
+- Real Apple identity token verification with proper bundle ID
+- RevenueCat webhook auth token setup (REVENUECAT_WEBHOOK_AUTH env var)
 
-### P1 — Drawing Lag
-- Current state: path updates via `useAnimatedProps` + JSI (New Arch)
-- No smoothing during drawing (removed for responsiveness)
-- If still laggy after reload: ultimate fix = dev build + react-native-skia
-- Note: `newArchEnabled: true` in app.json
+### P2 - Backlog
+- Crop tool inaccuracy and delay fix
+- Offline/no-connection handling
+- textShadow/boxShadow deprecation warnings in React Native Web
 
-### P2 — Crop Tool Inaccuracy
-- `handleApplyCrop` function needs investigation
-- Calculations for `cropData` may be off
+## Environment Variables
+### Backend (.env)
+- `MONGO_URL` - MongoDB connection string
+- `DB_NAME` - Database name (tattoo_stencil)
+- `GOOGLE_API_KEY` - Gemini API key
+- `JWT_SECRET` - JWT signing secret (optional, has default)
+- `REVENUECAT_WEBHOOK_AUTH` - RevenueCat webhook auth token (optional)
 
-### P2 — iPad Style Button Sizes
-- Partially fixed (responsive sizing formula added)
-- May need further tweaking based on user feedback
+### Frontend (.env)
+- `EXPO_PUBLIC_BACKEND_URL` - Backend URL (production stable URL)
+- `EXPO_TUNNEL_SUBDOMAIN` - Expo tunnel subdomain
 
-## Future / Backlog
-- P3: Refactor `index.tsx` (6400+ lines → components)
-- P4: Refactor `server.py`
-- P5: "Save to App" Gallery feature
+## RevenueCat Configuration
+- API Key: `appl_test_IuokLnnASfsuVHgijvsTOFfQAiI` (iOS)
+- Entitlement: `premium`
+- Products (to configure in App Store Connect):
+  - `bodybound_1499_1m_3d` → Hobbyist $14.99/mo
+  - `bodybound_2999_1m_3d` → Pro $29.99/mo
+  - `bodybound_9999_1m_3d` → Studio $99.00/mo
 
-## Key API Endpoints
-- `POST /api/ai-stencil-async` — generate stencil (style: light/medium/heavy)
-- `GET /api/ai-stencil-status/:jobId` — poll generation status
-- `POST /api/make-transparent` — make image transparent
-
-## Credentials
-- GOOGLE_API_KEY in `/app/backend/.env`
-
-## Important Notes
-- `newArchEnabled: true` → Fabric, so setNativeProps is unreliable; use useAnimatedProps
-- Metro in CI mode: no hot reload — user must shake device → Reload in Expo Go after updates
-- DO NOT change backend AI model/prompt (quality is dialed in)
-- Backend stencil generation uses: `gemini-3-pro-image-preview` model
+## Testing
+- Backend tests: `/app/backend/tests/test_auth_credits.py` - 26 tests, 100% passing
+- Test command: `cd /app/backend && python -m pytest tests/ -v`
+- Demo reviewer account: `POST /api/auth/demo-login`
