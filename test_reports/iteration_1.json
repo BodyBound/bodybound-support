@@ -55,7 +55,8 @@
     "SecureStore on web: expo-secure-store web stub is empty so all SecureStore operations fail silently on web - the catch block handles this correctly. No fix needed unless web support is desired.",
     "Auth screen web rendering: After welcome screen button click (setShowAuth=true), Auth screen content doesn't appear in DOM on web. Could be a React Native Web absolute positioning issue or an import that fails on web. The zIndex overlay system (9998/9999) works but may have edge cases on web.",
     "server.py is 3075 lines - very large monolith, consider splitting auth/credits/webhooks into separate modules",
-    "RevenueCat webhook has no retry logic and uses upsert=False - if customer_id doesn't match, webhook silently does nothing (returns 200 but no DB update)"
+    "RevenueCat webhook has no retry logic and uses upsert=False - if customer_id doesn't match, webhook silently does nothing (returns 200 but no DB update)",
+    "SECURITY: JWT_SECRET ('body-bound-jwt-secret-2026') is only 26 bytes long - below recommended 32 bytes for HS256. Backend shows InsecureKeyLengthWarning. Should use a longer secret in production."
   ],
   
   "updated_files": [
