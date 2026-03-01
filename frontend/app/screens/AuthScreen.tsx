@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,38 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as SecureStore from 'expo-secure-store';
+import * as Application from 'expo-application';
 import { User } from '../types';
 import { storeToken } from '../../utils/tokenStore';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+
+// Get unique device identifier for anti-abuse tracking
+const getDeviceId = async (): Promise<string | null> => {
+  try {
+    if (Platform.OS === 'ios') {
+      // iOS: Use identifierForVendor (persists across app reinstalls for same vendor)
+      return await Application.getIosIdForVendorAsync();
+    } else if (Platform.OS === 'android') {
+      // Android: Use Android ID
+      return Application.getAndroidId();
+    } else {
+      // Web: Generate and persist a unique ID in localStorage
+      if (typeof window !== 'undefined' && window.localStorage) {
+        let webId = window.localStorage.getItem('bodybound_device_id');
+        if (!webId) {
+          webId = `web_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+          window.localStorage.setItem('bodybound_device_id', webId);
+        }
+        return webId;
+      }
+    }
+    return null;
+  } catch (e) {
+    console.log('[DeviceID] Error getting device ID:', e);
+    return null;
+  }
+};
 
 interface AuthScreenProps {
   onAuthSuccess: (user: User, token: string) => void;
