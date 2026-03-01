@@ -85,6 +85,16 @@ An iOS app (Expo/React Native + FastAPI backend) that generates tattoo stencils 
 6. **Security**: JWT secret >32 bytes, anti-abuse key for trial prevention
 7. **Cleanup**: Removed debug alert, API_URL now from env var
 
+### 2026-03 - RevenueCat Full Integration + Monthly Credit Refresh (Phase 2-3)
+8. **Purchases.logIn(userId)**: Called after every successful auth (startup token restore + onAuthSuccess). Links user to RevenueCat so webhooks use our backend user_id as app_user_id.
+9. **Webhook Fix**: Webhook now matches subscriptions via `user_id` (was `revenuecat_customer_id`). Handles INITIAL_PURCHASE, RENEWAL (grant credits), CANCELLATION, EXPIRATION (mark expired).
+10. **Renewal Date**: Webhook sets renewal_date to 30 days from now (was incorrectly set to now).
+11. **Monthly Credit Refresh Cron**: `POST /api/cron/refresh-credits` endpoint protected by `CRON_SECRET` env var. Finds all active paid subscriptions with overdue renewal_date, refreshes credits, advances renewal_date by 30 days.
+12. **GitHub Actions Workflow**: `/.github/workflows/monthly-credit-refresh.yml` — runs on 1st of each month or on manual trigger. Requires GitHub Secrets: `BACKEND_URL` and `CRON_SECRET`.
+13. **PaywallScreen Web Handling**: Skips `Purchases.getOfferings()` on web (no SDK), shows static prices, changes CTA to "Subscribe in iOS App Store" on web platform.
+14. **Bug Fix**: Added `Platform` to imports in `mainStyles.ts` (critical — was causing app crash).
+15. **WelcomeScreen**: Added default export to eliminate Expo Router warning.
+
 ## Known Issues / Pending Work
 
 ### P0 - Active
