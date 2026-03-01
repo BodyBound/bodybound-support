@@ -2761,7 +2761,7 @@ import jwt
 import httpx
 from datetime import timezone, timedelta
 
-JWT_SECRET = os.environ.get('JWT_SECRET', 'body-bound-jwt-secret-2026')
+JWT_SECRET = os.environ.get('JWT_SECRET', 'body-bound-stencil-generator-jwt-secret-key-2026-secure')
 
 # ---- Pydantic Models ----
 class AppleAuthRequest(BaseModel):
