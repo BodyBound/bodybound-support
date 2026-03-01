@@ -968,6 +968,15 @@ export default function Index() {
               if (deductResp.ok) {
                 const d = await deductResp.json();
                 setAvailableCredits(d.available_credits);
+                // Fire a push notification the first time credits drop below 10
+                if (d.available_credits < 10 && d.available_credits > 0 && !lowCreditNotifiedRef.current) {
+                  lowCreditNotifiedRef.current = true;
+                  sendLowCreditsNotification(d.available_credits);
+                }
+                // Reset the flag once credits are refreshed above 10
+                if (d.available_credits >= 10) {
+                  lowCreditNotifiedRef.current = false;
+                }
               }
             } catch (e) { console.error('[Credits] Deduction failed:', e); }
 
