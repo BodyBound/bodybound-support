@@ -51,7 +51,6 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 const setupNotifications = async () => {
   if (Platform.OS === 'web') return;
   try {
-    // Set how notifications appear while app is in foreground
     await Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -59,7 +58,6 @@ const setupNotifications = async () => {
         shouldSetBadge: false,
       }),
     });
-    // Request permission (only prompts once; subsequent calls are silent)
     if (Device.isDevice) {
       const { status: existing } = await Notifications.getPermissionsAsync();
       if (existing !== 'granted') {
@@ -67,7 +65,8 @@ const setupNotifications = async () => {
       }
     }
   } catch (e) {
-    console.log('[Notifications] Setup failed:', e);
+    // Expected in Expo Go — push notifications require a custom dev build
+    console.log('[Notifications] Setup skipped (Expo Go or unsupported env):', e);
   }
 };
 
@@ -83,11 +82,10 @@ const sendLowCreditsNotification = async (credits: number) => {
         sound: true,
         data: { action: 'upgrade' },
       },
-      trigger: null, // fire immediately
+      trigger: null,
     });
-    console.log('[Notifications] Low credits notification sent:', credits);
   } catch (e) {
-    console.log('[Notifications] Failed to send:', e);
+    console.log('[Notifications] Skipped (Expo Go or unsupported env):', e);
   }
 };
 
