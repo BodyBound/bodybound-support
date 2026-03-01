@@ -6,7 +6,10 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "channel": "development"
+      "channel": "development",
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://bodybound-launch.preview.emergentagent.com"
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -16,6 +19,9 @@
       },
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://bodybound-launch.preview.emergentagent.com"
       }
     },
     "production": {
@@ -25,6 +31,9 @@
       },
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_BACKEND_URL": "https://bodybound-launch.preview.emergentagent.com"
       }
     }
   },
