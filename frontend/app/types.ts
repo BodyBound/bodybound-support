@@ -41,12 +41,14 @@ export interface AuthSession {
 }
 
 // Subscription & Credits
-export type SubscriptionTier = 'trial' | 'hobbyist' | 'pro' | 'studio' | null;
+export type SubscriptionTier = 'trial' | 'trial_expired' | 'walk-in' | 'booked-out' | 'the-shop' | 'hobbyist' | 'pro' | 'studio' | null;
 
 export interface UserCredits {
   available_credits: number;
   tier: SubscriptionTier;
   is_trial: boolean;
+  trial_expires_at: string | null;
+  trial_days_remaining: number | null;
   renewal_date: string | null;
   revenuecat_customer_id: string | null;
 }
