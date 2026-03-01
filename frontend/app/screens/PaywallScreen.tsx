@@ -57,6 +57,11 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
   }, []);
 
   const loadOfferings = async () => {
+    // RevenueCat SDK is not available on web - skip and use static plans
+    if (Platform.OS === 'web') {
+      setLoading(false);
+      return;
+    }
     try {
       const offerings = await Purchases.getOfferings();
       if (offerings.current?.availablePackages.length) {
