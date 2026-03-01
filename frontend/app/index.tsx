@@ -72,11 +72,21 @@ if (!isExpoGo && Platform.OS !== 'web') {
 // Show notifications only on real iOS/Android devices (not web/simulator)
 // Skip entirely in Expo Go to avoid PushNotificationIOS errors
 const setupNotifications = async () => {
-  if (Platform.OS === 'web') return;
-  if (isExpoGo) {
-    console.log('[Notifications] Skipped in Expo Go - use a development build');
+  if (Platform.OS === 'web' || isExpoGo) {
+    console.log('[Notifications] Skipped - web or Expo Go');
     return;
   }
+  
+  // Ensure module is loaded
+  if (!Notifications) {
+    try {
+      Notifications = await import('expo-notifications');
+    } catch (e) {
+      console.log('[Notifications] Module load failed:', e);
+      return;
+    }
+  }
+  
   try {
     await Notifications.setNotificationHandler({
       handleNotification: async () => ({
@@ -92,14 +102,12 @@ const setupNotifications = async () => {
       }
     }
   } catch (e) {
-    // Expected in Expo Go — push notifications require a custom dev build
-    console.log('[Notifications] Setup skipped:', e);
+    console.log('[Notifications] Setup failed:', e);
   }
 };
 
 const sendLowCreditsNotification = async (credits: number) => {
-  if (Platform.OS === 'web') return;
-  if (isExpoGo) return; // Skip in Expo Go
+  if (Platform.OS === 'web' || isExpoGo || !Notifications) return;
   try {
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') return;
