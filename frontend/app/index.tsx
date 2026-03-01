@@ -903,7 +903,31 @@ export default function Index() {
           
           setHasGeneratedOnce(true);
           
-          // Clean up job on server
+          // Deduct credit and track generation
+          if (sessionToken && currentUser) {
+            try {
+              const deductResp = await fetch(`${API_URL}/api/credits/deduct`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${sessionToken}`,
+                  'Content-Type': 'application/json',
+                },
+              });
+              if (deductResp.ok) {
+                const d = await deductResp.json();
+                setAvailableCredits(d.available_credits);
+              }
+            } catch (e) { console.error('[Credits] Deduction failed:', e); }
+
+            // Review prompt after 5th successful generation
+            const newCount = successfulGenerations + 1;
+            setSuccessfulGenerations(newCount);
+            if (newCount === 5) {
+              try { await StoreReview.requestReview(); } catch (_) {}
+            }
+          }
+
+
           try {
             await fetch(`${API_URL}/api/ai-stencil-job/${jobId}`, { method: 'DELETE' });
           } catch (e) {
