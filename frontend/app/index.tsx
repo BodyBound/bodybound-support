@@ -33,6 +33,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView, PointerType } from 'r
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedProps, runOnJS, useDerivedValue, withSpring } from 'react-native-reanimated';
 import { captureRef } from 'react-native-view-shot';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 import { storeToken, getToken, deleteToken } from '../utils/tokenStore';
 import Purchases from 'react-native-purchases';
 import * as Notifications from 'expo-notifications';
@@ -45,6 +46,9 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { PaywallScreen } from './screens/PaywallScreen';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
+
+// Check if running in Expo Go (where native modules like RevenueCat aren't available)
+const isExpoGo = Constants.appOwnership === 'expo';
 
 // ── Push Notification Helpers ───────────────────────────────────────────────
 // Show notifications only on real iOS/Android devices (not web/simulator)
