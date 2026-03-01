@@ -440,16 +440,31 @@ export default function Index() {
 
   // Configure RevenueCat SDK
   useEffect(() => {
-    try {
-      if (Platform.OS === 'ios') {
-        Purchases.configure({ apiKey: 'appl_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
-      } else if (Platform.OS === 'android') {
-        Purchases.configure({ apiKey: 'goog_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
+    const configureRevenueCat = async () => {
+      // Skip RevenueCat in web environment
+      if (Platform.OS === 'web') {
+        console.log('[RevenueCat] Skipped on web platform');
+        return;
       }
-    } catch (e) {
-      // Expected failure in Expo Go — RevenueCat requires a custom dev build
-      console.log('[RevenueCat] Configure skipped (Expo Go or unsupported env):', e);
-    }
+      
+      try {
+        // Check if we're in Expo Go by checking if native modules are available
+        const isExpoGo = !Purchases.isConfigured;
+        
+        if (Platform.OS === 'ios') {
+          await Purchases.configure({ apiKey: 'appl_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
+        } else if (Platform.OS === 'android') {
+          await Purchases.configure({ apiKey: 'goog_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
+        }
+        console.log('[RevenueCat] Configured successfully');
+      } catch (e: any) {
+        // Expected failure in Expo Go — RevenueCat requires a custom dev build
+        // This error is normal and the app will work fine without RevenueCat in Expo Go
+        console.log('[RevenueCat] Configure skipped (Expo Go or unsupported)');
+      }
+    };
+    
+    configureRevenueCat();
   }, []);
 
   // Check for stored auth token on startup
