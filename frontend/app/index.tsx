@@ -32,16 +32,16 @@ import Svg, { Path, Circle } from 'react-native-svg';
 import { Gesture, GestureDetector, GestureHandlerRootView, PointerType } from 'react-native-gesture-handler';
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedProps, runOnJS, useDerivedValue, withSpring } from 'react-native-reanimated';
 import { captureRef } from 'react-native-view-shot';
+import * as SecureStore from 'expo-secure-store';
+import Purchases from 'react-native-purchases';
+import { styles } from './styles/mainStyles';
+import { StencilSettings, SavedStencil, StencilListItem, User, UserCredits } from './types';
+import { WelcomeScreen } from './components/WelcomeScreen';
+import { AuthScreen } from './screens/AuthScreen';
+import { SettingsScreen } from './screens/SettingsScreen';
+import { PaywallScreen } from './screens/PaywallScreen';
 
-// Backend URL - hardcoded to ensure TestFlight builds use the correct URL
-const API_URL = 'https://paywall-preview-1.preview.emergentagent.com';
-
-// DEBUG: Show URL on app start (remove after debugging)
-if (typeof Alert !== 'undefined') {
-  setTimeout(() => {
-    Alert.alert('Debug Info', `API URL: ${API_URL}\nEnv URL: ${process.env.EXPO_PUBLIC_BACKEND_URL || 'not set'}`);
-  }, 1000);
-}
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 // Animated SVG Path for zero-lag drawing - updates directly on UI thread via Reanimated
 const AnimatedSVGPath = Animated.createAnimatedComponent(Path);
