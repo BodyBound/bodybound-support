@@ -71,9 +71,17 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     try {
       const { openAuthSessionAsync } = await import('expo-web-browser');
       const { makeRedirectUri } = await import('expo-auth-session');
+      const { Platform } = await import('react-native');
 
-      // Use the app scheme for deep linking back
-      const redirectUri = makeRedirectUri({ scheme: 'body-bound-stencil', path: 'auth' });
+      // On web: use the actual browser URL so maybeCompleteAuthSession() URL check passes.
+      // On native: use the app deep-link scheme.
+      const redirectUri =
+        Platform.OS === 'web'
+          ? (typeof window !== 'undefined'
+              ? `${window.location.origin}/auth`
+              : makeRedirectUri({ path: 'auth' }))
+          : makeRedirectUri({ scheme: 'body-bound-stencil', path: 'auth' });
+
       const authUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUri)}`;
 
       const result = await openAuthSessionAsync(authUrl, redirectUri);
