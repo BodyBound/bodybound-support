@@ -3014,16 +3014,16 @@ async def revenuecat_webhook(request: FastAPIRequest):
     return {'status': 'ok'}
 
 
-@api_router.post("/cron/refresh-credits")
-async def cron_refresh_credits(request: FastAPIRequest):
-    """Monthly credit refresh cron endpoint.
+@api_router.post("/tasks/refresh-credits")
+async def tasks_refresh_credits(request: FastAPIRequest):
+    """Monthly credit refresh endpoint.
     Triggered by an external scheduler (e.g. GitHub Actions).
-    Protected by CRON_SECRET env var.
+    Secured via X-Cron-Secret header matching CRON_SECRET env var.
     """
     if not CRON_SECRET:
         raise HTTPException(status_code=503, detail='Cron not configured')
-    auth = request.headers.get('authorization', '')
-    if auth != f'Bearer {CRON_SECRET}':
+    secret_header = request.headers.get('x-cron-secret', '')
+    if secret_header != CRON_SECRET:
         raise HTTPException(status_code=401, detail='Unauthorized')
 
     now = datetime.now(timezone.utc)
