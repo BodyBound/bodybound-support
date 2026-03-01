@@ -34,6 +34,8 @@ import Animated, { useSharedValue, useAnimatedStyle, useAnimatedProps, runOnJS, 
 import { captureRef } from 'react-native-view-shot';
 import * as SecureStore from 'expo-secure-store';
 import Purchases from 'react-native-purchases';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 import { styles } from './styles/mainStyles';
 import { StencilSettings, SavedStencil, StencilListItem, User, UserCredits } from './types';
 import { WelcomeScreen } from './components/WelcomeScreen';
