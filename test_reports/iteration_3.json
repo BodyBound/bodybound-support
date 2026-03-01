@@ -1,0 +1,108 @@
+{
+  "summary": "Iteration 3 testing: 11/11 backend tests pass (100%). Fixed critical frontend SSR crash (ENOENT for expo-crypto symlink). All new features verified: /api/tasks/refresh-credits endpoint with X-Cron-Secret auth, old /api/cron/refresh-credits returns 404, credit refresh logic, webhook regression, GitHub Actions workflow file.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "N/A - File: .github/workflows/monthly-credit-refresh.yml",
+        "issue": "Old workflow file still exists with OLD endpoint /api/cron/refresh-credits and old 'Authorization: Bearer' header. This is a stale file that should be deleted or updated to avoid confusion."
+      }
+    ]
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [
+      {
+        "component": "Metro SSR / expo-auth-session",
+        "issue": "FIXED: SSR crash 'ENOENT: no such file or directory, open .../expo-auth-session/node_modules/expo-crypto/build/Crypto.js'. Caused by expo-auth-session@55.0.6 being installed (incompatible with expo@54.0.33 - expected ~7.0.10). expo-auth-session requires expo-crypto ~55.0.8 but it wasn't nested under expo-auth-session/node_modules/. Fixed by creating a symlink: node_modules/expo-auth-session/node_modules/expo-crypto -> node_modules/expo-crypto. App now loads correctly.",
+        "selector": "N/A",
+        "priority": "CRITICAL - FIXED"
+      }
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "new_features_verified": {
+    "tasks_refresh_endpoint": {
+      "no_header_returns_401": "VERIFIED",
+      "wrong_secret_returns_401": "VERIFIED",
+      "old_bearer_auth_rejected": "VERIFIED - Authorization: Bearer TOKEN does NOT work (correct, auth changed)",
+      "correct_x_cron_secret_returns_200": "VERIFIED",
+      "response_has_refreshed_checked_timestamp": "VERIFIED",
+      "expired_subscription_gets_refreshed": "VERIFIED - renewal_date set to yesterday, cron refreshed credits to tier amount",
+      "future_renewal_not_refreshed": "VERIFIED"
+    },
+    "old_cron_endpoint_gone": {
+      "api_cron_refresh_credits_returns_404": "VERIFIED - returns 404 (endpoint removed)"
+    },
+    "github_actions_workflow": {
+      "file_exists": "VERIFIED - /app/.github/workflows/monthly_refresh.yml exists",
+      "uses_x_cron_secret_header": "VERIFIED - 'X-Cron-Secret: ${{ secrets.CRON_SECRET }}'",
+      "correct_endpoint_path": "VERIFIED - /api/tasks/refresh-credits",
+      "handles_non_200": "VERIFIED - exits with error if HTTP_CODE != 200",
+      "parses_refreshed_checked": "VERIFIED - python3 json parsing in workflow"
+    },
+    "package_json_dependencies": {
+      "expo_notifications": "VERIFIED - expo-notifications@^55.0.10 in package.json",
+      "expo_device": "VERIFIED - expo-device@^55.0.9 in package.json"
+    },
+    "push_notification_code": {
+      "setupNotifications": "VERIFIED in index.tsx lines 50-71 - Platform.OS web guard, setNotificationHandler, getPermissionsAsync, requestPermissionsAsync",
+      "sendLowCreditsNotification": "VERIFIED in index.tsx lines 73-91 - Platform.OS web guard, scheduleNotificationAsync with title/body",
+      "lowCreditNotifiedRef": "VERIFIED in index.tsx line 242 - prevents repeat notifications",
+      "trigger_condition": "VERIFIED in index.tsx lines 972-975 - fires when credits < 10 && > 0 && !alreadyNotified",
+      "flag_reset": "VERIFIED in index.tsx lines 977-979 - resets flag when credits >= 10",
+      "web_note": "Push notifications are bypassed on web (Platform.OS === 'web' guard) - CORRECT"
+    },
+    "frontend_loads": "VERIFIED - welcome screen visible at https://subscription-launch-1.preview.emergentagent.com"
+  },
+
+  "rca_of_issue": {
+    "issue": "Frontend SSR crash: ENOENT for expo-auth-session/node_modules/expo-crypto",
+    "root_cause": "When expo-notifications@55.0.10 and expo-device@55.0.9 were installed (this session), expo-auth-session was also updated from ~7.0.10 to ^55.0.6. expo-auth-session@55.x requires expo-crypto ~55.0.8 but expo 54.0.33 expects expo-auth-session@~7.0.10. The yarn hoisting placed expo-crypto@55.0.8 at the global node_modules level, but expo-auth-session has its own nested node_modules directory (with @expo, expo-constants, expo-linking, expo-web-browser) but NOT expo-crypto. Metro's SSR bundler computes the path as expo-auth-session/node_modules/expo-crypto/build/Crypto.js and fails with ENOENT.",
+    "fix_applied": "Created symlink: /app/frontend/node_modules/expo-auth-session/node_modules/expo-crypto -> /app/frontend/node_modules/expo-crypto",
+    "permanent_fix_recommendation": "Main agent should either: (1) downgrade expo-auth-session back to ~7.0.10 in package.json (correct for expo@54), or (2) run 'yarn install' which should properly resolve and nest expo-crypto under expo-auth-session. The symlink fix is transient and will be lost on next yarn install."
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_iter3_tasks_refresh.py",
+    "/app/test_reports/pytest/pytest_results_iter3.xml"
+  ],
+
+  "action_items": [
+    "IMPORTANT: Pin expo-auth-session to ~7.0.10 in package.json (correct for expo@54) OR run 'yarn add expo-auth-session@~7.0.10' to permanently fix the SSR crash. The symlink fix is temporary.",
+    "Delete or update stale file: .github/workflows/monthly-credit-refresh.yml - it still uses old /api/cron/refresh-credits endpoint and Authorization: Bearer header",
+    "No critical backend issues"
+  ],
+
+  "critical_code_review_comments": [
+    "expo-auth-session@55.0.6 is incompatible with expo@54.0.33 (expected ~7.0.10). This was likely an unintentional upgrade when expo-notifications was installed. Run: yarn add expo-auth-session@~7.0.10",
+    "Old workflow file .github/workflows/monthly-credit-refresh.yml still references /api/cron/refresh-credits - should be deleted to avoid confusion",
+    "push notification: lowCreditNotifiedRef is scoped to the component session (in-memory ref). If the app is killed and relaunched, the flag resets, so multiple notifications could fire across app restarts. Consider persisting to AsyncStorage for true deduplication (low priority for MVP)"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_iter3_tasks_refresh.py (new test file for iteration 3)",
+    "/app/frontend/node_modules/expo-auth-session/node_modules/expo-crypto (symlink created to fix ENOENT)"
+  ],
+
+  "success_rate": {
+    "backend": "100% (11/11 new tests passing, all features verified)",
+    "frontend": "100% (app loads, welcome screen visible, push notification code verified in source)"
+  },
+
+  "test_credentials": {
+    "cron_secret": "bb-cron-2026-refresh-c7f3a1",
+    "backend_url": "https://subscription-launch-1.preview.emergentagent.com",
+    "demo_login": "POST /api/auth/demo-login"
+  },
+
+  "seed_data_creation": "All test accounts (tasks_test_*, tasks_future_*, rc3_test_*) were cleaned up during test runs.",
+
+  "retest_needed": true,
+  "main_agent_can_self_test": true,
+
+  "context_for_next_testing_agent": "Backend: 11 new tests in /app/backend/tests/test_iter3_tasks_refresh.py - all pass. New endpoint /api/tasks/refresh-credits with X-Cron-Secret header works correctly. Old /api/cron/refresh-credits returns 404. Frontend: CRITICAL - expo-auth-session@55.0.6 is incompatible with expo@54. Symlink fix applied (node_modules/expo-auth-session/node_modules/expo-crypto -> node_modules/expo-crypto). Main agent should permanently fix with: cd /app/frontend && yarn add expo-auth-session@~7.0.10. Push notification code is correct but untestable on web (Platform.OS === 'web' guard). GitHub Actions: monthly_refresh.yml is correct, monthly-credit-refresh.yml (old) should be deleted."
+}
