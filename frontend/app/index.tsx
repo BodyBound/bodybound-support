@@ -230,6 +230,10 @@ export default function Index() {
   const [currentPath, setCurrentPath] = useState<string>(''); // Current drawing path
   const [currentPoints, setCurrentPoints] = useState<{x: number, y: number}[]>([]); // Points for smooth curve
   const [brushSize, setBrushSize] = useState(3); // Brush size in pixels
+  // Slider display states — update on every tick for smooth labels, commit state on release
+  const [brushSizeDisplay, setBrushSizeDisplay] = useState(3);
+  const [editOpacityDisplay, setEditOpacityDisplay] = useState(50);
+  const [lineWeightDisplay, setLineWeightDisplay] = useState(0);
   const [isEraser, setIsEraser] = useState(false); // Eraser mode
   const [enableFingerPainting, setEnableFingerPainting] = useState(false); // Like Procreate: OFF = pencil only
   const [editedStencil, setEditedStencil] = useState<string | null>(null); // Saved edited version
