@@ -84,8 +84,17 @@ const ONBOARDING_SLIDES = [
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function Index() {
-  // Welcome screen state - shows every time app opens
-  const [showWelcome, setShowWelcome] = useState(true);
+  // Auth & welcome screen state
+  const [isAuthChecking, setIsAuthChecking] = useState(true); // Check stored token on startup
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [availableCredits, setAvailableCredits] = useState<number>(0);
+  const [userTier, setUserTier] = useState<string | null>(null);
+  const [successfulGenerations, setSuccessfulGenerations] = useState(0);
   
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
