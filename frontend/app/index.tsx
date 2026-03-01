@@ -3896,6 +3896,10 @@ export default function Index() {
               setSessionToken(token);
               setShowAuth(false);
               refreshCredits(token);
+              // Link user to RevenueCat for purchase tracking
+              if (Platform.OS === 'ios' || Platform.OS === 'android') {
+                Purchases.logIn(user.user_id).catch(() => {});
+              }
             }}
           />
         </View>
