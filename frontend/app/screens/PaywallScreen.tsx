@@ -70,7 +70,8 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
         setSelectedPackage(offerings.current.availablePackages[1] || offerings.current.availablePackages[0]);
       }
     } catch (err) {
-      console.error('Failed to load offerings:', err);
+      // Expected in Expo Go — RevenueCat requires a custom dev build
+      console.log('[PaywallScreen] Offerings unavailable (Expo Go or SDK not configured):', err);
     } finally {
       setLoading(false);
     }
