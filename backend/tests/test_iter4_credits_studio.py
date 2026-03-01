@@ -424,23 +424,25 @@ class TestStudioTeamFullFlow:
         8. Cleanup
         """
         # Create admin user
-        admin_id = f"studio_admin_{uuid.uuid4().hex[:8]}"
+        admin_apple_id = f"studio_admin_{uuid.uuid4().hex[:8]}"
         admin_resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
             "identity_token": "mock",
-            "user_id": admin_id,
-            "email": f"{admin_id}@studio.test",
+            "user_id": admin_apple_id,
+            "email": f"{admin_apple_id}@studio.test",
             "full_name": "Studio Admin",
-            "device_id": f"device_{admin_id}"
+            "device_id": f"device_{admin_apple_id}"
         })
         assert admin_resp.status_code == 200
         admin_token = admin_resp.json()['session_token']
+        # IMPORTANT: Use the generated user_id from response, not the apple_user_id
+        admin_id = admin_resp.json()['user']['user_id']
         admin_headers = {"Authorization": f"Bearer {admin_token}", "Content-Type": "application/json"}
         
-        # Give admin 'the-shop' subscription via webhook
+        # Give admin 'the-shop' subscription via webhook using the actual user_id
         webhook_resp = api_client.post(f"{BASE_URL}/api/webhooks/revenuecat", json={
             "event": {
                 "type": "INITIAL_PURCHASE",
-                "app_user_id": admin_id,
+                "app_user_id": admin_id,  # Use actual user_id, not apple_user_id
                 "product_id": "bodybound_9999_1m_3d"  # the-shop = 1500 credits
             }
         })
@@ -488,16 +490,17 @@ class TestStudioTeamFullFlow:
         invite_code = invite_data['invite_code']
         
         # Step 5: Create member user and accept invite
-        member_id = f"studio_member_{uuid.uuid4().hex[:8]}"
+        member_apple_id = f"studio_member_{uuid.uuid4().hex[:8]}"
         member_resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
             "identity_token": "mock",
-            "user_id": member_id,
+            "user_id": member_apple_id,
             "email": member_email,
             "full_name": "Studio Member",
-            "device_id": f"device_{member_id}"
+            "device_id": f"device_{member_apple_id}"
         })
         assert member_resp.status_code == 200
         member_token = member_resp.json()['session_token']
+        member_id = member_resp.json()['user']['user_id']  # Use actual user_id
         member_headers = {"Authorization": f"Bearer {member_token}", "Content-Type": "application/json"}
         
         # Accept invite
@@ -558,23 +561,24 @@ class TestStudioTeamAdminCannotLeave:
     def test_admin_cannot_leave_own_team(self, api_client):
         """Admin should get 400 when trying to leave their own team"""
         # Create admin with the-shop subscription
-        admin_id = f"admin_leave_{uuid.uuid4().hex[:8]}"
+        admin_apple_id = f"admin_leave_{uuid.uuid4().hex[:8]}"
         admin_resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
             "identity_token": "mock",
-            "user_id": admin_id,
-            "email": f"{admin_id}@leave.test",
+            "user_id": admin_apple_id,
+            "email": f"{admin_apple_id}@leave.test",
             "full_name": "Admin Leave Test",
-            "device_id": f"device_{admin_id}"
+            "device_id": f"device_{admin_apple_id}"
         })
         assert admin_resp.status_code == 200
         admin_token = admin_resp.json()['session_token']
+        admin_id = admin_resp.json()['user']['user_id']  # Use actual user_id
         admin_headers = {"Authorization": f"Bearer {admin_token}", "Content-Type": "application/json"}
         
-        # Give the-shop subscription
+        # Give the-shop subscription using actual user_id
         api_client.post(f"{BASE_URL}/api/webhooks/revenuecat", json={
             "event": {
                 "type": "INITIAL_PURCHASE",
-                "app_user_id": admin_id,
+                "app_user_id": admin_id,  # Use actual user_id
                 "product_id": "bodybound_9999_1m_3d"
             }
         })
@@ -600,23 +604,24 @@ class TestStudioTeamAdminCannotRemoveSelf:
 
     def test_admin_cannot_remove_self(self, api_client):
         """Admin should get 400 when trying to remove themselves"""
-        admin_id = f"admin_self_{uuid.uuid4().hex[:8]}"
+        admin_apple_id = f"admin_self_{uuid.uuid4().hex[:8]}"
         admin_resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
             "identity_token": "mock",
-            "user_id": admin_id,
-            "email": f"{admin_id}@self.test",
+            "user_id": admin_apple_id,
+            "email": f"{admin_apple_id}@self.test",
             "full_name": "Admin Self Test",
-            "device_id": f"device_{admin_id}"
+            "device_id": f"device_{admin_apple_id}"
         })
         assert admin_resp.status_code == 200
         admin_token = admin_resp.json()['session_token']
+        admin_id = admin_resp.json()['user']['user_id']  # Use actual user_id
         admin_headers = {"Authorization": f"Bearer {admin_token}", "Content-Type": "application/json"}
         
-        # Give the-shop subscription
+        # Give the-shop subscription using actual user_id
         api_client.post(f"{BASE_URL}/api/webhooks/revenuecat", json={
             "event": {
                 "type": "INITIAL_PURCHASE",
-                "app_user_id": admin_id,
+                "app_user_id": admin_id,  # Use actual user_id
                 "product_id": "bodybound_9999_1m_3d"
             }
         })
