@@ -41,7 +41,7 @@ export interface AuthSession {
 }
 
 // Subscription & Credits
-export type SubscriptionTier = 'trial' | 'trial_expired' | 'walk-in' | 'booked-out' | 'the-shop' | 'hobbyist' | 'pro' | 'studio' | null;
+export type SubscriptionTier = 'trial' | 'trial_expired' | 'walk-in' | 'booked-out' | 'the-shop' | 'the-shop-member' | 'hobbyist' | 'pro' | 'studio' | null;
 
 export interface UserCredits {
   available_credits: number;
@@ -51,4 +51,30 @@ export interface UserCredits {
   trial_days_remaining: number | null;
   renewal_date: string | null;
   revenuecat_customer_id: string | null;
+  is_studio_team?: boolean;
+  studio_team_id?: string | null;
+}
+
+// Studio Team Types
+export interface StudioTeamMember {
+  user_id: string;
+  email: string | null;
+  name: string | null;
+  role: 'admin' | 'member';
+  joined_at: string;
+}
+
+export interface StudioTeam {
+  team_id: string;
+  admin_user_id: string;
+  members: StudioTeamMember[];
+  shared_credits: number;
+  max_members: number;
+  created_at: string;
+}
+
+export interface StudioInvite {
+  invite_code: string;
+  expires_at: string;
+  email: string;
 }
