@@ -2975,7 +2975,7 @@ async def verify_apple_token(identity_token: str, user_id: str) -> dict:
 
 @api_router.post("/auth/apple")
 async def apple_sign_in(request: AppleAuthRequest):
-    """Handle Apple Sign-In"""
+    """Handle Apple Sign-In with 3-day trial and anti-abuse protection"""
     verified = await verify_apple_token(request.identity_token, request.user_id)
     apple_user_id = verified['apple_user_id']
     email = verified.get('email') or request.email
@@ -2988,6 +2988,9 @@ async def apple_sign_in(request: AppleAuthRequest):
             update['email'] = email
         if request.full_name and not existing.get('name'):
             update['name'] = request.full_name
+        # Update device_id if provided (for tracking)
+        if request.device_id:
+            update['device_id'] = request.device_id
         await db.users.update_one({'user_id': user_id}, {'$set': update})
         user = {**existing, **update}
     else:
@@ -2995,21 +2998,19 @@ async def apple_sign_in(request: AppleAuthRequest):
         user = {
             'user_id': user_id, 'apple_user_id': apple_user_id, 'email': email,
             'name': request.full_name, 'picture': None,
+            'device_id': request.device_id,
             'created_at': datetime.now(timezone.utc).isoformat(),
             'last_login': datetime.now(timezone.utc).isoformat(),
         }
         await db.users.insert_one({**user})
-        # Anti-abuse trial check
-        anti_abuse_key = f'apple:{apple_user_id}:{email or ""}:{request.user_id}'
-        existing_trial = await db.subscriptions.find_one({'anti_abuse_key': anti_abuse_key})
-        trial_credits = 10 if not existing_trial else 0
-        await db.subscriptions.insert_one({
-            'user_id': user_id, 'tier': 'trial' if trial_credits > 0 else None,
-            'available_credits': trial_credits, 'is_trial': trial_credits > 0,
-            'renewal_date': None, 'revenuecat_customer_id': None,
-            'anti_abuse_key': anti_abuse_key,
-            'created_at': datetime.now(timezone.utc).isoformat(),
-        })
+        # Create trial subscription with anti-abuse protection
+        await create_trial_subscription(
+            user_id=user_id,
+            email=email,
+            device_id=request.device_id,
+            provider='apple',
+            provider_id=apple_user_id
+        )
 
     return {'user': user, 'session_token': create_session_token(user_id)}
 
