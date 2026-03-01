@@ -442,12 +442,12 @@ export default function Index() {
 
 
 
-  // Load photo library on mount (after welcome screen)
+  // Load photo library on mount (only when on main screen, not during auth flow)
   useEffect(() => {
-    if (!showWelcome) {
+    if (!showWelcome && !showAuth && !isAuthChecking) {
       loadPhotoLibrary();
     }
-  }, [showWelcome]);
+  }, [showWelcome, showAuth, isAuthChecking]);
 
   // Check if user has seen onboarding tutorial
   useEffect(() => {
