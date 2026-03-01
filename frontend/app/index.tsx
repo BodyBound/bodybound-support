@@ -451,10 +451,13 @@ export default function Index() {
         return;
       }
       
+      // Skip RevenueCat in Expo Go - it requires a custom dev build
+      if (isExpoGo) {
+        console.log('[RevenueCat] Skipped in Expo Go - use a development build for full functionality');
+        return;
+      }
+      
       try {
-        // Check if we're in Expo Go by checking if native modules are available
-        const isExpoGo = !Purchases.isConfigured;
-        
         if (Platform.OS === 'ios') {
           await Purchases.configure({ apiKey: 'appl_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
         } else if (Platform.OS === 'android') {
@@ -463,8 +466,7 @@ export default function Index() {
         console.log('[RevenueCat] Configured successfully');
       } catch (e: any) {
         // Expected failure in Expo Go — RevenueCat requires a custom dev build
-        // This error is normal and the app will work fine without RevenueCat in Expo Go
-        console.log('[RevenueCat] Configure skipped (Expo Go or unsupported)');
+        console.log('[RevenueCat] Configure failed:', e.message);
       }
     };
     
