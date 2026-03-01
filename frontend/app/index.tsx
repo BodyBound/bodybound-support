@@ -45,6 +45,51 @@ import { PaywallScreen } from './screens/PaywallScreen';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
+// ── Push Notification Helpers ───────────────────────────────────────────────
+// Show notifications only on real iOS/Android devices (not web/simulator)
+const setupNotifications = async () => {
+  if (Platform.OS === 'web') return;
+  try {
+    // Set how notifications appear while app is in foreground
+    await Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+    // Request permission (only prompts once; subsequent calls are silent)
+    if (Device.isDevice) {
+      const { status: existing } = await Notifications.getPermissionsAsync();
+      if (existing !== 'granted') {
+        await Notifications.requestPermissionsAsync();
+      }
+    }
+  } catch (e) {
+    console.log('[Notifications] Setup failed:', e);
+  }
+};
+
+const sendLowCreditsNotification = async (credits: number) => {
+  if (Platform.OS === 'web') return;
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') return;
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: 'Credits Running Low',
+        body: `Only ${credits} credit${credits === 1 ? '' : 's'} remaining — top up to keep generating stencils.`,
+        sound: true,
+        data: { action: 'upgrade' },
+      },
+      trigger: null, // fire immediately
+    });
+    console.log('[Notifications] Low credits notification sent:', credits);
+  } catch (e) {
+    console.log('[Notifications] Failed to send:', e);
+  }
+};
+
 // Animated SVG Path for zero-lag drawing - updates directly on UI thread via Reanimated
 const AnimatedSVGPath = Animated.createAnimatedComponent(Path);
 
