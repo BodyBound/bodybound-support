@@ -50,44 +50,20 @@ const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 // Check if running in Expo Go (where native modules like RevenueCat aren't available)
 const isExpoGo = Constants.appOwnership === 'expo';
 
-// Notifications module - loaded dynamically to avoid Expo Go crashes
-let Notifications: typeof import('expo-notifications') | null = null;
-
-// Initialize notifications module only if not in Expo Go
-const initNotifications = async () => {
-  if (isExpoGo || Platform.OS === 'web') return;
-  try {
-    Notifications = await import('expo-notifications');
-  } catch (e) {
-    console.log('[Notifications] Module load failed:', e);
-  }
-};
-
-// Call initialization (non-blocking)
-if (!isExpoGo && Platform.OS !== 'web') {
-  initNotifications();
-}
-
 // ── Push Notification Helpers ───────────────────────────────────────────────
-// Show notifications only on real iOS/Android devices (not web/simulator)
-// Skip entirely in Expo Go to avoid PushNotificationIOS errors
+// Push notifications are DISABLED in Expo Go to avoid PushNotificationIOS crashes
+// They will work in development builds and production
+
+// Stub functions that do nothing in Expo Go
 const setupNotifications = async () => {
   if (Platform.OS === 'web' || isExpoGo) {
-    console.log('[Notifications] Skipped - web or Expo Go');
+    console.log('[Notifications] Disabled - Expo Go or web');
     return;
   }
-  
-  // Ensure module is loaded
-  if (!Notifications) {
-    try {
-      Notifications = await import('expo-notifications');
-    } catch (e) {
-      console.log('[Notifications] Module load failed:', e);
-      return;
-    }
-  }
-  
+  // Only load and use expo-notifications in development/production builds
+  // This code path is never reached in Expo Go
   try {
+    const Notifications = require('expo-notifications');
     await Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
@@ -101,14 +77,16 @@ const setupNotifications = async () => {
         await Notifications.requestPermissionsAsync();
       }
     }
+    console.log('[Notifications] Setup complete');
   } catch (e) {
     console.log('[Notifications] Setup failed:', e);
   }
 };
 
 const sendLowCreditsNotification = async (credits: number) => {
-  if (Platform.OS === 'web' || isExpoGo || !Notifications) return;
+  if (Platform.OS === 'web' || isExpoGo) return;
   try {
+    const Notifications = require('expo-notifications');
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') return;
     await Notifications.scheduleNotificationAsync({
@@ -121,7 +99,7 @@ const sendLowCreditsNotification = async (credits: number) => {
       trigger: null,
     });
   } catch (e) {
-    console.log('[Notifications] Skipped:', e);
+    console.log('[Notifications] Send failed:', e);
   }
 };
 
