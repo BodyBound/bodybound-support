@@ -3099,7 +3099,344 @@ async def delete_account(request: FastAPIRequest):
     await db.users.delete_one({'user_id': user_id})
     await db.subscriptions.delete_many({'user_id': user_id})
     await db.stencils.delete_many({'user_id': user_id})
+    # Also remove from any studio teams
+    await db.studio_teams.update_many(
+        {'members.user_id': user_id},
+        {'$pull': {'members': {'user_id': user_id}}}
+    )
+    # Delete team if user was admin
+    await db.studio_teams.delete_many({'admin_user_id': user_id})
     return {'message': 'Account deleted successfully'}
+
+# ---- Studio Tier Team Management ----
+# The Shop ($99/mo) allows up to 5 team members sharing 1500 credits
+
+STUDIO_MAX_MEMBERS = 5
+STUDIO_CREDITS = 1500
+
+class StudioInviteRequest(BaseModel):
+    email: str = Field(..., description="Email of user to invite")
+
+class StudioInviteResponse(BaseModel):
+    invite_code: str
+    expires_at: str
+    email: str
+
+class StudioAcceptInviteRequest(BaseModel):
+    invite_code: str
+
+class StudioTeamMember(BaseModel):
+    user_id: str
+    email: Optional[str]
+    name: Optional[str]
+    role: str  # 'admin' or 'member'
+    joined_at: str
+
+class StudioTeamResponse(BaseModel):
+    team_id: str
+    admin_user_id: str
+    members: List[StudioTeamMember]
+    shared_credits: int
+    max_members: int
+    created_at: str
+
+async def get_user_studio_team(user_id: str) -> Optional[dict]:
+    """Get the studio team for a user (either as admin or member)."""
+    # Check if user is admin
+    team = await db.studio_teams.find_one({'admin_user_id': user_id}, {'_id': 0})
+    if team:
+        return team
+    # Check if user is a member
+    team = await db.studio_teams.find_one({'members.user_id': user_id}, {'_id': 0})
+    return team
+
+async def deduct_studio_credit(team_id: str) -> dict:
+    """Atomically deduct 1 credit from studio team shared pool."""
+    result = await db.studio_teams.find_one_and_update(
+        {'team_id': team_id, 'shared_credits': {'$gt': 0}},
+        {'$inc': {'shared_credits': -1}},
+        return_document=True,
+        projection={'_id': 0}
+    )
+    return result
+
+@api_router.get("/studio/team")
+async def get_studio_team(request: FastAPIRequest):
+    """Get current user's studio team info."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    
+    team = await get_user_studio_team(user['user_id'])
+    if not team:
+        raise HTTPException(status_code=404, detail='Not part of a studio team')
+    
+    # Enrich member info with names
+    enriched_members = []
+    for member in team.get('members', []):
+        user_info = await db.users.find_one({'user_id': member['user_id']}, {'_id': 0})
+        enriched_members.append({
+            'user_id': member['user_id'],
+            'email': user_info.get('email') if user_info else member.get('email'),
+            'name': user_info.get('name') if user_info else None,
+            'role': member.get('role', 'member'),
+            'joined_at': member.get('joined_at', team.get('created_at')),
+        })
+    
+    return {
+        'team_id': team['team_id'],
+        'admin_user_id': team['admin_user_id'],
+        'members': enriched_members,
+        'shared_credits': team.get('shared_credits', 0),
+        'max_members': STUDIO_MAX_MEMBERS,
+        'created_at': team.get('created_at'),
+    }
+
+@api_router.post("/studio/create")
+async def create_studio_team(request: FastAPIRequest):
+    """Create a new studio team (user must have 'the-shop' subscription)."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    
+    # Verify user has The Shop subscription
+    sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+    if not sub or sub.get('tier') != 'the-shop':
+        raise HTTPException(status_code=403, detail='The Shop subscription required to create a studio team')
+    
+    # Check if user already has a team
+    existing_team = await get_user_studio_team(user_id)
+    if existing_team:
+        raise HTTPException(status_code=400, detail='Already part of a studio team')
+    
+    now = datetime.now(timezone.utc).isoformat()
+    team_id = f'studio_{uuid.uuid4().hex[:12]}'
+    
+    team = {
+        'team_id': team_id,
+        'admin_user_id': user_id,
+        'members': [{
+            'user_id': user_id,
+            'email': user.get('email'),
+            'role': 'admin',
+            'joined_at': now,
+        }],
+        'shared_credits': STUDIO_CREDITS,
+        'created_at': now,
+        'pending_invites': [],
+    }
+    
+    await db.studio_teams.insert_one(team)
+    
+    # Update subscription to link to team
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {'$set': {'studio_team_id': team_id}}
+    )
+    
+    logger.info(f'[Studio] Team {team_id} created by user {user_id}')
+    
+    return {
+        'team_id': team_id,
+        'shared_credits': STUDIO_CREDITS,
+        'message': 'Studio team created successfully',
+    }
+
+@api_router.post("/studio/invite", response_model=StudioInviteResponse)
+async def invite_to_studio(request: FastAPIRequest, invite_request: StudioInviteRequest):
+    """Invite a user to join your studio team (admin only)."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    
+    # Get team and verify admin
+    team = await db.studio_teams.find_one({'admin_user_id': user_id}, {'_id': 0})
+    if not team:
+        raise HTTPException(status_code=403, detail='Only team admin can invite members')
+    
+    # Check member limit
+    if len(team.get('members', [])) >= STUDIO_MAX_MEMBERS:
+        raise HTTPException(status_code=400, detail=f'Team already has maximum {STUDIO_MAX_MEMBERS} members')
+    
+    # Check if email already a member
+    invited_email = invite_request.email.lower()
+    for member in team.get('members', []):
+        member_user = await db.users.find_one({'user_id': member['user_id']}, {'_id': 0})
+        if member_user and member_user.get('email', '').lower() == invited_email:
+            raise HTTPException(status_code=400, detail='User is already a team member')
+    
+    # Generate invite code
+    invite_code = f'inv_{uuid.uuid4().hex[:16]}'
+    expires_at = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+    
+    # Store invite
+    invite = {
+        'code': invite_code,
+        'email': invited_email,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+        'expires_at': expires_at,
+    }
+    
+    await db.studio_teams.update_one(
+        {'team_id': team['team_id']},
+        {'$push': {'pending_invites': invite}}
+    )
+    
+    logger.info(f'[Studio] Invite {invite_code} created for {invited_email} to team {team["team_id"]}')
+    
+    return StudioInviteResponse(
+        invite_code=invite_code,
+        expires_at=expires_at,
+        email=invited_email,
+    )
+
+@api_router.post("/studio/accept-invite")
+async def accept_studio_invite(request: FastAPIRequest, accept_request: StudioAcceptInviteRequest):
+    """Accept a studio team invitation."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    user_email = (user.get('email') or '').lower()
+    
+    # Check if user already in a team
+    existing_team = await get_user_studio_team(user_id)
+    if existing_team:
+        raise HTTPException(status_code=400, detail='Already part of a studio team')
+    
+    # Find team with this invite
+    team = await db.studio_teams.find_one(
+        {'pending_invites.code': accept_request.invite_code},
+        {'_id': 0}
+    )
+    
+    if not team:
+        raise HTTPException(status_code=404, detail='Invalid invite code')
+    
+    # Find the specific invite
+    invite = None
+    for inv in team.get('pending_invites', []):
+        if inv['code'] == accept_request.invite_code:
+            invite = inv
+            break
+    
+    if not invite:
+        raise HTTPException(status_code=404, detail='Invite not found')
+    
+    # Check if expired
+    expires_at = datetime.fromisoformat(invite['expires_at'].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) > expires_at:
+        raise HTTPException(status_code=400, detail='Invite has expired')
+    
+    # Verify email matches (optional but recommended)
+    if user_email and invite['email'] and user_email != invite['email']:
+        logger.warning(f'[Studio] Email mismatch: invite for {invite["email"]}, user has {user_email}')
+        # Allow anyway for flexibility, but log it
+    
+    # Check member limit again
+    if len(team.get('members', [])) >= STUDIO_MAX_MEMBERS:
+        raise HTTPException(status_code=400, detail='Team is now full')
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Add user to team and remove invite
+    await db.studio_teams.update_one(
+        {'team_id': team['team_id']},
+        {
+            '$push': {'members': {
+                'user_id': user_id,
+                'email': user_email,
+                'role': 'member',
+                'joined_at': now,
+            }},
+            '$pull': {'pending_invites': {'code': accept_request.invite_code}},
+        }
+    )
+    
+    # Link user's subscription to team
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {'$set': {'studio_team_id': team['team_id'], 'tier': 'the-shop-member'}}
+    )
+    
+    logger.info(f'[Studio] User {user_id} joined team {team["team_id"]}')
+    
+    return {
+        'message': 'Successfully joined studio team',
+        'team_id': team['team_id'],
+    }
+
+@api_router.delete("/studio/member/{member_user_id}")
+async def remove_studio_member(request: FastAPIRequest, member_user_id: str):
+    """Remove a member from the studio team (admin only)."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    
+    # Get team and verify admin
+    team = await db.studio_teams.find_one({'admin_user_id': user_id}, {'_id': 0})
+    if not team:
+        raise HTTPException(status_code=403, detail='Only team admin can remove members')
+    
+    # Can't remove yourself as admin
+    if member_user_id == user_id:
+        raise HTTPException(status_code=400, detail='Admin cannot remove themselves. Transfer ownership first.')
+    
+    # Check if member exists in team
+    member_found = False
+    for member in team.get('members', []):
+        if member['user_id'] == member_user_id:
+            member_found = True
+            break
+    
+    if not member_found:
+        raise HTTPException(status_code=404, detail='Member not found in team')
+    
+    # Remove member
+    await db.studio_teams.update_one(
+        {'team_id': team['team_id']},
+        {'$pull': {'members': {'user_id': member_user_id}}}
+    )
+    
+    # Update removed member's subscription
+    await db.subscriptions.update_one(
+        {'user_id': member_user_id},
+        {'$unset': {'studio_team_id': ''}, '$set': {'tier': None, 'available_credits': 0}}
+    )
+    
+    logger.info(f'[Studio] User {member_user_id} removed from team {team["team_id"]} by admin {user_id}')
+    
+    return {'message': 'Member removed successfully'}
+
+@api_router.post("/studio/leave")
+async def leave_studio_team(request: FastAPIRequest):
+    """Leave a studio team (non-admin members only)."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    
+    # Get user's team
+    team = await get_user_studio_team(user_id)
+    if not team:
+        raise HTTPException(status_code=404, detail='Not part of a studio team')
+    
+    # Admin cannot leave - must transfer or delete
+    if team['admin_user_id'] == user_id:
+        raise HTTPException(status_code=400, detail='Admin cannot leave. Transfer ownership or delete the team.')
+    
+    # Remove from team
+    await db.studio_teams.update_one(
+        {'team_id': team['team_id']},
+        {'$pull': {'members': {'user_id': user_id}}}
+    )
+    
+    # Update subscription
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {'$unset': {'studio_team_id': ''}, '$set': {'tier': None, 'available_credits': 0}}
+    )
+    
+    logger.info(f'[Studio] User {user_id} left team {team["team_id"]}')
+    
+    return {'message': 'Successfully left the studio team'}
 
 # ---- RevenueCat Webhook ----
 REVENUECAT_WEBHOOK_AUTH = os.environ.get('REVENUECAT_WEBHOOK_AUTH', '')
