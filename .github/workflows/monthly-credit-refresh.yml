@@ -1,0 +1,32 @@
+name: Monthly Credit Refresh
+
+on:
+  schedule:
+    # Runs at 00:00 UTC on the 1st of every month
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+    # Allows manual trigger from the GitHub Actions UI
+
+jobs:
+  refresh-credits:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger credit refresh
+        run: |
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "${{ secrets.BACKEND_URL }}/api/cron/refresh-credits" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -1)
+
+          echo "Response: $BODY"
+          echo "HTTP Status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "ERROR: Credit refresh failed with status $HTTP_CODE"
+            exit 1
+          fi
+
+          echo "SUCCESS: Credit refresh completed"
