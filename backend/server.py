@@ -2769,16 +2769,24 @@ class AppleAuthRequest(BaseModel):
     user_id: str
     email: Optional[str] = None
     full_name: Optional[str] = None
+    device_id: Optional[str] = None  # Device ID for anti-abuse
 
 class GoogleSessionRequest(BaseModel):
     session_id: str
+    device_id: Optional[str] = None  # Device ID for anti-abuse
 
 class UserCreditsResponse(BaseModel):
     available_credits: int
     tier: Optional[str] = None
     is_trial: bool = False
+    trial_expires_at: Optional[str] = None  # ISO timestamp when trial expires
+    trial_days_remaining: Optional[int] = None  # Days remaining in trial
     renewal_date: Optional[str] = None
     revenuecat_customer_id: Optional[str] = None
+
+# ---- Trial Constants ----
+TRIAL_DURATION_DAYS = 3
+TRIAL_CREDITS = 10
 
 # ---- JWT Helpers ----
 def create_session_token(user_id: str) -> str:
