@@ -468,7 +468,7 @@ export default function Index() {
             return;
           }
           // Token invalid - clear it
-          await SecureStore.deleteItemAsync('session_token');
+          await deleteToken();
         }
       } catch (err) {
         console.log('[Auth] Startup check failed:', err);
