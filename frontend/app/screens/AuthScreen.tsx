@@ -106,14 +106,19 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
     // Google Sign-In via Emergent Auth OAuth flow
     setGoogleLoading(true);
     try {
-      // On web: use the actual browser URL so maybeCompleteAuthSession() URL check passes.
-      // On native: use the app deep-link scheme.
-      const redirectUri =
-        Platform.OS === 'web'
-          ? (typeof window !== 'undefined'
-              ? `${window.location.origin}/auth`
-              : makeRedirectUri({ path: 'auth' }))
-          : makeRedirectUri({ scheme: 'body-bound-stencil', path: 'auth' });
+      // Build redirect URI manually to avoid expo-auth-session dependency
+      // On web: use the browser URL
+      // On native: use the app's deep link scheme
+      let redirectUri: string;
+      
+      if (Platform.OS === 'web') {
+        redirectUri = typeof window !== 'undefined'
+          ? `${window.location.origin}/auth`
+          : 'https://bodybound-launch.preview.emergentagent.com/auth';
+      } else {
+        // Use expo-linking to create the redirect URI for native
+        redirectUri = Linking.createURL('auth', { scheme: 'body-bound-stencil' });
+      }
 
       const authUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUri)}`;
 
