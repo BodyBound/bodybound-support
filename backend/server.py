@@ -2861,6 +2861,93 @@ async def get_user_credits(user_id: str) -> dict:
 # ---- Apple Sign-In ----
 APPLE_KEYS_URL = 'https://appleid.apple.com/auth/keys'
 
+async def check_trial_abuse(email: Optional[str], device_id: Optional[str], provider: str, provider_id: str) -> tuple[bool, str]:
+    """Check if this email/device combination has already used a trial.
+    
+    Anti-abuse strategy:
+    1. Check by email (prevents same email getting multiple trials)
+    2. Check by device_id (prevents same device getting trials with different emails)
+    3. Check by provider_id (prevents same account getting trials)
+    
+    Returns: (is_abuse, reason)
+    """
+    # Check by email
+    if email:
+        email_abuse = await db.subscriptions.find_one({
+            'anti_abuse_email': email.lower(),
+            'is_trial': True
+        })
+        if email_abuse:
+            logger.info(f'[AntiAbuse] Email {email} already used trial')
+            return True, 'email_used'
+    
+    # Check by device_id
+    if device_id:
+        device_abuse = await db.subscriptions.find_one({
+            'anti_abuse_device_id': device_id,
+            'is_trial': True
+        })
+        if device_abuse:
+            logger.info(f'[AntiAbuse] Device {device_id[:8]}... already used trial')
+            return True, 'device_used'
+    
+    # Check by provider_id (legacy check)
+    provider_key = f'{provider}:{provider_id}'
+    provider_abuse = await db.subscriptions.find_one({
+        'anti_abuse_provider': provider_key,
+        'is_trial': True
+    })
+    if provider_abuse:
+        logger.info(f'[AntiAbuse] Provider {provider_key} already used trial')
+        return True, 'provider_used'
+    
+    return False, ''
+
+async def create_trial_subscription(user_id: str, email: Optional[str], device_id: Optional[str], provider: str, provider_id: str) -> dict:
+    """Create a new trial subscription with proper anti-abuse tracking."""
+    is_abuse, abuse_reason = await check_trial_abuse(email, device_id, provider, provider_id)
+    
+    now = datetime.now(timezone.utc)
+    trial_expires_at = (now + timedelta(days=TRIAL_DURATION_DAYS)).isoformat()
+    
+    if is_abuse:
+        # User has already used a trial - create subscription with 0 credits
+        subscription = {
+            'user_id': user_id,
+            'tier': None,
+            'available_credits': 0,
+            'is_trial': False,
+            'trial_expires_at': None,
+            'renewal_date': None,
+            'revenuecat_customer_id': None,
+            'anti_abuse_email': email.lower() if email else None,
+            'anti_abuse_device_id': device_id,
+            'anti_abuse_provider': f'{provider}:{provider_id}',
+            'anti_abuse_reason': abuse_reason,
+            'created_at': now.isoformat(),
+        }
+        logger.info(f'[Trial] User {user_id} denied trial: {abuse_reason}')
+    else:
+        # Grant trial
+        subscription = {
+            'user_id': user_id,
+            'tier': 'trial',
+            'available_credits': TRIAL_CREDITS,
+            'is_trial': True,
+            'trial_start_date': now.isoformat(),
+            'trial_expires_at': trial_expires_at,
+            'renewal_date': None,
+            'revenuecat_customer_id': None,
+            'anti_abuse_email': email.lower() if email else None,
+            'anti_abuse_device_id': device_id,
+            'anti_abuse_provider': f'{provider}:{provider_id}',
+            'created_at': now.isoformat(),
+        }
+        logger.info(f'[Trial] User {user_id} granted {TRIAL_CREDITS} credits, expires {trial_expires_at}')
+    
+    await db.subscriptions.insert_one(subscription)
+    return subscription
+
 async def verify_apple_token(identity_token: str, user_id: str) -> dict:
     """Verify Apple identity token - falls back to trusting client in dev"""
     try:
