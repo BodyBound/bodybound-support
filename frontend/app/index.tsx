@@ -411,6 +411,10 @@ export default function Index() {
             setSessionToken(token);
             setAvailableCredits(data.credits?.available_credits ?? 0);
             setUserTier(data.credits?.tier ?? null);
+            // Link this user to RevenueCat so purchases are tracked per-user
+            if (Platform.OS === 'ios' || Platform.OS === 'android') {
+              try { await Purchases.logIn(data.user.user_id); } catch (_) {}
+            }
             setIsAuthChecking(false);
             return;
           }
