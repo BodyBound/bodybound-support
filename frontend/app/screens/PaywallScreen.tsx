@@ -14,7 +14,7 @@ import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchase
 
 const TIER_INFO = {
   hobbyist: {
-    label: 'Hobbyist',
+    label: 'The Walk-In',
     price: '$14.99/mo',
     credits: 125,
     description: 'Perfect for individual tattoo artists',
@@ -22,20 +22,20 @@ const TIER_INFO = {
     color: '#C9A227',
   },
   pro: {
-    label: 'Pro',
+    label: 'Booked Out',
     price: '$29.99/mo',
     credits: 500,
     description: 'For active studios and professionals',
-    features: ['500 credits/month', 'All Hobbyist features', 'Priority processing', 'Batch export'],
+    features: ['500 credits/month', 'All The Walk-In features', 'Priority processing', 'Batch export'],
     color: '#E8D5A3',
     popular: true,
   },
   studio: {
-    label: 'Studio',
+    label: 'The Shop',
     price: '$99.00/mo',
     credits: 1500,
     description: 'Shared credits for teams up to 5',
-    features: ['1,500 shared credits', 'Up to 5 team members', 'Admin dashboard', 'All Pro features'],
+    features: ['1,500 shared credits', 'Up to 5 team members', 'Admin dashboard', 'All Booked Out features'],
     color: '#FFFFFF',
   },
 };
