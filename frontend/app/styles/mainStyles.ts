@@ -2833,4 +2833,28 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
   },
+  // Credits header badge
+  creditsHeaderBadge: {
+    backgroundColor: 'rgba(201,162,39,0.15)',
+    borderWidth: 1,
+    borderColor: '#C9A227',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignItems: 'center',
+    marginRight: 4,
+  },
+  creditsHeaderText: {
+    color: '#C9A227',
+    fontSize: 15,
+    fontWeight: '800',
+    lineHeight: 18,
+  },
+  creditsHeaderLabel: {
+    color: '#C9A227',
+    fontSize: 8,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
 });
