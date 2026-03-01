@@ -3876,51 +3876,59 @@ export default function Index() {
         </View>
       )}
 
-      {/* Welcome Screen - Full-screen Modal overlay */}
-      <Modal visible={showWelcome} animationType="fade" transparent={false} statusBarTranslucent>
-        <WelcomeScreen onGetStarted={() => { setShowWelcome(false); setShowAuth(true); }} />
-      </Modal>
+      {/* Welcome Screen - Full-screen overlay */}
+      {showWelcome && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
+          <WelcomeScreen onGetStarted={() => { setShowWelcome(false); setShowAuth(true); }} />
+        </View>
+      )}
 
-      {/* Auth Screen - Full-screen Modal overlay */}
-      <Modal visible={showAuth} animationType="slide" transparent={false} statusBarTranslucent>
-        <AuthScreen
-          onAuthSuccess={(user, token) => {
-            setCurrentUser(user);
-            setSessionToken(token);
-            setShowAuth(false);
-            refreshCredits(token);
-          }}
-        />
-      </Modal>
+      {/* Auth Screen - Full-screen overlay */}
+      {showAuth && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998 }}>
+          <AuthScreen
+            onAuthSuccess={(user, token) => {
+              setCurrentUser(user);
+              setSessionToken(token);
+              setShowAuth(false);
+              refreshCredits(token);
+            }}
+          />
+        </View>
+      )}
 
-      {/* Settings Screen - Full-screen Modal overlay */}
-      <Modal visible={showSettings} animationType="slide" transparent={false} statusBarTranslucent>
-        <SettingsScreen
-          user={currentUser}
-          credits={currentUser ? { available_credits: availableCredits, tier: userTier as any, is_trial: false, renewal_date: null, revenuecat_customer_id: null } : null}
-          onSignOut={() => {
-            setCurrentUser(null);
-            setSessionToken(null);
-            setAvailableCredits(0);
-            setUserTier(null);
-            setShowSettings(false);
-            setShowWelcome(true);
-          }}
-          onClose={() => setShowSettings(false)}
-          onManageSubscription={() => { setShowSettings(false); setShowPaywall(true); }}
-        />
-      </Modal>
+      {/* Settings Screen - Full-screen overlay */}
+      {showSettings && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998 }}>
+          <SettingsScreen
+            user={currentUser}
+            credits={currentUser ? { available_credits: availableCredits, tier: userTier as any, is_trial: false, renewal_date: null, revenuecat_customer_id: null } : null}
+            onSignOut={() => {
+              setCurrentUser(null);
+              setSessionToken(null);
+              setAvailableCredits(0);
+              setUserTier(null);
+              setShowSettings(false);
+              setShowWelcome(true);
+            }}
+            onClose={() => setShowSettings(false)}
+            onManageSubscription={() => { setShowSettings(false); setShowPaywall(true); }}
+          />
+        </View>
+      )}
 
-      {/* Paywall Screen - Full-screen Modal overlay */}
-      <Modal visible={showPaywall} animationType="slide" transparent={false} statusBarTranslucent>
-        <PaywallScreen
-          onPurchaseSuccess={() => {
-            setShowPaywall(false);
-            if (sessionToken) refreshCredits(sessionToken);
-          }}
-          onDismiss={() => setShowPaywall(false)}
-        />
-      </Modal>
+      {/* Paywall Screen - Full-screen overlay */}
+      {showPaywall && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998 }}>
+          <PaywallScreen
+            onPurchaseSuccess={() => {
+              setShowPaywall(false);
+              if (sessionToken) refreshCredits(sessionToken);
+            }}
+            onDismiss={() => setShowPaywall(false)}
+          />
+        </View>
+      )}
 
     </SafeAreaView>
   );
