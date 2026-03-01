@@ -62,8 +62,7 @@ export default function AuthCallback() {
 
       const data = await response.json();
       // Store token — SecureStore uses localStorage on web
-      await SecureStore.setItemAsync('session_token', data.session_token);
-
+      await storeToken(data.session_token);
       // Redirect to main app — index.tsx will pick up the stored token
       router.replace('/');
     } catch (err: any) {
