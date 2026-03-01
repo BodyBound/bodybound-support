@@ -83,30 +83,6 @@ const ONBOARDING_SLIDES = [
 ];
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-interface StencilSettings {
-  clarity: number;
-  line_weight: number;
-  noise_reduction: number;
-  invert: boolean;
-}
-
-interface SavedStencil {
-  id: string;
-  original_image: string;
-  stencil_image: string;
-  settings: StencilSettings;
-  created_at: string;
-  name: string | null;
-}
-
-// Lightweight interface for gallery list (thumbnails only)
-interface StencilListItem {
-  id: string;
-  stencil_thumbnail: string | null;
-  created_at: string;
-  name: string | null;
-}
-
 export default function Index() {
   // Welcome screen state - shows every time app opens
   const [showWelcome, setShowWelcome] = useState(true);
