@@ -204,6 +204,19 @@ export function SettingsScreen({
               <Text style={styles.actionBtnText}>Manage Subscription</Text>
             </TouchableOpacity>
 
+            {/* Manage Team button - only for The Shop subscribers */}
+            {isShopTier && onManageTeam && (
+              <TouchableOpacity
+                testID="manage-team-btn"
+                style={[styles.actionBtn, styles.teamBtn]}
+                onPress={onManageTeam}
+              >
+                <Text style={[styles.actionBtnText, { color: '#C9A227' }]}>
+                  👥 Manage Studio Team
+                </Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
               testID="restore-purchases-btn"
               style={styles.actionBtn}
