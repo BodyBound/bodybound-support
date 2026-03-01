@@ -3079,6 +3079,17 @@ export default function Index() {
           </View>
         </View>
         <View style={styles.headerRight}>
+          {/* Credits display */}
+          {currentUser && (
+            <TouchableOpacity
+              data-testid="credits-display-btn"
+              style={styles.creditsHeaderBadge}
+              onPress={() => setShowSettings(true)}
+            >
+              <Text style={styles.creditsHeaderText} data-testid="header-credits-count">{availableCredits}</Text>
+              <Text style={styles.creditsHeaderLabel}>credits</Text>
+            </TouchableOpacity>
+          )}
           {/* Action icons - always visible */}
           <TouchableOpacity
             style={styles.headerIconButton}
@@ -3098,12 +3109,22 @@ export default function Index() {
           >
             <Text style={styles.headerIconText}>💾</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.helpButton}
-            onPress={showOnboardingTutorial}
-          >
-            <Text style={styles.helpButtonText}>?</Text>
-          </TouchableOpacity>
+          {currentUser ? (
+            <TouchableOpacity
+              data-testid="settings-btn"
+              style={styles.helpButton}
+              onPress={() => setShowSettings(true)}
+            >
+              <Text style={styles.helpButtonText}>⚙</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.helpButton}
+              onPress={showOnboardingTutorial}
+            >
+              <Text style={styles.helpButtonText}>?</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
