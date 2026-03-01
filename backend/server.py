@@ -3016,7 +3016,7 @@ async def apple_sign_in(request: AppleAuthRequest):
 
 @api_router.post("/auth/google-session")
 async def google_session_exchange(request: GoogleSessionRequest):
-    """Exchange Emergent Auth session_id for user data"""
+    """Exchange Emergent Auth session_id for user data with 3-day trial and anti-abuse"""
     try:
         async with httpx.AsyncClient() as c:
             resp = await c.get(
@@ -3037,29 +3037,33 @@ async def google_session_exchange(request: GoogleSessionRequest):
     )
     if existing:
         user_id = existing['user_id']
-        await db.users.update_one({'user_id': user_id}, {
-            '$set': {'google_user_id': google_user_id, 'last_login': datetime.now(timezone.utc).isoformat()}
-        })
-        user = {**existing, 'google_user_id': google_user_id}
+        update = {
+            'google_user_id': google_user_id,
+            'last_login': datetime.now(timezone.utc).isoformat()
+        }
+        # Update device_id if provided
+        if request.device_id:
+            update['device_id'] = request.device_id
+        await db.users.update_one({'user_id': user_id}, {'$set': update})
+        user = {**existing, **update}
     else:
         user_id = f'user_{uuid.uuid4().hex[:12]}'
         user = {
             'user_id': user_id, 'google_user_id': google_user_id, 'apple_user_id': None,
             'email': email, 'name': google_data.get('name'), 'picture': google_data.get('picture'),
+            'device_id': request.device_id,
             'created_at': datetime.now(timezone.utc).isoformat(),
             'last_login': datetime.now(timezone.utc).isoformat(),
         }
         await db.users.insert_one({**user})
-        anti_abuse_key = f'google:{google_user_id}:{email or ""}'
-        existing_trial = await db.subscriptions.find_one({'anti_abuse_key': anti_abuse_key})
-        trial_credits = 10 if not existing_trial else 0
-        await db.subscriptions.insert_one({
-            'user_id': user_id, 'tier': 'trial' if trial_credits > 0 else None,
-            'available_credits': trial_credits, 'is_trial': trial_credits > 0,
-            'renewal_date': None, 'revenuecat_customer_id': None,
-            'anti_abuse_key': anti_abuse_key,
-            'created_at': datetime.now(timezone.utc).isoformat(),
-        })
+        # Create trial subscription with anti-abuse protection
+        await create_trial_subscription(
+            user_id=user_id,
+            email=email,
+            device_id=request.device_id,
+            provider='google',
+            provider_id=google_user_id
+        )
 
     return {'user': user, 'session_token': create_session_token(user_id)}
 
