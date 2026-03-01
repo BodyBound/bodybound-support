@@ -2999,7 +2999,7 @@ async def revenuecat_webhook(request: FastAPIRequest):
                 'renewal_date': datetime.now(timezone.utc).isoformat(),
                 'last_event': event_type,
             }},
-            upsert=False
+            upsert=True
         )
     return {'status': 'ok'}
 

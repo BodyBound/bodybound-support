@@ -114,7 +114,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           {/* Header */}
           {onDismiss && (
-            <TouchableOpacity style={styles.closeBtn} onPress={onDismiss} data-testid="paywall-close-btn">
+            <TouchableOpacity style={styles.closeBtn} onPress={onDismiss} testID="paywall-close-btn">
               <Text style={styles.closeBtnText}>✕</Text>
             </TouchableOpacity>
           )}
@@ -143,7 +143,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
                 return (
                   <TouchableOpacity
                     key={key}
-                    data-testid={`plan-${key}-btn`}
+                    testID={`plan-${key}-btn`}
                     style={[styles.planCard, isSelected && styles.planCardSelected]}
                     onPress={() => pkg && setSelectedPackage(pkg)}
                     activeOpacity={0.85}
@@ -183,7 +183,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
 
           {/* CTA */}
           <TouchableOpacity
-            data-testid="subscribe-btn"
+            testID="subscribe-btn"
             style={[styles.subscribeBtn, (purchasing || !selectedPackage) && styles.subscribeBtnDisabled]}
             onPress={handlePurchase}
             disabled={purchasing || !selectedPackage}
@@ -200,7 +200,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
 
           {/* Restore */}
           <TouchableOpacity
-            data-testid="restore-purchases-btn"
+            testID="restore-purchases-btn"
             style={styles.restoreBtn}
             onPress={handleRestore}
             disabled={restoring}

@@ -43,7 +43,7 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
 
           {/* Get Started Button - right after disclaimer */}
           <TouchableOpacity
-            data-testid="welcome-get-started-btn"
+            testID="welcome-get-started-btn"
             style={styles.welcomeButtonTop}
             onPress={onGetStarted}
             activeOpacity={0.9}

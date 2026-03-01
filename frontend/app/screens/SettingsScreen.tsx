@@ -116,7 +116,7 @@ export function SettingsScreen({
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Settings</Text>
-          <TouchableOpacity data-testid="settings-close-btn" onPress={onClose} style={styles.closeBtn}>
+          <TouchableOpacity testID="settings-close-btn" onPress={onClose} style={styles.closeBtn}>
             <Text style={styles.closeBtnText}>✕</Text>
           </TouchableOpacity>
         </View>
@@ -145,7 +145,7 @@ export function SettingsScreen({
             <View style={styles.creditsCard}>
               <View style={styles.creditsRow}>
                 <Text style={styles.creditsLabel}>Credits Remaining</Text>
-                <Text style={styles.creditsValue} data-testid="credits-display">
+                <Text style={styles.creditsValue} testID="credits-display">
                   {credits?.available_credits ?? 0}
                 </Text>
               </View>
@@ -168,7 +168,7 @@ export function SettingsScreen({
             </View>
 
             <TouchableOpacity
-              data-testid="manage-subscription-btn"
+              testID="manage-subscription-btn"
               style={styles.actionBtn}
               onPress={onManageSubscription}
             >
@@ -176,7 +176,7 @@ export function SettingsScreen({
             </TouchableOpacity>
 
             <TouchableOpacity
-              data-testid="restore-purchases-btn"
+              testID="restore-purchases-btn"
               style={styles.actionBtn}
               onPress={handleRestorePurchases}
               disabled={restoringPurchases}
@@ -192,7 +192,7 @@ export function SettingsScreen({
           {/* Sign Out */}
           <View style={styles.section}>
             <TouchableOpacity
-              data-testid="sign-out-btn"
+              testID="sign-out-btn"
               style={styles.actionBtn}
               onPress={handleSignOut}
             >
@@ -204,7 +204,7 @@ export function SettingsScreen({
           <View style={[styles.section, styles.dangerSection]}>
             <Text style={[styles.sectionTitle, { color: '#FF4444' }]}>DANGER ZONE</Text>
             <TouchableOpacity
-              data-testid="delete-account-btn"
+              testID="delete-account-btn"
               style={styles.deleteBtn}
               onPress={handleDeleteAccount}
               disabled={deletingAccount}

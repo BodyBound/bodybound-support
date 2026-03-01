@@ -164,7 +164,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
           {/* Google Sign-In */}
           <TouchableOpacity
-            data-testid="google-signin-btn"
+            testID="google-signin-btn"
             style={styles.googleButton}
             onPress={handleGoogleSignIn}
             disabled={googleLoading}
