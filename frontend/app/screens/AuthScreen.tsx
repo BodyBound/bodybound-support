@@ -130,11 +130,14 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
         if (!sessionId) throw new Error('No session ID received');
 
-        // Exchange session_id for user data via backend
+        // Exchange session_id for user data via backend with device_id
         const response = await fetch(`${API_URL}/api/auth/google-session`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ session_id: sessionId }),
+          body: JSON.stringify({ 
+            session_id: sessionId,
+            device_id: deviceId,
+          }),
         });
 
         if (!response.ok) {
