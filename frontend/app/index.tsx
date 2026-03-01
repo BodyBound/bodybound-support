@@ -3024,6 +3024,7 @@ export default function Index() {
   }
 
   // Auth screen
+  console.log('[DEBUG] showAuth:', showAuth, 'showWelcome:', showWelcome, 'isAuthChecking:', isAuthChecking);
   if (showAuth) {
     return (
       <AuthScreen
