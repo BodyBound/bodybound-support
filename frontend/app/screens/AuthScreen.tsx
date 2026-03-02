@@ -18,8 +18,8 @@ import * as Linking from 'expo-linking';
 import { User } from '../types';
 import { storeToken } from '../../utils/tokenStore';
 
-// API URL - use environment variable with fallback for builds where env isn't set
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://bodybound-launch.preview.emergentagent.com';
+// API URL - must be set by environment, no fallback to prevent wrong backend connections
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 // Get unique device identifier for anti-abuse tracking
 const getDeviceId = async (): Promise<string | null> => {
