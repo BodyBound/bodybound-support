@@ -137,7 +137,6 @@ const VerticalSlider: React.FC<VerticalSliderProps> = ({
   
   return (
     <View
-      ref={containerRef}
       style={[{ width: 40, height: sliderHeight, alignItems: 'center', justifyContent: 'center' }, style]}
       {...panResponder.panHandlers}
     >
