@@ -43,7 +43,7 @@ const getDeviceId = async (): Promise<string | null> => {
     }
     return null;
   } catch (e) {
-    console.log('[DeviceID] Error getting device ID:', e);
+    // Silent fail for device ID - not critical
     return null;
   }
 };
