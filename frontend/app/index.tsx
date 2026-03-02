@@ -180,10 +180,12 @@ const isExpoGo = Constants.appOwnership === 'expo';
 
 const setupNotifications = async () => {
   // Notifications disabled for Expo Go compatibility
+  console.log('[Notifications] Disabled for Expo Go compatibility');
 };
 
 const sendLowCreditsNotification = async (credits: number) => {
   // Notifications disabled for Expo Go compatibility
+  console.log('[Notifications] Low credits notification skipped (Expo Go)');
 };
 
 // Animated SVG Path for zero-lag drawing - updates directly on UI thread via Reanimated
@@ -379,6 +381,7 @@ export default function Index() {
   useEffect(() => {
     enableFingerPaintingRef.current = enableFingerPainting;
     enableFPSV.value = enableFingerPainting; // sync to SharedValue for UI-thread access
+    console.log('[EditMode] enableFingerPainting changed to:', enableFingerPainting);
   }, [enableFingerPainting]);
   
   // Zoom and pan state for Edit mode (legacy - keeping for compatibility)
@@ -540,11 +543,13 @@ export default function Index() {
     const configureRevenueCat = async () => {
       // Skip RevenueCat in web environment
       if (Platform.OS === 'web') {
+        console.log('[RevenueCat] Skipped on web platform');
         return;
       }
       
       // Skip RevenueCat in Expo Go - it requires a custom dev build
       if (isExpoGo) {
+        console.log('[RevenueCat] Skipped in Expo Go - use a development build for full functionality');
         return;
       }
       
@@ -554,8 +559,10 @@ export default function Index() {
         } else if (Platform.OS === 'android') {
           await Purchases.configure({ apiKey: 'goog_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
         }
+        console.log('[RevenueCat] Configured successfully');
       } catch (e: any) {
         // Expected failure in Expo Go — RevenueCat requires a custom dev build
+        console.log('[RevenueCat] Configure failed:', e.message);
       }
     };
     
@@ -588,6 +595,7 @@ export default function Index() {
           await deleteToken();
         }
       } catch (err) {
+        console.log('[Auth] Startup check failed:', err);
       }
       // No valid token - show welcome screen
       setIsAuthChecking(false);
@@ -628,6 +636,7 @@ export default function Index() {
           setShowOnboarding(true);
         }
       } catch (error) {
+        console.log('Error checking onboarding status:', error);
       }
     };
     checkOnboarding();
@@ -641,6 +650,7 @@ export default function Index() {
       setShowOnboarding(false);
       setOnboardingSlide(0);
     } catch (error) {
+      console.log('Error saving onboarding status:', error);
       setShowOnboarding(false);
     }
   };
@@ -691,14 +701,19 @@ export default function Index() {
   // Select a photo from the library grid
   const selectPhotoFromLibrary = async (asset: MediaLibrary.Asset) => {
     try {
+      console.log('[SelectPhoto] Starting photo selection for asset:', asset.id);
+      console.log('[SelectPhoto] Asset URI:', asset.uri);
       
       // Get the asset info with local URI
       const assetInfo = await MediaLibrary.getAssetInfoAsync(asset);
+      console.log('[SelectPhoto] Asset info received, localUri:', assetInfo.localUri);
       
       const uriToUse = assetInfo.localUri || asset.uri;
+      console.log('[SelectPhoto] Using URI:', uriToUse);
       
       // Use ImageManipulator to ensure consistent image handling across platforms
       // This handles HEIC conversion, proper encoding, and prevents iOS-specific issues
+      console.log('[SelectPhoto] Processing image with ImageManipulator...');
       const manipulatedImage = await ImageManipulator.manipulateAsync(
         uriToUse,
         [{ resize: { width: 1500 } }], // Resize for optimal AI processing
@@ -710,6 +725,7 @@ export default function Index() {
       );
       
       if (manipulatedImage.base64) {
+        console.log('[SelectPhoto] Image processed successfully, base64 length:', manipulatedImage.base64.length);
         const base64Image = `data:image/jpeg;base64,${manipulatedImage.base64}`;
         setOriginalImage(base64Image);
         setStencilImage(null);
@@ -725,6 +741,7 @@ export default function Index() {
       } else {
         console.error('[SelectPhoto] ImageManipulator did not return base64 data');
         // Fallback: Try using ImagePicker directly
+        console.log('[SelectPhoto] Attempting fallback with ImagePicker...');
         const pickerResult = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ['images'],
           allowsEditing: false,
@@ -810,6 +827,7 @@ export default function Index() {
     setShowQualityWarning(false);
     
     try {
+      console.log('[ValidateImage] Validating image quality...');
       const response = await fetch(`${API_URL}/api/validate-image`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -818,10 +836,12 @@ export default function Index() {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('[ValidateImage] Response:', JSON.stringify(data));
         
         // Quality warnings disabled - PicsArt-style preprocessing (Clean, Sharpen, High Contrast)
         // now handles blur and image quality issues automatically
         if (data.warnings && data.warnings.length > 0) {
+          console.log('[ValidateImage] Warnings (suppressed - handled by preprocessing):', data.warnings);
         }
       }
     } catch (error) {
@@ -899,6 +919,7 @@ export default function Index() {
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
+        console.log(`[FetchRetry] Attempt ${attempt}/${maxRetries} for ${url}`);
         const response = await fetchWithTimeout(url, options);
         
         if (response.ok) {
@@ -908,10 +929,12 @@ export default function Index() {
         // If server error (5xx), retry
         if (response.status >= 500) {
           const errorText = await response.text();
+          console.log(`[FetchRetry] Server error ${response.status}: ${errorText}`);
           lastError = new Error(`Server error: ${response.status}`);
           
           if (attempt < maxRetries) {
             const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
+            console.log(`[FetchRetry] Waiting ${delay}ms before retry...`);
             await new Promise(resolve => setTimeout(resolve, delay));
             continue;
           }
@@ -921,10 +944,12 @@ export default function Index() {
         return response;
         
       } catch (error: any) {
+        console.log(`[FetchRetry] Attempt ${attempt} failed:`, error.message);
         lastError = error;
         
         if (attempt < maxRetries) {
           const delay = baseDelay * Math.pow(2, attempt - 1);
+          console.log(`[FetchRetry] Waiting ${delay}ms before retry...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -958,6 +983,8 @@ export default function Index() {
     }
 
     // Validate image data before sending
+    console.log('[GenerateAI] Original image length:', originalImage.length);
+    console.log('[GenerateAI] Image prefix:', originalImage.substring(0, 50));
     
     if (!originalImage.startsWith('data:image/')) {
       console.error('[GenerateAI] Invalid image format - missing data URI prefix');
@@ -979,6 +1006,7 @@ export default function Index() {
     
     try {
       // Step 1: Start async generation - returns immediately with job ID
+      console.log('[GenerateAI] Starting async generation...', autoEnhance ? 'with AI enhancement' : 'without enhancement');
       const startResponse = await fetch(`${API_URL}/api/ai-stencil-async`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -997,6 +1025,7 @@ export default function Index() {
       
       const startData = await startResponse.json();
       const jobId = startData.job_id;
+      console.log('[GenerateAI] Job started:', jobId);
       
       // Step 2: Poll for status until complete
       let attempts = 0;
@@ -1015,6 +1044,7 @@ export default function Index() {
         }
         
         const statusData = await statusResponse.json();
+        console.log(`[GenerateAI] Status: ${statusData.status}, Progress: ${statusData.progress}%, Current: ${statusData.current_style}`);
         
         // Update progress for UI
         if (statusData.progress <= 33) {
@@ -1026,6 +1056,7 @@ export default function Index() {
         }
         
         if (statusData.status === 'completed') {
+          console.log('[GenerateAI] Generation completed!');
           
           const versions = {
             light: statusData.result?.light || null,
@@ -1154,6 +1185,7 @@ export default function Index() {
       
       const base64Part = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
       
+      console.log(`[RegenerateSingle] Regenerating ${style} version...`);
       
       const response = await fetch(`${API_URL}/api/ai-stencil`, {
         method: 'POST',
@@ -1170,6 +1202,7 @@ export default function Index() {
       
       if (response.ok) {
         const data = await response.json();
+        console.log(`[RegenerateSingle] ${style} version regenerated successfully`);
         
         // Update only this style in stencilVersions
         setStencilVersions(prev => ({
@@ -1217,14 +1250,17 @@ export default function Index() {
         return;
       }
       
+      console.log(`[GenerateSingle] Image source type: ${imageBase64.substring(0, 30)}...`);
       
       // If the image is not already base64 (e.g., file:// or ph:// URI), convert it
       if (!imageBase64.startsWith('data:')) {
         try {
+          console.log(`[GenerateSingle] Converting image from URI to base64...`);
           const base64Data = await FileSystem.readAsStringAsync(imageBase64, {
             encoding: 'base64',
           });
           imageBase64 = `data:image/jpeg;base64,${base64Data}`;
+          console.log(`[GenerateSingle] Converted to base64, length: ${imageBase64.length}`);
         } catch (readError: any) {
           console.error('[GenerateSingle] Failed to read image file:', readError);
           Alert.alert('Error', 'Could not read image. Please try selecting the photo again.');
@@ -1232,6 +1268,7 @@ export default function Index() {
         }
       }
       
+      console.log(`[GenerateSingle] Generating ${style} version, image base64 length: ${imageBase64.length}`);
       
       // Use the original AI async endpoint
       const response = await fetch(`${API_URL}/api/ai-stencil-async`, {
@@ -1254,6 +1291,7 @@ export default function Index() {
       }
       
       const { job_id: jobId } = await response.json();
+      console.log(`[GenerateSingle] Job started:`, jobId);
       
       // Poll for completion
       let completed = false;
@@ -1267,9 +1305,11 @@ export default function Index() {
         }
         
         const statusData = await statusResponse.json();
+        console.log(`[GenerateSingle] Status: ${statusData.status}, Progress: ${statusData.progress}%`);
         
         if (statusData.status === 'completed') {
           completed = true;
+          console.log(`[GenerateSingle] Generation completed!`);
           
           const generatedStencil = statusData.result?.[style];
           if (generatedStencil) {
@@ -1284,9 +1324,11 @@ export default function Index() {
             // Save the reference photo for edit mode layers
             if (originalImage) {
               setReferencePhotoLayer(originalImage);
+              console.log('[GenerateSingle] Saved reference photo layer');
             }
             // Always save the freshly generated transparent stencil as the base for edit mode
             setOriginalAIStencil(generatedStencil);
+            console.log('[GenerateSingle] Saved originalAIStencil (transparent PNG base)');
           } else {
             console.error(`[GenerateSingle] No stencil in result for style ${style}`);
             Alert.alert('Generation Issue', 'Stencil was generated but not received properly.');
@@ -1296,6 +1338,7 @@ export default function Index() {
           try {
             await fetch(`${API_URL}/api/ai-stencil-job/${jobId}`, { method: 'DELETE' });
           } catch (e) {
+            console.log('Job cleanup failed (non-critical)');
           }
         } else if (statusData.status === 'failed') {
           completed = true;
@@ -1341,6 +1384,7 @@ export default function Index() {
     // Debounce the API call (150ms delay)
     lineWeightTimeoutRef.current = setTimeout(async () => {
       try {
+        console.log(`[LineWeight] Applying weight: ${newWeight}`);
         
         // Use the original generated stencil as base, not the adjusted one
         const baseStencil = selectedVersion && stencilVersions[selectedVersion] 
@@ -1360,6 +1404,7 @@ export default function Index() {
         
         if (response.ok) {
           const data = await response.json();
+          console.log(`[LineWeight] Adjustment applied: ${data.adjustment_applied}`);
           setStencilImage(data.adjusted_image);
           // Also update edit mode stencil if in edit mode
           if (showEditModal) {
@@ -1666,18 +1711,23 @@ export default function Index() {
   // Save stencil to device photo gallery using MediaLibrary with proper PNG quality
   const saveToPhotoGallery = async (imageBase64: string, filename: string = 'stencil'): Promise<boolean> => {
     try {
+      console.log('[SaveToGallery] Starting save process...');
       
       // Validate input
       if (!imageBase64) {
+        console.log('[SaveToGallery] ERROR: imageBase64 is undefined or empty');
         Alert.alert('Error', 'No image data to save.');
         return false;
       }
       
+      console.log('[SaveToGallery] Image data length:', imageBase64.length);
       
       // Request MediaLibrary permissions
       const permissionResult = await MediaLibrary.requestPermissionsAsync();
+      console.log('[SaveToGallery] Permission result:', JSON.stringify(permissionResult));
       
       if (permissionResult.status !== 'granted') {
+        console.log('[SaveToGallery] Permission denied');
         Alert.alert(
           'Permission Required',
           'Please allow access to your photo library to save stencils. Go to Settings > Body Bound > Photos.',
@@ -1686,6 +1736,7 @@ export default function Index() {
         return false;
       }
 
+      console.log('[SaveToGallery] Permission granted, processing image...');
       
       // Determine if this is a PNG (transparent stencil) or JPEG
       const isPNG = imageBase64.includes('data:image/png');
@@ -1703,14 +1754,17 @@ export default function Index() {
         encoding: FileSystem.EncodingType.Base64,
       });
       
+      console.log('[SaveToGallery] File written to:', fileUri);
 
       // Save directly to photo gallery using MediaLibrary
       const asset = await MediaLibrary.createAssetAsync(fileUri);
+      console.log('[SaveToGallery] Asset created:', asset.id, 'filename:', asset.filename);
       
       // Clean up temp file
       try {
         await FileSystem.deleteAsync(fileUri, { idempotent: true });
       } catch (e) {
+        console.log('[SaveToGallery] Cleanup warning:', e);
       }
       
       // Try to create/use album, but don't fail if it doesn't work
@@ -1720,13 +1774,17 @@ export default function Index() {
         
         if (album === null) {
           await MediaLibrary.createAlbumAsync(albumName, asset, false);
+          console.log('[SaveToGallery] Album created');
         } else {
           await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+          console.log('[SaveToGallery] Added to existing album');
         }
       } catch (albumError) {
+        console.log('[SaveToGallery] Album operation failed (non-critical):', albumError);
         // Album creation is optional, image is already saved to gallery
       }
 
+      console.log('[SaveToGallery] SUCCESS!');
       Alert.alert('Saved!', 'Stencil saved to your photo gallery.');
       return true;
     } catch (error: any) {
@@ -1859,6 +1917,7 @@ export default function Index() {
     setIsExportingPSD(true); // Reuse this loading state
     
     try {
+      console.log('[SaveBoth] Starting save process...');
       
       // Request MediaLibrary permissions
       const permissionResult = await MediaLibrary.requestPermissionsAsync();
@@ -1873,6 +1932,7 @@ export default function Index() {
       }
 
       // Step 1: Get dimensions from original image to ensure both are the same size
+      console.log('[SaveBoth] Processing original image...');
       const originalManipulated = await ImageManipulator.manipulateAsync(
         originalImage,
         [], // No transformations - keep original size
@@ -1890,8 +1950,10 @@ export default function Index() {
       };
       
       const originalSize = await getImageSize(originalManipulated.uri);
+      console.log('[SaveBoth] Original dimensions:', originalSize.width, 'x', originalSize.height);
 
       // Step 2: Process stencil - resize to match original and convert white to transparent
+      console.log('[SaveBoth] Processing stencil with transparency...');
       
       // First resize stencil to match original dimensions
       const stencilResized = await ImageManipulator.manipulateAsync(
@@ -1903,14 +1965,17 @@ export default function Index() {
         }
       );
       
+      console.log('[SaveBoth] Stencil resized to match original');
 
       // Step 3: The stencil is already a transparent PNG from the AI generation
       // We just need to save it directly without conversion
+      console.log('[SaveBoth] Reading stencil image...');
       const stencilBase64 = await FileSystem.readAsStringAsync(stencilResized.uri, {
         encoding: 'base64',
       });
       
       // Step 4: Save the stencil PNG directly (already transparent)
+      console.log('[SaveBoth] Saving stencil PNG...');
       
       // Write stencil to file
       const stencilFilename = `stencil_${Date.now()}.png`;
@@ -1922,6 +1987,7 @@ export default function Index() {
       
       // Save stencil to gallery
       const stencilAsset = await MediaLibrary.createAssetAsync(stencilFileUri);
+      console.log('[SaveBoth] Stencil saved:', stencilAsset.filename);
       
       // Clean up temp file
       try {
@@ -1931,7 +1997,9 @@ export default function Index() {
       }
       
       // Step 5: Save the reference JPEG
+      console.log('[SaveBoth] Saving reference JPEG...');
       const referenceAsset = await MediaLibrary.createAssetAsync(originalManipulated.uri);
+      console.log('[SaveBoth] Reference saved:', referenceAsset.filename);
       
       // Try to add both to album
       try {
@@ -1946,7 +2014,9 @@ export default function Index() {
         if (album) {
           await MediaLibrary.addAssetsToAlbumAsync([referenceAsset], album, false);
         }
+        console.log('[SaveBoth] Both images added to album');
       } catch (albumError) {
+        console.log('[SaveBoth] Album operation failed (non-critical):', albumError);
       }
 
       setIsExportingPSD(false);
@@ -1997,6 +2067,7 @@ export default function Index() {
       });
       
       if (result.action === RNShare.sharedAction) {
+        console.log('App shared successfully');
       }
     } catch (error) {
       console.error('Error sharing app:', error);
@@ -2007,11 +2078,16 @@ export default function Index() {
   
   // Open edit modal with Procreate-style layer system
   const openEditMode = () => {
+    console.log('[EditMode] ========== OPENING EDIT MODE ==========');
+    console.log('[EditMode] referencePhotoLayer exists:', !!referencePhotoLayer);
+    console.log('[EditMode] originalImage exists:', !!originalImage);
+    console.log('[EditMode] stencilImage exists:', !!stencilImage);
     
     // Use the saved reference photo layer (set when stencil was generated)
     // Fall back to originalImage if referencePhotoLayer isn't set
     const referenceToUse = referencePhotoLayer || originalImage;
     
+    console.log('[EditMode] Using reference:', referenceToUse ? 'YES' : 'NO');
     
     // CRITICAL FIX: Always use the original transparent PNG stencil as the edit base.
     // stencilVersions[selectedVersion] = the raw AI-generated transparent PNG.
@@ -2024,6 +2100,7 @@ export default function Index() {
       setOriginalAIStencil(stencilVersions[selectedVersion] || stencilImage);
     }
     
+    console.log('[EditMode] Using transparent base stencil:', transparentBaseStencil ? 'YES' : 'NO');
     
     // Freeze the images for edit mode
     setEditModeStencilImage(transparentBaseStencil);
@@ -2041,6 +2118,7 @@ export default function Index() {
     translateY.value = 0;
     rotation.value = 0;
     setShowEditModal(true);
+    console.log('[EditMode] ========== EDIT MODE OPENED ==========');
   };
 
   // Revert to original AI stencil (removes all edits)
@@ -2234,6 +2312,7 @@ export default function Index() {
       const point = currentPointsRef.current[0];
       // Add a small dot at the tap location
       setDotMarks(prev => [...prev, { x: point.x, y: point.y, size: brushSize }]);
+      console.log('[Drawing] Single tap - created dot at:', point.x, point.y);
     } else if (currentPointsRef.current.length > 1) {
       const smoothPath = createSmoothPath(currentPointsRef.current);
       if (isEraser) {
@@ -2561,6 +2640,7 @@ export default function Index() {
       hasAzimuth;
     
     // Extensive debug logging to diagnose the issue
+    console.log('[EditMode] Touch Debug:', JSON.stringify({
       touchTypeFromEvent,
       touchTypeFromTouch,
       touchTypeFromType,
@@ -2594,13 +2674,16 @@ export default function Index() {
     // Drawing logic: Finger painting enabled OR automatic pencil detection
     const shouldDraw = enableFingerPaintingRef.current || isApplePencil;
     
+    console.log('[EditMode] shouldDraw:', shouldDraw, 'enableFingerPainting:', enableFingerPaintingRef.current, 'isApplePencil:', isApplePencil);
     
     if (shouldDraw) {
+      console.log('[EditMode] ✏️ DRAWING - Starting at:', locationX, locationY, enableFingerPaintingRef.current ? '(finger painting)' : '(pencil detected)');
       setCurrentPoints([{ x: locationX, y: locationY }]);
       setCurrentPath(`M${locationX},${locationY}`);
       pendingDrawRef.current = false;
     } else {
       // For finger touch - do not draw
+      console.log('[EditMode] 👆 FINGER - will pan');
       pendingDrawRef.current = false;
     }
   };
@@ -2791,11 +2874,13 @@ export default function Index() {
 
     // If ref not available, just close with message
     if (!editCanvasRef.current) {
+      console.log('[SaveEdit] Canvas ref not available, closing modal');
       setShowEditModal(false);
       return;
     }
 
     try {
+      console.log('[SaveEdit] Starting capture...');
       
       // Reset canvas transforms before capture (so we get the full image, not zoomed/rotated view)
       scale.value = 1;
@@ -2816,6 +2901,7 @@ export default function Index() {
         result: 'base64',
       });
       
+      console.log('[SaveEdit] Capture successful, uri length:', uri?.length);
       
       // Reset capture mode
       setIsCapturingForExport(false);
@@ -2825,6 +2911,7 @@ export default function Index() {
         const editedImage = `data:image/png;base64,${uri}`;
         setEditedStencil(editedImage);
         setStencilImage(editedImage);
+        console.log('[SaveEdit] Stencil updated with edits');
       }
       
       // Close modal
