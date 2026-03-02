@@ -16,7 +16,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "51",
+      "buildNumber": "52",
       "infoPlist": {
         "NSCameraUsageDescription": "Take photos to convert into tattoo stencils",
         "NSPhotoLibraryUsageDescription": "Select reference photos to convert into stencils",
