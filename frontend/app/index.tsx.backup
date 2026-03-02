@@ -46,7 +46,7 @@ import { PaywallScreen } from './screens/PaywallScreen';
 import { StudioTeamScreen } from './screens/StudioTeamScreen';
 
 // API URL - hardcoded for reliable production builds
-const API_URL = 'https://bodybound-launch.preview.emergentagent.com';
+const API_URL = 'https://bodybound-subs.preview.emergentagent.com';
 
 // Custom Vertical Slider Component - handles vertical gestures properly
 interface VerticalSliderProps {

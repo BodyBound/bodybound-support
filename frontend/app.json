@@ -73,7 +73,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "backendUrl": "https://bodybound-launch.preview.emergentagent.com",
+      "backendUrl": "https://bodybound-subs.preview.emergentagent.com",
       "eas": {
         "projectId": "your-project-id"
       }
