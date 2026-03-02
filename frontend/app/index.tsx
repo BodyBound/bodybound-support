@@ -3701,7 +3701,9 @@ export default function Index() {
               <Text style={styles.procreateBrushLabel}>Size</Text>
               <View style={styles.procreateBrushSliderWrapper}>
                 <Slider
-                  style={[styles.procreateBrushSlider, { transform: [{ rotate: '-90deg' }] }]}
+                  style={styles.procreateBrushSlider}
+                  vertical={true}
+                  inverted={true}
                   minimumValue={1}
                   maximumValue={20}
                   step={1}
@@ -3724,7 +3726,9 @@ export default function Index() {
               <Text style={styles.procreateBrushLabel}>Ref</Text>
               <View style={styles.procreateBrushSliderWrapper}>
                 <Slider
-                  style={[styles.procreateBrushSlider, { transform: [{ rotate: '-90deg' }] }]}
+                  style={styles.procreateBrushSlider}
+                  vertical={true}
+                  inverted={true}
                   minimumValue={0}
                   maximumValue={100}
                   step={1}
@@ -3747,7 +3751,9 @@ export default function Index() {
               <Text style={styles.procreateBrushLabel}>Line</Text>
               <View style={styles.procreateBrushSliderWrapper}>
                 <Slider
-                  style={[styles.procreateBrushSlider, { transform: [{ rotate: '-90deg' }] }]}
+                  style={styles.procreateBrushSlider}
+                  vertical={true}
+                  inverted={true}
                   minimumValue={-5}
                   maximumValue={5}
                   step={1}
