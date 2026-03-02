@@ -71,7 +71,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
       }
     } catch (err) {
       // Expected in Expo Go — RevenueCat requires a custom dev build
-      console.log('[PaywallScreen] Offerings unavailable (Expo Go or SDK not configured):', err);
+      // Silent fail - will show fallback UI
     } finally {
       setLoading(false);
     }
