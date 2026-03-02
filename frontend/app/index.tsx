@@ -3726,8 +3726,11 @@ export default function Index() {
                   maximumValue={100}
                   step={1}
                   value={editOpacityDisplay}
-                  onValueChange={(val) => setEditOpacityDisplay(Math.round(val))}
-                  onSlidingComplete={(val) => { const v = Math.round(val); setEditOpacityDisplay(v); setEditOpacity(v / 100); }}
+                  onValueChange={(val) => { 
+                    const v = Math.round(val); 
+                    setEditOpacityDisplay(v); 
+                    setEditOpacity(v / 100); 
+                  }}
                   minimumTrackTintColor="#C9A227"
                   maximumTrackTintColor="#555"
                   thumbTintColor="#C9A227"
