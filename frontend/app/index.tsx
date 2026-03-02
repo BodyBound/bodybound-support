@@ -48,6 +48,128 @@ import { StudioTeamScreen } from './screens/StudioTeamScreen';
 // API URL - hardcoded for reliable production builds
 const API_URL = 'https://bodybound-launch.preview.emergentagent.com';
 
+// Custom Vertical Slider Component - handles vertical gestures properly
+interface VerticalSliderProps {
+  value: number;
+  minimumValue: number;
+  maximumValue: number;
+  step?: number;
+  onValueChange?: (value: number) => void;
+  onSlidingComplete?: (value: number) => void;
+  minimumTrackTintColor?: string;
+  maximumTrackTintColor?: string;
+  thumbTintColor?: string;
+  style?: any;
+}
+
+const VerticalSlider: React.FC<VerticalSliderProps> = ({
+  value,
+  minimumValue,
+  maximumValue,
+  step = 1,
+  onValueChange,
+  onSlidingComplete,
+  minimumTrackTintColor = '#C9A227',
+  maximumTrackTintColor = '#555',
+  thumbTintColor = '#C9A227',
+  style,
+}) => {
+  const sliderHeight = 120;
+  const thumbSize = 24;
+  const trackWidth = 6;
+  
+  const [currentValue, setCurrentValue] = React.useState(value);
+  const containerRef = React.useRef<View>(null);
+  
+  React.useEffect(() => {
+    setCurrentValue(value);
+  }, [value]);
+  
+  const valueToPosition = (val: number) => {
+    const range = maximumValue - minimumValue;
+    const normalizedValue = (val - minimumValue) / range;
+    // Invert so higher values are at top
+    return (1 - normalizedValue) * (sliderHeight - thumbSize);
+  };
+  
+  const positionToValue = (pos: number) => {
+    const range = maximumValue - minimumValue;
+    // Invert so dragging up increases value
+    const normalizedPos = 1 - (pos / (sliderHeight - thumbSize));
+    let newValue = minimumValue + (normalizedPos * range);
+    // Apply step
+    if (step > 0) {
+      newValue = Math.round(newValue / step) * step;
+    }
+    return Math.max(minimumValue, Math.min(maximumValue, newValue));
+  };
+  
+  const panResponder = React.useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (evt) => {
+        const y = evt.nativeEvent.locationY;
+        const newValue = positionToValue(y - thumbSize / 2);
+        setCurrentValue(newValue);
+        onValueChange?.(newValue);
+      },
+      onPanResponderMove: (evt) => {
+        const y = evt.nativeEvent.locationY;
+        const newValue = positionToValue(y - thumbSize / 2);
+        setCurrentValue(newValue);
+        onValueChange?.(newValue);
+      },
+      onPanResponderRelease: () => {
+        onSlidingComplete?.(currentValue);
+      },
+    })
+  ).current;
+  
+  const thumbPosition = valueToPosition(currentValue);
+  const filledHeight = sliderHeight - thumbPosition - thumbSize;
+  
+  return (
+    <View
+      ref={containerRef}
+      style={[{ width: 40, height: sliderHeight, alignItems: 'center', justifyContent: 'center' }, style]}
+      {...panResponder.panHandlers}
+    >
+      {/* Track background */}
+      <View style={{
+        position: 'absolute',
+        width: trackWidth,
+        height: sliderHeight,
+        backgroundColor: maximumTrackTintColor,
+        borderRadius: trackWidth / 2,
+      }} />
+      {/* Filled track */}
+      <View style={{
+        position: 'absolute',
+        width: trackWidth,
+        height: filledHeight,
+        bottom: 0,
+        backgroundColor: minimumTrackTintColor,
+        borderRadius: trackWidth / 2,
+      }} />
+      {/* Thumb */}
+      <View style={{
+        position: 'absolute',
+        top: thumbPosition,
+        width: thumbSize,
+        height: thumbSize,
+        borderRadius: thumbSize / 2,
+        backgroundColor: thumbTintColor,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+        elevation: 3,
+      }} />
+    </View>
+  );
+};
+
 // Check if running in Expo Go (where native modules like RevenueCat aren't available)
 const isExpoGo = Constants.appOwnership === 'expo';
 
