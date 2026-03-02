@@ -78,10 +78,14 @@ const VerticalSlider: React.FC<VerticalSliderProps> = ({
   const thumbSize = 24;
   const trackWidth = 6;
   
+  // Use refs to avoid stale closure problems inside PanResponder
+  const currentValueRef = React.useRef(value);
+  const startYRef = React.useRef(0);
+  const startValueRef = React.useRef(value);
   const [currentValue, setCurrentValue] = React.useState(value);
-  const containerRef = React.useRef<View>(null);
   
   React.useEffect(() => {
+    currentValueRef.current = value;
     setCurrentValue(value);
   }, [value]);
   
@@ -92,36 +96,38 @@ const VerticalSlider: React.FC<VerticalSliderProps> = ({
     return (1 - normalizedValue) * (sliderHeight - thumbSize);
   };
   
-  const positionToValue = (pos: number) => {
+  const dyToValue = (startVal: number, dy: number) => {
     const range = maximumValue - minimumValue;
-    // Invert so dragging up increases value
-    const normalizedPos = 1 - (pos / (sliderHeight - thumbSize));
-    let newValue = minimumValue + (normalizedPos * range);
-    // Apply step
+    // Dragging UP (negative dy) increases value
+    const valueDelta = -(dy / (sliderHeight - thumbSize)) * range;
+    let newValue = startVal + valueDelta;
     if (step > 0) {
       newValue = Math.round(newValue / step) * step;
     }
     return Math.max(minimumValue, Math.min(maximumValue, newValue));
   };
+
+  const onValueChangeRef = React.useRef(onValueChange);
+  const onSlidingCompleteRef = React.useRef(onSlidingComplete);
+  React.useEffect(() => { onValueChangeRef.current = onValueChange; }, [onValueChange]);
+  React.useEffect(() => { onSlidingCompleteRef.current = onSlidingComplete; }, [onSlidingComplete]);
   
   const panResponder = React.useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (evt) => {
-        const y = evt.nativeEvent.locationY;
-        const newValue = positionToValue(y - thumbSize / 2);
-        setCurrentValue(newValue);
-        onValueChange?.(newValue);
+        startYRef.current = evt.nativeEvent.locationY;
+        startValueRef.current = currentValueRef.current;
       },
-      onPanResponderMove: (evt) => {
-        const y = evt.nativeEvent.locationY;
-        const newValue = positionToValue(y - thumbSize / 2);
+      onPanResponderMove: (_evt, gestureState) => {
+        const newValue = dyToValue(startValueRef.current, gestureState.dy);
+        currentValueRef.current = newValue;
         setCurrentValue(newValue);
-        onValueChange?.(newValue);
+        onValueChangeRef.current?.(newValue);
       },
       onPanResponderRelease: () => {
-        onSlidingComplete?.(currentValue);
+        onSlidingCompleteRef.current?.(currentValueRef.current);
       },
     })
   ).current;
