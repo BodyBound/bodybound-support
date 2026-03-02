@@ -45,8 +45,25 @@ import { SettingsScreen } from './screens/SettingsScreen';
 import { PaywallScreen } from './screens/PaywallScreen';
 import { StudioTeamScreen } from './screens/StudioTeamScreen';
 
-// API URL - use environment variable with fallback for EAS builds
-const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'https://bodybound-launch.preview.emergentagent.com';
+// API URL - try multiple sources for maximum compatibility
+// 1. Environment variable (works in Expo Go with .env)
+// 2. app.json extra config (works in EAS builds)
+// 3. Hardcoded fallback (last resort)
+const getApiUrl = (): string => {
+  // Try environment variable first
+  if (process.env.EXPO_PUBLIC_BACKEND_URL) {
+    return process.env.EXPO_PUBLIC_BACKEND_URL;
+  }
+  // Try app.json extra config
+  const extra = Constants.expoConfig?.extra;
+  if (extra?.backendUrl) {
+    return extra.backendUrl;
+  }
+  // Fallback
+  return 'https://bodybound-launch.preview.emergentagent.com';
+};
+
+const API_URL = getApiUrl();
 
 // Debug: Log the API URL being used
 console.log('[App] API_URL:', API_URL);
