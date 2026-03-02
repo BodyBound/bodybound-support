@@ -3706,8 +3706,11 @@ export default function Index() {
                   maximumValue={20}
                   step={1}
                   value={brushSizeDisplay}
-                  onValueChange={(val) => setBrushSizeDisplay(Math.round(val))}
-                  onSlidingComplete={(val) => { const v = Math.round(val); setBrushSizeDisplay(v); setBrushSize(v); }}
+                  onValueChange={(val) => { 
+                    const v = Math.round(val); 
+                    setBrushSizeDisplay(v); 
+                    setBrushSize(v); 
+                  }}
                   minimumTrackTintColor="#C9A227"
                   maximumTrackTintColor="#555"
                   thumbTintColor="#C9A227"
