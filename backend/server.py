@@ -175,7 +175,6 @@ def cv2_to_base64(img: np.ndarray) -> str:
 # Hybrid: U2-Net Background Removal + AI Line Art Conversion + CV Post-Processing
 # ============================================
 
-from rembg import remove as rembg_remove
 from PIL import Image as PILImage
 
 def remove_background_u2net(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
@@ -191,7 +190,8 @@ def remove_background_u2net(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     # Convert OpenCV BGR to PIL RGB
     pil_image = PILImage.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
     
-    # Remove background using U2-Net
+    # Remove background using U2-Net (lazy import to avoid slow startup)
+    from rembg import remove as rembg_remove
     result = rembg_remove(pil_image)
     
     # Convert back to OpenCV format (BGRA)
@@ -3626,6 +3626,11 @@ async def stencil_preview_page():
         with open(html_path, 'r') as f:
             return HTMLResponse(content=f.read())
     raise HTTPException(status_code=404, detail="Preview page not found")
+
+# Root health check — nginx in production hits /health (no /api prefix)
+@app.get("/health")
+async def root_health_check():
+    return {"status": "healthy", "service": "tattoo-stencil-api"}
 
 # Include the router in the main app
 app.include_router(api_router)
