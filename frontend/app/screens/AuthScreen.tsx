@@ -19,7 +19,7 @@ import { User } from '../types';
 import { storeToken } from '../../utils/tokenStore';
 
 // API URL - hardcoded for reliable production builds
-const API_URL = 'https://bodybound-subs.preview.emergentagent.com';
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL;
 
 // Get unique device identifier for anti-abuse tracking
 const getDeviceId = async (): Promise<string | null> => {
