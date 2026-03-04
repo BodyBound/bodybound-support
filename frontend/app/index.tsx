@@ -1957,23 +1957,38 @@ export default function Index() {
       const originalSize = await getImageSize(originalManipulated.uri);
       console.log('[SaveBoth] Original dimensions:', originalSize.width, 'x', originalSize.height);
 
-      // Step 2: Process stencil - resize to match original and convert white to transparent
+      // Step 2: Process stencil as PNG — preserve it at its native size.
+      // When the stencil has been edited, it is a screen-resolution capture.
+      // Forcing a resize to match the (potentially larger / different aspect-ratio)
+      // original photo dimensions causes distortion, so we skip the resize entirely
+      // and let Procreate handle the layer sizing on import.
       console.log('[SaveBoth] Processing stencil with transparency...');
-      
-      // First resize stencil to match original dimensions
-      const stencilResized = await ImageManipulator.manipulateAsync(
-        stencilImage,
-        [{ resize: { width: originalSize.width, height: originalSize.height } }],
-        { 
-          format: ImageManipulator.SaveFormat.PNG,
-          compress: 1, // Lossless for stencil
-        }
-      );
-      
-      console.log('[SaveBoth] Stencil resized to match original');
 
-      // Step 3: The stencil is already a transparent PNG from the AI generation
-      // We just need to save it directly without conversion
+      const stencilSize = await getImageSize(stencilImage);
+      const aspectRatioMatch =
+        Math.abs(stencilSize.width / stencilSize.height - originalSize.width / originalSize.height) < 0.05;
+
+      let stencilResized;
+      if (aspectRatioMatch && stencilSize.width !== originalSize.width) {
+        // Same aspect ratio — safe to resize to match original (unedited AI stencil path)
+        stencilResized = await ImageManipulator.manipulateAsync(
+          stencilImage,
+          [{ resize: { width: originalSize.width, height: originalSize.height } }],
+          { format: ImageManipulator.SaveFormat.PNG, compress: 1 }
+        );
+      } else {
+        // Different aspect ratio (edited stencil captured from screen) — save at native size
+        // to avoid distortion. Do NOT resize.
+        stencilResized = await ImageManipulator.manipulateAsync(
+          stencilImage,
+          [],
+          { format: ImageManipulator.SaveFormat.PNG, compress: 1 }
+        );
+      }
+
+      console.log('[SaveBoth] Stencil processed at', stencilResized.width, 'x', stencilResized.height);
+
+      // Step 3: Read the stencil PNG
       console.log('[SaveBoth] Reading stencil image...');
       const stencilBase64 = await FileSystem.readAsStringAsync(stencilResized.uri, {
         encoding: 'base64',
