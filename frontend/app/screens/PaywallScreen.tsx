@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 
 const APPLE_EULA_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
-const PRIVACY_POLICY_URL = 'https://www.bodybound.app/privacy'; // Replace with your actual privacy policy URL
+const PRIVACY_POLICY_URL = 'https://bodybound.github.io/bodybound-support/privacy';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
 
