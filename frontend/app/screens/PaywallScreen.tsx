@@ -9,7 +9,11 @@ import {
   Alert,
   Platform,
   Image,
+  Linking,
 } from 'react-native';
+
+const APPLE_EULA_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+const PRIVACY_POLICY_URL = 'https://www.bodybound.app/privacy'; // Replace with your actual privacy policy URL
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
 
@@ -243,9 +247,17 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
           {/* Legal */}
           <Text style={styles.legal}>
             Payment charged to Apple ID. Subscription auto-renews monthly.{'\n'}
-            Cancel anytime in Settings &gt; Apple ID &gt; Subscriptions.{'\n'}
-            Terms of Service  •  Privacy Policy
+            Cancel anytime in Settings &gt; Apple ID &gt; Subscriptions.
           </Text>
+          <View style={styles.legalLinks}>
+            <TouchableOpacity onPress={() => Linking.openURL(APPLE_EULA_URL)}>
+              <Text style={styles.legalLink}>Terms of Service</Text>
+            </TouchableOpacity>
+            <Text style={styles.legalSeparator}> • </Text>
+            <TouchableOpacity onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}>
+              <Text style={styles.legalLink}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -340,5 +352,21 @@ const styles = StyleSheet.create({
   legal: {
     color: 'rgba(255,255,255,0.25)',
     fontSize: 11, textAlign: 'center', lineHeight: 17,
+    marginBottom: 6,
+  },
+  legalLinks: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  legalLink: {
+    color: 'rgba(255,255,255,0.45)',
+    fontSize: 11,
+    textDecorationLine: 'underline',
+  },
+  legalSeparator: {
+    color: 'rgba(255,255,255,0.25)',
+    fontSize: 11,
   },
 });
