@@ -88,16 +88,32 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
       });
 
       if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.detail || 'Apple Sign-In failed');
+        let errMsg = 'Apple Sign-In failed';
+        try {
+          const errData = await response.json();
+          errMsg = errData.detail || errMsg;
+        } catch { /* response wasn't JSON */ }
+        throw new Error(errMsg);
       }
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error('Unable to connect to server. Please check your connection and try again.');
+      }
       await storeToken(data.session_token);
       onAuthSuccess(data.user, data.session_token);
     } catch (err: any) {
-      if (err.code === 'ERR_REQUEST_CANCELED') return; // User cancelled
-      Alert.alert('Sign In Failed', err.message || 'Please try again.');
+      if (err.code === 'ERR_REQUEST_CANCELED') return;
+      const msg = err.message || '';
+      const isParseError = msg.includes('JSON Parse error') || msg.includes('Unexpected character') || msg.includes('Unexpected token');
+      Alert.alert(
+        'Sign In Failed',
+        isParseError
+          ? 'Unable to connect to the server. Please try again in a moment.'
+          : msg || 'Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -145,18 +161,34 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
         });
 
         if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.detail || 'Google Sign-In failed');
+          let errMsg = 'Google Sign-In failed';
+          try {
+            const errData = await response.json();
+            errMsg = errData.detail || errMsg;
+          } catch { /* response wasn't JSON */ }
+          throw new Error(errMsg);
         }
 
-        const data = await response.json();
+        let data;
+        try {
+          data = await response.json();
+        } catch {
+          throw new Error('Unable to connect to server. Please check your connection and try again.');
+        }
         await storeToken(data.session_token);
         onAuthSuccess(data.user, data.session_token);
       }
     } catch (err: any) {
-      if (err.message !== 'The user closed the authentication session.') {
-        Alert.alert('Sign In Failed', err.message || 'Please try again.');
-      }
+      const msg = err.message || '';
+      if (msg === 'The user closed the authentication session.') return;
+      // Catch raw JSON parse errors from server returning HTML (e.g. 502/503)
+      const isParseError = msg.includes('JSON Parse error') || msg.includes('Unexpected character') || msg.includes('Unexpected token');
+      Alert.alert(
+        'Sign In Failed',
+        isParseError
+          ? 'Unable to connect to the server. Please try again in a moment.'
+          : msg || 'Please try again.'
+      );
     } finally {
       setGoogleLoading(false);
     }
