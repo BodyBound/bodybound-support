@@ -560,7 +560,7 @@ export default function Index() {
       
       try {
         if (Platform.OS === 'ios') {
-          await Purchases.configure({ apiKey: 'appl_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
+          await Purchases.configure({ apiKey: 'appl_dVqjUPRJXPXNpLZThAjtsqApiVU' });
         } else if (Platform.OS === 'android') {
           await Purchases.configure({ apiKey: 'goog_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
         }
