@@ -166,10 +166,11 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
             <ActivityIndicator color="#C9A227" size="large" style={{ marginVertical: 40 }} />
           ) : (
             <View style={styles.plans}>
-              {Object.entries(TIER_INFO).map(([key, tier]) => {
-                const pkg = offerings.find(p =>
-                  p.product?.identifier?.toLowerCase().includes(key)
-                );
+              {Object.entries(TIER_INFO).map(([key, tier], index) => {
+                // Match by position: Walk-In=0, Booked Out=1, The Shop=2
+                // Falls back to identifier matching if order differs
+                const pkg = offerings[index] ||
+                  offerings.find(p => p.product?.identifier?.toLowerCase().includes(key));
                 const isSelected = selectedPackage?.identifier === pkg?.identifier;
 
                 return (
