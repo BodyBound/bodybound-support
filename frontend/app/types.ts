@@ -41,7 +41,7 @@ export interface AuthSession {
 }
 
 // Subscription & Credits
-export type SubscriptionTier = 'trial' | 'trial_expired' | 'walk-in' | 'booked-out' | 'the-shop' | 'the-shop-member' | 'hobbyist' | 'pro' | 'studio' | null;
+export type SubscriptionTier = 'trial' | 'trial_expired' | 'expired' | 'walk-in' | 'booked-out' | 'the-shop' | 'the-shop-member' | 'hobbyist' | 'pro' | 'studio' | null;
 
 export interface UserCredits {
   available_credits: number;
@@ -53,6 +53,7 @@ export interface UserCredits {
   revenuecat_customer_id: string | null;
   is_studio_team?: boolean;
   studio_team_id?: string | null;
+  needs_subscription?: boolean;
 }
 
 // Studio Team Types

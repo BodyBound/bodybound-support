@@ -240,6 +240,7 @@ export default function Index() {
   const [showAuth, setShowAuth] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallRequired, setPaywallRequired] = useState(false); // Non-dismissable paywall for users without subscription
   const [showStudioTeam, setShowStudioTeam] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
@@ -593,6 +594,20 @@ export default function Index() {
             if (Platform.OS === 'ios' || Platform.OS === 'android') {
               try { await Purchases.logIn(data.user.user_id); } catch (_) {}
             }
+            // Check if user needs to subscribe (new paywall-first flow)
+            if (data.credits?.needs_subscription) {
+              // Try syncing RevenueCat first — maybe webhook just didn't arrive
+              await syncRevenueCatWithBackend(token);
+              // Re-check after sync
+              const updatedCredits = await refreshCredits(token);
+              if (updatedCredits?.needs_subscription) {
+                setPaywallRequired(true);
+                setShowPaywall(true);
+              }
+            } else {
+              // Existing subscriber or grandfathered trial user — sync RC in background
+              syncRevenueCatWithBackend(token);
+            }
             setIsAuthChecking(false);
             return;
           }
@@ -618,8 +633,43 @@ export default function Index() {
         const d = await r.json();
         setAvailableCredits(d.credits?.available_credits ?? 0);
         setUserTier(d.credits?.tier ?? null);
+        return d.credits;
       }
     } catch (e) { console.error('[Credits] Refresh failed:', e); }
+    return null;
+  };
+
+  // Sync RevenueCat entitlements with backend (fixes missing webhook scenarios)
+  const syncRevenueCatWithBackend = async (token: string) => {
+    if (Platform.OS !== 'ios' && Platform.OS !== 'android') return;
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      const activeSubscriptions = customerInfo.activeSubscriptions;
+      if (activeSubscriptions.length > 0) {
+        const productId = activeSubscriptions[0]; // e.g., 'bodybound_2999_1m_3d'
+        console.log('[RevenueCat] Active subscription detected:', productId);
+        const resp = await fetch(`${API_URL}/api/subscription/sync`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ product_id: productId }),
+        });
+        if (resp.ok) {
+          const syncedCredits = await resp.json();
+          setAvailableCredits(syncedCredits.available_credits ?? 0);
+          setUserTier(syncedCredits.tier ?? null);
+          if (!syncedCredits.needs_subscription) {
+            setShowPaywall(false);
+            setPaywallRequired(false);
+          }
+          console.log('[RevenueCat] Synced with backend:', syncedCredits.tier, syncedCredits.available_credits);
+        }
+      }
+    } catch (e) {
+      console.log('[RevenueCat] Sync check failed (expected in Expo Go):', e);
+    }
   };
 
 
@@ -4096,15 +4146,26 @@ export default function Index() {
       {showAuth && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998 }}>
           <AuthScreen
-            onAuthSuccess={(user, token) => {
+            onAuthSuccess={async (user, token) => {
               setCurrentUser(user);
               setSessionToken(token);
               setShowAuth(false);
-              refreshCredits(token);
               // Request push notification permission + link user to RevenueCat
               setupNotifications();
               if (Platform.OS === 'ios' || Platform.OS === 'android') {
-                Purchases.logIn(user.user_id).catch(() => {});
+                try { await Purchases.logIn(user.user_id); } catch (_) {}
+              }
+              // Check subscription status
+              const credits = await refreshCredits(token);
+              if (credits?.needs_subscription) {
+                // Try RevenueCat sync first (in case they already purchased)
+                await syncRevenueCatWithBackend(token);
+                const updatedCredits = await refreshCredits(token);
+                if (updatedCredits?.needs_subscription) {
+                  // Still no subscription — show required paywall
+                  setPaywallRequired(true);
+                  setShowPaywall(true);
+                }
               }
             }}
           />
@@ -4150,11 +4211,17 @@ export default function Index() {
       {showPaywall && (
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998 }}>
           <PaywallScreen
-            onPurchaseSuccess={() => {
+            required={paywallRequired}
+            onPurchaseSuccess={async () => {
+              // After purchase, sync RevenueCat with backend
+              if (sessionToken) {
+                await syncRevenueCatWithBackend(sessionToken);
+                await refreshCredits(sessionToken);
+              }
+              setPaywallRequired(false);
               setShowPaywall(false);
-              if (sessionToken) refreshCredits(sessionToken);
             }}
-            onDismiss={() => setShowPaywall(false)}
+            onDismiss={paywallRequired ? undefined : () => setShowPaywall(false)}
           />
         </View>
       )}

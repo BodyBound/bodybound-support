@@ -2870,6 +2870,7 @@ async def get_user_credits(user_id: str) -> dict:
         'revenuecat_customer_id': sub.get('revenuecat_customer_id'),
         'is_studio_team': is_studio_team,
         'studio_team_id': studio_team_id,
+        'needs_subscription': sub.get('tier') in (None, 'trial_expired', 'expired'),
     }
 
 # ---- Apple Sign-In ----
@@ -2917,47 +2918,27 @@ async def check_trial_abuse(email: Optional[str], device_id: Optional[str], prov
     
     return False, ''
 
-async def create_trial_subscription(user_id: str, email: Optional[str], device_id: Optional[str], provider: str, provider_id: str) -> dict:
-    """Create a new trial subscription with proper anti-abuse tracking."""
-    is_abuse, abuse_reason = await check_trial_abuse(email, device_id, provider, provider_id)
+async def create_initial_subscription(user_id: str, email: Optional[str], device_id: Optional[str], provider: str, provider_id: str) -> dict:
+    """Create an initial subscription record for a new user.
     
+    No free credits are granted — the user must subscribe via Apple/RevenueCat
+    to start their 3-day free trial (managed by Apple, not our backend).
+    """
     now = datetime.now(timezone.utc)
-    trial_expires_at = (now + timedelta(days=TRIAL_DURATION_DAYS)).isoformat()
-    
-    if is_abuse:
-        # User has already used a trial - create subscription with 0 credits
-        subscription = {
-            'user_id': user_id,
-            'tier': None,
-            'available_credits': 0,
-            'is_trial': False,
-            'trial_expires_at': None,
-            'renewal_date': None,
-            'revenuecat_customer_id': None,
-            'anti_abuse_email': email.lower() if email else None,
-            'anti_abuse_device_id': device_id,
-            'anti_abuse_provider': f'{provider}:{provider_id}',
-            'anti_abuse_reason': abuse_reason,
-            'created_at': now.isoformat(),
-        }
-        logger.info(f'[Trial] User {user_id} denied trial: {abuse_reason}')
-    else:
-        # Grant trial
-        subscription = {
-            'user_id': user_id,
-            'tier': 'trial',
-            'available_credits': TRIAL_CREDITS,
-            'is_trial': True,
-            'trial_start_date': now.isoformat(),
-            'trial_expires_at': trial_expires_at,
-            'renewal_date': None,
-            'revenuecat_customer_id': None,
-            'anti_abuse_email': email.lower() if email else None,
-            'anti_abuse_device_id': device_id,
-            'anti_abuse_provider': f'{provider}:{provider_id}',
-            'created_at': now.isoformat(),
-        }
-        logger.info(f'[Trial] User {user_id} granted {TRIAL_CREDITS} credits, expires {trial_expires_at}')
+    subscription = {
+        'user_id': user_id,
+        'tier': None,
+        'available_credits': 0,
+        'is_trial': False,
+        'trial_expires_at': None,
+        'renewal_date': None,
+        'revenuecat_customer_id': None,
+        'anti_abuse_email': email.lower() if email else None,
+        'anti_abuse_device_id': device_id,
+        'anti_abuse_provider': f'{provider}:{provider_id}',
+        'created_at': now.isoformat(),
+    }
+    logger.info(f'[Subscription] New user {user_id} — no trial, must subscribe via Apple')
     
     await db.subscriptions.insert_one(subscription)
     return subscription
@@ -2989,7 +2970,7 @@ async def verify_apple_token(identity_token: str, user_id: str) -> dict:
 
 @api_router.post("/auth/apple")
 async def apple_sign_in(request: AppleAuthRequest):
-    """Handle Apple Sign-In with 3-day trial and anti-abuse protection"""
+    """Handle Apple Sign-In — new users get no free trial (Apple/RevenueCat manages trials)"""
     verified = await verify_apple_token(request.identity_token, request.user_id)
     apple_user_id = verified['apple_user_id']
     email = verified.get('email') or request.email
@@ -3017,8 +2998,8 @@ async def apple_sign_in(request: AppleAuthRequest):
             'last_login': datetime.now(timezone.utc).isoformat(),
         }
         await db.users.insert_one({**user})
-        # Create trial subscription with anti-abuse protection
-        await create_trial_subscription(
+        # Create initial subscription (no free credits — user must subscribe via Apple)
+        await create_initial_subscription(
             user_id=user_id,
             email=email,
             device_id=request.device_id,
@@ -3030,7 +3011,7 @@ async def apple_sign_in(request: AppleAuthRequest):
 
 @api_router.post("/auth/google-session")
 async def google_session_exchange(request: GoogleSessionRequest):
-    """Exchange Emergent Auth session_id for user data with 3-day trial and anti-abuse"""
+    """Exchange Emergent Auth session_id for user data — new users must subscribe via Apple"""
     try:
         async with httpx.AsyncClient() as c:
             resp = await c.get(
@@ -3070,8 +3051,8 @@ async def google_session_exchange(request: GoogleSessionRequest):
             'last_login': datetime.now(timezone.utc).isoformat(),
         }
         await db.users.insert_one({**user})
-        # Create trial subscription with anti-abuse protection
-        await create_trial_subscription(
+        # Create initial subscription (no free credits — user must subscribe via Apple)
+        await create_initial_subscription(
             user_id=user_id,
             email=email,
             device_id=request.device_id,
@@ -3522,6 +3503,57 @@ async def revenuecat_webhook(request: FastAPIRequest):
             {'$set': {'tier': 'expired', 'last_event': event_type}}
         )
     return {'status': 'ok'}
+
+
+@api_router.post("/subscription/sync")
+async def sync_subscription(request: FastAPIRequest):
+    """Sync subscription status from RevenueCat entitlement data sent by the frontend.
+    
+    Called after a successful purchase or on app startup when the frontend detects
+    active RevenueCat entitlements that don't match the backend subscription state.
+    This acts as a fallback when the RevenueCat webhook doesn't fire.
+    """
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    
+    body = await request.json()
+    product_id = body.get('product_id')
+    
+    if not product_id:
+        raise HTTPException(status_code=400, detail='Missing product_id')
+    
+    tier_info = PRODUCT_CREDIT_MAP.get(product_id)
+    if not tier_info:
+        logger.warning(f'[Sync] Unknown product_id: {product_id} for user {user_id}')
+        raise HTTPException(status_code=400, detail='Unknown product')
+    
+    # Check current subscription to avoid overwriting if already correct
+    existing_sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+    if existing_sub and existing_sub.get('tier') == tier_info['tier'] and not existing_sub.get('is_trial', False):
+        # Already synced — return current credits
+        logger.info(f'[Sync] User {user_id} already on tier {tier_info["tier"]}, skipping')
+        credits = await get_user_credits(user_id)
+        return credits
+    
+    next_renewal = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {'$set': {
+            'tier': tier_info['tier'],
+            'available_credits': tier_info['credits'],
+            'is_trial': False,
+            'trial_expires_at': None,
+            'renewal_date': next_renewal,
+            'synced_from': 'frontend',
+            'last_event': 'FRONTEND_SYNC',
+        }},
+        upsert=True
+    )
+    logger.info(f'[Sync] User {user_id} synced to tier {tier_info["tier"]} with {tier_info["credits"]} credits (product: {product_id})')
+    
+    credits = await get_user_credits(user_id)
+    return credits
 
 
 @api_router.post("/tasks/refresh-credits")

@@ -196,14 +196,6 @@ export function SettingsScreen({
               )}
             </View>
 
-            <TouchableOpacity
-              testID="manage-subscription-btn"
-              style={styles.actionBtn}
-              onPress={onManageSubscription}
-            >
-              <Text style={styles.actionBtnText}>Manage Subscription</Text>
-            </TouchableOpacity>
-
             {/* Manage Team button - only for The Shop subscribers */}
             {isShopTier && onManageTeam && (
               <TouchableOpacity
@@ -212,7 +204,7 @@ export function SettingsScreen({
                 onPress={onManageTeam}
               >
                 <Text style={[styles.actionBtnText, { color: '#C9A227' }]}>
-                  👥 Manage Studio Team
+                  Manage Studio Team
                 </Text>
               </TouchableOpacity>
             )}
@@ -239,6 +231,17 @@ export function SettingsScreen({
               onPress={handleSignOut}
             >
               <Text style={styles.actionBtnText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Account Management — subtle links */}
+          <View style={styles.section}>
+            <TouchableOpacity
+              testID="manage-subscription-btn"
+              style={styles.subtleLink}
+              onPress={onManageSubscription}
+            >
+              <Text style={styles.subtleLinkText}>Change Plan</Text>
             </TouchableOpacity>
           </View>
 
@@ -350,4 +353,13 @@ const styles = StyleSheet.create({
   },
   deleteBtnText: { color: '#FF4444', fontSize: 15, fontWeight: '600' },
   deleteWarning: { color: 'rgba(255,68,68,0.5)', fontSize: 12, textAlign: 'center' },
+  subtleLink: {
+    paddingVertical: 8,
+    alignItems: 'center',
+  },
+  subtleLinkText: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 13,
+    textDecorationLine: 'underline',
+  },
 });

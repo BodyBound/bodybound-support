@@ -48,9 +48,10 @@ const TIER_INFO = {
 interface PaywallScreenProps {
   onPurchaseSuccess: () => void;
   onDismiss?: () => void;
+  required?: boolean; // When true, user cannot dismiss — must subscribe
 }
 
-export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenProps) {
+export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }: PaywallScreenProps) {
   const [offerings, setOfferings] = useState<PurchasesPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -145,7 +146,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
       <SafeAreaView style={styles.safeArea}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
           {/* Header */}
-          {onDismiss && (
+          {onDismiss && !required && (
             <TouchableOpacity style={styles.closeBtn} onPress={onDismiss} testID="paywall-close-btn">
               <Text style={styles.closeBtnText}>✕</Text>
             </TouchableOpacity>
@@ -208,8 +209,8 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
           {/* Trial Info */}
           <View style={styles.trialInfo}>
             <Text style={styles.trialInfoText}>
-              All plans include a 3-day free trial with 10 starter credits.{'\n'}
-              Cancel anytime before trial ends. Full credits unlock after first payment.
+              Start your 3-day free trial with full access to all credits.{'\n'}
+              Cancel anytime before your trial ends — you won't be charged.
             </Text>
           </View>
 
