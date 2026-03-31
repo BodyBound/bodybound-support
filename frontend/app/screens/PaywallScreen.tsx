@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
 
 const TIER_INFO = {
-  hobbyist: {
+  walk_in: {
     label: 'The Walk-In',
     price: '$14.99/mo',
     credits: 125,
@@ -26,7 +26,7 @@ const TIER_INFO = {
     features: ['125 credits/month', 'All stencil styles', 'Edit mode', 'HD export'],
     color: '#C9A227',
   },
-  pro: {
+  booked_out: {
     label: 'Booked Out',
     price: '$29.99/mo',
     credits: 500,
@@ -35,7 +35,7 @@ const TIER_INFO = {
     color: '#E8D5A3',
     popular: true,
   },
-  studio: {
+  the_shop: {
     label: 'The Shop',
     price: '$99.00/mo',
     credits: 1500,
@@ -167,10 +167,9 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss }: PaywallScreenPro
           ) : (
             <View style={styles.plans}>
               {Object.entries(TIER_INFO).map(([key, tier], index) => {
-                // Match by position: Walk-In=0, Booked Out=1, The Shop=2
-                // Falls back to identifier matching if order differs
-                const pkg = offerings[index] ||
-                  offerings.find(p => p.product?.identifier?.toLowerCase().includes(key));
+                // Match by RevenueCat package identifier (walk_in, booked_out, the_shop)
+                // Falls back to position-based matching
+                const pkg = offerings.find(p => p.identifier === key) || offerings[index];
                 const isSelected = selectedPackage?.identifier === pkg?.identifier;
 
                 return (

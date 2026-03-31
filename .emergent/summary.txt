@@ -1,203 +1,156 @@
-<analysis>original_problem_statement:
-The user wants to implement a complete Credit Management and Subscription System for the BODY BOUND stencil generator app to prepare it for App Store launch. This involves shifting from a free model to a subscription-based one using RevenueCat, managing user credits, and implementing a monthly credit refresh mechanism.
+<analysis>**original_problem_statement:**
+The user is preparing their BODY BOUND stencil generator app for App Store launch (and subsequently updating the live app). They needed to resolve critical build issues, fix UI bugs (line weight slider, edited stencil save distortion), pass App Store review by adding legal links to the paywall, fix RevenueCat integration for real purchases, and resolve recurring backend crashes and API key revocations. 
 
 **PRODUCT REQUIREMENTS**:
+1. Stable production deployment with a working  check.
+2. RevenueCat integrated with LIVE API keys and matching package identifiers (, , ).
+3. Paywall must include tappable links to Apple EULA and the app's Privacy Policy.
+4. Edit Mode saves must not stretch or distort stencils when downloaded alongside reference photos.
+5. Google AI Studio API key must be secured and not leaked to public GitHub repositories.
+6. **(Pending)** Shift to a native Apple subscription flow: show Paywall immediately on first launch, handle the 3-day trial via Apple/RevenueCat instead of custom backend logic.
 
-1.  **Authentication**: Implement user sign-in using **Emergent-managed Google Sign-In**.
-2.  **Backend & Database**:
-    *   Set up a database to manage user accounts and credits.
-    *   **Subscription Tiers**:
-        *   The Walk-In (4.99/mo): 125 credits.
-        *   Booked Out (9.99/mo): 500 credits.
-        *   The Shop (9.00/mo): 1,500 shared credits for a team of up to 5 members.
-    *   **Credit Logic**: Deduct credits on use, block on zero, refresh monthly.
-    *   **Free Trial**: Offer a 3-day free trial with 10 starter credits.
-    *   **Cron Job**: Create a secure endpoint for an external trigger (GitHub Actions) to refresh credits monthly.
-3.  **RevenueCat Integration**:
-    *   Integrate RevenueCat SDK for Apple In-App Purchases, with a graceful fallback for web.
-    *   Use API Key: .
-    *   Set up entitlement checking, paywall presentation, and Restore Purchase.
-4.  **UI/UX Tasks**:
-    *   Display a paywall, credit tracker, and a consistent background image on pre-login screens.
-    *   Implement low-credit push notifications.
-5.  **App Store Launch Readiness**:
-    *   Implement Delete Account functionality.
-    *   Add a review prompt.
-    *   Fix core usability bugs (e.g., jittery sliders).
+**User's preferred language**: 
+INSTRUCT next agent to respond in **English**.
 
-**User's preferred language**: English
+**what currently exists?** 
+A full-stack application (Expo React Native frontend + FastAPI backend + MongoDB). The app is **LIVE on the App Store (v3.0.56, Build 56)**. It uses RevenueCat for subscriptions and Google AI for stencil generation. The backend successfully processes stencils using a U2-Net background removal () combined with Gemini.
 
-**what currently exists?**
-The application is a React Native (Expo) frontend with a FastAPI backend. A full authentication flow using Emergent-managed Google Sign-In is in place, which now works correctly on both native and web platforms after significant debugging. The backend has a monolithic  containing endpoints for auth, credit management, and a RevenueCat webhook. A secure cron endpoint () and a corresponding GitHub Actions workflow file () have been created to handle monthly credit resets.
+**Last working item**: 
+- Last item agent was working: Securing the Google AI API key. The key was repeatedly revoked by Google because clicking Save to GitHub committed  to the public repo. The agent updated the key, removed  from git tracking, and added it to .
+- Status: COMPLETED
+- Agent Testing Done: Y
+- Which testing method agent to use? manual testing by curl / python -c
+- User Testing Done: Y
 
-The frontend has been refactored into a screen/component architecture. It displays subscription tiers (now named The Walk-In, Booked Out, The Shop), handles RevenueCat paywall display with a graceful fallback on web, and has a consistent background image across pre-login screens. Low-credit push notifications using  have been added. Several bugs related to the web auth flow, jittery UI sliders, and crashes in the Expo Go environment have been resolved.
+**All Pending/In progress Issue list**: 
+Issue 1: **Transition to Standard Apple/RevenueCat Subscription Flow (P0)**
+- Attempted fixes: Discussed and approved by user, but coding has not started.
+- Next debug checklist: 
+  - Update frontend routing to show  immediately after sign-in for new users.
+  - Remove the custom backend logic that automatically grants a 3-day/10-credit trial upon account creation.
+  - Ensure the backend strictly trusts RevenueCat webhook data for subscription and trial statuses.
+- Why fix this issue and what will be achieved with the fix? Industry standard for conversion. Users must commit Apple Pay info upfront to get the 3-day trial, rather than getting free access and bouncing.
+- Status: NOT STARTED
+- Is recurring issue? N
+- Should Test frontend/backend/both after fix? Both
+- Blocked on other issue: None
 
-**Last working item**:
--   Last item agent was working: Fixing a crash in the Expo Go environment. The user reported that an error related to  was appearing after the previous fix for RevenueCat. The agent identified that  doesn't exist in Expo Go and was about to silence the resulting error.
--   Status: IN PROGRESS
--   Agent Testing Done: N
--   Which testing method agent to use? Manual testing by user. The agent should apply the fix and ask the user to verify in Expo Go.
--   User Testing Done: N
+Issue 2: **EAS Project ID Build Pipeline Conflict (P1)**
+- Attempted fixes: Agent escalated to Emergent support. The build pipeline strips the  from  and tries to recreate the EAS project, failing because it already exists under .
+- Next debug checklist: Wait for user to get the true  UUID from Emergent Support, then hardcode it into .
+- Why fix this issue and what will be achieved with the fix? Prevents build failures in the Emergent EAS pipeline. 
+- Status: BLOCKED
+- Is recurring issue? Y
+- Should Test frontend/backend/both after fix? Frontend
+- Blocked on other issue: Platform support.
 
-**All Pending/In progress Issue list**:
--   Issue 1: ** crashes the app in Expo Go** (P0)
--   Issue 2: **Crop tool is inaccurate and has a delay** (P2)
--   Issue 3: **Full end-to-end purchase flow not validated in a production-like environment** (P1)
-
-Issues Detail:
--   Issue 1:
-    -   Attempted fixes: The agent has identified the root cause ( is unavailable in Expo Go) from the logs.
-    -   Next debug checklist: Wrap the call to the notification setup function inside a  block within , similar to how the RevenueCat crash was handled. This will log the expected error silently instead of crashing the app.
-    -   Why fix this issue and what will be achieved with the fix? This will allow the user to test other app functionalities in Expo Go without the app crashing.
-    -   Status: IN PROGRESS
-    -   Is recurring issue? N
-    -   Should Test frontend/backend/both after fix? Frontend (specifically in Expo Go).
-    -   Blocked on other issue: None.
-
--   Issue 2:
-    -   Attempted fixes: None. This is a long-standing issue.
-    -   Next debug checklist: Review the  function in . Profile the function to find the source of the delay and check the cropping calculations.
-    -   Why fix this issue and what will be achieved with the fix? Improves a core editing feature's user experience.
-    -   Status: NOT STARTED
-    -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Frontend.
-    -   Blocked on other issue: None.
-
--   Issue 3:
-    -   Attempted fixes: The UI and backend webhook are implemented. Web fallback logic is in place.
-    -   Next debug checklist: User needs to configure App Store Connect products and test a real purchase in a custom dev build or TestFlight build, as this cannot be tested in Expo Go or a web preview.
-    -   Why fix this issue and what will be achieved with the fix? This validates the core monetization flow, which is critical for launch.
-    -   Status: USER VERIFICATION PENDING
-    -   Is recurring issue? N
-    -   Should Test frontend/backend/both after fix? Both.
-    -   Blocked on other issue: User action (setting up App Store Connect & TestFlight).
-
-**In progress Task List**:
--   Task 1: **Implement Credit Management & Subscription System** (P0)
-    -   Where to resume: Fix the  crash in Expo Go. After that, the main implementation is largely complete, pending user verification of the full purchase flow and implementation of the remaining Launch Readiness tasks.
-    -   What will be achieved with this? A complete monetization system, enabling the app to be launched on the App Store.
-    -   Status: IN PROGRESS
-    -   Should Test frontend/backend/both after fix? Both.
-    -   Blocked on something: No.
+**In progress Task List**: 
+Task 1: **Implement Native Trial Grandfathering**
+- Where to resume: When building the new Paywall-first flow, implement backend logic to grandfather the ~3 current real users who are currently in the middle of their custom 3-day backend trial. 
+- What will be achieved with this? Prevents locking out live customers who downloaded the app before the subscription flow change.
+- Status: NOT STARTED
+- Should Test frontend/backend/both after fix? Both
+- Blocked on something: N/A
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks (Credit System & Launch Readiness):**
-    -   **(P1) Phase 3: Backend Credit & Trial Logic**
-        -   Implement the 3-day/10-credit free trial logic.
-        -   Implement anti-abuse checks (Device ID & Email).
-        -   Implement Studio tier logic (admin invites, shared credits).
-    -   **(P2) Phase 4: App Store Launch Readiness**
-        -   Add Delete Account feature (UI button and backend API).
-        -   Add a review prompt after the 5th successful generation.
+Upcoming Tasks:
+- (P0) Transition app to native Apple Paywall-first trial flow.
+- (P1) Investigate  warnings in backend logs.
 
--   **Future Tasks**:
-    -   **(P1) Refactor **: Modularize the backend code into separate files for routes, services, and models.
-    -   **(P2) Fix Crop tool is inaccurate and has a delay**.
+Future Tasks:
+- (P2) Refactor : Break down the 4000+ line monolith.
+- (P2) Refactor : Extract components and custom hooks.
+- (P2) Re-enable push notifications for production.
+- (P3) Pre-warm  ONNX model in a background task on backend startup to prevent slow first-generation times.
 
 **Completed work in this session**
--   **CRITICAL: Web Auth Flow Fixed**: Diagnosed and fixed a complex OAuth redirect loop on the web preview. Created a -based token utility () to bypass 's limitations on the web and implemented a dedicated callback route ().
--   **CRITICAL: Expo Go Stability**: Fixed multiple crashes in the Expo Go environment by:
-    -   Moving the  utility outside the  directory to resolve a Metro bundler issue.
-    -   Wrapping the  call in a  block to handle its absence in Expo Go gracefully.
--   **Monthly Credit Refresh Implemented**:
-    -   Created a secure backend endpoint  protected by an  header.
-    -   Created a GitHub Actions workflow file  to trigger the endpoint monthly.
--   **Low-Credit Push Notifications**: Integrated  to alert users when their credit balance drops below 10.
--   **UI/UX Improvements**:
-    -   Renamed subscription tiers to The Walk-In, Booked Out, and The Shop across the backend and frontend.
-    -   Fixed jittery sliders in the image editor by moving state updates from  to .
-    -   Applied a consistent background image to all pre-login screens (, ).
--   **Infrastructure**: Resolved an  tunnel conflict by killing stale processes and restarting the frontend service.
+- Fixed  state/closure bug preventing proper gesture response (DONE).
+- Fixed deployment crash by lazy importing  and adding root  endpoint (DONE).
+- Fixed edited stencil distortion bug by saving edited stencils at native aspect ratios (DONE).
+- Added Privacy Policy and Apple TOS links to Paywall to pass App Store Review (DONE).
+- Added friendly fallback UI error messages for intermittent Auth  failures (DONE).
+- Migrated RevenueCat to LIVE API key and mapped packages to exact RC identifiers (, , ) (DONE).
+- Secured  files via  to stop Google API key revocations (DONE).
 
 **Earlier issues found/mentioned but not fixed**
--   **Crop tool is inaccurate and has a delay.** This was mentioned in a previous handoff and remains unaddressed.
+- None. All mentioned bugs were tackled successfully. 
 
 **Known issue recurrence from previous fork**
--   None.
+- Issue recurrence in previous fork: The deployment agent flagged hardcoded API URLs in  and . 
+- Recurrence count: 4+
+- Status: RESOLVED (Ignored)
+- Note: Do NOT change the hardcoded frontend  variables. This is a deliberate, required workaround because the EAS pipeline fails to inject environment variables into the native build. 
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Frontend**: React Native (Expo), TypeScript, Expo Router, , .
--   **Backend**: FastAPI, Python, MongoDB, JWT ().
--   **Monetization**: RevenueCat ().
--   **Authentication**: Emergent-managed Google Sign-In with a popup flow on web, handled by a custom  redirect page and a -backed .
--   **Dev Environments**: Supporting both web preview and Expo Go, which requires conditional logic and error handling for native-only modules like RevenueCat and Notifications.
+- Frontend: Expo React Native (EAS Build system)
+- Backend: FastAPI
+- Database: MongoDB (Sandbox vs Atlas Production)
+- AI / Image:  (U2-Net), OpenCV, Google Gemini ()
+- Subscriptions: RevenueCat
 
 **key DB schema**
--   **users**: , , , , , , .
--   **subscriptions**: (Implicitly managed via RevenueCat webhook) stores user's active subscription and maps to credit allowances.
+- : , , , , 
+- : Used to track tiers
+- : Team logic for The Shop tier.
 
 **changes in tech stack**
--   **Added**: .
+- Transitioned heavily to  but backend still has legacy dependencies on .
 
 **All files of reference**
--   **Created**:
-    -   
-    -   
-    -    (moved from )
--   **Modified**:
-    -   : Added cron endpoint, renamed subscription tiers.
-    -   : Major changes to auth logic, added notification and RevenueCat setup, wired in .
-    -   : Updated to use .
-    -   : Renamed tiers, added background, suppressed RevenueCat errors in Expo Go.
-    -   : Renamed tiers, added background.
-    -   : Fixed slider UI/UX bug.
-    -   : Version adjustments for dependencies.
-    -   : Added  plugin.
+- : Fixed slider and image saving logic.
+- : Updated RevenueCat identifiers and legal links.
+- : Lazy loaded , added .
+- : Updated to explicitly ignore .
 
 **Areas that need refactoring**:
--   : Remains a large monolithic file. It should be broken down into a modular structure (e.g., , , ).
+-  and  are massive, fragile monoliths.
 
 **key api endpoints**
--   **POST /api/auth/google**: Exchanges a Google auth code for a JWT.
--   **POST /api/webhooks/revenuecat**: Handles RevenueCat subscription events.
--   **POST /api/tasks/refresh-credits**: Secure endpoint for monthly credit refresh, triggered by an external cron job.
+-  and : Deployment health checks.
+- : RevenueCat lifecycle tracking.
+- : Generates the images via Gemini.
 
 **Critical Info for New Agent**
-1.  **Dual Environment Focus**: The user actively tests on both the **web preview** and **Expo Go**. You MUST ensure changes work on both. Be aware of native-only modules (RevenueCat, Notifications) and wrap their initialization in  blocks to prevent crashes in Expo Go.
-2.  **Web Auth is Fragile**: The current web authentication relies on a popup flow, the  callback page, and the  helper. Any changes to the auth flow must be carefully tested on the web to avoid regressions.
-3.  **Expo Go Limitations**: Remind the user that full subscription testing () is not possible in Expo Go and requires a custom dev build or TestFlight. The current setup only prevents crashes.
-4.  **Confirm User Actions**: Before proceeding with new features, confirm if the user has completed necessary external steps like setting up  and  in GitHub secrets for the cron job to function.
+1. **APP IS LIVE**: The application has been approved and is live on the App Store. Avoid pushing breaking changes. Test thoroughly before committing.
+2. **PAYWALL REFACTOR**: The user agreed to change the subscription logic to a standard App Store model: show the paywall *immediately* upon first login, forcing users to start a RevenueCat 3-day trial via Apple Pay instead of receiving an automatic 3-day backend trial. This is your immediate next task.
+3. **DO NOT COMMIT API KEYS**: GitHub's secret scanner will revoke Google API keys within seconds if committed.  is now in . Leave it there.
 
 **documents and test reports created in this job**
--   
--   
--    (updated multiple times)
+- None.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  User reported Unmatched route error after Google Sign-In on the web. (RESOLVED)
-2.  User reported being redirected back to the Get Started page after sign-in. (RESOLVED)
-3.  User reported a  error in a popup during sign-in. (RESOLVED)
-4.  User reported the same redirect issue was still happening. (RESOLVED)
-5.  User reported two separate errors: a module resolution error in Expo Go and the redirect issue on the web. (RESOLVED)
-6.  User reported a new crash in Expo Go, and that sliders were responding odd on the web. (RESOLVED)
-7.  User confirmed Expo Go worked but showed a new error on the pricing page. (IN PROGRESS - This is the last working item).
-8.  User requested to change the background image on all pre-app screens. (COMPLETED)
-9.  User requested to change subscription tier names. (COMPLETED)
-10. User asked for the app's URL. (COMPLETED)
+1. User mentions customers can't generate stencils.
+2. Agent finds Google API key revoked (leaked to GitHub). Updates it.
+3. User reports another customer can't generate. Agent finds DB trial expiry and second API key formatting issue.
+4. User asks if the subscription flow is setup wrong (free trial without upfront payment commitment).
+5. Agent confirms standard Apple flow (Paywall first) is better.
+6. User asks how changing the flow affects current trial users. 
+7. Agent checks DB: 0 active trials in sandbox. Suggests a clean flip.
+8. User tells agent to proceed with building the new Paywall-first flow.
+9. User asks why a live customer () can't subscribe.
+10. Agent discovers RevenueCat packages in code don't match Dashboard IDs (, , ). Fixes it (Build 56).
+11. User says stencils are failing again. Agent realizes Save to GitHub leaked the key *again*. Fixes  and updates key. *(Pending: Proceeding with Paywall-first flow).*
 
 **Project Health Check:**
--   **Broken**: None. App is stable on web and (with graceful failures) in Expo Go.
--   **Needs Refactoring**: **CRITICAL**: The backend logic in  is monolithic and complex, increasing the risk of bugs.
+Healthy.
 
 **3rd Party Integrations**
--   **Emergent LLM Integrations**:  for stencil generation.
--   **Emergent-managed Google Auth**: For user sign-in.
--   **RevenueCat**: For managing in-app subscriptions.
--   **expo-notifications**: For sending push notifications.
+- Google Gemini API () — requires User API Key.
+- RevenueCat (Subscriptions) — requires User API Key (Live Key currently in code).
+- Emergent-managed Google/Apple Auth — Uses Emergent URLs.
 
 **Testing status**
--   Testing agent used after significant changes: YES. Two test runs were executed (, ) to validate the cron job and backend changes.
--   Troubleshoot agent used after agent stuck in loop: NO.
--   Test files created: None.
--   Known regressions: None.
+- Testing agent used after significant changes: NO (Manual/Script testing used heavily due to rapid deployment debugging).
+- Troubleshoot agent used after agent stuck in loop: NO.
+- Test files created: None.
+- Known regressions: None currently.
 
 **Credentials to test flow:**
--   RevenueCat API key: .
--   Google Sign-in credentials are in the environment.
--    environment variable is used for the refresh endpoint.
+- RevenueCat Live Key: 
+- Google API Key: Located in .
 
 **What agent forgot to execute**
--   The agent identified the  crash in Expo Go from logs but was interrupted before implementing the  fix. This is the immediate next step.</analysis>
+- The agent gained user approval to refactor the subscription flow to the Paywall-first model, but was interrupted by a customer bug and a leaked API key. This refactor has not been started.</analysis>
