@@ -12,44 +12,41 @@ An iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo
 - **Storage**: MongoDB (tattoo_stencil DB)
 
 ## Subscription Tiers (Apple-managed trials)
-| Tier | Price | Credits/Month | Notes |
-|------|-------|---------------|-------|
-| The Walk-In | $14.99/mo | 125 | Individual plan |
-| Booked Out | $29.99/mo | 500 | Individual plan |
-| The Shop | $99.00/mo | 1,500 shared | Team plan (up to 5 members) |
+| Tier | Price | Credits/Month | Trial Credits |
+|------|-------|---------------|---------------|
+| The Walk-In | $14.99/mo | 125 | 10 |
+| Booked Out | $29.99/mo | 500 | 10 |
+| The Shop | $99.00/mo | 1,500 shared | 10 |
 
-**Trial Model**: 3-day free trial managed by Apple/RevenueCat (not backend). Users get FULL tier credits during trial. No backend-granted starter credits.
+**Trial Model**: 3-day free trial managed by Apple/RevenueCat. Users get 10 credits during trial (regardless of tier). Full tier credits unlock after first payment.
+
+## Refer-a-Friend
+- Each subscriber gets a unique referral code (BB-XXXXXX format)
+- When a new subscriber redeems a code: both parties get **20 bonus credits**
+- One-time use per user (can't redeem twice)
+- Can't redeem your own code
+- Both parties must have active subscriptions
+- Stats tracked per user (total referrals, credits earned)
 
 ## Code Architecture
 ```
 /app
 ├── backend/
-│   ├── server.py          # FastAPI (~3681 lines) - monolithic but working
+│   ├── server.py              # FastAPI (~3820 lines) - monolithic but working
 │   ├── requirements.txt
 │   └── tests/
-│       ├── test_auth_credits.py
-│       ├── test_iter4_credits_studio.py
-│       ├── test_paywall_flow.py          # 7 tests (paywall-first flow)
-│       └── test_paywall_flow_extended.py # 16 tests (extended coverage)
+│       ├── test_paywall_flow.py          # 7 tests
+│       ├── test_paywall_flow_extended.py # 16 tests
+│       └── test_trial_referral.py        # 26 tests (trial cap + referral)
 ├── frontend/
-│   ├── assets/
-│   │   └── images/
 │   ├── app/
-│   │   ├── index.tsx      # Main app (~4232 lines)
+│   │   ├── index.tsx      # Main app (~4250 lines)
 │   │   ├── types.ts       # Shared TypeScript interfaces
-│   │   ├── auth.tsx
-│   │   ├── styles/
-│   │   │   └── mainStyles.ts
-│   │   ├── components/
-│   │   │   └── WelcomeScreen.tsx
-│   │   └── screens/
-│   │       ├── AuthScreen.tsx
-│   │       ├── PaywallScreen.tsx   # Supports required mode (non-dismissable)
-│   │       ├── SettingsScreen.tsx  # "Change Plan" subtle link
-│   │       └── StudioTeamScreen.tsx
-│   ├── utils/
-│   │   └── tokenStore.ts
-│   ├── app.json
+│   │   ├── screens/
+│   │   │   ├── AuthScreen.tsx
+│   │   │   ├── PaywallScreen.tsx   # Required mode + referral code input
+│   │   │   ├── SettingsScreen.tsx  # Refer-a-Friend section + subtle Change Plan
+│   │   │   └── StudioTeamScreen.tsx
 │   └── package.json
 └── memory/
     ├── PRD.md
@@ -59,93 +56,70 @@ An iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo
 ## Key API Endpoints
 
 ### Auth & User
-- `POST /api/auth/apple` - Apple Sign-In (new users get empty subscription, no free trial)
-- `POST /api/auth/google-session` - Google Sign-In (new users get empty subscription)
-- `GET /api/auth/me` - Get current user + credits (includes `needs_subscription` boolean)
-- `POST /api/auth/demo-login` - Reviewer demo account (100 credits)
-- `DELETE /api/account/delete` - Delete user account
+- `POST /api/auth/apple` - Apple Sign-In (new users: empty subscription)
+- `POST /api/auth/google-session` - Google Sign-In (new users: empty subscription)
+- `GET /api/auth/me` - Get current user + credits (includes `needs_subscription`)
+- `POST /api/auth/demo-login` - Reviewer demo account
 
 ### Subscription & Credits
-- `POST /api/subscription/sync` - Sync RevenueCat entitlement to backend (fallback for missed webhooks)
+- `POST /api/subscription/sync` - Sync RevenueCat entitlement to backend (supports `is_trial` flag)
 - `POST /api/credits/deduct` - Atomically deduct 1 credit
-- `POST /api/webhooks/revenuecat` - RevenueCat lifecycle events
+- `POST /api/webhooks/revenuecat` - RevenueCat lifecycle events (detects `period_type: TRIAL`)
 - `POST /api/tasks/refresh-credits` - Monthly credit refresh (cron)
 
-### Studio Team Management
-- `GET /api/studio/team` - Get team info
-- `POST /api/studio/create` - Create team (The Shop only)
-- `POST /api/studio/invite` - Invite member
-- `POST /api/studio/accept-invite` - Accept invitation
-- `DELETE /api/studio/member/{user_id}` - Remove member
-- `POST /api/studio/leave` - Leave team
+### Referral System
+- `GET /api/referral/code` - Get or generate user's referral code + stats
+- `POST /api/referral/redeem` - Redeem a referral code (20 credits to both parties)
 
-### Stencil Generation
-- `POST /api/ai-stencil-async` - Generate stencil async
-- `GET /api/ai-stencil-status/{job_id}` - Check job status
-- `POST /api/adjust-line-weight` - Adjust stencil lines
-- `GET/POST /api/stencils` - Stencil gallery CRUD
+### Studio Team, Stencil Generation
+- Team CRUD: `/api/studio/*`
+- AI Stencil: `/api/ai-stencil-async`, `/api/ai-stencil-status/{job_id}`
 
 ## MongoDB Collections
-- **users**: user_id, apple_user_id, google_user_id, email, name, device_id, created_at, last_login
-- **subscriptions**: user_id, tier, available_credits, is_trial, renewal_date, revenuecat_customer_id, anti_abuse_*
-- **studio_teams**: team_id, admin_user_id, members[], shared_credits, pending_invites[]
-- **stencils**: id, user_id, original_image, stencil_image, settings, created_at, name
+- **users**: user_id, apple_user_id, google_user_id, email, name, device_id
+- **subscriptions**: user_id, tier, available_credits, is_trial, renewal_date, period_type
+- **referrals**: type (code/redemption), referral_code, referrer_user_id, redeemer_user_id, status
+- **studio_teams**: team_id, admin_user_id, members[], shared_credits
+- **stencils**: id, user_id, original_image, stencil_image, settings
 
 ## What's Been Implemented
 
-### 2026-03 — Paywall-First Subscription Flow Refactor ✅ NEW
-1. **Removed backend-managed trials**: New users get empty subscription (tier=null, credits=0) instead of 3-day/10-credit trial
-2. **Apple-managed trial**: 3-day free trial handled by Apple/RevenueCat, full credits during trial
-3. **Paywall-first UX**: New users see non-dismissable PaywallScreen immediately after sign-in
-4. **RevenueCat sync endpoint**: `POST /api/subscription/sync` — frontend-driven sync for missed webhook scenarios
-5. **needs_subscription flag**: `/api/auth/me` response includes boolean indicating if user must subscribe
-6. **Startup sync**: On app launch, frontend syncs RevenueCat entitlements with backend (fixes stale subscription data)
-7. **Cancel button de-emphasized**: "Manage Subscription" renamed to "Change Plan" and styled as subtle text link below Sign Out
-8. **PaywallScreen text updated**: Reflects Apple-managed trial (full access, cancel anytime)
-9. **Grandfathering**: Existing trial users' subscriptions are untouched — they keep their current trial
+### 2026-03 — Trial Credit Cap + Refer-a-Friend
+1. **Trial credit cap**: 10 credits for ALL tiers during Apple trial (`TRIAL_CREDITS=10`)
+2. **Webhook trial detection**: `period_type=TRIAL` in RevenueCat webhook → 10 credits; `NORMAL` → full credits
+3. **Sync trial detection**: `is_trial=true` parameter in `/api/subscription/sync` → 10 credits
+4. **Referral code generation**: `GET /api/referral/code` returns unique BB-XXXXXX code
+5. **Referral redemption**: `POST /api/referral/redeem` awards 20 credits to both parties
+6. **Referral UI on Paywall**: Input field for referral code during subscription
+7. **Referral UI on Settings**: "Refer a Friend" section with code display, stats, and Share button
 
-### 2026-03 — Previous Work
-- Credit Management & Auth System (Phase 0-2)
-- Free Trial Logic + Anti-Abuse (Phase 3) — now superseded by Apple-managed trials
-- Studio Team Management UI
-- RevenueCat LIVE keys and package identifiers
-- Paywall legal links (EULA, Privacy Policy)
-- VerticalSlider state/closure bug fix
-- Edited stencil distortion bug fix
-- Deployment crash fix (lazy rembg, /health endpoint)
-- API key security (.gitignore protection)
+### 2026-03 — Paywall-First Subscription Flow
+1. Removed backend-managed trials (no free 3-day/10-credit trial)
+2. Apple-managed trial with trial credit cap
+3. Paywall-first UX (non-dismissable for new users)
+4. RevenueCat sync endpoint as webhook fallback
+5. `needs_subscription` flag in `/api/auth/me`
+6. Startup sync of RevenueCat entitlements
+7. "Change Plan" as subtle link (de-emphasized cancel)
 
-## Known Issues / Pending Work
+### Earlier Work
+- Credit management, auth, anti-abuse, studio teams, stencil generation
+- RevenueCat LIVE keys, legal links, slider/distortion fixes, API key security
 
-### P0 - Active
-- **Booked Out customer showing 10 credits**: Fix deployed (RevenueCat sync on startup), requires new App Store build to take effect
-- **EAS Project ID conflict**: Blocked on Emergent platform support
-
-### P1 - Upcoming
-- Apple token `audience doesn't match` warnings in backend logs
-- Backend server.py refactoring (split into routes/services/models)
-- Frontend index.tsx refactoring (extract components/hooks)
-
-### P2 - Backlog
-- Re-enable push notifications for production
-- Pre-warm rembg ONNX model on backend startup
-- Studio team admin transfer functionality
+## Known Issues / Pending
+- **P0**: EAS Project ID conflict (blocked on Emergent support)
+- **P1**: Apple token `audience doesn't match` warnings
+- **P2**: Refactor server.py (~3820 lines) and index.tsx (~4250 lines)
+- **P2**: Re-enable push notifications, pre-warm rembg model
 
 ## Testing Status
-- **Paywall Flow Tests**: 23/23 passing (test_paywall_flow.py + test_paywall_flow_extended.py)
-- **Test Report**: /app/test_reports/iteration_5.json
-- **Coverage**: Sync endpoint, needs_subscription field, product mapping, webhook, cron
-
-## Environment Variables
-### Backend (.env)
-- `MONGO_URL`, `DB_NAME`, `GOOGLE_API_KEY`, `JWT_SECRET`, `CRON_SECRET`, `REVENUECAT_WEBHOOK_AUTH`
-
-### Frontend (.env)
-- `EXPO_PUBLIC_BACKEND_URL`
+- **Total Tests**: 49/49 passing (7 + 16 + 26)
+- **Test Reports**: /app/test_reports/iteration_5.json, iteration_6.json
+- **Coverage**: Sync, trial cap, webhook, referral CRUD, needs_subscription, regression
 
 ## RevenueCat Configuration
 - API Key (Live): `appl_dVqjUPRJXPXNpLZThAjtsqApiVU`
 - Product IDs → Backend Tiers:
-  - `bodybound_1499_1m_3d` → walk-in (125 credits)
-  - `bodybound_2999_1m_3d` → booked-out (500 credits)
-  - `bodybound_9999_1m_3d` → the-shop (1500 credits)
+  - `bodybound_1499_1m_3d` → walk-in (125 credits, 10 trial)
+  - `bodybound_2999_1m_3d` → booked-out (500 credits, 10 trial)
+  - `bodybound_9999_1m_3d` → the-shop (1500 credits, 10 trial)
