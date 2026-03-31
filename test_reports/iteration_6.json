@@ -1,0 +1,100 @@
+{
+  "summary": "Iteration 6 testing: 26/26 new tests pass (100%) + 23/23 regression tests pass. All Trial Credit Cap and Refer-a-Friend features verified. Fixed missing @api_router.post decorator for /api/tasks/refresh-credits endpoint.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "features_verified": {
+    "trial_credit_cap_sync": {
+      "POST /api/subscription/sync is_trial=true walk-in": "VERIFIED - Returns 10 credits (trial cap)",
+      "POST /api/subscription/sync is_trial=true booked-out": "VERIFIED - Returns 10 credits (trial cap)",
+      "POST /api/subscription/sync is_trial=true the-shop": "VERIFIED - Returns 10 credits (trial cap)",
+      "POST /api/subscription/sync is_trial=false walk-in": "VERIFIED - Returns 125 credits (full)",
+      "POST /api/subscription/sync is_trial=false booked-out": "VERIFIED - Returns 500 credits (full)",
+      "POST /api/subscription/sync is_trial=false the-shop": "VERIFIED - Returns 1500 credits (full)",
+      "is_trial flag set correctly": "VERIFIED - Flag toggles correctly between trial/paid"
+    },
+    "trial_credit_cap_webhook": {
+      "POST /api/webhooks/revenuecat period_type=TRIAL": "VERIFIED - Grants 10 credits",
+      "POST /api/webhooks/revenuecat period_type=NORMAL": "VERIFIED - Grants full tier credits (500 for booked-out)"
+    },
+    "needs_subscription_trial": {
+      "GET /api/auth/me for trial users": "VERIFIED - needs_subscription=False when tier is set"
+    },
+    "referral_code_get": {
+      "GET /api/referral/code returns code": "VERIFIED - Returns BB-XXXXXX format code",
+      "GET /api/referral/code idempotent": "VERIFIED - Same code on subsequent calls",
+      "GET /api/referral/code returns stats": "VERIFIED - Returns total_referrals and credits_earned",
+      "GET /api/referral/code requires auth": "VERIFIED - Returns 401 without token"
+    },
+    "referral_redeem": {
+      "POST /api/referral/redeem requires auth": "VERIFIED - Returns 401 without token",
+      "POST /api/referral/redeem missing code": "VERIFIED - Returns 400 with 'Missing referral_code'",
+      "POST /api/referral/redeem invalid code": "VERIFIED - Returns 404 with 'Invalid referral code'",
+      "POST /api/referral/redeem self-referral": "VERIFIED - Returns 400 with 'Cannot redeem your own'"
+    },
+    "paywall_regression": {
+      "demo_login": "VERIFIED - Still works",
+      "subscription_sync_auth": "VERIFIED - Returns 401 without token",
+      "subscription_sync_product_id": "VERIFIED - Returns 400 without product_id",
+      "subscription_sync_unknown_product": "VERIFIED - Returns 400 for unknown product",
+      "webhook_auth": "VERIFIED - Returns 401 without token",
+      "cron_refresh_secret": "VERIFIED - Returns 401 without X-Cron-Secret"
+    }
+  },
+
+  "bugs_fixed": [
+    {
+      "file": "/app/backend/server.py",
+      "line": "~3698",
+      "issue": "Missing @api_router.post('/tasks/refresh-credits') decorator before tasks_refresh_credits function",
+      "fix": "Added the missing decorator"
+    }
+  ],
+
+  "test_report_links": [
+    "/app/backend/tests/test_trial_referral.py",
+    "/app/backend/tests/test_paywall_flow.py",
+    "/app/backend/tests/test_paywall_flow_extended.py",
+    "/app/test_reports/pytest/pytest_results_iter6.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "server.py is now 3820+ lines - still a large monolith. Consider splitting into modules",
+    "TRIAL_CREDITS=10 and REFERRAL_BONUS_CREDITS=20 are hardcoded constants - consider moving to config"
+  ],
+
+  "updated_files": [
+    "/app/backend/server.py (fixed missing @api_router.post decorator for /tasks/refresh-credits)",
+    "/app/backend/tests/test_trial_referral.py (new test file for trial/referral features)"
+  ],
+
+  "success_rate": {
+    "backend": "100% (26/26 new tests + 23/23 regression tests passing)",
+    "frontend": "N/A (backend-only testing requested)"
+  },
+
+  "test_credentials": {
+    "demo_login": "POST /api/auth/demo-login (no auth needed)",
+    "cron_secret": "bb-cron-2026-refresh-c7f3a1",
+    "revenuecat_webhook_auth": "bb-rc-webhook-2026-secure-x9k2m",
+    "backend_url": "https://stencil-gen-staging.preview.emergentagent.com"
+  },
+
+  "seed_data_creation": "Demo account (demo_reviewer_account) used for testing. Restored to booked-out paid (500 credits) after tests.",
+
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+
+  "context_for_next_testing_agent": "Backend: All 49 tests pass (26 new + 23 regression). Trial Credit Cap: TRIAL_CREDITS=10 applied when is_trial=true in sync or period_type=TRIAL in webhook. Refer-a-Friend: GET /api/referral/code returns BB-XXXXXX code with stats, POST /api/referral/redeem validates self-referral, invalid codes, missing codes. PRODUCT_CREDIT_MAP: bodybound_1499_1m_3d → walk-in/125, bodybound_2999_1m_3d → booked-out/500, bodybound_9999_1m_3d → the-shop/1500. Fixed missing decorator for /api/tasks/refresh-credits. Test files at /app/backend/tests/test_trial_referral.py. Backend URL: https://stencil-gen-staging.preview.emergentagent.com."
+}

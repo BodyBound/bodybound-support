@@ -647,14 +647,16 @@ export default function Index() {
       const activeSubscriptions = customerInfo.activeSubscriptions;
       if (activeSubscriptions.length > 0) {
         const productId = activeSubscriptions[0]; // e.g., 'bodybound_2999_1m_3d'
-        console.log('[RevenueCat] Active subscription detected:', productId);
+        const entitlement = customerInfo.entitlements.active['premium'];
+        const isTrial = entitlement?.periodType === 'TRIAL';
+        console.log('[RevenueCat] Active subscription detected:', productId, isTrial ? '(trial)' : '(paid)');
         const resp = await fetch(`${API_URL}/api/subscription/sync`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ product_id: productId }),
+          body: JSON.stringify({ product_id: productId, is_trial: isTrial }),
         });
         if (resp.ok) {
           const syncedCredits = await resp.json();
@@ -4217,6 +4219,26 @@ export default function Index() {
               if (sessionToken) {
                 await syncRevenueCatWithBackend(sessionToken);
                 await refreshCredits(sessionToken);
+                // Try to redeem any pending referral code
+                try {
+                  const pendingCode = await SecureStore.getItemAsync('pending_referral_code');
+                  if (pendingCode) {
+                    const resp = await fetch(`${API_URL}/api/referral/redeem`, {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${sessionToken}`,
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({ referral_code: pendingCode }),
+                    });
+                    if (resp.ok) {
+                      const data = await resp.json();
+                      Alert.alert('Referral Applied!', data.message);
+                      await refreshCredits(sessionToken);
+                    }
+                    await SecureStore.deleteItemAsync('pending_referral_code');
+                  }
+                } catch (_) {}
               }
               setPaywallRequired(false);
               setShowPaywall(false);

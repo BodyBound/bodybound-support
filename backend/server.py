@@ -2786,7 +2786,8 @@ class UserCreditsResponse(BaseModel):
 
 # ---- Trial Constants ----
 TRIAL_DURATION_DAYS = 3
-TRIAL_CREDITS = 10
+TRIAL_CREDITS = 10  # Credits during Apple trial (all tiers)
+REFERRAL_BONUS_CREDITS = 20  # Credits awarded to both referrer and friend
 
 # ---- JWT Helpers ----
 def create_session_token(user_id: str) -> str:
@@ -3485,17 +3486,23 @@ async def revenuecat_webhook(request: FastAPIRequest):
     logger.info(f'[RevenueCat] {event_type} | user_id={user_id} | product={product_id}')
     tier_info = PRODUCT_CREDIT_MAP.get(product_id, {})
     if event_type in ('INITIAL_PURCHASE', 'RENEWAL') and tier_info and user_id:
+        # Detect Apple trial vs paid subscription
+        period_type = event.get('period_type', 'NORMAL')
+        is_apple_trial = period_type == 'TRIAL'
+        credits_to_grant = TRIAL_CREDITS if is_apple_trial else tier_info['credits']
         next_renewal = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
         await db.subscriptions.update_one(
             {'user_id': user_id},
             {'$set': {
                 'tier': tier_info['tier'],
-                'available_credits': tier_info['credits'],
-                'is_trial': False,
+                'available_credits': credits_to_grant,
+                'is_trial': is_apple_trial,
                 'renewal_date': next_renewal,
                 'last_event': event_type,
+                'period_type': period_type,
             }}
         )
+        logger.info(f'[RevenueCat] Granted {credits_to_grant} credits ({"trial" if is_apple_trial else "paid"}) to {user_id}')
     elif event_type in ('CANCELLATION', 'EXPIRATION') and user_id:
         # Keep remaining credits but mark tier as expired
         await db.subscriptions.update_one(
@@ -3519,6 +3526,7 @@ async def sync_subscription(request: FastAPIRequest):
     
     body = await request.json()
     product_id = body.get('product_id')
+    is_trial = body.get('is_trial', False)  # Frontend passes trial status from RevenueCat
     
     if not product_id:
         raise HTTPException(status_code=400, detail='Missing product_id')
@@ -3528,9 +3536,12 @@ async def sync_subscription(request: FastAPIRequest):
         logger.warning(f'[Sync] Unknown product_id: {product_id} for user {user_id}')
         raise HTTPException(status_code=400, detail='Unknown product')
     
+    # Cap credits during Apple trial
+    credits_to_grant = TRIAL_CREDITS if is_trial else tier_info['credits']
+    
     # Check current subscription to avoid overwriting if already correct
     existing_sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
-    if existing_sub and existing_sub.get('tier') == tier_info['tier'] and not existing_sub.get('is_trial', False):
+    if existing_sub and existing_sub.get('tier') == tier_info['tier'] and existing_sub.get('is_trial', False) == is_trial:
         # Already synced — return current credits
         logger.info(f'[Sync] User {user_id} already on tier {tier_info["tier"]}, skipping')
         credits = await get_user_credits(user_id)
@@ -3541,8 +3552,8 @@ async def sync_subscription(request: FastAPIRequest):
         {'user_id': user_id},
         {'$set': {
             'tier': tier_info['tier'],
-            'available_credits': tier_info['credits'],
-            'is_trial': False,
+            'available_credits': credits_to_grant,
+            'is_trial': is_trial,
             'trial_expires_at': None,
             'renewal_date': next_renewal,
             'synced_from': 'frontend',
@@ -3550,10 +3561,140 @@ async def sync_subscription(request: FastAPIRequest):
         }},
         upsert=True
     )
-    logger.info(f'[Sync] User {user_id} synced to tier {tier_info["tier"]} with {tier_info["credits"]} credits (product: {product_id})')
+    logger.info(f'[Sync] User {user_id} synced to tier {tier_info["tier"]} with {credits_to_grant} credits ({"trial" if is_trial else "paid"}, product: {product_id})')
     
     credits = await get_user_credits(user_id)
     return credits
+
+
+# ---- Refer-a-Friend ----
+
+@api_router.get("/referral/code")
+async def get_referral_code(request: FastAPIRequest):
+    """Get or generate the user's unique referral code."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    
+    # Check if user already has a referral code
+    existing = await db.referrals.find_one({'referrer_user_id': user_id, 'type': 'code'}, {'_id': 0})
+    if existing:
+        stats = await db.referrals.count_documents({'referrer_user_id': user_id, 'type': 'redemption', 'status': 'completed'})
+        return {
+            'referral_code': existing['referral_code'],
+            'total_referrals': stats,
+            'credits_earned': stats * REFERRAL_BONUS_CREDITS,
+        }
+    
+    # Generate a unique code: BB-XXXXXX
+    code = f'BB-{uuid.uuid4().hex[:6].upper()}'
+    await db.referrals.insert_one({
+        'type': 'code',
+        'referral_code': code,
+        'referrer_user_id': user_id,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+    })
+    logger.info(f'[Referral] Generated code {code} for user {user_id}')
+    return {
+        'referral_code': code,
+        'total_referrals': 0,
+        'credits_earned': 0,
+    }
+
+
+@api_router.post("/referral/redeem")
+async def redeem_referral_code(request: FastAPIRequest):
+    """Redeem a referral code. Awards 20 credits to both the referrer and the redeemer.
+    
+    Rules:
+    - User must have an active subscription (not trial, not expired)
+    - Cannot redeem your own code
+    - Can only redeem one referral code ever
+    """
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    
+    body = await request.json()
+    code = body.get('referral_code', '').strip().upper()
+    
+    if not code:
+        raise HTTPException(status_code=400, detail='Missing referral_code')
+    
+    # Find the referral code
+    code_doc = await db.referrals.find_one({'type': 'code', 'referral_code': code}, {'_id': 0})
+    if not code_doc:
+        raise HTTPException(status_code=404, detail='Invalid referral code')
+    
+    referrer_user_id = code_doc['referrer_user_id']
+    
+    # Can't redeem your own code
+    if referrer_user_id == user_id:
+        raise HTTPException(status_code=400, detail='Cannot redeem your own referral code')
+    
+    # Check if user already redeemed a code
+    already_redeemed = await db.referrals.find_one({
+        'type': 'redemption', 'redeemer_user_id': user_id, 'status': 'completed'
+    })
+    if already_redeemed:
+        raise HTTPException(status_code=400, detail='You have already redeemed a referral code')
+    
+    # Check redeemer has an active subscription
+    redeemer_sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+    active_tiers = ['walk-in', 'booked-out', 'the-shop', 'the-shop-member']
+    if not redeemer_sub or redeemer_sub.get('tier') not in active_tiers:
+        raise HTTPException(status_code=400, detail='You need an active subscription to redeem a referral code')
+    
+    # Check referrer has an active subscription
+    referrer_sub = await db.subscriptions.find_one({'user_id': referrer_user_id}, {'_id': 0})
+    if not referrer_sub or referrer_sub.get('tier') not in active_tiers:
+        raise HTTPException(status_code=400, detail='Referrer does not have an active subscription')
+    
+    # Award credits to both parties
+    # Referrer: add credits (check if team member for shared pool)
+    referrer_team_id = referrer_sub.get('studio_team_id')
+    if referrer_team_id:
+        await db.studio_teams.update_one(
+            {'team_id': referrer_team_id},
+            {'$inc': {'shared_credits': REFERRAL_BONUS_CREDITS}}
+        )
+    else:
+        await db.subscriptions.update_one(
+            {'user_id': referrer_user_id},
+            {'$inc': {'available_credits': REFERRAL_BONUS_CREDITS}}
+        )
+    
+    # Redeemer: add credits (check if team member for shared pool)
+    redeemer_team_id = redeemer_sub.get('studio_team_id')
+    if redeemer_team_id:
+        await db.studio_teams.update_one(
+            {'team_id': redeemer_team_id},
+            {'$inc': {'shared_credits': REFERRAL_BONUS_CREDITS}}
+        )
+    else:
+        await db.subscriptions.update_one(
+            {'user_id': user_id},
+            {'$inc': {'available_credits': REFERRAL_BONUS_CREDITS}}
+        )
+    
+    # Record the redemption
+    await db.referrals.insert_one({
+        'type': 'redemption',
+        'referral_code': code,
+        'referrer_user_id': referrer_user_id,
+        'redeemer_user_id': user_id,
+        'credits_awarded': REFERRAL_BONUS_CREDITS,
+        'status': 'completed',
+        'created_at': datetime.now(timezone.utc).isoformat(),
+    })
+    
+    logger.info(f'[Referral] {user_id} redeemed code {code} from {referrer_user_id} — {REFERRAL_BONUS_CREDITS} credits each')
+    
+    credits = await get_user_credits(user_id)
+    return {
+        'message': f'Referral applied! You and your friend both received {REFERRAL_BONUS_CREDITS} bonus credits.',
+        'credits': credits,
+    }
 
 
 @api_router.post("/tasks/refresh-credits")

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  Share,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Purchases from 'react-native-purchases';
@@ -44,9 +46,47 @@ export function SettingsScreen({
 }: SettingsScreenProps) {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [restoringPurchases, setRestoringPurchases] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralStats, setReferralStats] = useState({ total_referrals: 0, credits_earned: 0 });
+  const [loadingReferral, setLoadingReferral] = useState(false);
   
   // Check if user has The Shop subscription (admin or member)
   const isShopTier = credits?.tier === 'the-shop' || credits?.tier === 'the-shop-member';
+  const activeTiers = ['walk-in', 'booked-out', 'the-shop', 'the-shop-member'];
+  const hasActiveSubscription = credits?.tier ? activeTiers.includes(credits.tier) : false;
+
+  useEffect(() => {
+    if (hasActiveSubscription) {
+      fetchReferralCode();
+    }
+  }, [hasActiveSubscription]);
+
+  const fetchReferralCode = async () => {
+    setLoadingReferral(true);
+    try {
+      const token = await SecureStore.getItemAsync('session_token');
+      if (!token) return;
+      const resp = await fetch(`${API_URL}/api/referral/code`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (resp.ok) {
+        const data = await resp.json();
+        setReferralCode(data.referral_code);
+        setReferralStats({ total_referrals: data.total_referrals, credits_earned: data.credits_earned });
+      }
+    } catch (_) {} finally {
+      setLoadingReferral(false);
+    }
+  };
+
+  const handleShareReferral = async () => {
+    if (!referralCode) return;
+    try {
+      await Share.share({
+        message: `Try Body Bound — the AI tattoo stencil app! Use my referral code ${referralCode} when you subscribe and we both get 20 bonus credits. Download: https://apps.apple.com/app/body-bound/id6745072871`,
+      });
+    } catch (_) {}
+  };
 
   const handleRestorePurchases = async () => {
     setRestoringPurchases(true);
@@ -223,6 +263,40 @@ export function SettingsScreen({
             </TouchableOpacity>
           </View>
 
+          {/* Refer a Friend — only for active subscribers */}
+          {hasActiveSubscription && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>REFER A FRIEND</Text>
+              <View style={styles.referralCard}>
+                {loadingReferral ? (
+                  <ActivityIndicator color="#C9A227" size="small" />
+                ) : referralCode ? (
+                  <>
+                    <Text style={styles.referralCodeLabel}>Your referral code</Text>
+                    <Text testID="referral-code-display" style={styles.referralCodeText}>{referralCode}</Text>
+                    <Text style={styles.referralReward}>
+                      You both get 20 bonus credits when a friend subscribes with your code
+                    </Text>
+                    {referralStats.total_referrals > 0 && (
+                      <Text style={styles.referralStatsText}>
+                        {referralStats.total_referrals} referral{referralStats.total_referrals !== 1 ? 's' : ''} — {referralStats.credits_earned} credits earned
+                      </Text>
+                    )}
+                    <TouchableOpacity
+                      testID="share-referral-btn"
+                      style={styles.referralShareBtn}
+                      onPress={handleShareReferral}
+                    >
+                      <Text style={styles.referralShareBtnText}>Share Code</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <Text style={styles.referralCodeLabel}>Unable to load referral code</Text>
+                )}
+              </View>
+            </View>
+          )}
+
           {/* Sign Out */}
           <View style={styles.section}>
             <TouchableOpacity
@@ -361,5 +435,47 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.3)',
     fontSize: 13,
     textDecorationLine: 'underline',
+  },
+  referralCard: {
+    backgroundColor: '#141414',
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    borderRadius: 8,
+    padding: 18,
+    alignItems: 'center',
+    gap: 8,
+  },
+  referralCodeLabel: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 13,
+  },
+  referralCodeText: {
+    color: '#C9A227',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 3,
+  },
+  referralReward: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  referralStatsText: {
+    color: '#C9A227',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  referralShareBtn: {
+    backgroundColor: '#C9A227',
+    paddingHorizontal: 28,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginTop: 4,
+  },
+  referralShareBtnText: {
+    color: '#000',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });

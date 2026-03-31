@@ -10,12 +10,16 @@ import {
   Platform,
   Image,
   Linking,
+  TextInput,
 } from 'react-native';
 
 const APPLE_EULA_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 const PRIVACY_POLICY_URL = 'https://bodybound.github.io/bodybound-support/privacy';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
+import * as SecureStore from 'expo-secure-store';
+
+const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
 const TIER_INFO = {
   walk_in: {
@@ -57,6 +61,8 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
+  const [referralCode, setReferralCode] = useState('');
+  const [referralApplied, setReferralApplied] = useState(false);
 
   useEffect(() => {
     loadOfferings();
@@ -95,6 +101,12 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
     try {
       const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
       if (typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
+        // If user entered a referral code, save it for redemption after sync
+        if (referralCode.trim()) {
+          try {
+            await SecureStore.setItemAsync('pending_referral_code', referralCode.trim().toUpperCase());
+          } catch (_) {}
+        }
         Alert.alert('Welcome!', 'Your subscription is now active. Enjoy your credits!');
         onPurchaseSuccess();
       }
@@ -245,6 +257,33 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
             )}
           </TouchableOpacity>
 
+          {/* Referral Code */}
+          <View style={styles.referralSection}>
+            <Text style={styles.referralLabel}>Have a referral code?</Text>
+            <View style={styles.referralInputRow}>
+              <TextInput
+                testID="referral-code-input"
+                style={styles.referralInput}
+                placeholder="BB-XXXXXX"
+                placeholderTextColor="rgba(255,255,255,0.25)"
+                value={referralCode}
+                onChangeText={setReferralCode}
+                autoCapitalize="characters"
+                maxLength={9}
+                editable={!referralApplied}
+              />
+              {referralCode.trim().length > 0 && !referralApplied && (
+                <Text style={styles.referralHint}>Applied after purchase</Text>
+              )}
+              {referralApplied && (
+                <Text style={[styles.referralHint, { color: '#4CAF50' }]}>Applied</Text>
+              )}
+            </View>
+            <Text style={styles.referralSubtext}>
+              You and your friend both get 20 bonus credits
+            </Text>
+          </View>
+
           {/* Legal */}
           <Text style={styles.legal}>
             Payment charged to Apple ID. Subscription auto-renews monthly.{'\n'}
@@ -350,6 +389,42 @@ const styles = StyleSheet.create({
   subscribeBtnSubtext: { color: 'rgba(0,0,0,0.6)', fontSize: 12 },
   restoreBtn: { alignItems: 'center', paddingVertical: 12, marginBottom: 16 },
   restoreBtnText: { color: '#666', fontSize: 14 },
+  referralSection: {
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  referralLabel: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 13,
+    marginBottom: 8,
+  },
+  referralInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  referralInput: {
+    flex: 1,
+    backgroundColor: '#141414',
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+    borderRadius: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: 1,
+  },
+  referralHint: {
+    color: 'rgba(255,255,255,0.35)',
+    fontSize: 12,
+  },
+  referralSubtext: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 11,
+    marginTop: 6,
+  },
   legal: {
     color: 'rgba(255,255,255,0.25)',
     fontSize: 11, textAlign: 'center', lineHeight: 17,
