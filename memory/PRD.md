@@ -84,6 +84,12 @@ An iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo
 
 ## What's Been Implemented
 
+### 2026-03 — Deployment Fix
+1. Removed `*.env` gitignore rules that blocked deployment pipeline
+2. Removed `rembg` / U2-Net ML dependencies (added by previous agent, not in live App Store version)
+3. Removed dead `/cv-stencil` endpoint and associated functions
+4. Deployment agent confirms: **DEPLOYMENT READY** — no blockers
+
 ### 2026-03 — Trial Credit Cap + Refer-a-Friend
 1. **Trial credit cap**: 10 credits for ALL tiers during Apple trial (`TRIAL_CREDITS=10`)
 2. **Webhook trial detection**: `period_type=TRIAL` in RevenueCat webhook → 10 credits; `NORMAL` → full credits
@@ -107,10 +113,10 @@ An iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo
 - RevenueCat LIVE keys, legal links, slider/distortion fixes, API key security
 
 ## Known Issues / Pending
-- **P0**: EAS Project ID conflict (blocked on Emergent support)
+- **P1**: EAS Project ID conflict (awaiting user build test)
 - **P1**: Apple token `audience doesn't match` warnings
-- **P2**: Refactor server.py (~3820 lines) and index.tsx (~4250 lines)
-- **P2**: Re-enable push notifications, pre-warm rembg model
+- **P2**: Refactor server.py (~3500 lines) and index.tsx (~4250 lines)
+- **P2**: Re-enable push notifications
 
 ## Testing Status
 - **Total Tests**: 49/49 passing (7 + 16 + 26)
