@@ -56,7 +56,7 @@
       "flag_reset": "VERIFIED in index.tsx lines 977-979 - resets flag when credits >= 10",
       "web_note": "Push notifications are bypassed on web (Platform.OS === 'web' guard) - CORRECT"
     },
-    "frontend_loads": "VERIFIED - welcome screen visible at https://stencil-gen-staging.preview.emergentagent.com"
+    "frontend_loads": "VERIFIED - welcome screen visible at https://body-bound-test.preview.emergentagent.com"
   },
 
   "rca_of_issue": {
@@ -95,7 +95,7 @@
 
   "test_credentials": {
     "cron_secret": "bb-cron-2026-refresh-c7f3a1",
-    "backend_url": "https://stencil-gen-staging.preview.emergentagent.com",
+    "backend_url": "https://body-bound-test.preview.emergentagent.com",
     "demo_login": "POST /api/auth/demo-login"
   },
 

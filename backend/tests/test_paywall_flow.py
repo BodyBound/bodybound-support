@@ -10,7 +10,7 @@ import pytest
 import httpx
 import asyncio
 
-API_URL = "https://stencil-gen-staging.preview.emergentagent.com"
+API_URL = "https://body-bound-test.preview.emergentagent.com"
 
 
 @pytest.fixture

@@ -1,85 +1,73 @@
 <analysis>**original_problem_statement:**
-The user is preparing their BODY BOUND stencil generator app for App Store launch (and subsequently updating the live app). They needed to resolve critical build issues, fix UI bugs (line weight slider, edited stencil save distortion), pass App Store review by adding legal links to the paywall, fix RevenueCat integration for real purchases, and resolve recurring backend crashes and API key revocations. 
+The user is preparing their BODY BOUND stencil generator app for App Store launch. The goal was to resolve critical build issues, finalize RevenueCat integration for real purchases, transition to a native Apple subscription flow (Paywall-first), fix UI bugs, and resolve recurring backend crashes/API key revocations.
 
 **PRODUCT REQUIREMENTS**:
 1. Stable production deployment with a working  check.
-2. RevenueCat integrated with LIVE API keys and matching package identifiers (, , ).
-3. Paywall must include tappable links to Apple EULA and the app's Privacy Policy.
-4. Edit Mode saves must not stretch or distort stencils when downloaded alongside reference photos.
-5. Google AI Studio API key must be secured and not leaked to public GitHub repositories.
-6. **(Pending)** Shift to a native Apple subscription flow: show Paywall immediately on first launch, handle the 3-day trial via Apple/RevenueCat instead of custom backend logic.
+2. RevenueCat integrated with LIVE API keys and matching package identifiers.
+3. Native Apple subscription flow: show Paywall immediately on first launch, handle 3-day trial via Apple/RevenueCat instead of custom backend logic. 
+4. Trial credit limit: Cap at 10 credits during the 3-day Apple free trial.
+5. Refer-a-Friend feature: Give 20 bonus credits to both the referrer and new subscriber.
+6. Google AI Studio API key must be secured and not leaked to public GitHub repositories.
 
 **User's preferred language**: 
 INSTRUCT next agent to respond in **English**.
 
 **what currently exists?** 
-A full-stack application (Expo React Native frontend + FastAPI backend + MongoDB). The app is **LIVE on the App Store (v3.0.56, Build 56)**. It uses RevenueCat for subscriptions and Google AI for stencil generation. The backend successfully processes stencils using a U2-Net background removal () combined with Gemini.
+A full-stack application (Expo React Native frontend + FastAPI backend + MongoDB). The app uses RevenueCat for subscriptions and Google AI for stencil generation. A native Apple Paywall-first subscription flow, trial credit capping, and a Refer-a-Friend feature have just been fully implemented and tested successfully (49/49 backend tests passing).
 
 **Last working item**: 
-- Last item agent was working: Securing the Google AI API key. The key was repeatedly revoked by Google because clicking Save to GitHub committed  to the public repo. The agent updated the key, removed  from git tracking, and added it to .
-- Status: COMPLETED
-- Agent Testing Done: Y
-- Which testing method agent to use? manual testing by curl / python -c
-- User Testing Done: Y
+- Last item agent was working: Debugging a production deployment failure using the . The deployment agent identified that  is being ignored via , which is blocking the cloud deployment build pipeline.
+- Status: IN PROGRESS
+- Agent Testing Done: N/A (Deployment pending)
+- Which testing method agent to use? deployment_agent / backend testing agent
+- User Testing Done: N
 
 **All Pending/In progress Issue list**: 
-Issue 1: **Transition to Standard Apple/RevenueCat Subscription Flow (P0)**
-- Attempted fixes: Discussed and approved by user, but coding has not started.
+Issue 1: **Deployment Pipeline Failure (.gitignore blocker) (P0)**
+- Attempted fixes: Agent previously added  to  to stop GitHub from leaking and revoking the Google Gemini API key. The deployment agent just reported that ignoring  breaks the deployment.
 - Next debug checklist: 
-  - Update frontend routing to show  immediately after sign-in for new users.
-  - Remove the custom backend logic that automatically grants a 3-day/10-credit trial upon account creation.
-  - Ensure the backend strictly trusts RevenueCat webhook data for subscription and trial statuses.
-- Why fix this issue and what will be achieved with the fix? Industry standard for conversion. Users must commit Apple Pay info upfront to get the 3-day trial, rather than getting free access and bouncing.
-- Status: NOT STARTED
-- Is recurring issue? N
-- Should Test frontend/backend/both after fix? Both
+  - Find a secure way to satisfy the deployment pipeline without exposing the Google API key to GitHub. (Do NOT just remove  from  if it contains the raw Google key, or it will be revoked immediately). Review platform-specific ways to handle env vars or create a dummy  template that the pipeline can use while injecting secrets securely.
+- Why fix this issue and what will be achieved with the fix? Unblocks production deployment.
+- Status: BLOCKED
+- Is recurring issue? Y (API key leaks vs deployment failures)
+- Should Test frontend/backend/both after fix? Both (Deployment Test)
 - Blocked on other issue: None
 
 Issue 2: **EAS Project ID Build Pipeline Conflict (P1)**
-- Attempted fixes: Agent escalated to Emergent support. The build pipeline strips the  from  and tries to recreate the EAS project, failing because it already exists under .
-- Next debug checklist: Wait for user to get the true  UUID from Emergent Support, then hardcode it into .
-- Why fix this issue and what will be achieved with the fix? Prevents build failures in the Emergent EAS pipeline. 
-- Status: BLOCKED
+- Attempted fixes: The agent fixed the  to match Apple's portal ().
+- Next debug checklist: Ensure no further EAS  conflicts exist in  now that the bundle identifier is corrected.
+- Why fix this issue and what will be achieved with the fix? Prevents native iOS build failures.
+- Status: TESTING PENDING (User is trying to build)
 - Is recurring issue? Y
-- Should Test frontend/backend/both after fix? Frontend
-- Blocked on other issue: Platform support.
+- Should Test frontend/backend/both after fix? Frontend (iOS build)
+- Blocked on other issue: Platform support (if  UUID issues persist).
 
 **In progress Task List**: 
-Task 1: **Implement Native Trial Grandfathering**
-- Where to resume: When building the new Paywall-first flow, implement backend logic to grandfather the ~3 current real users who are currently in the middle of their custom 3-day backend trial. 
-- What will be achieved with this? Prevents locking out live customers who downloaded the app before the subscription flow change.
-- Status: NOT STARTED
-- Should Test frontend/backend/both after fix? Both
-- Blocked on something: N/A
+None active.
 
 **Upcoming and Future Tasks**
-Upcoming Tasks:
-- (P0) Transition app to native Apple Paywall-first trial flow.
-- (P1) Investigate  warnings in backend logs.
-
 Future Tasks:
-- (P2) Refactor : Break down the 4000+ line monolith.
-- (P2) Refactor : Extract components and custom hooks.
+- (P2) Refactor : Break down the ~3820 line monolith.
+- (P2) Refactor : Break down the ~4250 line monolith.
 - (P2) Re-enable push notifications for production.
 - (P3) Pre-warm  ONNX model in a background task on backend startup to prevent slow first-generation times.
 
 **Completed work in this session**
-- Fixed  state/closure bug preventing proper gesture response (DONE).
-- Fixed deployment crash by lazy importing  and adding root  endpoint (DONE).
-- Fixed edited stencil distortion bug by saving edited stencils at native aspect ratios (DONE).
-- Added Privacy Policy and Apple TOS links to Paywall to pass App Store Review (DONE).
-- Added friendly fallback UI error messages for intermittent Auth  failures (DONE).
-- Migrated RevenueCat to LIVE API key and mapped packages to exact RC identifiers (, , ) (DONE).
-- Secured  files via  to stop Google API key revocations (DONE).
+- Transitioned app to native Apple Paywall-first trial flow (DONE).
+- Implemented Trial Credit Cap: 10 credits across all tiers during the 3-day Apple free trial via RevenueCat webhook detection (DONE).
+- Implemented Refer-a-Friend feature: Code generation, redemption, and 20 bonus credits for both users (DONE).
+- Subdued the Manage Subscription / Unsubscribe button UI in the Settings Screen (DONE).
+- Fixed the iOS bundle ID in  to correctly match Apple Developer Portal () (DONE).
+- Diagnosed GitHub Actions  failure and instructed user to add GitHub Secrets (DONE).
+- Wrote and passed 49/49 backend tests covering all new and regression subscription/referral flows (DONE).
 
 **Earlier issues found/mentioned but not fixed**
-- None. All mentioned bugs were tackled successfully. 
+None.
 
 **Known issue recurrence from previous fork**
-- Issue recurrence in previous fork: The deployment agent flagged hardcoded API URLs in  and . 
+- Issue recurrence in previous fork: The deployment agent flagged hardcoded API URLs in  and .
 - Recurrence count: 4+
-- Status: RESOLVED (Ignored)
-- Note: Do NOT change the hardcoded frontend  variables. This is a deliberate, required workaround because the EAS pipeline fails to inject environment variables into the native build. 
+- Status: RESOLVED (Ignored - necessary workaround for EAS).
 
 **Code Architecture**
 
@@ -87,70 +75,89 @@ Future Tasks:
 **Key Technical Concepts**
 - Frontend: Expo React Native (EAS Build system)
 - Backend: FastAPI
-- Database: MongoDB (Sandbox vs Atlas Production)
-- AI / Image:  (U2-Net), OpenCV, Google Gemini ()
+- Database: MongoDB
 - Subscriptions: RevenueCat
+- AI/Image: , Google Gemini ()
 
 **key DB schema**
-- : , , , , 
-- : Used to track tiers
-- : Team logic for The Shop tier.
+- : , , , , , , , , .
 
 **changes in tech stack**
-- Transitioned heavily to  but backend still has legacy dependencies on .
+- Added explicit backend testing suite using ============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.0.2, pluggy-1.6.0
+rootdir: /app/frontend
+plugins: anyio-4.12.1
+collected 0 items
+
+============================ no tests ran in 0.05s ============================= and .
 
 **All files of reference**
-- : Fixed slider and image saving logic.
-- : Updated RevenueCat identifiers and legal links.
-- : Lazy loaded , added .
-- : Updated to explicitly ignore .
+- 
+- 
+- 
+- 
+- 
+- 
+- 
 
 **Areas that need refactoring**:
--  and  are massive, fragile monoliths.
+-  and  are extremely large monoliths.
 
 **key api endpoints**
--  and : Deployment health checks.
-- : RevenueCat lifecycle tracking.
-- : Generates the images via Gemini.
+- : Syncs RevenueCat status, handles trial detection (10 credit cap).
+- : Generates unique referral code.
+- : Applies referral code.
 
 **Critical Info for New Agent**
-1. **APP IS LIVE**: The application has been approved and is live on the App Store. Avoid pushing breaking changes. Test thoroughly before committing.
-2. **PAYWALL REFACTOR**: The user agreed to change the subscription logic to a standard App Store model: show the paywall *immediately* upon first login, forcing users to start a RevenueCat 3-day trial via Apple Pay instead of receiving an automatic 3-day backend trial. This is your immediate next task.
-3. **DO NOT COMMIT API KEYS**: GitHub's secret scanner will revoke Google API keys within seconds if committed.  is now in . Leave it there.
+1. **APP IS LIVE**: The application is live on the App Store. The bundle identifier has just been reverted back to its original production value () after a previous agent mistakenly changed it. Do not change it again.
+2. **DO NOT COMMIT RAW API KEYS**: GitHub's secret scanner will revoke Google API keys within seconds.  is currently ignoring . However, the deployment agent stated this breaks the deployment. **Your immediate task is to fix the deployment build without leaking the raw Google API key to GitHub.**
 
 **documents and test reports created in this job**
-- None.
+- /app/memory/PRD.md
+- /app/memory/test_credentials.md
+- /app/test_reports/iteration_5.json
+- /app/test_reports/iteration_6.json
 
 **Last 10 User Messages and any pending HUMAN messages**
-1. User mentions customers can't generate stencils.
-2. Agent finds Google API key revoked (leaked to GitHub). Updates it.
-3. User reports another customer can't generate. Agent finds DB trial expiry and second API key formatting issue.
-4. User asks if the subscription flow is setup wrong (free trial without upfront payment commitment).
-5. Agent confirms standard Apple flow (Paywall first) is better.
-6. User asks how changing the flow affects current trial users. 
-7. Agent checks DB: 0 active trials in sandbox. Suggests a clean flip.
-8. User tells agent to proceed with building the new Paywall-first flow.
-9. User asks why a live customer () can't subscribe.
-10. Agent discovers RevenueCat packages in code don't match Dashboard IDs (, , ). Fixes it (Build 56).
-11. User says stencils are failing again. Agent realizes Save to GitHub leaked the key *again*. Fixes  and updates key. *(Pending: Proceeding with Paywall-first flow).*
+1. User approves Paywall-first flow, 10-credit bug fix, and subduing unsubscribe button.
+2. Agent plans and implements backend/frontend paywall logic.
+3. Agent writes and runs 23 tests -> all pass.
+4. User requests new feature: 20 bonus credits for Refer-a-Friend, and caps Apple trial to 10 credits.
+5. Agent implements Trial Credit Cap and Refer-a-friend. Writes 26 new tests.
+6. Tests run via testing agent -> 49/49 pass.
+7. User reports GitHub Actions  failing. Agent debugs and advises adding GitHub secrets.
+8. User reports Apple ID credential failure on EAS build. Asks about Bundle ID.
+9. Agent checks and finds mismatch; reverts  bundle ID to .
+10. (Pending) User runs CloudBuild deployment, which fails. User pastes logs and asks deployment agent for fix. Deployment agent flags  blocking .
 
 **Project Health Check:**
-Healthy.
+Broken (Deployment pipeline failing due to ).
 
 **3rd Party Integrations**
 - Google Gemini API () — requires User API Key.
-- RevenueCat (Subscriptions) — requires User API Key (Live Key currently in code).
+- RevenueCat (Subscriptions) — requires User API Key.
 - Emergent-managed Google/Apple Auth — Uses Emergent URLs.
 
 **Testing status**
-- Testing agent used after significant changes: NO (Manual/Script testing used heavily due to rapid deployment debugging).
-- Troubleshoot agent used after agent stuck in loop: NO.
-- Test files created: None.
-- Known regressions: None currently.
+- Testing agent used after significant changes: YES
+- Troubleshoot agent used after agent stuck in loop: NO
+- Test files created: , 
+- Known regressions: None.
 
 **Credentials to test flow:**
-- RevenueCat Live Key: 
-- Google API Key: Located in .
+Check .
 
 **What agent forgot to execute**
-- The agent gained user approval to refactor the subscription flow to the Paywall-first model, but was interrupted by a customer bug and a leaked API key. This refactor has not been started.</analysis>
+- The agent was interrupted by the deployment failure logs. The  deployment issue needs immediate attention.
+
+**Debugging checklist for current issue**
+    Issue: Cloud deployment fails because  is ignored by .
+    
+    Files to check:
+    - 
+    - Deployment configuration files (, ,  etc.)
+    
+    Next steps:
+    1. Figure out how the deployment environment handles  vars. If it requires a template, create a  that gets copied/populated during CI/CD, or configure the emergent platform env variables correctly.
+    2. Ensure the actual Google API key is NOT committed to git.
+    3. Modify the deployment flow or  cautiously to satisfy the deployment agent without leaking the key.</analysis>

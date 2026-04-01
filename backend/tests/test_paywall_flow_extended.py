@@ -20,7 +20,7 @@ import pytest
 import httpx
 import os
 
-API_URL = "https://stencil-gen-staging.preview.emergentagent.com"
+API_URL = "https://body-bound-test.preview.emergentagent.com"
 CRON_SECRET = "bb-cron-2026-refresh-c7f3a1"
 REVENUECAT_WEBHOOK_AUTH = "bb-rc-webhook-2026-secure-x9k2m"
 

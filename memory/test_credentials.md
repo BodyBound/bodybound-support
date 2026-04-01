@@ -10,7 +10,7 @@
 - **RevenueCat Webhook Auth**: bb-rc-webhook-2026-secure-x9k2m (Authorization: Bearer header for /api/webhooks/revenuecat)
 
 ## API Base URL
-- **Preview**: https://stencil-gen-staging.preview.emergentagent.com
+- **Preview**: https://body-bound-test.preview.emergentagent.com
 
 ## RevenueCat
 - **Live API Key**: appl_dVqjUPRJXPXNpLZThAjtsqApiVU

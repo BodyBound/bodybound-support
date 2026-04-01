@@ -73,7 +73,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "backendUrl": "https://stencil-gen-staging.preview.emergentagent.com",
+      "backendUrl": "https://body-bound-test.preview.emergentagent.com",
       "eas": {
         "projectId": "your-project-id"
       }

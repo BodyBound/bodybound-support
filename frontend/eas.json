@@ -8,7 +8,7 @@
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://stencil-gen-staging.preview.emergentagent.com"
+        "EXPO_PUBLIC_BACKEND_URL": "https://body-bound-test.preview.emergentagent.com"
       }
     },
     "preview": {
@@ -21,7 +21,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://stencil-gen-staging.preview.emergentagent.com"
+        "EXPO_PUBLIC_BACKEND_URL": "https://body-bound-test.preview.emergentagent.com"
       }
     },
     "production": {
@@ -33,7 +33,7 @@
         "resourceClass": "m-medium"
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://stencil-gen-staging.preview.emergentagent.com"
+        "EXPO_PUBLIC_BACKEND_URL": "https://body-bound-test.preview.emergentagent.com"
       }
     }
   },

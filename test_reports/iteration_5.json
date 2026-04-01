@@ -72,7 +72,7 @@
     "demo_login": "POST /api/auth/demo-login (no auth needed)",
     "cron_secret": "bb-cron-2026-refresh-c7f3a1",
     "revenuecat_webhook_auth": "bb-rc-webhook-2026-secure-x9k2m",
-    "backend_url": "https://stencil-gen-staging.preview.emergentagent.com"
+    "backend_url": "https://body-bound-test.preview.emergentagent.com"
   },
 
   "seed_data_creation": "Demo account used for testing (demo_reviewer_account). Tier restored to booked-out after each test.",
@@ -80,5 +80,5 @@
   "retest_needed": false,
   "main_agent_can_self_test": true,
 
-  "context_for_next_testing_agent": "Backend: All 23 tests pass. Paywall-First subscription flow fully verified: (1) /api/subscription/sync endpoint syncs RevenueCat entitlements to backend, (2) PRODUCT_CREDIT_MAP: bodybound_1499_1m_3d → walk-in/125, bodybound_2999_1m_3d → booked-out/500, bodybound_9999_1m_3d → the-shop/1500, (3) /api/auth/me returns needs_subscription boolean (False for active tiers, True for None/expired/trial_expired), (4) RevenueCat webhook handles INITIAL_PURCHASE/RENEWAL/CANCELLATION/EXPIRATION events, (5) /api/tasks/refresh-credits works with X-Cron-Secret header. Test files at /app/backend/tests/test_paywall_flow.py and test_paywall_flow_extended.py. Backend URL: https://stencil-gen-staging.preview.emergentagent.com."
+  "context_for_next_testing_agent": "Backend: All 23 tests pass. Paywall-First subscription flow fully verified: (1) /api/subscription/sync endpoint syncs RevenueCat entitlements to backend, (2) PRODUCT_CREDIT_MAP: bodybound_1499_1m_3d → walk-in/125, bodybound_2999_1m_3d → booked-out/500, bodybound_9999_1m_3d → the-shop/1500, (3) /api/auth/me returns needs_subscription boolean (False for active tiers, True for None/expired/trial_expired), (4) RevenueCat webhook handles INITIAL_PURCHASE/RENEWAL/CANCELLATION/EXPIRATION events, (5) /api/tasks/refresh-credits works with X-Cron-Secret header. Test files at /app/backend/tests/test_paywall_flow.py and test_paywall_flow_extended.py. Backend URL: https://body-bound-test.preview.emergentagent.com."
 }
