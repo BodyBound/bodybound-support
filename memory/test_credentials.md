@@ -14,3 +14,9 @@
 
 ## RevenueCat
 - **Live API Key**: appl_dVqjUPRJXPXNpLZThAjtsqApiVU
+
+## Expo / EAS
+- **Expo Account**: bbillmaier
+- **EAS Project ID**: 6f1631f5-e00d-41d1-b926-deeeb057b429
+- **Bundle Identifier**: app.emergent.tattoostencils115373ef8
+- **ASC App ID**: 6741930631
