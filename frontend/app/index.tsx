@@ -647,7 +647,7 @@ export default function Index() {
       const activeSubscriptions = customerInfo.activeSubscriptions;
       if (activeSubscriptions.length > 0) {
         const productId = activeSubscriptions[0]; // e.g., 'bodybound_2999_1m_3d'
-        const entitlement = customerInfo.entitlements.active['premium'];
+        const entitlement = customerInfo.entitlements.active['BODY BOUND Stencil Generator Pro'];
         const isTrial = entitlement?.periodType === 'TRIAL';
         console.log('[RevenueCat] Active subscription detected:', productId, isTrial ? '(trial)' : '(paid)');
         const resp = await fetch(`${API_URL}/api/subscription/sync`, {

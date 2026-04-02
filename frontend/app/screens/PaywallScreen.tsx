@@ -75,10 +75,21 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
       return;
     }
     try {
-      const offerings = await Purchases.getOfferings();
-      if (offerings.current?.availablePackages.length) {
-        setOfferings(offerings.current.availablePackages);
-        setSelectedPackage(offerings.current.availablePackages[1] || offerings.current.availablePackages[0]);
+      const allOfferings = await Purchases.getOfferings();
+      const packages: PurchasesPackage[] = [];
+
+      // Fetch the monthly package from each offering separately by identifier
+      const walkInOffering = allOfferings.all['bodybound_1499_1m_3d'];
+      const bookedOutOffering = allOfferings.all['bodybound_2999_1m_3d'];
+      const theShopOffering = allOfferings.all['bodybound_9999_1m_3d'];
+
+      if (walkInOffering?.monthly) packages.push(walkInOffering.monthly);
+      if (bookedOutOffering?.monthly) packages.push(bookedOutOffering.monthly);
+      if (theShopOffering?.monthly) packages.push(theShopOffering.monthly);
+
+      if (packages.length > 0) {
+        setOfferings(packages);
+        setSelectedPackage(packages[1] || packages[0]);
       }
     } catch (err) {
       // Expected in Expo Go — RevenueCat requires a custom dev build
@@ -100,8 +111,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
     setPurchasing(true);
     try {
       const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
-      if (typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
-        // If user entered a referral code, save it for redemption after sync
+      if (typeof customerInfo.entitlements.active['BODY BOUND Stencil Generator Pro'] !== 'undefined') {
         if (referralCode.trim()) {
           try {
             await SecureStore.setItemAsync('pending_referral_code', referralCode.trim().toUpperCase());
@@ -127,7 +137,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
     setRestoring(true);
     try {
       const customerInfo: CustomerInfo = await Purchases.restorePurchases();
-      if (typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
+      if (typeof customerInfo.entitlements.active['BODY BOUND Stencil Generator Pro'] !== 'undefined') {
         Alert.alert('Restored!', 'Your previous purchase has been restored.');
         onPurchaseSuccess();
       } else {
@@ -180,9 +190,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
           ) : (
             <View style={styles.plans}>
               {Object.entries(TIER_INFO).map(([key, tier], index) => {
-                // Match by RevenueCat package identifier (walk_in, booked_out, the_shop)
-                // Falls back to position-based matching
-                const pkg = offerings.find(p => p.identifier === key) || offerings[index];
+                const pkg = offerings[index];
                 const isSelected = selectedPackage?.identifier === pkg?.identifier;
 
                 return (

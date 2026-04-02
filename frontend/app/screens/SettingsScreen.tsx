@@ -92,7 +92,7 @@ export function SettingsScreen({
     setRestoringPurchases(true);
     try {
       const customerInfo = await Purchases.restorePurchases();
-      if (typeof customerInfo.entitlements.active['premium'] !== 'undefined') {
+      if (typeof customerInfo.entitlements.active['BODY BOUND Stencil Generator Pro'] !== 'undefined') {
         Alert.alert('Restored!', 'Your previous subscription has been restored.');
       } else {
         Alert.alert(
