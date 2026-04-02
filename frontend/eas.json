@@ -7,9 +7,6 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
-      "ios": {
-        "bundleIdentifier": "app.emergent.tattoostencils115373ef8"
-      },
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://body-bound-test.preview.emergentagent.com"
       }
@@ -21,8 +18,7 @@
         "buildType": "apk"
       },
       "ios": {
-        "simulator": true,
-        "bundleIdentifier": "app.emergent.tattoostencils115373ef8"
+        "simulator": true
       },
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://body-bound-test.preview.emergentagent.com"
@@ -34,8 +30,7 @@
         "buildType": "apk"
       },
       "ios": {
-        "resourceClass": "m-medium",
-        "bundleIdentifier": "app.emergent.tattoostencils115373ef8"
+        "resourceClass": "m-medium"
       },
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://body-bound-test.preview.emergentagent.com"
