@@ -3190,7 +3190,8 @@ async def revenuecat_webhook(request: FastAPIRequest):
                 'renewal_date': next_renewal,
                 'last_event': event_type,
                 'period_type': period_type,
-            }}
+            }},
+            upsert=True
         )
         logger.info(f'[RevenueCat] Granted {credits_to_grant} credits ({"trial" if is_apple_trial else "paid"}) to {user_id}')
     elif event_type in ('CANCELLATION', 'EXPIRATION') and user_id:

@@ -33,7 +33,7 @@
         "resourceClass": "m-medium"
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://body-bound-test.preview.emergentagent.com"
+        "EXPO_PUBLIC_BACKEND_URL": "https://bodybound-subs.emergent.host"
       }
     }
   },
