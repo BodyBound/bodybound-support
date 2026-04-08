@@ -1,0 +1,91 @@
+#!/usr/bin/expect -f
+set timeout 120
+
+spawn env EXPO_TOKEN=X5_v7RuzWX6eDtfvk8Cnbgu4S99JZndJ9TVOATtU EAS_BUILD_NO_EXPO_GO_WARNING=true npx eas build --platform ios --profile production
+
+# Wait for prompts and respond
+expect {
+    "Generate a new Apple Distribution Certificate?" {
+        send "Y\r"
+        exp_continue
+    }
+    "Do you want to set up a new one?" {
+        send "Y\r"
+        exp_continue
+    }
+    "Select an API Key" {
+        send "\r"
+        exp_continue
+    }
+    "Would you like to set up your Apple API Key?" {
+        send "Y\r"
+        exp_continue
+    }
+    "Apple Key ID" {
+        send "62TD3W67UF\r"
+        exp_continue
+    }
+    "Apple Issuer ID" {
+        send "588409ae-048c-4e91-a829-028b6c80036a\r"
+        exp_continue
+    }
+    "Apple Key P8 Path" {
+        send "./apple-api-key.p8\r"
+        exp_continue
+    }
+    "path to the key" {
+        send "./apple-api-key.p8\r"
+        exp_continue
+    }
+    "Select provider" {
+        send "\r"
+        exp_continue
+    }
+    "Which credentials would you like to set up" {
+        send "\r"
+        exp_continue
+    }
+    "Would you like to reuse" {
+        send "Y\r"
+        exp_continue
+    }
+    "Select a distribution certificate" {
+        send "\r"
+        exp_continue
+    }
+    "Want to configure Push Notifications" {
+        send "N\r"
+        exp_continue
+    }
+    "Continue?" {
+        send "Y\r"
+        exp_continue
+    }
+    "Confirm" {
+        send "Y\r"
+        exp_continue
+    }
+    "Yes" {
+        send "Y\r"
+        exp_continue
+    }
+    "Press ENTER" {
+        send "\r"
+        exp_continue
+    }
+    "Build details" {
+        puts "\n\nBuild started successfully!"
+    }
+    "https://expo.dev" {
+        puts "\n\nBuild URL detected!"
+    }
+    "Error:" {
+        puts "\n\nError detected!"
+    }
+    timeout {
+        puts "\n\nTimeout waiting for prompt"
+    }
+    eof {
+        puts "\n\nProcess ended"
+    }
+}

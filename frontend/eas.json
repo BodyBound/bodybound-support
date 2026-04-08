@@ -30,7 +30,8 @@
         "buildType": "apk"
       },
       "ios": {
-        "resourceClass": "m-medium"
+        "resourceClass": "m-medium",
+        "credentialsSource": "remote"
       },
       "env": {
         "EXPO_PUBLIC_BACKEND_URL": "https://bodybound-subs.emergent.host"
