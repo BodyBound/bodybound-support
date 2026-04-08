@@ -1598,39 +1598,37 @@ class AIStencilResponse(BaseModel):
     regenerated_style: Optional[str] = None  # Which style was regenerated (if single style request)
     
 async def generate_with_gemini(image_data: str, prompt: str) -> tuple[str, str]:
-    """Generate stencil with Gemini using emergentintegrations LlmChat
+    """Generate stencil with Gemini using Google SDK directly
     
-    Uses gemini-3-pro-image-preview model which produces better quality stencils
+    Uses gemini-2.5-flash-image model which produces quality stencils
     """
+    import google.generativeai as genai
+    
+    api_key = GOOGLE_API_KEY or EMERGENT_LLM_KEY
+    if not api_key:
+        raise Exception("No API key configured for Gemini")
+    
+    genai.configure(api_key=api_key)
+    model = genai.GenerativeModel('gemini-2.5-flash-image')
+    
     # Decode the base64 image if needed
     if ',' in image_data:
         image_data = image_data.split(',')[1]
     
-    # Create chat instance with Gemini image model
-    chat = LlmChat(
-        api_key=EMERGENT_LLM_KEY or AI_API_KEY, 
-        session_id=f"stencil-{uuid.uuid4()}", 
-        system_message="You are an expert tattoo stencil artist. You create clean, professional tattoo stencils from reference images."
-    )
-    chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["image", "text"])
+    # Send image with prompt
+    response = model.generate_content([
+        prompt,
+        {"mime_type": "image/png", "data": image_data}
+    ])
     
-    # Send the image with prompt
-    msg = UserMessage(
-        text=prompt,
-        file_contents=[ImageContent(image_data)]
-    )
+    # Extract image from response
+    if response.candidates and response.candidates[0].content.parts:
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, 'inline_data') and part.inline_data:
+                result_base64 = base64.b64encode(part.inline_data.data).decode('utf-8')
+                return result_base64, 'image/png'
     
-    text_response, images = await chat.send_message_multimodal_response(msg)
-    
-    if not images or len(images) == 0:
-        raise Exception("Gemini did not return any images")
-    
-    # Get the generated image
-    generated_image = images[0]
-    image_base64 = generated_image['data']
-    mime_type = generated_image.get('mime_type', 'image/png')
-    
-    return image_base64, mime_type
+    raise Exception("Gemini did not return any images")
 
 async def generate_with_openai(prompt: str) -> tuple[str, str]:
     """Fallback: Generate stencil with OpenAI gpt-image-1"""
