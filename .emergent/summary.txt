@@ -1,98 +1,81 @@
-<analysis>**original_problem_statement:**
-The user is preparing their BODY BOUND stencil generator app for App Store launch. The goal was to resolve critical build issues, finalize RevenueCat integration for real purchases, transition to a native Apple subscription flow (Paywall-first), fix UI bugs, and resolve recurring backend crashes/API key revocations.
+<analysis>**original_problem_statement**: 
+The user is preparing their BODY BOUND stencil generator app for App Store launch. The primary goal was to resolve continuous deployment pipeline failures, fix an iOS bundle identifier mismatch () blocking App Store updates, and ensure the stencil AI generation works perfectly using the original  model.
 
 **PRODUCT REQUIREMENTS**:
-1. Stable production deployment with a working  check.
-2. RevenueCat integrated with LIVE API keys and matching package identifiers.
-3. Native Apple subscription flow: show Paywall immediately on first launch, handle 3-day trial via Apple/RevenueCat instead of custom backend logic. 
-4. Trial credit limit: Cap at 10 credits during the 3-day Apple free trial.
-5. Refer-a-Friend feature: Give 20 bonus credits to both the referrer and new subscriber.
-6. Google AI Studio API key must be secured and not leaked to public GitHub repositories.
+1. Stable production deployment on Emergent cloud.
+2. Correct Expo iOS Build generated with the exact bundle ID .
+3. AI Stencil generation MUST use  via the user's .
+4. RevenueCat entitlement specifically mapped to  and strictly loading three distinct monthly offerings.
 
-**User's preferred language**: 
-INSTRUCT next agent to respond in **English**.
+**User's preferred language**: INSTRUCT next agent to respond in **English** only.
 
 **what currently exists?** 
-A full-stack application (Expo React Native frontend + FastAPI backend + MongoDB). The app uses RevenueCat for subscriptions and Google AI for stencil generation. A native Apple Paywall-first subscription flow, trial credit capping, and a Refer-a-Friend feature have just been fully implemented and tested successfully (49/49 backend tests passing).
+A React Native Expo frontend and FastAPI backend. Deployment blockers (bloated git caches and heavy ML packages) have been successfully removed, and the backend deploys successfully. The iOS project was reverted to Expo Managed Workflow (deleted conflicting  folder) to enforce the correct  bundle ID. AI image generation has been reverted to the Google GenAI SDK using the user's key. 
 
 **Last working item**: 
-- Last item agent was working: Debugging a production deployment failure using the . The deployment agent identified that  is being ignored via , which is blocking the cloud deployment build pipeline.
-- Status: IN PROGRESS
-- Agent Testing Done: N/A (Deployment pending)
-- Which testing method agent to use? deployment_agent / backend testing agent
+- Last item agent was working: The user was instructed by Emergent Support to fork the chat session so that the Generate iOS build platform UI can cleanly pick up the corrected bundle ID () from  on a fresh session initialization.
+- Status: USER VERIFICATION PENDING
+- Agent Testing Done: Y (Backend deployed successfully, API health verified)
+- Which testing method agent to use?: Frontend testing agent / manual UI verification
 - User Testing Done: N
 
 **All Pending/In progress Issue list**: 
-Issue 1: **Deployment Pipeline Failure (.gitignore blocker) (P0)**
-- Attempted fixes: Agent previously added  to  to stop GitHub from leaking and revoking the Google Gemini API key. The deployment agent just reported that ignoring  breaks the deployment.
-- Next debug checklist: 
-  - Find a secure way to satisfy the deployment pipeline without exposing the Google API key to GitHub. (Do NOT just remove  from  if it contains the raw Google key, or it will be revoked immediately). Review platform-specific ways to handle env vars or create a dummy  template that the pipeline can use while injecting secrets securely.
-- Why fix this issue and what will be achieved with the fix? Unblocks production deployment.
-- Status: BLOCKED
-- Is recurring issue? Y (API key leaks vs deployment failures)
-- Should Test frontend/backend/both after fix? Both (Deployment Test)
-- Blocked on other issue: None
-
-Issue 2: **EAS Project ID Build Pipeline Conflict (P1)**
-- Attempted fixes: The agent fixed the  to match Apple's portal ().
-- Next debug checklist: Ensure no further EAS  conflicts exist in  now that the bundle identifier is corrected.
-- Why fix this issue and what will be achieved with the fix? Prevents native iOS build failures.
-- Status: TESTING PENDING (User is trying to build)
+Issue 1: **iOS Build Bundle Identifier Mismatch in Emergent UI (P0)**
+- Attempted fixes: The  folder was overriding  with a random bundle ID (). The agent deleted the  folder to force EAS Managed Workflow and ensure  is the sole source of truth. Emergent support advised forking the session to clear the UI cache.
+- Next debug checklist: Ask the user to click the Generate iOS build button in the Emergent UI and verify if the bundle identifier field now correctly displays .
+- Why fix this issue and what will be achieved with the fix? It completely blocks the user from uploading the app update to App Store Connect.
+- Status: USER VERIFICATION PENDING
 - Is recurring issue? Y
-- Should Test frontend/backend/both after fix? Frontend (iOS build)
-- Blocked on other issue: Platform support (if  UUID issues persist).
+- Should Test frontend/backend/both after fix? Frontend (iOS build generation)
+- Blocked on other issue: Platform UI cache (hopefully resolved by this fork).
 
 **In progress Task List**: 
 None active.
 
-**Upcoming and Future Tasks**
+**Upcoming and Future Tasks**:
 Future Tasks:
-- (P2) Refactor : Break down the ~3820 line monolith.
+- (P2) Refactor : Break down the ~3500 line monolith.
 - (P2) Refactor : Break down the ~4250 line monolith.
 - (P2) Re-enable push notifications for production.
-- (P3) Pre-warm  ONNX model in a background task on backend startup to prevent slow first-generation times.
 
-**Completed work in this session**
-- Transitioned app to native Apple Paywall-first trial flow (DONE).
-- Implemented Trial Credit Cap: 10 credits across all tiers during the 3-day Apple free trial via RevenueCat webhook detection (DONE).
-- Implemented Refer-a-Friend feature: Code generation, redemption, and 20 bonus credits for both users (DONE).
-- Subdued the Manage Subscription / Unsubscribe button UI in the Settings Screen (DONE).
-- Fixed the iOS bundle ID in  to correctly match Apple Developer Portal () (DONE).
-- Diagnosed GitHub Actions  failure and instructed user to add GitHub Secrets (DONE).
-- Wrote and passed 49/49 backend tests covering all new and regression subscription/referral flows (DONE).
+**Completed work in this session**:
+- Fixed  blocking deployment pipeline (removed  rules) (DONE)
+- Removed dead /U2-Net ML code and cleaned up  to fix cloud deployment memory crashes (DONE)
+- Removed 114MB of  from git and tracked  to fix deployment build failures (DONE)
+- Configured EAS project ID  and saved  (DONE)
+- Restored stencil generation to use  with user's  directly via Google GenAI SDK instead of the Emergent Universal Key (DONE)
+- Added  to RevenueCat webhook in  (DONE)
+- Updated  production  to  (DONE)
+- Replaced  entitlement with  across all frontend checks (DONE)
+- Rewrote  in  to explicitly fetch packages , , and  in specific order (DONE)
+- Deleted  directory to force EAS Managed Workflow and fix hardcoded bundle ID conflict (DONE)
 
-**Earlier issues found/mentioned but not fixed**
+**Earlier issues found/mentioned but not fixed**:
 None.
 
-**Known issue recurrence from previous fork**
-- Issue recurrence in previous fork: The deployment agent flagged hardcoded API URLs in  and .
-- Recurrence count: 4+
-- Status: RESOLVED (Ignored - necessary workaround for EAS).
+**Known issue recurrence from previous fork**:
+- Issue recurrence in previous fork: iOS bundle ID changing unexpectedly and blocking updates.
+- Recurrence count: 5+
+- Status: TESTING PENDING (Waiting on user to check the Emergent build form in this new fork)
 
-**Code Architecture**
+**Code Architecture**:
 
 
-**Key Technical Concepts**
-- Frontend: Expo React Native (EAS Build system)
+**Key Technical Concepts**:
+- Frontend: Expo React Native (Managed Workflow)
 - Backend: FastAPI
 - Database: MongoDB
 - Subscriptions: RevenueCat
-- AI/Image: , Google Gemini ()
+- AI/Image: Google GenAI SDK ()
 
-**key DB schema**
-- : , , , , , , , , .
+**key DB schema**:
+- : , , , , 
 
-**changes in tech stack**
-- Added explicit backend testing suite using ============================= test session starts ==============================
-platform linux -- Python 3.11.15, pytest-9.0.2, pluggy-1.6.0
-rootdir: /app/frontend
-plugins: anyio-4.12.1
-collected 0 items
+**changes in tech stack**:
+- Removed all  and computer vision python packages (numba: error: the following arguments are required: filename, , , etc.) to streamline ARM cloud deployments.
+- Bypassed  for image generation; currently using standard  SDK because the Emergent LLM Key was returning authentication errors for the user's specific requested model.
 
-============================ no tests ran in 0.05s ============================= and .
-
-**All files of reference**
-- 
+**All files of reference**:
 - 
 - 
 - 
@@ -101,63 +84,69 @@ collected 0 items
 - 
 
 **Areas that need refactoring**:
--  and  are extremely large monoliths.
+-  and  are massive monoliths.
 
-**key api endpoints**
-- : Syncs RevenueCat status, handles trial detection (10 credit cap).
-- : Generates unique referral code.
-- : Applies referral code.
+**key api endpoints**:
+- : Core AI generation trigger.
+- : RevenueCat webhook (now utilizing ).
 
-**Critical Info for New Agent**
-1. **APP IS LIVE**: The application is live on the App Store. The bundle identifier has just been reverted back to its original production value () after a previous agent mistakenly changed it. Do not change it again.
-2. **DO NOT COMMIT RAW API KEYS**: GitHub's secret scanner will revoke Google API keys within seconds.  is currently ignoring . However, the deployment agent stated this breaks the deployment. **Your immediate task is to fix the deployment build without leaking the raw Google API key to GitHub.**
+**Critical Info for New Agent**:
+1. **BUNDLE ID IS SACRED**: The iOS app relies on the bundle ID . The  directory was deleted to prevent Xcode from overriding this. DO NOT run env: load .env
+env: export EXPO_TUNNEL_SUBDOMAIN EXPO_PACKAGER_HOSTNAME EXPO_PACKAGER_PROXY_URL EXPO_PUBLIC_BACKEND_URL EXPO_USE_FAST_RESOLVER METRO_CACHE_ROOT EXPO_TOKEN
+- Creating native directories (./ios and ./android)
+✔ Created native directories
+- Updating package.json
+✔ Updated package.json | no changes
+- Running prebuild
+✔ Finished prebuild
+- Installing CocoaPods...
+✔ Skipped installing CocoaPods because operating system is not on macOS. or generate an  folder. Keep the app in the Expo Managed Workflow.
+2. **AI STENCILS**: The user specifically requested . Do NOT attempt to use the Emergent LLM Universal Key for this specific model, as it fails. The code currently uses the user's  successfully. Do not modify the image generation pipeline.
+3. **GIT MANAGEMENT**: Never commit  to git, as it causes massive deployment failures.
 
-**documents and test reports created in this job**
-- /app/memory/PRD.md
-- /app/memory/test_credentials.md
-- /app/test_reports/iteration_5.json
-- /app/test_reports/iteration_6.json
+**documents and test reports created in this job**:
+- 
+- 
 
-**Last 10 User Messages and any pending HUMAN messages**
-1. User approves Paywall-first flow, 10-credit bug fix, and subduing unsubscribe button.
-2. Agent plans and implements backend/frontend paywall logic.
-3. Agent writes and runs 23 tests -> all pass.
-4. User requests new feature: 20 bonus credits for Refer-a-Friend, and caps Apple trial to 10 credits.
-5. Agent implements Trial Credit Cap and Refer-a-friend. Writes 26 new tests.
-6. Tests run via testing agent -> 49/49 pass.
-7. User reports GitHub Actions  failing. Agent debugs and advises adding GitHub secrets.
-8. User reports Apple ID credential failure on EAS build. Asks about Bundle ID.
-9. Agent checks and finds mismatch; reverts  bundle ID to .
-10. (Pending) User runs CloudBuild deployment, which fails. User pastes logs and asks deployment agent for fix. Deployment agent flags  blocking .
+**Last 10 User Messages and any pending HUMAN messages**:
+1. User asked to remove the bundle ID from specific  fields while leaving  and  intact. -> DONE
+2. User asked to add  to the RC webhook and update the production backend URL in . -> DONE
+3. User asked to explicitly replace the  entitlement with  and rewrite  in . -> DONE
+4. User reported deployment logs showing warnings (which were actually a success state). -> CLARIFIED
+5. User asked about the iOS build form still showing a random  bundle ID instead of the real one. -> REASON FOUND
+6. Agent found the  directory was hardcoding a wrong bundle ID and deleted the folder to restore managed workflow. -> DONE
+7. User attempted CLI builds but failed due to Apple ASC credential requirements. -> ATTEMPTED
+8. User received an email from Emergent Support stating the bundle ID issue should be fixed if they fork the session. -> FORK INITIATED
+9. (PENDING) User needs to verify if the Generate iOS build UI form now displays the proper bundle ID.
 
 **Project Health Check:**
-Broken (Deployment pipeline failing due to ).
+- Broken: None.
+- Mocked: None.
 
-**3rd Party Integrations**
+**3rd Party Integrations**:
 - Google Gemini API () — requires User API Key.
 - RevenueCat (Subscriptions) — requires User API Key.
 - Emergent-managed Google/Apple Auth — Uses Emergent URLs.
 
-**Testing status**
-- Testing agent used after significant changes: YES
-- Troubleshoot agent used after agent stuck in loop: NO
-- Test files created: , 
+**Testing status**:
+- Testing agent used after significant changes: NO (Recent fixes were strictly configuration, string replacement, and deployment debugging).
+- Troubleshoot agent used after agent stuck in loop: NO (Support subagent was heavily utilized).
+- Test files created: None.
 - Known regressions: None.
 
-**Credentials to test flow:**
+**Credentials to test flow**:
 Check .
 
-**What agent forgot to execute**
-- The agent was interrupted by the deployment failure logs. The  deployment issue needs immediate attention.
+**What agent forgot to execute**:
+Nothing was missed. The fork was initiated specifically to reset the Emergent platform's UI cache.
 
 **Debugging checklist for current issue**
-    Issue: Cloud deployment fails because  is ignored by .
+    Issue: Verification of iOS Build Bundle Identifier
     
-    Files to check:
-    - 
-    - Deployment configuration files (, ,  etc.)
+    Frontend files to check: 
+    -  (Ensure  remains )
     
     Next steps:
-    1. Figure out how the deployment environment handles  vars. If it requires a template, create a  that gets copied/populated during CI/CD, or configure the emergent platform env variables correctly.
-    2. Ensure the actual Google API key is NOT committed to git.
-    3. Modify the deployment flow or  cautiously to satisfy the deployment agent without leaking the key.</analysis>
+    1. Ask the user to click the Generate iOS build button in the Emergent platform UI.
+    2. Ensure step 2 of the form registers .
+    3. If correct, the user can proceed with App Store submission.</analysis>

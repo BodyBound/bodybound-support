@@ -80,7 +80,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "backendUrl": "https://body-bound-test.preview.emergentagent.com",
+      "backendUrl": "https://gemini-tattoo-gen.preview.emergentagent.com",
       "eas": {
         "projectId": "6f1631f5-e00d-41d1-b926-deeeb057b429"
       },
