@@ -84,6 +84,13 @@ An iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo
 
 ## What's Been Implemented
 
+### 2026-03 — Fork Session: iOS Bundle ID Fix
+1. Deleted `ios/` folder (re-appeared in fork) to enforce Managed Workflow
+2. Added `ios/` to `.gitignore` to prevent re-creation
+3. Verified `app.json` bundle ID: `app.emergent.tattoostencils115373ef8`
+4. Verified `eas.json` submit bundle ID matches
+5. Backend health confirmed
+
 ### 2026-03 — Deployment Fix
 1. Removed `*.env` gitignore rules that blocked deployment pipeline
 2. Removed `rembg` / U2-Net ML dependencies (added by previous agent, not in live App Store version)
@@ -92,8 +99,8 @@ An iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo
 
 ### 2026-03 — Trial Credit Cap + Refer-a-Friend
 1. **Trial credit cap**: 10 credits for ALL tiers during Apple trial (`TRIAL_CREDITS=10`)
-2. **Webhook trial detection**: `period_type=TRIAL` in RevenueCat webhook → 10 credits; `NORMAL` → full credits
-3. **Sync trial detection**: `is_trial=true` parameter in `/api/subscription/sync` → 10 credits
+2. **Webhook trial detection**: `period_type=TRIAL` in RevenueCat webhook -> 10 credits; `NORMAL` -> full credits
+3. **Sync trial detection**: `is_trial=true` parameter in `/api/subscription/sync` -> 10 credits
 4. **Referral code generation**: `GET /api/referral/code` returns unique BB-XXXXXX code
 5. **Referral redemption**: `POST /api/referral/redeem` awards 20 credits to both parties
 6. **Referral UI on Paywall**: Input field for referral code during subscription
@@ -113,7 +120,7 @@ An iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo
 - RevenueCat LIVE keys, legal links, slider/distortion fixes, API key security
 
 ## Known Issues / Pending
-- **P1**: EAS Project ID conflict (awaiting user build test)
+- **P0**: iOS bundle ID — user must verify in Emergent UI "Generate iOS build" form (PENDING USER ACTION)
 - **P1**: Apple token `audience doesn't match` warnings
 - **P2**: Refactor server.py (~3500 lines) and index.tsx (~4250 lines)
 - **P2**: Re-enable push notifications
@@ -125,7 +132,13 @@ An iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo
 
 ## RevenueCat Configuration
 - API Key (Live): `appl_dVqjUPRJXPXNpLZThAjtsqApiVU`
-- Product IDs → Backend Tiers:
-  - `bodybound_1499_1m_3d` → walk-in (125 credits, 10 trial)
-  - `bodybound_2999_1m_3d` → booked-out (500 credits, 10 trial)
-  - `bodybound_9999_1m_3d` → the-shop (1500 credits, 10 trial)
+- Product IDs to Backend Tiers:
+  - `bodybound_1499_1m_3d` -> walk-in (125 credits, 10 trial)
+  - `bodybound_2999_1m_3d` -> booked-out (500 credits, 10 trial)
+  - `bodybound_9999_1m_3d` -> the-shop (1500 credits, 10 trial)
+
+## Critical Rules
+1. **BUNDLE ID IS SACRED**: `app.emergent.tattoostencils115373ef8` — never change it
+2. **NO ios/ FOLDER**: Keep Managed Workflow. Never run `npx expo prebuild`
+3. **AI STENCILS**: Use `gemini-3-pro-image-preview` with user's `GOOGLE_API_KEY` only
+4. **NO .metro-cache in git**: Causes massive deployment failures
