@@ -79,3 +79,4 @@ frontend/package-lock.json
 
 # Mobile development
 android-sdk/
+model.patch
