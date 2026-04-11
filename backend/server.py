@@ -855,7 +855,8 @@ async def enhance_photo_with_ai(base64_string: str) -> str:
     Returns:
         Base64 encoded AI-enhanced image
     """
-    import google.generativeai as genai
+    from google import genai
+    from google.genai import types
     
     try:
         logger.info("[AIEnhance] Starting AI-powered photo enhancement...")
@@ -872,9 +873,8 @@ async def enhance_photo_with_ai(base64_string: str) -> str:
         width, height = img.size
         logger.info(f"[AIEnhance] Original resolution: {width}x{height}")
         
-        # Configure Gemini
-        genai.configure(api_key=AI_API_KEY)
-        model = genai.GenerativeModel('gemini-2.5-flash-image')
+        # Configure Gemini with new SDK
+        client = genai.Client(api_key=AI_API_KEY)
         
         # Create enhancement prompt based on image issues
         needs_upscale = width < 1500 or height < 1500
@@ -907,13 +907,19 @@ IMPORTANT:
 
 Output the enhanced photo now."""
 
-        # Call Gemini for enhancement
+        # Call Gemini for enhancement using new SDK
         image_bytes = base64.b64decode(base64_data)
         
-        response = model.generate_content([
-            enhancement_prompt,
-            {"mime_type": "image/png", "data": image_bytes}
-        ])
+        response = client.models.generate_content(
+            model='gemini-2.5-flash-image',
+            contents=[
+                enhancement_prompt,
+                types.Part.from_bytes(data=image_bytes, mime_type="image/png")
+            ],
+            config=types.GenerateContentConfig(
+                response_modalities=['IMAGE', 'TEXT']
+            )
+        )
         
         # Extract the enhanced image
         if response.candidates and response.candidates[0].content.parts:
@@ -1309,6 +1315,51 @@ async def root():
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "tattoo-stencil-api"}
+
+@api_router.get("/diagnostics")
+async def diagnostics():
+    """Diagnostic endpoint to check API key status and library versions on production"""
+    import importlib
+    results = {}
+    
+    # Check API keys
+    results["google_api_key_set"] = bool(GOOGLE_API_KEY)
+    results["google_api_key_prefix"] = GOOGLE_API_KEY[:8] + "..." if GOOGLE_API_KEY else "NOT SET"
+    results["emergent_llm_key_set"] = bool(EMERGENT_LLM_KEY)
+    results["ai_api_key_set"] = bool(AI_API_KEY)
+    
+    # Check library versions
+    try:
+        import emergentintegrations
+        results["emergentintegrations_version"] = getattr(emergentintegrations, '__version__', 'unknown')
+    except ImportError:
+        results["emergentintegrations_version"] = "NOT INSTALLED"
+    
+    try:
+        import litellm
+        results["litellm_version"] = getattr(litellm, '__version__', getattr(litellm, 'version', 'unknown'))
+    except ImportError:
+        results["litellm_version"] = "NOT INSTALLED"
+    
+    try:
+        import google.generativeai
+        results["google_generativeai_version"] = getattr(google.generativeai, '__version__', 'unknown')
+    except ImportError:
+        results["google_generativeai_version"] = "NOT INSTALLED"
+    
+    # Quick Gemini API test
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        api_key = GOOGLE_API_KEY or EMERGENT_LLM_KEY
+        chat = LlmChat(api_key=api_key, session_id="diag-test", system_message="Reply with 'OK'")
+        chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["text"])
+        msg = UserMessage(text="Say OK")
+        response = await chat.send_message(msg)
+        results["gemini_api_test"] = "PASS" if response else "FAIL - empty response"
+    except Exception as e:
+        results["gemini_api_test"] = f"FAIL: {str(e)}"
+    
+    return results
 
 @api_router.post("/process", response_model=ProcessImageResponse)
 async def process_image(request: ProcessImageRequest):
@@ -2054,6 +2105,10 @@ Style: Professional tattoo stencil suitable for thermal transfer paper"""
             
     except Exception as e:
         logger.error(f"[AsyncJob {job.job_id}] {style} version error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        # Store the actual error so it propagates to the client
+        job.error = f"{style} generation error: {str(e)}"
         return False
 
 async def process_stencil_job(job_id: str):
