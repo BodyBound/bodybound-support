@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File
+from fastapi import FastAPI, APIRouter, HTTPException, UploadFile, File, Request
 from fastapi.responses import Response, StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -1352,9 +1352,11 @@ async def health_check():
     return {"status": "healthy", "service": "tattoo-stencil-api"}
 
 @api_router.get("/diagnostics")
-async def diagnostics():
-    """Diagnostic endpoint to check API key status and library versions on production"""
+async def diagnostics(request: Request):
+    """Diagnostic endpoint - returns HTML dashboard or JSON based on Accept header"""
     import importlib
+    from starlette.responses import HTMLResponse
+    
     results = {}
     
     # Check API keys
@@ -1390,9 +1392,13 @@ async def diagnostics():
         chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["text"])
         msg = UserMessage(text="Say OK")
         response = await chat.send_message(msg)
-        results["gemini_api_test"] = "PASS" if response else "FAIL - empty response"
+        results["gemini_api_test"] = "PASS" if response else "FAIL"
     except Exception as e:
-        results["gemini_api_test"] = f"FAIL: {str(e)}"
+        error_str = str(e)
+        if "expired" in error_str.lower() or "invalid" in error_str.lower():
+            results["gemini_api_test"] = "FAIL - Key expired or invalid"
+        else:
+            results["gemini_api_test"] = f"FAIL - {error_str[:100]}"
     
     # Recent key failure alerts (last 10)
     try:
@@ -1404,6 +1410,106 @@ async def diagnostics():
     except Exception:
         results["recent_key_alerts"] = []
         results["total_key_failures"] = 0
+    
+    # If browser request, return nice HTML page
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept:
+        google_status = "Working" if results["gemini_api_test"] == "PASS" else "NOT Working"
+        google_color = "#22c55e" if google_status == "Working" else "#ef4444"
+        google_icon = "&#10004;" if google_status == "Working" else "&#10008;"
+        
+        emergent_status = "Available" if results["emergent_llm_key_set"] else "Not Set"
+        emergent_color = "#22c55e" if results["emergent_llm_key_set"] else "#ef4444"
+        
+        alerts_html = ""
+        if results["recent_key_alerts"]:
+            for alert in results["recent_key_alerts"]:
+                ts = alert.get("timestamp", "Unknown time")
+                if "T" in str(ts):
+                    ts = str(ts).replace("T", " ").split(".")[0] + " UTC"
+                failed = alert.get("failed_key", "Unknown")
+                fallback = alert.get("fallback_used", "none")
+                resolved = alert.get("resolved", False)
+                resolved_text = "Yes - Backup key used" if resolved else "No - Generation failed"
+                resolved_color = "#22c55e" if resolved else "#ef4444"
+                
+                alerts_html += f"""
+                <div style="background:#1a1a2e;border-radius:12px;padding:16px;margin-bottom:12px;border-left:4px solid {resolved_color};">
+                    <div style="color:#999;font-size:13px;margin-bottom:6px;">{ts}</div>
+                    <div style="color:#fff;font-size:15px;margin-bottom:4px;"><strong>{failed}</strong> failed</div>
+                    <div style="color:{resolved_color};font-size:14px;">Recovered: {resolved_text}</div>
+                </div>"""
+        else:
+            alerts_html = '<div style="color:#999;text-align:center;padding:20px;">No key failures recorded. Everything is running smoothly!</div>'
+        
+        html = f"""<!DOCTYPE html>
+<html><head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BODY BOUND - System Health</title>
+<style>
+  * {{ margin:0; padding:0; box-sizing:border-box; }}
+  body {{ background:#0a0a0f; color:#fff; font-family:-apple-system,BlinkMacSystemFont,sans-serif; padding:20px; }}
+  .header {{ text-align:center; margin-bottom:30px; padding:20px 0; }}
+  .header h1 {{ color:#c4a44a; font-size:24px; letter-spacing:2px; }}
+  .header p {{ color:#888; font-size:14px; margin-top:6px; }}
+  .card {{ background:#12121f; border-radius:16px; padding:24px; margin-bottom:20px; }}
+  .card h2 {{ color:#c4a44a; font-size:16px; letter-spacing:1px; margin-bottom:16px; text-transform:uppercase; }}
+  .status-row {{ display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #1a1a2e; }}
+  .status-row:last-child {{ border-bottom:none; }}
+  .status-label {{ color:#999; font-size:14px; }}
+  .status-value {{ font-size:15px; font-weight:600; }}
+  .badge {{ display:inline-block; padding:4px 12px; border-radius:20px; font-size:13px; font-weight:600; }}
+  .badge-green {{ background:#22c55e22; color:#22c55e; }}
+  .badge-red {{ background:#ef444422; color:#ef4444; }}
+  .badge-yellow {{ background:#eab30822; color:#eab308; }}
+  .big-status {{ text-align:center; padding:20px; }}
+  .big-status .icon {{ font-size:48px; margin-bottom:10px; }}
+  .big-status .text {{ font-size:18px; font-weight:600; }}
+  .footer {{ text-align:center; color:#555; font-size:12px; margin-top:30px; padding:20px; }}
+</style>
+</head><body>
+<div class="header">
+  <h1>BODY BOUND</h1>
+  <p>System Health Dashboard</p>
+</div>
+
+<div class="card">
+  <h2>API Key Status</h2>
+  <div class="big-status">
+    <div class="icon" style="color:{google_color};">{google_icon}</div>
+    <div class="text" style="color:{google_color};">Google API Key: {google_status}</div>
+  </div>
+  <div class="status-row">
+    <span class="status-label">Google Key</span>
+    <span class="badge {"badge-green" if results["google_api_key_set"] else "badge-red"}">{results["google_api_key_prefix"]}</span>
+  </div>
+  <div class="status-row">
+    <span class="status-label">Backup Key (Emergent)</span>
+    <span class="badge {"badge-green" if results["emergent_llm_key_set"] else "badge-red"}">{emergent_status}</span>
+  </div>
+  <div class="status-row">
+    <span class="status-label">Stencil Generation Test</span>
+    <span class="badge {"badge-green" if results["gemini_api_test"] == "PASS" else "badge-red"}">{results["gemini_api_test"]}</span>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Key Failure History</h2>
+  <div class="status-row">
+    <span class="status-label">Total failures recorded</span>
+    <span class="badge {"badge-green" if results["total_key_failures"] == 0 else "badge-yellow"}">{results["total_key_failures"]}</span>
+  </div>
+  <div style="margin-top:16px;">
+    {alerts_html}
+  </div>
+</div>
+
+<div class="footer">
+  Refresh this page anytime to check your system health.<br>
+  If Google Key shows "NOT Working", the backup Emergent key is keeping your app running.
+</div>
+</body></html>"""
+        return HTMLResponse(content=html)
     
     return results
 
