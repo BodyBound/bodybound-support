@@ -873,8 +873,16 @@ async def enhance_photo_with_ai(base64_string: str) -> str:
         width, height = img.size
         logger.info(f"[AIEnhance] Original resolution: {width}x{height}")
         
-        # Configure Gemini with new SDK
-        client = genai.Client(api_key=AI_API_KEY)
+        # Configure Gemini with new SDK - try keys in order
+        keys_to_try = []
+        if GOOGLE_API_KEY:
+            keys_to_try.append(("Google API Key", GOOGLE_API_KEY))
+        if EMERGENT_LLM_KEY:
+            keys_to_try.append(("Emergent LLM Key", EMERGENT_LLM_KEY))
+        
+        if not keys_to_try:
+            logger.warning("[AIEnhance] No API keys available, falling back to basic enhancement")
+            return enhance_photo_basic(base64_string)
         
         # Create enhancement prompt based on image issues
         needs_upscale = width < 1500 or height < 1500
@@ -907,33 +915,43 @@ IMPORTANT:
 
 Output the enhanced photo now."""
 
-        # Call Gemini for enhancement using new SDK
+        # Call Gemini for enhancement using new SDK - try each key
         image_bytes = base64.b64decode(base64_data)
         
-        response = client.models.generate_content(
-            model='gemini-2.5-flash-image',
-            contents=[
-                enhancement_prompt,
-                types.Part.from_bytes(data=image_bytes, mime_type="image/png")
-            ],
-            config=types.GenerateContentConfig(
-                response_modalities=['IMAGE', 'TEXT']
-            )
-        )
-        
-        # Extract the enhanced image
-        if response.candidates and response.candidates[0].content.parts:
-            for part in response.candidates[0].content.parts:
-                if hasattr(part, 'inline_data') and part.inline_data:
-                    enhanced_base64 = base64.b64encode(part.inline_data.data).decode('utf-8')
-                    mime_type = part.inline_data.mime_type or 'image/png'
-                    
-                    # Verify the enhanced image
-                    enhanced_img = Image.open(BytesIO(part.inline_data.data))
-                    new_width, new_height = enhanced_img.size
-                    logger.info(f"[AIEnhance] Enhanced resolution: {new_width}x{new_height}")
-                    
-                    return f"data:{mime_type};base64,{enhanced_base64}"
+        for key_name, api_key in keys_to_try:
+            try:
+                logger.info(f"[AIEnhance] Trying {key_name}...")
+                client = genai.Client(api_key=api_key)
+                
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash-image',
+                    contents=[
+                        enhancement_prompt,
+                        types.Part.from_bytes(data=image_bytes, mime_type="image/png")
+                    ],
+                    config=types.GenerateContentConfig(
+                        response_modalities=['IMAGE', 'TEXT']
+                    )
+                )
+                
+                # Extract the enhanced image
+                if response.candidates and response.candidates[0].content.parts:
+                    for part in response.candidates[0].content.parts:
+                        if hasattr(part, 'inline_data') and part.inline_data:
+                            enhanced_base64 = base64.b64encode(part.inline_data.data).decode('utf-8')
+                            mime_type = part.inline_data.mime_type or 'image/png'
+                            
+                            # Verify the enhanced image
+                            enhanced_img = Image.open(BytesIO(part.inline_data.data))
+                            new_width, new_height = enhanced_img.size
+                            logger.info(f"[AIEnhance] Enhanced resolution: {new_width}x{new_height} (using {key_name})")
+                            
+                            return f"data:{mime_type};base64,{enhanced_base64}"
+                
+                logger.warning(f"[AIEnhance] {key_name} returned no image, trying next key...")
+            except Exception as key_err:
+                logger.warning(f"[AIEnhance] {key_name} failed: {str(key_err)}, trying next key...")
+                continue
         
         logger.warning("[AIEnhance] Gemini did not return enhanced image, falling back to basic enhancement")
         return enhance_photo_basic(base64_string)
@@ -1651,41 +1669,61 @@ class AIStencilResponse(BaseModel):
 async def generate_with_gemini(image_data: str, prompt: str) -> tuple[str, str]:
     """Generate stencil with Gemini using emergentintegrations LlmChat
     
-    Uses gemini-3-pro-image-preview model which produces better quality stencils
+    Uses gemini-3-pro-image-preview model which produces better quality stencils.
+    Tries GOOGLE_API_KEY first, auto-falls back to EMERGENT_LLM_KEY if it fails.
     """
     # Decode the base64 image if needed
     if ',' in image_data:
         image_data = image_data.split(',')[1]
     
-    # Create chat instance with Gemini image model - use Google API key first
-    api_key = GOOGLE_API_KEY or EMERGENT_LLM_KEY
-    if not api_key:
+    # Build ordered list of keys to try
+    keys_to_try = []
+    if GOOGLE_API_KEY:
+        keys_to_try.append(("Google API Key", GOOGLE_API_KEY))
+    if EMERGENT_LLM_KEY:
+        keys_to_try.append(("Emergent LLM Key", EMERGENT_LLM_KEY))
+    
+    if not keys_to_try:
         raise Exception("No API key configured for Gemini")
     
-    chat = LlmChat(
-        api_key=api_key, 
-        session_id=f"stencil-{uuid.uuid4()}", 
-        system_message="You are an expert tattoo stencil artist. You create clean, professional tattoo stencils from reference images."
-    )
-    chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["image", "text"])
+    last_error = None
+    for key_name, api_key in keys_to_try:
+        try:
+            logger.info(f"[Gemini] Attempting stencil generation with {key_name}...")
+            chat = LlmChat(
+                api_key=api_key, 
+                session_id=f"stencil-{uuid.uuid4()}", 
+                system_message="You are an expert tattoo stencil artist. You create clean, professional tattoo stencils from reference images."
+            )
+            chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["image", "text"])
+            
+            # Send the image with prompt
+            msg = UserMessage(
+                text=prompt,
+                file_contents=[ImageContent(image_data)]
+            )
+            
+            text_response, images = await chat.send_message_multimodal_response(msg)
+            
+            if not images or len(images) == 0:
+                raise Exception("Gemini did not return any images")
+            
+            # Get the generated image
+            generated_image = images[0]
+            image_base64 = generated_image['data']
+            mime_type = generated_image.get('mime_type', 'image/png')
+            
+            logger.info(f"[Gemini] Successfully generated with {key_name}")
+            return image_base64, mime_type
+            
+        except Exception as e:
+            last_error = e
+            logger.warning(f"[Gemini] {key_name} failed: {str(e)}")
+            # Continue to next key
+            continue
     
-    # Send the image with prompt
-    msg = UserMessage(
-        text=prompt,
-        file_contents=[ImageContent(image_data)]
-    )
-    
-    text_response, images = await chat.send_message_multimodal_response(msg)
-    
-    if not images or len(images) == 0:
-        raise Exception("Gemini did not return any images")
-    
-    # Get the generated image
-    generated_image = images[0]
-    image_base64 = generated_image['data']
-    mime_type = generated_image.get('mime_type', 'image/png')
-    
-    return image_base64, mime_type
+    # All keys failed
+    raise Exception(f"All API keys failed. Last error: {str(last_error)}")
 
 async def generate_with_openai(prompt: str) -> tuple[str, str]:
     """Fallback: Generate stencil with OpenAI gpt-image-1"""
