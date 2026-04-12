@@ -43,6 +43,23 @@ if not AI_API_KEY and not EMERGENT_LLM_KEY:
     logger_temp = logging.getLogger(__name__)
     logger_temp.error("No AI API key configured! Please set GOOGLE_API_KEY or EMERGENT_LLM_KEY")
 
+# Track API key failures for admin visibility
+async def log_key_failure(key_name: str, error_msg: str, fallback_used: str):
+    """Log API key failures to MongoDB so the admin can monitor key health"""
+    try:
+        from datetime import datetime, timezone
+        await db.api_key_alerts.insert_one({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "failed_key": key_name,
+            "error": error_msg,
+            "fallback_used": fallback_used,
+            "resolved": fallback_used != "none"
+        })
+        logger_temp = logging.getLogger(__name__)
+        logger_temp.warning(f"[KEY ALERT] {key_name} failed: {error_msg}. Fallback: {fallback_used}")
+    except Exception:
+        pass  # Don't let logging failures break the app
+
 # Create the main app without a prefix
 app = FastAPI()
 
@@ -1377,6 +1394,17 @@ async def diagnostics():
     except Exception as e:
         results["gemini_api_test"] = f"FAIL: {str(e)}"
     
+    # Recent key failure alerts (last 10)
+    try:
+        alerts = await db.api_key_alerts.find(
+            {}, {"_id": 0}
+        ).sort("timestamp", -1).limit(10).to_list(10)
+        results["recent_key_alerts"] = alerts
+        results["total_key_failures"] = await db.api_key_alerts.count_documents({})
+    except Exception:
+        results["recent_key_alerts"] = []
+        results["total_key_failures"] = 0
+    
     return results
 
 @api_router.post("/process", response_model=ProcessImageResponse)
@@ -1719,6 +1747,9 @@ async def generate_with_gemini(image_data: str, prompt: str) -> tuple[str, str]:
         except Exception as e:
             last_error = e
             logger.warning(f"[Gemini] {key_name} failed: {str(e)}")
+            # Log key failure to DB for admin visibility
+            next_key = keys_to_try[keys_to_try.index((key_name, api_key)) + 1][0] if keys_to_try.index((key_name, api_key)) + 1 < len(keys_to_try) else "none"
+            await log_key_failure(key_name, str(e), next_key)
             # Continue to next key
             continue
     
