@@ -3399,7 +3399,11 @@ async def revenuecat_webhook(request: FastAPIRequest):
     app_user_id = our backend user_id (set via Purchases.logIn(userId) in the app).
     """
     auth = request.headers.get('authorization', '')
-    if REVENUECAT_WEBHOOK_AUTH and auth != f'Bearer {REVENUECAT_WEBHOOK_AUTH}':
+    # Accept: "Bearer <token>", just "<token>", or "Bearer Bearer <token>" (RevenueCat quirk)
+    auth_token = auth.replace('Bearer ', '').strip()
+    expected_token = REVENUECAT_WEBHOOK_AUTH.replace('Bearer ', '').strip() if REVENUECAT_WEBHOOK_AUTH else ''
+    if expected_token and auth_token != expected_token:
+        logger.warning(f'[RevenueCat] Webhook auth failed. Got: "{auth[:30]}..."')
         raise HTTPException(status_code=401, detail='Unauthorized')
     body = await request.json()
     event = body.get('event', {})
