@@ -1351,6 +1351,37 @@ async def root():
 async def health_check():
     return {"status": "healthy", "service": "tattoo-stencil-api"}
 
+@api_router.get("/admin/user-lookup")
+async def admin_user_lookup(email: str = None, user_id: str = None):
+    """Admin endpoint to look up a user's account and subscription status"""
+    if not email and not user_id:
+        raise HTTPException(status_code=400, detail="Provide email or user_id")
+    
+    query = {}
+    if email:
+        query['email'] = {'$regex': email, '$options': 'i'}
+    if user_id:
+        query['user_id'] = user_id
+    
+    user = await db.users.find_one(query, {'_id': 0})
+    if not user:
+        return {"found": False, "message": "No user found with that email/id"}
+    
+    uid = user.get('user_id', '')
+    sub = await db.subscriptions.find_one({'user_id': uid}, {'_id': 0})
+    
+    # Check for unmatched webhooks that might belong to this user
+    unmatched = await db.unmatched_webhooks.find(
+        {'reconciled': False}, {'_id': 0}
+    ).to_list(50)
+    
+    return {
+        "found": True,
+        "user": user,
+        "subscription": sub,
+        "unmatched_webhooks_count": len(unmatched)
+    }
+
 @api_router.get("/diagnostics")
 async def diagnostics(request: Request):
     """Diagnostic endpoint - returns HTML dashboard or JSON based on Accept header"""
