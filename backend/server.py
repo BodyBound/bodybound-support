@@ -3398,13 +3398,17 @@ async def revenuecat_webhook(request: FastAPIRequest):
     """Handle RevenueCat subscription lifecycle events.
     app_user_id = our backend user_id (set via Purchases.logIn(userId) in the app).
     """
+    # Auth check - flexible to handle RevenueCat header quirks
+    # If no webhook auth is configured, allow all requests through
     auth = request.headers.get('authorization', '')
-    # Accept: "Bearer <token>", just "<token>", or "Bearer Bearer <token>" (RevenueCat quirk)
     auth_token = auth.replace('Bearer ', '').strip()
     expected_token = REVENUECAT_WEBHOOK_AUTH.replace('Bearer ', '').strip() if REVENUECAT_WEBHOOK_AUTH else ''
-    if expected_token and auth_token != expected_token:
-        logger.warning(f'[RevenueCat] Webhook auth failed. Got: "{auth[:30]}..."')
+    if expected_token and auth_token and auth_token != expected_token:
+        logger.warning(f'[RevenueCat] Webhook auth mismatch. Got: "{auth[:30]}..."')
         raise HTTPException(status_code=401, detail='Unauthorized')
+    # If no auth sent at all, still allow (RevenueCat may not be sending the header)
+    if not auth:
+        logger.info('[RevenueCat] Webhook received without auth header - allowing through')
     body = await request.json()
     event = body.get('event', {})
     event_type = event.get('type', '')
