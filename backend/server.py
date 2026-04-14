@@ -3412,10 +3412,57 @@ async def revenuecat_webhook(request: FastAPIRequest):
     body = await request.json()
     event = body.get('event', {})
     event_type = event.get('type', '')
-    # app_user_id is our backend user_id (we call Purchases.logIn(userId) in the app)
-    user_id = event.get('app_user_id', '')
+    # app_user_id might be a RevenueCat anonymous UUID instead of our backend user_id
+    # Check aliases first for a backend user_id match (format: user_XXXXXXXXXXXX)
+    raw_user_id = event.get('app_user_id', '')
+    aliases = event.get('aliases', [])
     product_id = event.get('product_id', '')
-    logger.info(f'[RevenueCat] {event_type} | user_id={user_id} | product={product_id}')
+    
+    # Try to find the backend user_id from aliases or app_user_id
+    user_id = ''
+    all_ids = [raw_user_id] + aliases
+    
+    # First: check if any ID matches our backend format (starts with 'user_')
+    for candidate in all_ids:
+        if candidate and candidate.startswith('user_'):
+            user_id = candidate
+            break
+    
+    # Second: if no backend-format ID found, search the database for any matching ID
+    if not user_id:
+        for candidate in all_ids:
+            if not candidate:
+                continue
+            # Check if this RevenueCat ID is stored as revenuecat_customer_id on any user
+            existing = await db.subscriptions.find_one({'revenuecat_customer_id': candidate}, {'_id': 0, 'user_id': 1})
+            if existing:
+                user_id = existing['user_id']
+                break
+            # Also check users collection
+            existing_user = await db.users.find_one(
+                {'$or': [{'revenuecat_customer_id': candidate}, {'user_id': candidate}]},
+                {'_id': 0, 'user_id': 1}
+            )
+            if existing_user:
+                user_id = existing_user['user_id']
+                break
+    
+    # Third: if still no match, use the raw app_user_id and store it for later reconciliation
+    if not user_id:
+        user_id = raw_user_id
+        logger.warning(f'[RevenueCat] Could not match user. raw_id={raw_user_id}, aliases={aliases}')
+        # Store the unmatched webhook for later reconciliation
+        await db.unmatched_webhooks.insert_one({
+            'raw_user_id': raw_user_id,
+            'aliases': aliases,
+            'event_type': event_type,
+            'product_id': product_id,
+            'event_data': event,
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'reconciled': False
+        })
+    
+    logger.info(f'[RevenueCat] {event_type} | user_id={user_id} | raw_id={raw_user_id} | product={product_id}')
     tier_info = PRODUCT_CREDIT_MAP.get(product_id, {})
     if event_type in ('INITIAL_PURCHASE', 'RENEWAL') and tier_info and user_id:
         # Detect Apple trial vs paid subscription

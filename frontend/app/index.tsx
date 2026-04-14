@@ -4155,7 +4155,12 @@ export default function Index() {
               // Request push notification permission + link user to RevenueCat
               setupNotifications();
               if (Platform.OS === 'ios' || Platform.OS === 'android') {
-                try { await Purchases.logIn(user.user_id); } catch (_) {}
+                try {
+                  const { customerInfo } = await Purchases.logIn(user.user_id);
+                  console.log('[RevenueCat] Logged in as:', user.user_id, 'RC ID:', customerInfo?.originalAppUserId);
+                } catch (loginErr) {
+                  console.warn('[RevenueCat] logIn failed:', loginErr);
+                }
               }
               // Check subscription status
               const credits = await refreshCredits(token);
