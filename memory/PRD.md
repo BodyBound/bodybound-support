@@ -1,144 +1,62 @@
 # BODY BOUND Stencil Generator - PRD
 
 ## Product Overview
-An iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo stencils from photos using AI. Designed for tattoo artists.
+iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo stencils from photos using AI. Designed for tattoo artists.
 
 ## Core Tech Stack
 - **Frontend**: React Native (Expo SDK 54), TypeScript, expo-router
 - **Backend**: FastAPI (Python), MongoDB
-- **AI**: Gemini gemini-3-pro-image-preview for stencil generation
+- **AI**: Gemini gemini-3-pro-image-preview (stencil gen), gemini-2.5-flash-image (enhancement)
 - **Auth**: Apple Sign-In (primary), Google OAuth via Emergent Auth (fallback)
 - **Subscriptions**: RevenueCat SDK (react-native-purchases v9.10.5)
-- **Storage**: MongoDB (tattoo_stencil DB)
+- **Storage**: MongoDB Atlas (production), local MongoDB (preview)
 
-## Subscription Tiers (Apple-managed trials)
+## Subscription Tiers
 | Tier | Price | Credits/Month | Trial Credits |
 |------|-------|---------------|---------------|
-| The Walk-In | $14.99/mo | 125 | 10 |
+| Walk-In | $14.99/mo | 125 | 10 |
 | Booked Out | $29.99/mo | 500 | 10 |
 | The Shop | $99.00/mo | 1,500 shared | 10 |
 
-**Trial Model**: 3-day free trial managed by Apple/RevenueCat. Users get 10 credits during trial (regardless of tier). Full tier credits unlock after first payment.
-
-## Refer-a-Friend
-- Each subscriber gets a unique referral code (BB-XXXXXX format)
-- When a new subscriber redeems a code: both parties get **20 bonus credits**
-- One-time use per user (can't redeem twice)
-- Can't redeem your own code
-- Both parties must have active subscriptions
-- Stats tracked per user (total referrals, credits earned)
-
-## Code Architecture
-```
-/app
-├── backend/
-│   ├── server.py              # FastAPI (~3820 lines) - monolithic but working
-│   ├── requirements.txt
-│   └── tests/
-│       ├── test_paywall_flow.py          # 7 tests
-│       ├── test_paywall_flow_extended.py # 16 tests
-│       └── test_trial_referral.py        # 26 tests (trial cap + referral)
-├── frontend/
-│   ├── app/
-│   │   ├── index.tsx      # Main app (~4250 lines)
-│   │   ├── types.ts       # Shared TypeScript interfaces
-│   │   ├── screens/
-│   │   │   ├── AuthScreen.tsx
-│   │   │   ├── PaywallScreen.tsx   # Required mode + referral code input
-│   │   │   ├── SettingsScreen.tsx  # Refer-a-Friend section + subtle Change Plan
-│   │   │   └── StudioTeamScreen.tsx
-│   └── package.json
-└── memory/
-    ├── PRD.md
-    └── test_credentials.md
-```
-
 ## Key API Endpoints
+- `POST /api/ai-stencil-async` — AI stencil generation
+- `POST /api/subscription/sync` — Sync RevenueCat subscription
+- `POST /api/webhooks/revenuecat` — RevenueCat webhook (unauthenticated currently)
+- `POST /api/promo/redeem` — Redeem promo codes
+- `GET /api/diagnostics` — Visual health dashboard (HTML in browser, JSON via API)
+- `GET /api/admin/user-lookup?email=X` — Look up customer by email
+- `POST /api/admin/fix-subscription` — Manually activate subscription
+- `POST /api/admin/add-credits` — Add bonus credits
+- `GET /api/admin/all-users` — List all customers
+- `POST /api/admin/create-promo` — Create promo codes
 
-### Auth & User
-- `POST /api/auth/apple` - Apple Sign-In (new users: empty subscription)
-- `POST /api/auth/google-session` - Google Sign-In (new users: empty subscription)
-- `GET /api/auth/me` - Get current user + credits (includes `needs_subscription`)
-- `POST /api/auth/demo-login` - Reviewer demo account
+## AI Key Fallback System
+- Primary: User's GOOGLE_API_KEY (pay-as-you-go)
+- Backup: EMERGENT_LLM_KEY (universal key)
+- Auto-fallback on auth/quota failures
+- Key failures logged to `api_key_alerts` collection
+- Visual dashboard at `/api/diagnostics`
 
-### Subscription & Credits
-- `POST /api/subscription/sync` - Sync RevenueCat entitlement to backend (supports `is_trial` flag)
-- `POST /api/credits/deduct` - Atomically deduct 1 credit
-- `POST /api/webhooks/revenuecat` - RevenueCat lifecycle events (detects `period_type: TRIAL`)
-- `POST /api/tasks/refresh-credits` - Monthly credit refresh (cron)
+## RevenueCat Webhook
+- URL: `https://bodybound-subs.emergent.host/api/webhooks/revenuecat`
+- Auth: Currently allowing unauthenticated (RC dashboard won't save auth header)
+- Smart user matching: checks `aliases` array for backend user_ids, falls back to UUID
+- Unmatched webhooks stored in `unmatched_webhooks` collection
 
-### Referral System
-- `GET /api/referral/code` - Get or generate user's referral code + stats
-- `POST /api/referral/redeem` - Redeem a referral code (20 credits to both parties)
-
-### Studio Team, Stencil Generation
-- Team CRUD: `/api/studio/*`
-- AI Stencil: `/api/ai-stencil-async`, `/api/ai-stencil-status/{job_id}`
-
-## MongoDB Collections
-- **users**: user_id, apple_user_id, google_user_id, email, name, device_id
-- **subscriptions**: user_id, tier, available_credits, is_trial, renewal_date, period_type
-- **referrals**: type (code/redemption), referral_code, referrer_user_id, redeemer_user_id, status
-- **studio_teams**: team_id, admin_user_id, members[], shared_credits
-- **stencils**: id, user_id, original_image, stencil_image, settings
-
-## What's Been Implemented
-
-### 2026-03 — Fork Session: iOS Bundle ID Fix
-1. Deleted `ios/` folder (re-appeared in fork) to enforce Managed Workflow
-2. Added `ios/` to `.gitignore` to prevent re-creation
-3. Verified `app.json` bundle ID: `app.emergent.tattoostencils115373ef8`
-4. Verified `eas.json` submit bundle ID matches
-5. Backend health confirmed
-
-### 2026-03 — Deployment Fix
-1. Removed `*.env` gitignore rules that blocked deployment pipeline
-2. Removed `rembg` / U2-Net ML dependencies (added by previous agent, not in live App Store version)
-3. Removed dead `/cv-stencil` endpoint and associated functions
-4. Deployment agent confirms: **DEPLOYMENT READY** — no blockers
-
-### 2026-03 — Trial Credit Cap + Refer-a-Friend
-1. **Trial credit cap**: 10 credits for ALL tiers during Apple trial (`TRIAL_CREDITS=10`)
-2. **Webhook trial detection**: `period_type=TRIAL` in RevenueCat webhook -> 10 credits; `NORMAL` -> full credits
-3. **Sync trial detection**: `is_trial=true` parameter in `/api/subscription/sync` -> 10 credits
-4. **Referral code generation**: `GET /api/referral/code` returns unique BB-XXXXXX code
-5. **Referral redemption**: `POST /api/referral/redeem` awards 20 credits to both parties
-6. **Referral UI on Paywall**: Input field for referral code during subscription
-7. **Referral UI on Settings**: "Refer a Friend" section with code display, stats, and Share button
-
-### 2026-03 — Paywall-First Subscription Flow
-1. Removed backend-managed trials (no free 3-day/10-credit trial)
-2. Apple-managed trial with trial credit cap
-3. Paywall-first UX (non-dismissable for new users)
-4. RevenueCat sync endpoint as webhook fallback
-5. `needs_subscription` flag in `/api/auth/me`
-6. Startup sync of RevenueCat entitlements
-7. "Change Plan" as subtle link (de-emphasized cancel)
-
-### Earlier Work
-- Credit management, auth, anti-abuse, studio teams, stencil generation
-- RevenueCat LIVE keys, legal links, slider/distortion fixes, API key security
-
-## Known Issues / Pending
-- **P0**: iOS bundle ID — user must verify in Emergent UI "Generate iOS build" form (PENDING USER ACTION)
-- **P1**: Apple token `audience doesn't match` warnings
-- **P2**: Refactor server.py (~3500 lines) and index.tsx (~4250 lines)
-- **P2**: Re-enable push notifications
-
-## Testing Status
-- **Total Tests**: 49/49 passing (7 + 16 + 26)
-- **Test Reports**: /app/test_reports/iteration_5.json, iteration_6.json
-- **Coverage**: Sync, trial cap, webhook, referral CRUD, needs_subscription, regression
-
-## RevenueCat Configuration
-- API Key (Live): `appl_dVqjUPRJXPXNpLZThAjtsqApiVU`
-- Product IDs to Backend Tiers:
-  - `bodybound_1499_1m_3d` -> walk-in (125 credits, 10 trial)
-  - `bodybound_2999_1m_3d` -> booked-out (500 credits, 10 trial)
-  - `bodybound_9999_1m_3d` -> the-shop (1500 credits, 10 trial)
+## Promo Code System
+- `BBSORRY` code created, locked to 20 affected customer emails
+- Walk-In tier, 125 credits, 30 days
+- One-time use per person, email-restricted
+- Frontend "Apply" button added to PaywallScreen (needs new iOS build)
 
 ## Critical Rules
-1. **BUNDLE ID IS SACRED**: `app.emergent.tattoostencils115373ef8` — never change it
-2. **NO ios/ FOLDER**: Keep Managed Workflow. Never run `npx expo prebuild`
-3. **AI STENCILS**: Use `gemini-3-pro-image-preview` with user's `GOOGLE_API_KEY` only
-4. **NO .metro-cache in git**: Causes massive deployment failures
+1. **BUNDLE ID IS SACRED**: `app.emergent.tattoostencils115373ef8`
+2. **NO ios/ FOLDER**: Keep Managed Workflow
+3. **AI STENCILS**: gemini-3-pro-image-preview with key fallback
+4. **NO .metro-cache in git**
+
+## Known Issues
+- Production GOOGLE_API_KEY expired (AIzaSyCk...) — needs update in Emergent deployment settings
+- Emergent Universal Key budget near limit — needs top-up
+- RevenueCat webhook auth header won't save in RC dashboard
+- Admin endpoints are unauthenticated (P2 security fix)
