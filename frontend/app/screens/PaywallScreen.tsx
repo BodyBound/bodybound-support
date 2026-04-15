@@ -64,6 +64,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
   const [referralCode, setReferralCode] = useState('');
   const [referralApplied, setReferralApplied] = useState(false);
   const [applyingPromo, setApplyingPromo] = useState(false);
+  const [offeringsError, setOfferingsError] = useState(false);
 
   useEffect(() => {
     loadOfferings();
@@ -91,10 +92,13 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
       if (packages.length > 0) {
         setOfferings(packages);
         setSelectedPackage(packages[1] || packages[0]);
+      } else {
+        console.log('[Paywall] No offerings returned from RevenueCat');
+        setOfferingsError(true);
       }
     } catch (err) {
-      // Expected in Expo Go — RevenueCat requires a custom dev build
-      // Silent fail - will show fallback UI
+      console.log('[Paywall] Failed to load offerings:', err);
+      setOfferingsError(true);
     } finally {
       setLoading(false);
     }
@@ -224,6 +228,16 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
                   </TouchableOpacity>
                 );
               })}
+            </View>
+          )}
+
+          {/* Sandbox / TestFlight error message */}
+          {offeringsError && !isWeb && (
+            <View style={{ backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' }}>
+              <Text style={{ color: '#ef4444', fontSize: 14, fontWeight: '700', marginBottom: 6 }}>Subscription plans unavailable</Text>
+              <Text style={{ color: '#999', fontSize: 13, lineHeight: 18 }}>
+                If you're testing on TestFlight, sandbox purchases may not be configured. Tap "Restore Purchases" if you have an existing subscription. This does not affect App Store users.
+              </Text>
             </View>
           )}
 
