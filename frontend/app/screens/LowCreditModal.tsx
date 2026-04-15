@@ -16,6 +16,7 @@ interface LowCreditModalProps {
   creditsRemaining: number;
   totalCredits: number;
   onUpgrade: () => void;
+  onInviteArtists?: () => void;
   onDismiss?: () => void;
 }
 
@@ -46,6 +47,7 @@ export function LowCreditModal({
   creditsRemaining,
   totalCredits,
   onUpgrade,
+  onInviteArtists,
   onDismiss,
 }: LowCreditModalProps) {
   const content = CONTENT[level];
@@ -99,6 +101,18 @@ export function LowCreditModal({
               {level === 'empty' ? 'Upgrade Now' : 'Upgrade Plan'}
             </Text>
           </TouchableOpacity>
+
+          {/* Invite Artists — referral CTA for low/critical */}
+          {canDismiss && onInviteArtists && (
+            <TouchableOpacity
+              onPress={onInviteArtists}
+              style={styles.inviteBtn}
+              data-testid="low-credit-invite-btn"
+            >
+              <Feather name="users" size={16} color="#C9A227" />
+              <Text style={styles.inviteBtnText}>Invite 2 Artists → Free Month</Text>
+            </TouchableOpacity>
+          )}
 
           {/* Dismiss — only for low/critical */}
           {canDismiss && onDismiss && (
@@ -192,6 +206,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
     fontSize: 16,
+  },
+  inviteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(201,162,39,0.1)',
+    borderWidth: 1,
+    borderColor: '#C9A227',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    width: '100%',
+    gap: 8,
+    marginTop: 8,
+  },
+  inviteBtnText: {
+    color: '#C9A227',
+    fontWeight: '600',
+    fontSize: 14,
   },
   dismissBtn: {
     paddingVertical: 12,

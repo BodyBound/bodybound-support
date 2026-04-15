@@ -48,6 +48,9 @@ import { StudioTeamScreen } from './screens/StudioTeamScreen';
 import { ReferralDashboard } from './screens/ReferralDashboard';
 import { ReferralPopup } from './screens/ReferralPopup';
 import { LowCreditModal } from './screens/LowCreditModal';
+import { ReferralBanner } from './screens/ReferralBanner';
+import { MilestoneModal } from './screens/MilestoneModal';
+import { FlexMessage } from './screens/FlexMessage';
 
 // API URL - hardcoded for reliable production builds
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL ;
@@ -260,6 +263,15 @@ export default function Index() {
   const [showLowCreditModal, setShowLowCreditModal] = useState(false);
   const [lowCreditLevel, setLowCreditLevel] = useState<'low' | 'critical' | 'empty'>('low');
   const triggeredThresholdsRef = useRef<Set<string>>(new Set());
+
+  // Growth messaging state
+  const [showReferralBanner, setShowReferralBanner] = useState(false);
+  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
+  const [flexMessage, setFlexMessage] = useState<string | null>(null);
+  const [showFlexMessage, setShowFlexMessage] = useState(false);
+  const milestoneTriggeredThisSessionRef = useRef(false);
+  const triggeredFlexMilestonesRef = useRef<Set<number>>(new Set());
+  const bannerDismissedUntilRef = useRef<number>(0);
   
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
@@ -773,6 +785,73 @@ export default function Index() {
     // If credits went UP (billing renewal), reset thresholds
     if (credits > prevCredits && prevCredits > 0) {
       triggeredThresholdsRef.current.clear();
+    }
+  };
+
+
+  // ---- Growth Messaging Logic ----
+  const isPaidUser = userTier && ['walk-in', 'booked-out', 'the-shop', 'the-shop-member'].includes(userTier);
+
+  // Check referral banner visibility on login
+  useEffect(() => {
+    if (isPaidUser && currentUser) {
+      const checkBannerVisibility = async () => {
+        const dismissedUntil = await AsyncStorage.getItem('bb_banner_dismissed_until');
+        if (dismissedUntil && Date.now() < parseInt(dismissedUntil, 10)) {
+          bannerDismissedUntilRef.current = parseInt(dismissedUntil, 10);
+          setShowReferralBanner(false);
+        } else {
+          setShowReferralBanner(true);
+        }
+        // Load triggered flex milestones from storage
+        const flexData = await AsyncStorage.getItem('bb_flex_milestones');
+        if (flexData) {
+          try { triggeredFlexMilestonesRef.current = new Set(JSON.parse(flexData)); } catch (_) {}
+        }
+      };
+      checkBannerVisibility();
+    } else {
+      setShowReferralBanner(false);
+    }
+  }, [isPaidUser, currentUser]);
+
+  const handleBannerDismiss = async () => {
+    const until = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+    bannerDismissedUntilRef.current = until;
+    setShowReferralBanner(false);
+    await AsyncStorage.setItem('bb_banner_dismissed_until', until.toString());
+  };
+
+  // Milestone + flex check — called after each generation
+  const checkGrowthPrompts = (genCount: number, creditsUsed: number) => {
+    if (!isPaidUser) return;
+    // Priority: low credit modal > milestone modal > flex message
+    // Don't stack — only one prompt at a time
+    if (showLowCreditModal) return;
+
+    // Feature 2: Milestone trigger (3rd gen, then every 10th: 10, 20, 30...)
+    const isMilestoneTrigger = genCount === 3 || (genCount >= 10 && genCount % 10 === 0);
+    if (isMilestoneTrigger && !milestoneTriggeredThisSessionRef.current) {
+      milestoneTriggeredThisSessionRef.current = true;
+      setShowMilestoneModal(true);
+      return; // Don't show flex if milestone is showing
+    }
+
+    // Feature 3: Subtle flex messages at 10, 25, 50 credits used
+    const FLEX_MILESTONES: Record<number, string> = {
+      10: "You've generated 10 stencils this month. That's hours saved.",
+      25: '25 stencils generated. Imagine drawing all of those by hand.',
+      50: "50+ stencils this month. You're working faster than most artists.",
+    };
+    for (const [threshold, msg] of Object.entries(FLEX_MILESTONES)) {
+      const t = parseInt(threshold, 10);
+      if (creditsUsed >= t && !triggeredFlexMilestonesRef.current.has(t)) {
+        triggeredFlexMilestonesRef.current.add(t);
+        setFlexMessage(msg);
+        setShowFlexMessage(true);
+        AsyncStorage.setItem('bb_flex_milestones', JSON.stringify([...triggeredFlexMilestonesRef.current]));
+        break; // Only one at a time
+      }
     }
   };
 
@@ -1306,10 +1385,9 @@ export default function Index() {
             if (newCount === 5) {
               try { await StoreReview.requestReview(); } catch (_) {}
             }
-            // Referral popup after meaningful usage (3rd generation, then every 10th)
-            if (sessionToken && (newCount === 3 || (newCount > 3 && newCount % 10 === 0))) {
-              checkReferralPopup(sessionToken);
-            }
+            // Growth messaging: milestone modal + flex messages
+            const creditsUsed = totalMonthlyCredits > 0 ? totalMonthlyCredits - availableCredits : 0;
+            checkGrowthPrompts(newCount, creditsUsed);
           }
 
 
@@ -3513,6 +3591,23 @@ export default function Index() {
         </View>
       </View>
 
+      {/* Growth Messaging: Referral Banner */}
+      {showReferralBanner && isPaidUser && !showLowCreditModal && !showMilestoneModal && (
+        <ReferralBanner
+          onPress={() => { setShowReferralBanner(false); setShowReferralDashboard(true); }}
+          onDismiss={handleBannerDismiss}
+        />
+      )}
+
+      {/* Growth Messaging: Flex Message (inline, auto-fading) */}
+      {flexMessage && (
+        <FlexMessage
+          message={flexMessage}
+          visible={showFlexMessage}
+          onDone={() => { setShowFlexMessage(false); setFlexMessage(null); }}
+        />
+      )}
+
       {/* Main Image Area - fills all available vertical space */}
       <View style={styles.imageArea}>
         {/* Image Preview Area */}
@@ -4441,7 +4536,24 @@ export default function Index() {
           setShowLowCreditModal(false);
           setShowPaywall(true);
         }}
+        onInviteArtists={lowCreditLevel !== 'empty' ? () => {
+          setShowLowCreditModal(false);
+          setShowReferralDashboard(true);
+        } : undefined}
         onDismiss={lowCreditLevel !== 'empty' ? () => setShowLowCreditModal(false) : undefined}
+      />
+
+      {/* Milestone Modal */}
+      <MilestoneModal
+        visible={showMilestoneModal}
+        onInvite={() => {
+          setShowMilestoneModal(false);
+          setShowReferralDashboard(true);
+        }}
+        onDismiss={() => {
+          setShowMilestoneModal(false);
+          handleDismissReferralPopup('dismiss');
+        }}
       />
 
     </SafeAreaView>

@@ -6,9 +6,9 @@ import {
   StyleSheet,
   Modal,
   Share,
+  Clipboard,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import * as Clipboard from 'expo-clipboard';
 
 interface ReferralPopupProps {
   visible: boolean;
@@ -38,7 +38,7 @@ export function ReferralPopup({
 
   const handleCopy = async () => {
     try {
-      await Clipboard.setStringAsync(referralLink);
+      Clipboard.setString(referralLink);
     } catch (_) {}
     onCopyLink();
   };
