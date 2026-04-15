@@ -3566,6 +3566,40 @@ async def redeem_promo_code(request: FastAPIRequest):
         'needs_subscription': False
     }
 
+@api_router.post("/admin/add-credits")
+async def admin_add_credits(request: Request):
+    """Admin endpoint to add bonus credits to a user"""
+    body = await request.json()
+    email = body.get('email', '')
+    bonus = body.get('credits', 0)
+    
+    if not email or not bonus:
+        raise HTTPException(status_code=400, detail="Provide email and credits")
+    
+    user = await db.users.find_one({'email': {'$regex': email, '$options': 'i'}}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    uid = user['user_id']
+    result = await db.subscriptions.update_one(
+        {'user_id': uid},
+        {'$inc': {'available_credits': bonus}},
+    )
+    
+    if result.matched_count == 0:
+        # Create subscription if none exists
+        await db.subscriptions.insert_one({
+            'user_id': uid,
+            'tier': 'trial',
+            'available_credits': bonus,
+            'is_trial': True,
+            'last_event': 'LOYALTY_BONUS',
+            'synced_from': 'admin_bonus'
+        })
+    
+    updated = await db.subscriptions.find_one({'user_id': uid}, {'_id': 0})
+    return {"status": "credits_added", "email": email, "bonus": bonus, "new_total": updated.get('available_credits', 0)}
+
 @api_router.post("/admin/create-promo")
 async def admin_create_promo(request: Request):
     """Admin endpoint to create a promo code"""
