@@ -2880,9 +2880,15 @@ async def get_user_credits(user_id: str) -> dict:
         except Exception as e:
             logger.error(f'[Trial] Error parsing trial_expires_at: {e}')
     
+    # Tier -> total monthly credits mapping
+    TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500}
+    tier = sub.get('tier')
+    total_monthly_credits = TIER_CREDITS_MAP.get(tier, 0)
+
     return {
         'available_credits': available_credits,
-        'tier': sub.get('tier'),
+        'total_monthly_credits': total_monthly_credits,
+        'tier': tier,
         'is_trial': is_trial,
         'trial_expires_at': trial_expires_at,
         'trial_days_remaining': trial_days_remaining,
@@ -2890,7 +2896,7 @@ async def get_user_credits(user_id: str) -> dict:
         'revenuecat_customer_id': sub.get('revenuecat_customer_id'),
         'is_studio_team': is_studio_team,
         'studio_team_id': studio_team_id,
-        'needs_subscription': sub.get('tier') in (None, 'trial_expired', 'expired'),
+        'needs_subscription': tier in (None, 'trial_expired', 'expired'),
     }
 
 # ---- Apple Sign-In ----
@@ -3135,7 +3141,13 @@ async def deduct_credit(request: FastAPIRequest):
     )
     if not result:
         raise HTTPException(status_code=402, detail='Insufficient credits')
-    return {'available_credits': result['available_credits'], 'tier': result.get('tier')}
+    tier = result.get('tier', '')
+    TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500}
+    return {
+        'available_credits': result['available_credits'],
+        'total_monthly_credits': TIER_CREDITS_MAP.get(tier, 0),
+        'tier': tier,
+    }
 
 @api_router.delete("/account/delete")
 async def delete_account(request: FastAPIRequest):
@@ -4131,16 +4143,31 @@ async def referral_popup_eligible(request: FastAPIRequest):
     if not sub or sub.get('tier') not in REFERRAL_ACTIVE_TIERS or sub.get('is_trial', False):
         return {'eligible': False, 'reason': 'not_paid_subscriber'}
 
-    # Check last dismissal
+    # Check last dismissal — cooldown varies by action
     dismissal = await db.referral_popup_dismissals.find_one(
         {'user_id': user_id}, {'_id': 0}
     )
     if dismissal:
         last_dismissed = dismissal.get('dismissed_at', '')
+        last_action = dismissal.get('action', 'dismiss')
+        # Cooldown: dismiss=7d, shared/invite/copy=30d
+        cooldown_days = 30 if last_action in ('shared', 'invite', 'copy') else 7
         try:
             dismissed_dt = datetime.fromisoformat(last_dismissed.replace('Z', '+00:00'))
-            if (datetime.now(timezone.utc) - dismissed_dt).days < 7:
+            if (datetime.now(timezone.utc) - dismissed_dt).days < cooldown_days:
                 return {'eligible': False, 'reason': 'recently_dismissed'}
+        except Exception:
+            pass
+
+    # If user already has verified referrals, suppress longer (60 days from last dismissal)
+    has_verified = await db.referral_links.find_one(
+        {'referrer_id': user_id, 'status': 'verified'}
+    )
+    if has_verified and dismissal:
+        try:
+            dismissed_dt = datetime.fromisoformat(dismissal.get('dismissed_at', '').replace('Z', '+00:00'))
+            if (datetime.now(timezone.utc) - dismissed_dt).days < 60:
+                return {'eligible': False, 'reason': 'active_referrer'}
         except Exception:
             pass
 
@@ -4149,15 +4176,23 @@ async def referral_popup_eligible(request: FastAPIRequest):
 
 @api_router.post("/referral/dismiss-popup")
 async def dismiss_referral_popup(request: FastAPIRequest):
-    """Record that the user dismissed the referral popup."""
+    """Record that the user dismissed or engaged with the referral popup.
+    Actions: 'dismiss' (7-day cooldown), 'shared' (30-day cooldown)."""
     auth_header = request.headers.get('authorization')
     user = await get_current_user(auth_header)
     user_id = user['user_id']
 
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+    action = body.get('action', 'dismiss')
+
     now = datetime.now(timezone.utc).isoformat()
     await db.referral_popup_dismissals.update_one(
         {'user_id': user_id},
-        {'$set': {'dismissed_at': now}},
+        {'$set': {'dismissed_at': now, 'action': action}},
         upsert=True
     )
     return {'status': 'ok'}

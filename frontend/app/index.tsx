@@ -47,6 +47,7 @@ import { PaywallScreen } from './screens/PaywallScreen';
 import { StudioTeamScreen } from './screens/StudioTeamScreen';
 import { ReferralDashboard } from './screens/ReferralDashboard';
 import { ReferralPopup } from './screens/ReferralPopup';
+import { LowCreditModal } from './screens/LowCreditModal';
 
 // API URL - hardcoded for reliable production builds
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL ;
@@ -251,8 +252,14 @@ export default function Index() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [availableCredits, setAvailableCredits] = useState<number>(0);
+  const [totalMonthlyCredits, setTotalMonthlyCredits] = useState<number>(0);
   const [userTier, setUserTier] = useState<string | null>(null);
   const [successfulGenerations, setSuccessfulGenerations] = useState(0);
+  
+  // Low-credit notification state
+  const [showLowCreditModal, setShowLowCreditModal] = useState(false);
+  const [lowCreditLevel, setLowCreditLevel] = useState<'low' | 'critical' | 'empty'>('low');
+  const triggeredThresholdsRef = useRef<Set<string>>(new Set());
   
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
@@ -587,14 +594,33 @@ export default function Index() {
       try {
         const token = await getToken();
         if (token) {
-          const response = await fetch(`${API_URL}/api/auth/me`, {
-            headers: { 'Authorization': `Bearer ${token}` },
-          });
+          let response;
+          try {
+            response = await fetch(`${API_URL}/api/auth/me`, {
+              headers: { 'Authorization': `Bearer ${token}` },
+            });
+          } catch (networkErr) {
+            // Network error (no connectivity, app resuming, etc.) — keep token, retry silently
+            console.log('[Auth] Network error during startup check, keeping token:', networkErr);
+            // Try once more after a short delay
+            try {
+              await new Promise(r => setTimeout(r, 2000));
+              response = await fetch(`${API_URL}/api/auth/me`, {
+                headers: { 'Authorization': `Bearer ${token}` },
+              });
+            } catch (retryErr) {
+              console.log('[Auth] Retry also failed, keeping token for next launch');
+              setIsAuthChecking(false);
+              setShowWelcome(true);
+              return;
+            }
+          }
           if (response.ok) {
             const data = await response.json();
             setCurrentUser(data.user);
             setSessionToken(token);
             setAvailableCredits(data.credits?.available_credits ?? 0);
+            setTotalMonthlyCredits(data.credits?.total_monthly_credits ?? 0);
             setUserTier(data.credits?.tier ?? null);
             // Link this user to RevenueCat so purchases are tracked per-user
             if (Platform.OS === 'ios' || Platform.OS === 'android') {
@@ -617,13 +643,19 @@ export default function Index() {
             setIsAuthChecking(false);
             return;
           }
-          // Token invalid - clear it
-          await deleteToken();
+          // Only delete token on definitive auth rejection (401)
+          if (response.status === 401) {
+            console.log('[Auth] Token rejected (401), clearing');
+            await deleteToken();
+          } else {
+            // Server error (5xx) or other issue — keep token for next attempt
+            console.log('[Auth] Server returned', response.status, '— keeping token');
+          }
         }
       } catch (err) {
         console.log('[Auth] Startup check failed:', err);
       }
-      // No valid token - show welcome screen
+      // No valid token or auth failed — show welcome screen
       setIsAuthChecking(false);
       setShowWelcome(true);
     };
@@ -668,7 +700,9 @@ export default function Index() {
       });
       if (r.ok) {
         const d = await r.json();
-        setAvailableCredits(d.credits?.available_credits ?? 0);
+        const credits = d.credits?.available_credits ?? 0;
+        const total = d.credits?.total_monthly_credits ?? 0;
+        handleCreditsUpdate(credits, total);
         setUserTier(d.credits?.tier ?? null);
         return d.credits;
       }
@@ -712,6 +746,37 @@ export default function Index() {
   };
 
 
+  // ---- Low-Credit Threshold Logic ----
+  const checkCreditThreshold = (credits: number, total: number) => {
+    if (total <= 0) return; // No plan or trial
+    const pct = credits / total;
+    if (credits <= 0 && !triggeredThresholdsRef.current.has('empty')) {
+      triggeredThresholdsRef.current.add('empty');
+      setLowCreditLevel('empty');
+      setShowLowCreditModal(true);
+    } else if (pct <= 0.10 && pct > 0 && !triggeredThresholdsRef.current.has('critical')) {
+      triggeredThresholdsRef.current.add('critical');
+      setLowCreditLevel('critical');
+      setShowLowCreditModal(true);
+    } else if (pct <= 0.25 && pct > 0.10 && !triggeredThresholdsRef.current.has('low')) {
+      triggeredThresholdsRef.current.add('low');
+      setLowCreditLevel('low');
+      setShowLowCreditModal(true);
+    }
+  };
+
+  // Reset thresholds when credits refresh (new billing cycle)
+  const handleCreditsUpdate = (credits: number, total: number) => {
+    const prevCredits = availableCredits;
+    setAvailableCredits(credits);
+    if (total > 0) setTotalMonthlyCredits(total);
+    // If credits went UP (billing renewal), reset thresholds
+    if (credits > prevCredits && prevCredits > 0) {
+      triggeredThresholdsRef.current.clear();
+    }
+  };
+
+
   // ---- Referral Popup Logic ----
   const checkReferralPopup = async (token: string) => {
     try {
@@ -734,13 +799,17 @@ export default function Index() {
     } catch (_) {}
   };
 
-  const handleDismissReferralPopup = async () => {
+  const handleDismissReferralPopup = async (action: string = 'dismiss') => {
     setShowReferralPopup(false);
     if (sessionToken) {
       try {
         await fetch(`${API_URL}/api/referral/dismiss-popup`, {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${sessionToken}` },
+          headers: {
+            'Authorization': `Bearer ${sessionToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ action }),
         });
       } catch (_) {}
     }
@@ -1099,14 +1168,8 @@ export default function Index() {
 
     // Check credits before generating
     if (currentUser && availableCredits <= 0) {
-      Alert.alert(
-        'No Credits Remaining',
-        'You have used all your credits for this period. Upgrade or wait for your monthly renewal.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Upgrade', onPress: () => setShowPaywall(true) },
-        ]
-      );
+      setLowCreditLevel('empty');
+      setShowLowCreditModal(true);
       return;
     }
 
@@ -1220,14 +1283,18 @@ export default function Index() {
               });
               if (deductResp.ok) {
                 const d = await deductResp.json();
-                setAvailableCredits(d.available_credits);
+                const newCredits = d.available_credits;
+                const total = d.total_monthly_credits || totalMonthlyCredits;
+                handleCreditsUpdate(newCredits, total);
+                // Check credit thresholds for modal
+                checkCreditThreshold(newCredits, total);
                 // Fire a push notification the first time credits drop below 10
-                if (d.available_credits < 10 && d.available_credits > 0 && !lowCreditNotifiedRef.current) {
+                if (newCredits < 10 && newCredits > 0 && !lowCreditNotifiedRef.current) {
                   lowCreditNotifiedRef.current = true;
-                  sendLowCreditsNotification(d.available_credits);
+                  sendLowCreditsNotification(newCredits);
                 }
                 // Reset the flag once credits are refreshed above 10
-                if (d.available_credits >= 10) {
+                if (newCredits >= 10) {
                   lowCreditNotifiedRef.current = false;
                 }
               }
@@ -3371,11 +3438,41 @@ export default function Index() {
           {currentUser && (
             <TouchableOpacity
               testID="credits-display-btn"
-              style={styles.creditsHeaderBadge}
+              style={[
+                styles.creditsHeaderBadge,
+                totalMonthlyCredits > 0 && availableCredits <= totalMonthlyCredits * 0.10
+                  ? { borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.15)' }
+                  : totalMonthlyCredits > 0 && availableCredits <= totalMonthlyCredits * 0.25
+                    ? { borderColor: '#F59E0B', backgroundColor: 'rgba(245,158,11,0.15)' }
+                    : {},
+              ]}
               onPress={() => setShowSettings(true)}
             >
-              <Text style={styles.creditsHeaderText} testID="header-credits-count">{availableCredits}</Text>
-              <Text style={styles.creditsHeaderLabel}>credits</Text>
+              <Text
+                style={[
+                  styles.creditsHeaderText,
+                  totalMonthlyCredits > 0 && availableCredits <= totalMonthlyCredits * 0.10
+                    ? { color: '#ef4444' }
+                    : totalMonthlyCredits > 0 && availableCredits <= totalMonthlyCredits * 0.25
+                      ? { color: '#F59E0B' }
+                      : {},
+                ]}
+                testID="header-credits-count"
+              >
+                {availableCredits}{totalMonthlyCredits > 0 ? ` / ${totalMonthlyCredits}` : ''}
+              </Text>
+              <Text
+                style={[
+                  styles.creditsHeaderLabel,
+                  totalMonthlyCredits > 0 && availableCredits <= totalMonthlyCredits * 0.10
+                    ? { color: '#ef4444' }
+                    : totalMonthlyCredits > 0 && availableCredits <= totalMonthlyCredits * 0.25
+                      ? { color: '#F59E0B' }
+                      : {},
+                ]}
+              >
+                credits
+              </Text>
             </TouchableOpacity>
           )}
           {/* Action icons - always visible */}
@@ -4323,14 +4420,29 @@ export default function Index() {
           visible={showReferralPopup}
           referralLink={referralPopupData.link}
           referralCode={referralPopupData.code}
-          onInvite={() => setShowReferralPopup(false)}
+          onInvite={() => {
+            handleDismissReferralPopup('shared');
+          }}
           onCopyLink={() => {
-            setShowReferralPopup(false);
+            handleDismissReferralPopup('copy');
             Alert.alert('Link Copied!', 'Your referral link has been copied to clipboard.');
           }}
-          onDismiss={handleDismissReferralPopup}
+          onDismiss={() => handleDismissReferralPopup('dismiss')}
         />
       )}
+
+      {/* Low Credit Modal */}
+      <LowCreditModal
+        visible={showLowCreditModal}
+        level={lowCreditLevel}
+        creditsRemaining={availableCredits}
+        totalCredits={totalMonthlyCredits}
+        onUpgrade={() => {
+          setShowLowCreditModal(false);
+          setShowPaywall(true);
+        }}
+        onDismiss={lowCreditLevel !== 'empty' ? () => setShowLowCreditModal(false) : undefined}
+      />
 
     </SafeAreaView>
   );

@@ -1,0 +1,80 @@
+{
+  "summary": "Iteration 9 backend testing complete. 21/21 tests pass (100%). All new features verified: total_monthly_credits field in /api/auth/me and /api/credits/deduct, action-based referral popup cooldowns, and existing referral endpoints regression.",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "features_verified": {
+    "total_monthly_credits_in_auth_me": {
+      "GET /api/auth/me": "VERIFIED - Returns total_monthly_credits field in credits object",
+      "walk_in_tier": "VERIFIED - Returns 125 for walk-in tier",
+      "tier_mapping": "VERIFIED - walk-in=125, booked-out=500, the-shop=1500"
+    },
+    "total_monthly_credits_in_deduct": {
+      "POST /api/credits/deduct": "VERIFIED - Returns total_monthly_credits in response",
+      "consistency": "VERIFIED - total_monthly_credits matches between /auth/me and /credits/deduct"
+    },
+    "referral_popup_action_field": {
+      "POST /api/referral/dismiss-popup": "VERIFIED - Accepts action field",
+      "actions_supported": ["dismiss", "shared", "copy", "invite"],
+      "default_action": "VERIFIED - Defaults to 'dismiss' when not specified"
+    },
+    "referral_popup_cooldowns": {
+      "dismiss_action": "VERIFIED - 7-day cooldown (code confirms: cooldown_days = 7 for dismiss)",
+      "shared_copy_invite_actions": "VERIFIED - 30-day cooldown (code confirms: cooldown_days = 30 for shared/invite/copy)",
+      "verified_referral_suppression": "VERIFIED - 60-day suppression if user has verified referrals (code at line 4162-4172)"
+    },
+    "health_endpoint": {
+      "GET /api/health": "VERIFIED - Returns healthy status"
+    },
+    "referral_endpoints_regression": {
+      "GET /api/referral/code": "VERIFIED - Returns BB-XXXXXX format code",
+      "GET /api/referral/dashboard": "VERIFIED - Returns all required fields",
+      "GET /api/ref/{code}": "VERIFIED - Returns HTML landing page",
+      "POST /api/referral/check-verifications": "VERIFIED - Requires X-Cron-Secret header"
+    }
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_iter9_credits_referral.py",
+    "/app/test_reports/pytest/pytest_results_iter9.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "All three features implemented correctly: total_monthly_credits field, action-based cooldowns, and verified referral suppression",
+    "TIER_CREDITS_MAP correctly defined: walk-in=125, booked-out=500, the-shop=1500, the-shop-member=1500",
+    "Cooldown logic correctly implemented: dismiss=7d, shared/invite/copy=30d, verified_referrer=60d"
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_iter9_credits_referral.py (new - 21 API tests)"
+  ],
+
+  "success_rate": {
+    "backend": "100% (21/21 tests passing)",
+    "frontend": "N/A (backend-only testing requested)"
+  },
+
+  "test_credentials": {
+    "demo_login": "POST /api/auth/demo-login (no auth needed)",
+    "cron_secret": "bb-cron-2026-refresh-c7f3a1",
+    "backend_url": "https://stencil-ai-fallback.preview.emergentagent.com"
+  },
+
+  "seed_data_creation": "Demo account (demo_reviewer_account) used for testing. Has tier 'walk-in' with ~121 credits remaining (4 deducted during testing).",
+
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+
+  "context_for_next_testing_agent": "Iteration 9 verified: 1) total_monthly_credits field added to /api/auth/me and /api/credits/deduct responses - maps tier to credits (walk-in=125, booked-out=500, the-shop=1500). 2) /api/referral/dismiss-popup now accepts 'action' field (dismiss/shared/copy/invite). 3) /api/referral/popup-eligible respects action-based cooldowns: dismiss=7d, shared/copy/invite=30d. 4) If user has verified referrals, popup suppressed for 60 days from last dismissal. Demo user has code BB-257527, tier walk-in, ~121 credits. Frontend features (auth token fix, LowCreditModal) not tested as backend-only testing was requested."
+}
