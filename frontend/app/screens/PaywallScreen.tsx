@@ -232,13 +232,23 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             </View>
           )}
 
-          {/* Sandbox / TestFlight error message */}
+          {/* Sandbox / Offerings error message */}
           {offeringsError && !isWeb && (
             <View style={{ backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' }}>
-              <Text style={{ color: '#ef4444', fontSize: 14, fontWeight: '700', marginBottom: 6 }}>Subscription plans unavailable</Text>
-              <Text style={{ color: '#999', fontSize: 13, lineHeight: 18 }}>
-                If you're testing on TestFlight, sandbox purchases may not be configured. Tap "Restore Purchases" if you have an existing subscription. This does not affect App Store users.
+              <Text style={{ color: '#ef4444', fontSize: 14, fontWeight: '700', marginBottom: 6 }}>Unable to load subscription plans</Text>
+              <Text style={{ color: '#999', fontSize: 13, lineHeight: 18, marginBottom: 12 }}>
+                This can happen due to a temporary connection issue. Please try again.
               </Text>
+              <TouchableOpacity
+                style={{ backgroundColor: '#ef4444', borderRadius: 8, paddingVertical: 10, alignItems: 'center' }}
+                onPress={() => {
+                  setOfferingsError(false);
+                  setLoading(true);
+                  loadOfferings();
+                }}
+              >
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>Retry Loading Plans</Text>
+              </TouchableOpacity>
             </View>
           )}
 
@@ -464,7 +474,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', gap: 4,
     marginBottom: 16,
   },
-  subscribeBtnDisabled: { opacity: 0.5 },
+  subscribeBtnDisabled: { opacity: 0.35, backgroundColor: '#666' },
   subscribeBtnText: { color: '#000', fontSize: 17, fontWeight: '800' },
   subscribeBtnSubtext: { color: 'rgba(0,0,0,0.6)', fontSize: 12 },
   restoreBtn: { alignItems: 'center', paddingVertical: 12, marginBottom: 16 },
