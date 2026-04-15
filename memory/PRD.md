@@ -23,34 +23,18 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 - `POST /api/subscription/sync` — Sync RevenueCat subscription
 - `POST /api/webhooks/revenuecat` — RevenueCat webhook (unauthenticated currently)
 - `POST /api/promo/redeem` — Redeem promo codes
-- `GET /api/diagnostics` — Visual health dashboard (HTML in browser, JSON via API)
-- `GET /api/admin/user-lookup?email=X` — Look up customer by email
-- `POST /api/admin/fix-subscription` — Manually activate subscription
-- `POST /api/admin/add-credits` — Add bonus credits
-- `GET /api/admin/all-users` — List all customers
-- `POST /api/admin/create-promo` — Create promo codes
+- `GET /api/diagnostics` — Visual health dashboard
+- `POST /api/credits/deduct` — Deduct 1 credit (returns total_monthly_credits)
+- `GET /api/auth/me` — User info + credits (returns total_monthly_credits)
+- Admin endpoints: user-lookup, fix-subscription, add-credits, all-users, create-promo
 
 ### Referral System v2 Endpoints
 - `GET /api/referral/code` — Get/generate user's referral code + link
 - `GET /api/referral/dashboard` — Full referral stats, progress, history
-- `GET /api/referral/popup-eligible` — Check if user should see referral popup
-- `POST /api/referral/dismiss-popup` — Record popup dismissal (7-day cooldown)
-- `POST /api/referral/check-verifications` — Cron: process 14-day referral verifications
+- `GET /api/referral/popup-eligible` — Check popup eligibility (action-based cooldowns)
+- `POST /api/referral/dismiss-popup` — Record dismissal with action type
+- `POST /api/referral/check-verifications` — Cron: process 14-day verifications
 - `GET /api/ref/{code}` — Landing page for referral links
-
-## AI Key Fallback System
-- Primary: User's GOOGLE_API_KEY (pay-as-you-go)
-- Backup: EMERGENT_LLM_KEY (universal key)
-- Auto-fallback on auth/quota failures
-- Key failures logged to `api_key_alerts` collection
-- Visual dashboard at `/api/diagnostics`
-
-## RevenueCat Webhook
-- URL: `https://bodybound-subs.emergent.host/api/webhooks/revenuecat`
-- Auth: Currently allowing unauthenticated (RC dashboard won't save auth header)
-- Smart user matching: checks `aliases` array for backend user_ids, falls back to UUID
-- Unmatched webhooks stored in `unmatched_webhooks` collection
-- Now triggers referral status updates for referred users
 
 ## Referral System v2
 - **Core rule**: 2 verified paid referrals = 1 free month (ledger only, Phase 1)
@@ -58,16 +42,25 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 - **14-day verification**: Referred user must stay subscribed for 14 days
 - **Attribution**: First-touch, locked at signup, cannot be changed
 - **Anti-abuse**: Self-referral blocked, same email/device blocked, rapid referral fraud flagging
-- **Collections**: `referral_codes`, `referral_links`, `referral_rewards`, `referral_popup_dismissals`
-- **Popup**: Shown to active paid subscribers after meaningful app usage, 7-day cooldown
-- **Deep links**: App captures referral codes from URLs, stores in SecureStore, sends at signup
-- **Phase 2 (NOT IMPLEMENTED)**: Reward redemption (granting premium access from free months) — requires compliance strategy document first
+- **Popup cooldowns**: Dismiss=7d, Share/Copy=30d, Has verified referral=60d
+- **Phase 2 (NOT IMPLEMENTED)**: Reward redemption requires compliance strategy doc first
 
-## Promo Code System
-- `BBSORRY` code created, locked to 20 affected customer emails
-- Walk-In tier, 125 credits, 30 days
-- One-time use per person, email-restricted
-- Frontend "Apply" button added to PaywallScreen (needs new iOS build)
+## Low-Credit Notification System
+- **Persistent credit display**: Shows `X / Total` in header, always visible
+- **Color coding**: Normal=gold, 25%=yellow (#F59E0B), 10%=red (#ef4444)
+- **Threshold modals**: 25% (low), 10% (critical), 0% (empty/no dismiss)
+- **Once per cycle**: Each threshold triggers only once per billing cycle
+- **Reset on renewal**: Thresholds clear when credits increase (new billing cycle)
+- **Backend**: `total_monthly_credits` returned in /auth/me and /credits/deduct responses
+
+## Auth Token Fix
+- Token only deleted on **401** (definitive auth rejection)
+- Network errors and 5xx responses: token preserved, retry once after 2s delay
+- Prevents sign-out after app backgrounding/memory reclaim
+
+## AI Key Fallback System
+- Primary: User's GOOGLE_API_KEY → Backup: EMERGENT_LLM_KEY
+- Auto-fallback on auth/quota failures
 
 ## Critical Rules
 1. **BUNDLE ID IS SACRED**: `app.emergent.tattoostencils115373ef8`
@@ -76,8 +69,5 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 4. **NO .metro-cache in git**
 
 ## Known Issues
-- Production GOOGLE_API_KEY expired (AIzaSyCk...) — needs update in Emergent deployment settings
-- Emergent Universal Key budget near limit — needs top-up
-- RevenueCat webhook auth header won't save in RC dashboard
-- Admin endpoints are unauthenticated (P2 security fix)
 - App Store Connect / TestFlight Upload blocked (Mac VM disk full, waiting on Emergent support)
+- Admin endpoints are unauthenticated (P2 security fix)
