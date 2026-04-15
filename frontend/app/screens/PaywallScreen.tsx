@@ -53,10 +53,11 @@ interface PaywallScreenProps {
   onPurchaseSuccess: () => void;
   onDismiss?: () => void;
   onSignOut?: () => void;
-  required?: boolean; // When true, user cannot dismiss — must subscribe
+  required?: boolean;
+  revenueCatReady?: boolean;
 }
 
-export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, required = false }: PaywallScreenProps) {
+export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, required = false, revenueCatReady = true }: PaywallScreenProps) {
   const [offerings, setOfferings] = useState<PurchasesPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -68,8 +69,10 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   const [offeringsError, setOfferingsError] = useState(false);
 
   useEffect(() => {
-    loadOfferings();
-  }, []);
+    if (revenueCatReady) {
+      loadOfferings();
+    }
+  }, [revenueCatReady]);
 
   const loadOfferings = async () => {
     // RevenueCat SDK is not available on web - skip and use static plans

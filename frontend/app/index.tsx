@@ -570,17 +570,20 @@ export default function Index() {
   }, []);
 
   // Configure RevenueCat SDK
+  const [revenueCatReady, setRevenueCatReady] = useState(false);
   useEffect(() => {
     const configureRevenueCat = async () => {
       // Skip RevenueCat in web environment
       if (Platform.OS === 'web') {
         console.log('[RevenueCat] Skipped on web platform');
+        setRevenueCatReady(true);
         return;
       }
       
       // Skip RevenueCat in Expo Go - it requires a custom dev build
       if (isExpoGo) {
         console.log('[RevenueCat] Skipped in Expo Go - use a development build for full functionality');
+        setRevenueCatReady(true);
         return;
       }
       
@@ -595,6 +598,7 @@ export default function Index() {
         // Expected failure in Expo Go — RevenueCat requires a custom dev build
         console.log('[RevenueCat] Configure failed:', e.message);
       }
+      setRevenueCatReady(true);
     };
     
     configureRevenueCat();
@@ -4487,6 +4491,7 @@ export default function Index() {
         <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998 }}>
           <PaywallScreen
             required={paywallRequired}
+            revenueCatReady={revenueCatReady}
             onPurchaseSuccess={async () => {
               // After purchase, sync RevenueCat with backend
               if (sessionToken) {
