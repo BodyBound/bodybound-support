@@ -52,10 +52,11 @@ const TIER_INFO = {
 interface PaywallScreenProps {
   onPurchaseSuccess: () => void;
   onDismiss?: () => void;
+  onSignOut?: () => void;
   required?: boolean; // When true, user cannot dismiss — must subscribe
 }
 
-export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }: PaywallScreenProps) {
+export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, required = false }: PaywallScreenProps) {
   const [offerings, setOfferings] = useState<PurchasesPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -357,6 +358,26 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
               <Text style={styles.legalLink}>Privacy Policy</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Sign Out — lets users switch accounts if signed into wrong one */}
+          {onSignOut && (
+            <TouchableOpacity
+              testID="paywall-sign-out-btn"
+              style={{ paddingVertical: 16, alignItems: 'center' }}
+              onPress={() => {
+                Alert.alert(
+                  'Sign Out',
+                  'Sign out and switch to a different account?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Sign Out', style: 'destructive', onPress: onSignOut },
+                  ]
+                );
+              }}
+            >
+              <Text style={{ color: '#555', fontSize: 13 }}>Wrong account? Sign out</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </SafeAreaView>
     </View>

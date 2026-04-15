@@ -4498,6 +4498,17 @@ export default function Index() {
               setShowPaywall(false);
             }}
             onDismiss={paywallRequired ? undefined : () => setShowPaywall(false)}
+            onSignOut={async () => {
+              await deleteToken();
+              setCurrentUser(null);
+              setSessionToken(null);
+              setAvailableCredits(0);
+              setTotalMonthlyCredits(0);
+              setUserTier(null);
+              setPaywallRequired(false);
+              setShowPaywall(false);
+              setShowWelcome(true);
+            }}
           />
         </View>
       )}
