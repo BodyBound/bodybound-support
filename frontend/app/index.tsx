@@ -33,6 +33,7 @@ import { Gesture, GestureDetector, GestureHandlerRootView, PointerType } from 'r
 import Animated, { useSharedValue, useAnimatedStyle, useAnimatedProps, runOnJS, useDerivedValue, withSpring } from 'react-native-reanimated';
 import { captureRef } from 'react-native-view-shot';
 import * as SecureStore from 'expo-secure-store';
+import * as Linking from 'expo-linking';
 import Constants from 'expo-constants';
 import { storeToken, getToken, deleteToken } from '../utils/tokenStore';
 import Purchases from 'react-native-purchases';
@@ -44,6 +45,8 @@ import { AuthScreen } from './screens/AuthScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
 import { PaywallScreen } from './screens/PaywallScreen';
 import { StudioTeamScreen } from './screens/StudioTeamScreen';
+import { ReferralDashboard } from './screens/ReferralDashboard';
+import { ReferralPopup } from './screens/ReferralPopup';
 
 // API URL - hardcoded for reliable production builds
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL ;
@@ -242,6 +245,9 @@ export default function Index() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallRequired, setPaywallRequired] = useState(false); // Non-dismissable paywall for users without subscription
   const [showStudioTeam, setShowStudioTeam] = useState(false);
+  const [showReferralDashboard, setShowReferralDashboard] = useState(false);
+  const [showReferralPopup, setShowReferralPopup] = useState(false);
+  const [referralPopupData, setReferralPopupData] = useState<{ code: string; link: string } | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [availableCredits, setAvailableCredits] = useState<number>(0);
@@ -624,6 +630,37 @@ export default function Index() {
     checkStoredAuth();
   }, []);
 
+  // Deep link handling: capture referral codes from URLs
+  useEffect(() => {
+    const handleDeepLink = async (url: string) => {
+      // Match /ref/BB-XXXXXX or /api/ref/BB-XXXXXX
+      const match = url.match(/\/(?:api\/)?ref\/(BB-[A-Z0-9]+)/i);
+      if (match) {
+        const code = match[1].toUpperCase();
+        try {
+          await SecureStore.setItemAsync('pending_referral_code', code);
+          console.log('[Referral] Captured referral code from deep link:', code);
+        } catch (_) {}
+      }
+    };
+
+    // Check initial URL (app was opened via link)
+    const checkInitialUrl = async () => {
+      try {
+        const initialUrl = await Linking.getInitialURL();
+        if (initialUrl) handleDeepLink(initialUrl);
+      } catch (_) {}
+    };
+    checkInitialUrl();
+
+    // Listen for future deep links while app is open
+    const subscription = Linking.addEventListener('url', (event) => {
+      handleDeepLink(event.url);
+    });
+
+    return () => subscription?.remove();
+  }, []);
+
   const refreshCredits = async (token: string) => {
     try {
       const r = await fetch(`${API_URL}/api/auth/me`, {
@@ -674,6 +711,40 @@ export default function Index() {
     }
   };
 
+
+  // ---- Referral Popup Logic ----
+  const checkReferralPopup = async (token: string) => {
+    try {
+      const resp = await fetch(`${API_URL}/api/referral/popup-eligible`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (data.eligible) {
+        // Fetch referral code for the popup
+        const codeResp = await fetch(`${API_URL}/api/referral/code`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (codeResp.ok) {
+          const codeData = await codeResp.json();
+          setReferralPopupData({ code: codeData.referral_code, link: codeData.referral_link });
+          setShowReferralPopup(true);
+        }
+      }
+    } catch (_) {}
+  };
+
+  const handleDismissReferralPopup = async () => {
+    setShowReferralPopup(false);
+    if (sessionToken) {
+      try {
+        await fetch(`${API_URL}/api/referral/dismiss-popup`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${sessionToken}` },
+        });
+      } catch (_) {}
+    }
+  };
 
 
   // Load photo library on mount (only when on main screen, not during auth flow)
@@ -1167,6 +1238,10 @@ export default function Index() {
             setSuccessfulGenerations(newCount);
             if (newCount === 5) {
               try { await StoreReview.requestReview(); } catch (_) {}
+            }
+            // Referral popup after meaningful usage (3rd generation, then every 10th)
+            if (sessionToken && (newCount === 3 || (newCount > 3 && newCount % 10 === 0))) {
+              checkReferralPopup(sessionToken);
             }
           }
 
@@ -4196,6 +4271,7 @@ export default function Index() {
             onClose={() => setShowSettings(false)}
             onManageSubscription={() => { setShowSettings(false); setShowPaywall(true); }}
             onManageTeam={() => { setShowSettings(false); setShowStudioTeam(true); }}
+            onOpenReferralDashboard={() => { setShowSettings(false); setShowReferralDashboard(true); }}
           />
         </View>
       )}
@@ -4224,26 +4300,7 @@ export default function Index() {
               if (sessionToken) {
                 await syncRevenueCatWithBackend(sessionToken);
                 await refreshCredits(sessionToken);
-                // Try to redeem any pending referral code
-                try {
-                  const pendingCode = await SecureStore.getItemAsync('pending_referral_code');
-                  if (pendingCode) {
-                    const resp = await fetch(`${API_URL}/api/referral/redeem`, {
-                      method: 'POST',
-                      headers: {
-                        'Authorization': `Bearer ${sessionToken}`,
-                        'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify({ referral_code: pendingCode }),
-                    });
-                    if (resp.ok) {
-                      const data = await resp.json();
-                      Alert.alert('Referral Applied!', data.message);
-                      await refreshCredits(sessionToken);
-                    }
-                    await SecureStore.deleteItemAsync('pending_referral_code');
-                  }
-                } catch (_) {}
+                // Referral attribution happens at signup; subscription verification is automatic via webhook
               }
               setPaywallRequired(false);
               setShowPaywall(false);
@@ -4251,6 +4308,28 @@ export default function Index() {
             onDismiss={paywallRequired ? undefined : () => setShowPaywall(false)}
           />
         </View>
+      )}
+
+      {/* Referral Dashboard - Full-screen overlay */}
+      {showReferralDashboard && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998 }}>
+          <ReferralDashboard onClose={() => setShowReferralDashboard(false)} />
+        </View>
+      )}
+
+      {/* Referral Popup - Modal overlay */}
+      {referralPopupData && (
+        <ReferralPopup
+          visible={showReferralPopup}
+          referralLink={referralPopupData.link}
+          referralCode={referralPopupData.code}
+          onInvite={() => setShowReferralPopup(false)}
+          onCopyLink={() => {
+            setShowReferralPopup(false);
+            Alert.alert('Link Copied!', 'Your referral link has been copied to clipboard.');
+          }}
+          onDismiss={handleDismissReferralPopup}
+        />
       )}
 
     </SafeAreaView>

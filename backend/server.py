@@ -2786,10 +2786,12 @@ class AppleAuthRequest(BaseModel):
     email: Optional[str] = None
     full_name: Optional[str] = None
     device_id: Optional[str] = None  # Device ID for anti-abuse
+    referral_code: Optional[str] = None  # Referral code from deep link
 
 class GoogleSessionRequest(BaseModel):
     session_id: str
     device_id: Optional[str] = None  # Device ID for anti-abuse
+    referral_code: Optional[str] = None  # Referral code from deep link
 
 class UserCreditsResponse(BaseModel):
     available_credits: int
@@ -2803,7 +2805,8 @@ class UserCreditsResponse(BaseModel):
 # ---- Trial Constants ----
 TRIAL_DURATION_DAYS = 3
 TRIAL_CREDITS = 10  # Credits during Apple trial (all tiers)
-REFERRAL_BONUS_CREDITS = 20  # Credits awarded to both referrer and friend
+REFERRALS_NEEDED_FOR_REWARD = 2  # Verified referrals needed for 1 free month
+VERIFICATION_DAYS = 14  # Days a referred user must stay subscribed
 
 # ---- JWT Helpers ----
 def create_session_token(user_id: str) -> str:
@@ -3023,6 +3026,9 @@ async def apple_sign_in(request: AppleAuthRequest):
             provider='apple',
             provider_id=apple_user_id
         )
+        # Attribute referral if code provided
+        if request.referral_code:
+            await attribute_referral(user_id, email, request.device_id, request.referral_code)
 
     return {'user': user, 'session_token': create_session_token(user_id)}
 
@@ -3076,6 +3082,9 @@ async def google_session_exchange(request: GoogleSessionRequest):
             provider='google',
             provider_id=google_user_id
         )
+        # Attribute referral if code provided
+        if request.referral_code:
+            await attribute_referral(user_id, email, request.device_id, request.referral_code)
 
     return {'user': user, 'session_token': create_session_token(user_id)}
 
@@ -3721,12 +3730,17 @@ async def revenuecat_webhook(request: FastAPIRequest):
             upsert=True
         )
         logger.info(f'[RevenueCat] Granted {credits_to_grant} credits ({"trial" if is_apple_trial else "paid"}) to {user_id}')
+        # Update referral status if this user was referred
+        if not is_apple_trial:
+            await update_referral_on_subscription(user_id, event_type)
     elif event_type in ('CANCELLATION', 'EXPIRATION') and user_id:
         # Keep remaining credits but mark tier as expired
         await db.subscriptions.update_one(
             {'user_id': user_id},
             {'$set': {'tier': 'expired', 'last_event': event_type}}
         )
+        # Update referral status — cancellation/expiration rejects pending referrals
+        await update_referral_on_subscription(user_id, event_type)
     return {'status': 'ok'}
 
 
@@ -3781,138 +3795,417 @@ async def sync_subscription(request: FastAPIRequest):
     )
     logger.info(f'[Sync] User {user_id} synced to tier {tier_info["tier"]} with {credits_to_grant} credits ({"trial" if is_trial else "paid"}, product: {product_id})')
     
+    # Update referral status if this user was referred and it's a paid subscription
+    if not is_trial:
+        await update_referral_on_subscription(user_id, 'INITIAL_PURCHASE')
+    
     credits = await get_user_credits(user_id)
     return credits
 
 
-# ---- Refer-a-Friend ----
+# ---- Referral System v2 ----
+
+REFERRAL_ACTIVE_TIERS = ['walk-in', 'booked-out', 'the-shop', 'the-shop-member']
+
+async def attribute_referral(new_user_id: str, email: Optional[str], device_id: Optional[str], referral_code: Optional[str]):
+    """Called during signup to attribute a new user to a referrer. First-touch only."""
+    if not referral_code:
+        return
+    referral_code = referral_code.strip().upper()
+
+    # Find the referral code owner
+    code_doc = await db.referral_codes.find_one({'code': referral_code})
+    if not code_doc:
+        logger.warning(f'[Referral] Invalid code {referral_code} during signup for {new_user_id}')
+        return
+
+    referrer_id = code_doc['user_id']
+
+    # Anti-abuse: self-referral
+    if referrer_id == new_user_id:
+        logger.warning(f'[Referral] Self-referral blocked: {new_user_id}')
+        return
+
+    # Anti-abuse: same email as referrer
+    if email:
+        referrer = await db.users.find_one({'user_id': referrer_id}, {'_id': 0, 'email': 1})
+        if referrer and referrer.get('email') and referrer['email'].lower() == email.lower():
+            logger.warning(f'[Referral] Same email as referrer blocked: {email}')
+            return
+
+    # Anti-abuse: same device as referrer
+    if device_id:
+        referrer = await db.users.find_one({'user_id': referrer_id}, {'_id': 0, 'device_id': 1})
+        if referrer and referrer.get('device_id') and referrer['device_id'] == device_id:
+            logger.warning(f'[Referral] Same device as referrer blocked: {device_id[:8]}...')
+            return
+
+    # Anti-abuse: user already attributed (first-touch lock)
+    existing = await db.referral_links.find_one({'referred_user_id': new_user_id})
+    if existing:
+        logger.warning(f'[Referral] User {new_user_id} already attributed — first-touch lock')
+        return
+
+    # Anti-abuse: rapid referral detection (flag if referrer has >5 referrals in last hour)
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    recent_count = await db.referral_links.count_documents({
+        'referrer_id': referrer_id,
+        'created_at': {'$gte': one_hour_ago}
+    })
+    fraud_flag = recent_count >= 5
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.referral_links.insert_one({
+        'referrer_id': referrer_id,
+        'referred_user_id': new_user_id,
+        'referral_code': referral_code,
+        'status': 'account_created',
+        'created_at': now,
+        'account_created_at': now,
+        'subscribed_at': None,
+        'verification_due_at': None,
+        'verified_at': None,
+        'rejected_at': None,
+        'rejection_reason': None,
+        'referred_email': email,
+        'referred_device_id': device_id,
+        'reward_consumed': False,
+        'fraud_flag': fraud_flag,
+    })
+
+    # Mark the new user as referred
+    await db.users.update_one(
+        {'user_id': new_user_id},
+        {'$set': {'referred_by': referrer_id, 'referral_code_used': referral_code}}
+    )
+
+    if fraud_flag:
+        logger.warning(f'[Referral] FRAUD FLAG: Referrer {referrer_id} has {recent_count} referrals in last hour')
+    logger.info(f'[Referral] Attributed {new_user_id} to referrer {referrer_id} via code {referral_code}')
+
+
+async def update_referral_on_subscription(user_id: str, event_type: str):
+    """Called from webhook/sync when a referred user's subscription changes."""
+    referral = await db.referral_links.find_one(
+        {'referred_user_id': user_id, 'status': {'$in': ['account_created', 'subscribed', 'verification_pending']}}
+    )
+    if not referral:
+        return
+
+    now = datetime.now(timezone.utc)
+
+    if event_type in ('INITIAL_PURCHASE', 'RENEWAL', 'FRONTEND_SYNC'):
+        if referral['status'] == 'account_created':
+            # Referred user just subscribed — start 14-day verification
+            verification_due = (now + timedelta(days=VERIFICATION_DAYS)).isoformat()
+            await db.referral_links.update_one(
+                {'referred_user_id': user_id, 'status': 'account_created'},
+                {'$set': {
+                    'status': 'verification_pending',
+                    'subscribed_at': now.isoformat(),
+                    'verification_due_at': verification_due,
+                }}
+            )
+            logger.info(f'[Referral] User {user_id} subscribed — verification pending until {verification_due}')
+
+    elif event_type in ('CANCELLATION', 'EXPIRATION'):
+        if referral['status'] in ('subscribed', 'verification_pending'):
+            # Cancelled during verification period — reject
+            await db.referral_links.update_one(
+                {'referred_user_id': user_id, 'status': {'$in': ['subscribed', 'verification_pending']}},
+                {'$set': {
+                    'status': 'rejected',
+                    'rejected_at': now.isoformat(),
+                    'rejection_reason': f'{event_type.lower()}_during_verification',
+                }}
+            )
+            logger.info(f'[Referral] Referral for {user_id} rejected — {event_type} during verification')
+
+
+async def process_referral_verifications():
+    """Check verification_pending referrals where 14 days have passed."""
+    now = datetime.now(timezone.utc)
+    pending = await db.referral_links.find({'status': 'verification_pending'}).to_list(None)
+
+    verified_count = 0
+    rejected_count = 0
+
+    for ref in pending:
+        # Check if 14 days have passed since subscription
+        subscribed_at_str = ref.get('subscribed_at')
+        if not subscribed_at_str:
+            continue
+        try:
+            subscribed_at = datetime.fromisoformat(subscribed_at_str.replace('Z', '+00:00'))
+        except Exception:
+            continue
+
+        if (now - subscribed_at).days < VERIFICATION_DAYS:
+            continue  # Not yet due
+
+        referred_user_id = ref['referred_user_id']
+        sub = await db.subscriptions.find_one({'user_id': referred_user_id}, {'_id': 0})
+
+        if sub and sub.get('tier') in REFERRAL_ACTIVE_TIERS and not sub.get('is_trial', False):
+            # Still active and paid — verify
+            await db.referral_links.update_one(
+                {'referred_user_id': referred_user_id, 'status': 'verification_pending'},
+                {'$set': {'status': 'verified', 'verified_at': now.isoformat()}}
+            )
+            verified_count += 1
+            logger.info(f'[Referral] Verified referral for user {referred_user_id}')
+            await check_and_issue_rewards(ref['referrer_id'])
+        else:
+            await db.referral_links.update_one(
+                {'referred_user_id': referred_user_id, 'status': 'verification_pending'},
+                {'$set': {
+                    'status': 'rejected',
+                    'rejected_at': now.isoformat(),
+                    'rejection_reason': 'not_active_at_verification',
+                }}
+            )
+            rejected_count += 1
+            logger.info(f'[Referral] Rejected referral for user {referred_user_id} — not active')
+
+    return {'verified': verified_count, 'rejected': rejected_count, 'checked': len(pending)}
+
+
+async def check_and_issue_rewards(referrer_id: str):
+    """Check if referrer has enough unconsumed verified referrals for a new reward."""
+    unconsumed = await db.referral_links.find({
+        'referrer_id': referrer_id,
+        'status': 'verified',
+        'reward_consumed': False,
+    }).to_list(None)
+
+    if len(unconsumed) < REFERRALS_NEEDED_FOR_REWARD:
+        return
+
+    rewards_to_issue = len(unconsumed) // REFERRALS_NEEDED_FOR_REWARD
+    # Consume referrals in pairs
+    consume_count = rewards_to_issue * REFERRALS_NEEDED_FOR_REWARD
+    consumed_user_ids = [r['referred_user_id'] for r in unconsumed[:consume_count]]
+
+    await db.referral_links.update_many(
+        {'referrer_id': referrer_id, 'referred_user_id': {'$in': consumed_user_ids}, 'status': 'verified'},
+        {'$set': {'reward_consumed': True}}
+    )
+
+    now = datetime.now(timezone.utc).isoformat()
+    existing = await db.referral_rewards.find_one({'user_id': referrer_id})
+
+    if existing:
+        await db.referral_rewards.update_one(
+            {'user_id': referrer_id},
+            {'$inc': {
+                'rewards_earned': rewards_to_issue,
+                'free_months_available': rewards_to_issue,
+            },
+            '$set': {'last_reward_at': now}}
+        )
+    else:
+        await db.referral_rewards.insert_one({
+            'user_id': referrer_id,
+            'rewards_earned': rewards_to_issue,
+            'free_months_available': rewards_to_issue,
+            'last_reward_at': now,
+        })
+
+    logger.info(f'[Referral] Issued {rewards_to_issue} free month(s) reward to referrer {referrer_id}')
+
 
 @api_router.get("/referral/code")
 async def get_referral_code(request: FastAPIRequest):
-    """Get or generate the user's unique referral code."""
+    """Get or generate the user's unique referral code and shareable link."""
     auth_header = request.headers.get('authorization')
     user = await get_current_user(auth_header)
     user_id = user['user_id']
-    
-    # Check if user already has a referral code
-    existing = await db.referrals.find_one({'referrer_user_id': user_id, 'type': 'code'}, {'_id': 0})
+
+    existing = await db.referral_codes.find_one({'user_id': user_id}, {'_id': 0})
     if existing:
-        stats = await db.referrals.count_documents({'referrer_user_id': user_id, 'type': 'redemption', 'status': 'completed'})
-        return {
-            'referral_code': existing['referral_code'],
-            'total_referrals': stats,
-            'credits_earned': stats * REFERRAL_BONUS_CREDITS,
-        }
-    
-    # Generate a unique code: BB-XXXXXX
-    code = f'BB-{uuid.uuid4().hex[:6].upper()}'
-    await db.referrals.insert_one({
-        'type': 'code',
-        'referral_code': code,
-        'referrer_user_id': user_id,
-        'created_at': datetime.now(timezone.utc).isoformat(),
-    })
-    logger.info(f'[Referral] Generated code {code} for user {user_id}')
+        code = existing['code']
+    else:
+        code = f'BB-{uuid.uuid4().hex[:6].upper()}'
+        await db.referral_codes.insert_one({
+            'user_id': user_id,
+            'code': code,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+        })
+        logger.info(f'[Referral] Generated code {code} for user {user_id}')
+
+    # Build referral link using production URL
+    base_url = os.environ.get('REFERRAL_BASE_URL', 'https://bodybound-subs.emergent.host')
+    referral_link = f'{base_url}/api/ref/{code}'
+
     return {
         'referral_code': code,
-        'total_referrals': 0,
-        'credits_earned': 0,
+        'referral_link': referral_link,
     }
 
 
-@api_router.post("/referral/redeem")
-async def redeem_referral_code(request: FastAPIRequest):
-    """Redeem a referral code. Awards 20 credits to both the referrer and the redeemer.
-    
-    Rules:
-    - User must have an active subscription (not trial, not expired)
-    - Cannot redeem your own code
-    - Can only redeem one referral code ever
-    """
+@api_router.get("/referral/dashboard")
+async def get_referral_dashboard(request: FastAPIRequest):
+    """Full referral dashboard data for the logged-in user."""
     auth_header = request.headers.get('authorization')
     user = await get_current_user(auth_header)
     user_id = user['user_id']
-    
-    body = await request.json()
-    code = body.get('referral_code', '').strip().upper()
-    
-    if not code:
-        raise HTTPException(status_code=400, detail='Missing referral_code')
-    
-    # Find the referral code
-    code_doc = await db.referrals.find_one({'type': 'code', 'referral_code': code}, {'_id': 0})
+
+    # Get or create referral code
+    code_doc = await db.referral_codes.find_one({'user_id': user_id}, {'_id': 0})
     if not code_doc:
-        raise HTTPException(status_code=404, detail='Invalid referral code')
-    
-    referrer_user_id = code_doc['referrer_user_id']
-    
-    # Can't redeem your own code
-    if referrer_user_id == user_id:
-        raise HTTPException(status_code=400, detail='Cannot redeem your own referral code')
-    
-    # Check if user already redeemed a code
-    already_redeemed = await db.referrals.find_one({
-        'type': 'redemption', 'redeemer_user_id': user_id, 'status': 'completed'
-    })
-    if already_redeemed:
-        raise HTTPException(status_code=400, detail='You have already redeemed a referral code')
-    
-    # Check redeemer has an active subscription
-    redeemer_sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
-    active_tiers = ['walk-in', 'booked-out', 'the-shop', 'the-shop-member']
-    if not redeemer_sub or redeemer_sub.get('tier') not in active_tiers:
-        raise HTTPException(status_code=400, detail='You need an active subscription to redeem a referral code')
-    
-    # Check referrer has an active subscription
-    referrer_sub = await db.subscriptions.find_one({'user_id': referrer_user_id}, {'_id': 0})
-    if not referrer_sub or referrer_sub.get('tier') not in active_tiers:
-        raise HTTPException(status_code=400, detail='Referrer does not have an active subscription')
-    
-    # Award credits to both parties
-    # Referrer: add credits (check if team member for shared pool)
-    referrer_team_id = referrer_sub.get('studio_team_id')
-    if referrer_team_id:
-        await db.studio_teams.update_one(
-            {'team_id': referrer_team_id},
-            {'$inc': {'shared_credits': REFERRAL_BONUS_CREDITS}}
-        )
+        code = f'BB-{uuid.uuid4().hex[:6].upper()}'
+        await db.referral_codes.insert_one({
+            'user_id': user_id,
+            'code': code,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+        })
     else:
-        await db.subscriptions.update_one(
-            {'user_id': referrer_user_id},
-            {'$inc': {'available_credits': REFERRAL_BONUS_CREDITS}}
-        )
-    
-    # Redeemer: add credits (check if team member for shared pool)
-    redeemer_team_id = redeemer_sub.get('studio_team_id')
-    if redeemer_team_id:
-        await db.studio_teams.update_one(
-            {'team_id': redeemer_team_id},
-            {'$inc': {'shared_credits': REFERRAL_BONUS_CREDITS}}
-        )
-    else:
-        await db.subscriptions.update_one(
-            {'user_id': user_id},
-            {'$inc': {'available_credits': REFERRAL_BONUS_CREDITS}}
-        )
-    
-    # Record the redemption
-    await db.referrals.insert_one({
-        'type': 'redemption',
-        'referral_code': code,
-        'referrer_user_id': referrer_user_id,
-        'redeemer_user_id': user_id,
-        'credits_awarded': REFERRAL_BONUS_CREDITS,
-        'status': 'completed',
-        'created_at': datetime.now(timezone.utc).isoformat(),
-    })
-    
-    logger.info(f'[Referral] {user_id} redeemed code {code} from {referrer_user_id} — {REFERRAL_BONUS_CREDITS} credits each')
-    
-    credits = await get_user_credits(user_id)
+        code = code_doc['code']
+
+    base_url = os.environ.get('REFERRAL_BASE_URL', 'https://bodybound-subs.emergent.host')
+    referral_link = f'{base_url}/api/ref/{code}'
+
+    # Get all referral links where this user is the referrer
+    all_referrals = await db.referral_links.find(
+        {'referrer_id': user_id}, {'_id': 0}
+    ).sort('created_at', -1).to_list(None)
+
+    verified = sum(1 for r in all_referrals if r['status'] == 'verified')
+    pending = sum(1 for r in all_referrals if r['status'] in ('account_created', 'subscribed', 'verification_pending'))
+    rejected = sum(1 for r in all_referrals if r['status'] == 'rejected')
+
+    # Get reward ledger
+    rewards = await db.referral_rewards.find_one({'user_id': user_id}, {'_id': 0})
+    free_months_earned = rewards['rewards_earned'] if rewards else 0
+    free_months_available = rewards['free_months_available'] if rewards else 0
+
+    # Progress toward next reward: count unconsumed verified referrals
+    unconsumed_verified = sum(1 for r in all_referrals if r['status'] == 'verified' and not r.get('reward_consumed', False))
+    progress = unconsumed_verified % REFERRALS_NEEDED_FOR_REWARD
+
+    # Referral activity list (simplified for frontend)
+    referral_list = [
+        {'status': r['status'], 'created_at': r['created_at']}
+        for r in all_referrals
+    ]
+
     return {
-        'message': f'Referral applied! You and your friend both received {REFERRAL_BONUS_CREDITS} bonus credits.',
-        'credits': credits,
+        'referral_code': code,
+        'referral_link': referral_link,
+        'verified_referrals': verified,
+        'pending_referrals': pending,
+        'rejected_referrals': rejected,
+        'progress_toward_reward': progress,
+        'referrals_needed': REFERRALS_NEEDED_FOR_REWARD,
+        'free_months_earned': free_months_earned,
+        'free_months_available': free_months_available,
+        'referrals': referral_list,
     }
+
+
+@api_router.post("/referral/check-verifications")
+async def check_verifications_endpoint(request: FastAPIRequest):
+    """Cron endpoint: process pending referral verifications (14-day rule).
+    Secured via X-Cron-Secret header."""
+    if not CRON_SECRET:
+        raise HTTPException(status_code=503, detail='Cron not configured')
+    secret_header = request.headers.get('x-cron-secret', '')
+    if secret_header != CRON_SECRET:
+        raise HTTPException(status_code=401, detail='Unauthorized')
+
+    result = await process_referral_verifications()
+    logger.info(f'[Referral Cron] Verification check: {result}')
+    return result
+
+
+@api_router.get("/referral/popup-eligible")
+async def referral_popup_eligible(request: FastAPIRequest):
+    """Check if the user should see the referral popup.
+    Rules: active paid subscriber, max once per 7 days if dismissed."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+
+    # Must be an active paid subscriber
+    sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+    if not sub or sub.get('tier') not in REFERRAL_ACTIVE_TIERS or sub.get('is_trial', False):
+        return {'eligible': False, 'reason': 'not_paid_subscriber'}
+
+    # Check last dismissal
+    dismissal = await db.referral_popup_dismissals.find_one(
+        {'user_id': user_id}, {'_id': 0}
+    )
+    if dismissal:
+        last_dismissed = dismissal.get('dismissed_at', '')
+        try:
+            dismissed_dt = datetime.fromisoformat(last_dismissed.replace('Z', '+00:00'))
+            if (datetime.now(timezone.utc) - dismissed_dt).days < 7:
+                return {'eligible': False, 'reason': 'recently_dismissed'}
+        except Exception:
+            pass
+
+    return {'eligible': True}
+
+
+@api_router.post("/referral/dismiss-popup")
+async def dismiss_referral_popup(request: FastAPIRequest):
+    """Record that the user dismissed the referral popup."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.referral_popup_dismissals.update_one(
+        {'user_id': user_id},
+        {'$set': {'dismissed_at': now}},
+        upsert=True
+    )
+    return {'status': 'ok'}
+
+
+@api_router.get("/ref/{code}")
+async def referral_landing(code: str):
+    """Landing page when someone clicks a referral link.
+    Displays the app info and directs to App Store."""
+    code = code.strip().upper()
+    code_doc = await db.referral_codes.find_one({'code': code})
+    valid = code_doc is not None
+    app_store_url = "https://apps.apple.com/app/body-bound-stencil-generator/id6741930631"
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BODY BOUND - Referral</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ background: #0a0a0f; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }}
+        .card {{ max-width: 420px; text-align: center; }}
+        .logo {{ font-size: 28px; font-weight: 800; color: #C9A227; letter-spacing: 3px; margin-bottom: 8px; }}
+        .sub {{ color: #666; font-size: 13px; letter-spacing: 2px; margin-bottom: 32px; }}
+        h1 {{ font-size: 22px; margin-bottom: 12px; line-height: 1.3; }}
+        p {{ color: #999; font-size: 15px; line-height: 1.6; margin-bottom: 24px; }}
+        .code-box {{ background: #12121f; border: 1px solid #C9A227; border-radius: 12px; padding: 16px; margin-bottom: 24px; }}
+        .code-label {{ color: #666; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }}
+        .code-value {{ color: #C9A227; font-size: 20px; font-weight: 700; letter-spacing: 2px; }}
+        .dl-btn {{ display: inline-block; background: #C9A227; color: #000; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; }}
+        .dl-btn:hover {{ background: #d4b042; }}
+        .note {{ color: #555; font-size: 12px; margin-top: 20px; }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="logo">BODY BOUND</div>
+        <div class="sub">STENCIL GENERATOR</div>
+        {"<h1>You've been invited to try BODY BOUND</h1><p>A fellow tattoo artist thinks you'd love this AI-powered stencil generator. Download the app and enter the referral code when you sign up.</p>" if valid else "<h1>Invalid Referral Link</h1><p>This referral link is not valid. You can still download BODY BOUND below.</p>"}
+        {"<div class='code-box'><div class='code-label'>Your Referral Code</div><div class='code-value'>" + code + "</div></div>" if valid else ""}
+        <a href="{app_store_url}" class="dl-btn">Download on App Store</a>
+        <p class="note">Enter the code above when you create your account.</p>
+    </div>
+</body>
+</html>"""
+    return HTMLResponse(content=html)
 
 
 @api_router.post("/tasks/refresh-credits")

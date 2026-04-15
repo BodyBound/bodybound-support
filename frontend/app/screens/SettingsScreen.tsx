@@ -34,6 +34,7 @@ interface SettingsScreenProps {
   onClose: () => void;
   onManageSubscription: () => void;
   onManageTeam?: () => void;
+  onOpenReferralDashboard?: () => void;
 }
 
 export function SettingsScreen({
@@ -43,11 +44,12 @@ export function SettingsScreen({
   onClose,
   onManageSubscription,
   onManageTeam,
+  onOpenReferralDashboard,
 }: SettingsScreenProps) {
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [restoringPurchases, setRestoringPurchases] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
-  const [referralStats, setReferralStats] = useState({ total_referrals: 0, credits_earned: 0 });
+  const [referralLink, setReferralLink] = useState<string | null>(null);
   const [loadingReferral, setLoadingReferral] = useState(false);
   
   // Check if user has The Shop subscription (admin or member)
@@ -72,7 +74,7 @@ export function SettingsScreen({
       if (resp.ok) {
         const data = await resp.json();
         setReferralCode(data.referral_code);
-        setReferralStats({ total_referrals: data.total_referrals, credits_earned: data.credits_earned });
+        setReferralLink(data.referral_link);
       }
     } catch (_) {} finally {
       setLoadingReferral(false);
@@ -80,10 +82,10 @@ export function SettingsScreen({
   };
 
   const handleShareReferral = async () => {
-    if (!referralCode) return;
+    if (!referralLink) return;
     try {
       await Share.share({
-        message: `Try Body Bound — the AI tattoo stencil app! Use my referral code ${referralCode} when you subscribe and we both get 20 bonus credits. Download: https://apps.apple.com/app/body-bound/id6745072871`,
+        message: `Stop wasting hours hand-drawing realism stencils. I use BODY BOUND and it's a game changer. Try it free: ${referralLink}`,
       });
     } catch (_) {}
   };
@@ -263,10 +265,10 @@ export function SettingsScreen({
             </TouchableOpacity>
           </View>
 
-          {/* Refer a Friend — only for active subscribers */}
+          {/* Refer & Earn — only for active subscribers */}
           {hasActiveSubscription && (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>REFER A FRIEND</Text>
+              <Text style={styles.sectionTitle}>REFER & EARN</Text>
               <View style={styles.referralCard}>
                 {loadingReferral ? (
                   <ActivityIndicator color="#C9A227" size="small" />
@@ -275,20 +277,24 @@ export function SettingsScreen({
                     <Text style={styles.referralCodeLabel}>Your referral code</Text>
                     <Text testID="referral-code-display" style={styles.referralCodeText}>{referralCode}</Text>
                     <Text style={styles.referralReward}>
-                      You both get 20 bonus credits when a friend subscribes with your code
+                      Invite 2 artists who become verified subscribers and earn 1 free month
                     </Text>
-                    {referralStats.total_referrals > 0 && (
-                      <Text style={styles.referralStatsText}>
-                        {referralStats.total_referrals} referral{referralStats.total_referrals !== 1 ? 's' : ''} — {referralStats.credits_earned} credits earned
-                      </Text>
-                    )}
                     <TouchableOpacity
                       testID="share-referral-btn"
                       style={styles.referralShareBtn}
                       onPress={handleShareReferral}
                     >
-                      <Text style={styles.referralShareBtnText}>Share Code</Text>
+                      <Text style={styles.referralShareBtnText}>Invite Artists</Text>
                     </TouchableOpacity>
+                    {onOpenReferralDashboard && (
+                      <TouchableOpacity
+                        testID="open-referral-dashboard-btn"
+                        style={[styles.referralShareBtn, { backgroundColor: 'transparent', borderWidth: 1, borderColor: '#C9A227', marginTop: 8 }]}
+                        onPress={onOpenReferralDashboard}
+                      >
+                        <Text style={[styles.referralShareBtnText, { color: '#C9A227' }]}>View Referral Dashboard</Text>
+                      </TouchableOpacity>
+                    )}
                   </>
                 ) : (
                   <Text style={styles.referralCodeLabel}>Unable to load referral code</Text>
@@ -460,11 +466,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 18,
-  },
-  referralStatsText: {
-    color: '#C9A227',
-    fontSize: 12,
-    fontWeight: '600',
   },
   referralShareBtn: {
     backgroundColor: '#C9A227',

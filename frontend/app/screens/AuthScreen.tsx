@@ -56,10 +56,14 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [pendingReferralCode, setPendingReferralCode] = useState<string | null>(null);
 
-  // Get device ID on mount
+  // Get device ID and pending referral code on mount
   useEffect(() => {
     getDeviceId().then(setDeviceId);
+    SecureStore.getItemAsync('pending_referral_code').then(code => {
+      if (code) setPendingReferralCode(code);
+    }).catch(() => {});
   }, []);
 
   const handleAppleSignIn = async () => {
@@ -84,6 +88,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
             ? `${credential.fullName.givenName || ''} ${credential.fullName.familyName || ''}`.trim()
             : null,
           device_id: deviceId,
+          referral_code: pendingReferralCode,
         }),
       });
 
@@ -157,6 +162,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
           body: JSON.stringify({ 
             session_id: sessionId,
             device_id: deviceId,
+            referral_code: pendingReferralCode,
           }),
         });
 
