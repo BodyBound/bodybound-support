@@ -1585,6 +1585,26 @@ async def diagnostics(request: Request):
     
     return results
 
+@api_router.get("/admin/all-users")
+async def admin_all_users():
+    """List all users with their subscription status"""
+    users = await db.users.find({}, {'_id': 0}).to_list(500)
+    results = []
+    for u in users:
+        uid = u.get('user_id', '')
+        sub = await db.subscriptions.find_one({'user_id': uid}, {'_id': 0})
+        results.append({
+            "email": u.get('email', 'no email'),
+            "name": u.get('name', 'no name'),
+            "user_id": uid,
+            "tier": sub.get('tier') if sub else None,
+            "credits": sub.get('available_credits', 0) if sub else 0,
+            "is_trial": sub.get('is_trial', False) if sub else False,
+            "last_event": sub.get('last_event', 'none') if sub else 'none',
+            "created_at": u.get('created_at', '')
+        })
+    return {"total": len(results), "users": results}
+
 @api_router.post("/process", response_model=ProcessImageResponse)
 async def process_image(request: ProcessImageRequest):
     """Process an image to create a tattoo stencil"""
