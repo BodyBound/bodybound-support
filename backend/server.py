@@ -3485,6 +3485,118 @@ PRODUCT_CREDIT_MAP = {
     'bodybound_9999_1m_3d': {'tier': 'the-shop', 'credits': 1500},
 }
 
+# ── Promo Code System ──────────────────────────────────────────
+@api_router.post("/promo/redeem")
+async def redeem_promo_code(request: FastAPIRequest):
+    """Redeem a promo code for a free subscription period"""
+    auth = request.headers.get('authorization', '')
+    token = auth.replace('Bearer ', '') if auth else ''
+    user_id = None
+    if token:
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+            user_id = payload.get('user_id')
+        except Exception:
+            pass
+    if not user_id:
+        raise HTTPException(status_code=401, detail='Missing authorization')
+    
+    body = await request.json()
+    code = body.get('code', '').strip().upper()
+    if not code:
+        raise HTTPException(status_code=400, detail='Missing promo code')
+    
+    # Look up the promo code
+    promo = await db.promo_codes.find_one({'code': code, 'active': True}, {'_id': 0})
+    if not promo:
+        raise HTTPException(status_code=400, detail='Invalid or expired promo code')
+    
+    # Check if user already redeemed this code
+    existing = await db.promo_redemptions.find_one({'user_id': user_id, 'code': code})
+    if existing:
+        raise HTTPException(status_code=400, detail='You have already used this promo code')
+    
+    # Check if this code is email-restricted
+    allowed_emails = promo.get('allowed_emails', [])
+    if allowed_emails:
+        user = await db.users.find_one({'user_id': user_id}, {'_id': 0, 'email': 1})
+        user_email = (user.get('email', '') if user else '').lower()
+        if user_email not in [e.lower() for e in allowed_emails]:
+            raise HTTPException(status_code=403, detail='This promo code is not available for your account')
+    
+    # Check max total redemptions
+    max_uses = promo.get('max_uses', 0)
+    if max_uses > 0:
+        total_used = await db.promo_redemptions.count_documents({'code': code})
+        if total_used >= max_uses:
+            raise HTTPException(status_code=400, detail='This promo code has reached its limit')
+    
+    # Apply the promo
+    tier = promo.get('tier', 'walk-in')
+    credits = promo.get('credits', 125)
+    duration_days = promo.get('duration_days', 30)
+    
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {'$set': {
+            'tier': tier,
+            'available_credits': credits,
+            'is_trial': False,
+            'last_event': 'PROMO_REDEEM',
+            'synced_from': f'promo:{code}',
+            'renewal_date': (datetime.now(timezone.utc) + timedelta(days=duration_days)).isoformat()
+        }},
+        upsert=True
+    )
+    
+    # Record redemption
+    await db.promo_redemptions.insert_one({
+        'user_id': user_id,
+        'code': code,
+        'timestamp': datetime.now(timezone.utc).isoformat()
+    })
+    
+    logger.info(f'[Promo] {user_id} redeemed {code} -> {tier} ({credits} credits, {duration_days} days)')
+    
+    return {
+        'status': 'success',
+        'message': f'Promo code applied! You have {credits} credits for {duration_days} days.',
+        'tier': tier,
+        'available_credits': credits,
+        'needs_subscription': False
+    }
+
+@api_router.post("/admin/create-promo")
+async def admin_create_promo(request: Request):
+    """Admin endpoint to create a promo code"""
+    body = await request.json()
+    code = body.get('code', '').strip().upper()
+    tier = body.get('tier', 'walk-in')
+    credits = body.get('credits', 125)
+    duration_days = body.get('duration_days', 30)
+    allowed_emails = body.get('allowed_emails', [])
+    max_uses = body.get('max_uses', 0)
+    
+    if not code:
+        raise HTTPException(status_code=400, detail='Missing code')
+    
+    await db.promo_codes.update_one(
+        {'code': code},
+        {'$set': {
+            'code': code,
+            'tier': tier,
+            'credits': credits,
+            'duration_days': duration_days,
+            'allowed_emails': [e.lower() for e in allowed_emails],
+            'max_uses': max_uses,
+            'active': True,
+            'created_at': datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    
+    return {'status': 'created', 'code': code, 'allowed_emails': len(allowed_emails), 'tier': tier, 'credits': credits}
+
 @api_router.post("/webhooks/revenuecat")
 async def revenuecat_webhook(request: FastAPIRequest):
     """Handle RevenueCat subscription lifecycle events.

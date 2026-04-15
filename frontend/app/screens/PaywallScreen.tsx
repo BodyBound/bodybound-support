@@ -63,6 +63,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
   const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
   const [referralCode, setReferralCode] = useState('');
   const [referralApplied, setReferralApplied] = useState(false);
+  const [applyingPromo, setApplyingPromo] = useState(false);
 
   useEffect(() => {
     loadOfferings();
@@ -265,22 +266,58 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
             )}
           </TouchableOpacity>
 
-          {/* Referral Code */}
+          {/* Referral / Promo Code */}
           <View style={styles.referralSection}>
-            <Text style={styles.referralLabel}>Have a referral code?</Text>
+            <Text style={styles.referralLabel}>Have a referral or promo code?</Text>
             <View style={styles.referralInputRow}>
               <TextInput
                 testID="referral-code-input"
                 style={styles.referralInput}
-                placeholder="BB-XXXXXX"
+                placeholder="Enter code"
                 placeholderTextColor="rgba(255,255,255,0.25)"
                 value={referralCode}
                 onChangeText={setReferralCode}
                 autoCapitalize="characters"
-                maxLength={9}
+                maxLength={12}
                 editable={!referralApplied}
               />
-              {referralCode.trim().length > 0 && !referralApplied && (
+              {referralCode.trim().length > 0 && !referralApplied && !referralCode.trim().startsWith('BB-') && (
+                <TouchableOpacity
+                  testID="apply-promo-btn"
+                  style={styles.applyPromoBtn}
+                  onPress={async () => {
+                    setApplyingPromo(true);
+                    try {
+                      const token = await SecureStore.getItemAsync('session_token');
+                      const res = await fetch(`${API_URL}/api/promo/redeem`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ code: referralCode.trim() }),
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        Alert.alert('Promo Applied!', data.message || 'Your free credits have been activated.');
+                        setReferralApplied(true);
+                        onPurchaseSuccess();
+                      } else {
+                        Alert.alert('Invalid Code', data.detail || 'This promo code is not valid.');
+                      }
+                    } catch (err) {
+                      Alert.alert('Error', 'Could not apply promo code. Please try again.');
+                    } finally {
+                      setApplyingPromo(false);
+                    }
+                  }}
+                  disabled={applyingPromo}
+                >
+                  {applyingPromo ? (
+                    <ActivityIndicator color="#000" size="small" />
+                  ) : (
+                    <Text style={styles.applyPromoBtnText}>Apply</Text>
+                  )}
+                </TouchableOpacity>
+              )}
+              {referralCode.trim().length > 0 && !referralApplied && referralCode.trim().startsWith('BB-') && (
                 <Text style={styles.referralHint}>Applied after purchase</Text>
               )}
               {referralApplied && (
@@ -288,7 +325,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, required = false }
               )}
             </View>
             <Text style={styles.referralSubtext}>
-              You and your friend both get 20 bonus credits
+              Referral codes (BB-) apply after purchase. Promo codes activate instantly.
             </Text>
           </View>
 
@@ -427,6 +464,17 @@ const styles = StyleSheet.create({
   referralHint: {
     color: 'rgba(255,255,255,0.35)',
     fontSize: 12,
+  },
+  applyPromoBtn: {
+    backgroundColor: '#C9A227',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 6,
+  },
+  applyPromoBtnText: {
+    color: '#000',
+    fontWeight: '700',
+    fontSize: 14,
   },
   referralSubtext: {
     color: 'rgba(255,255,255,0.3)',
