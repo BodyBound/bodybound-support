@@ -30,6 +30,14 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 - `GET /api/admin/all-users` — List all customers
 - `POST /api/admin/create-promo` — Create promo codes
 
+### Referral System v2 Endpoints
+- `GET /api/referral/code` — Get/generate user's referral code + link
+- `GET /api/referral/dashboard` — Full referral stats, progress, history
+- `GET /api/referral/popup-eligible` — Check if user should see referral popup
+- `POST /api/referral/dismiss-popup` — Record popup dismissal (7-day cooldown)
+- `POST /api/referral/check-verifications` — Cron: process 14-day referral verifications
+- `GET /api/ref/{code}` — Landing page for referral links
+
 ## AI Key Fallback System
 - Primary: User's GOOGLE_API_KEY (pay-as-you-go)
 - Backup: EMERGENT_LLM_KEY (universal key)
@@ -42,6 +50,18 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 - Auth: Currently allowing unauthenticated (RC dashboard won't save auth header)
 - Smart user matching: checks `aliases` array for backend user_ids, falls back to UUID
 - Unmatched webhooks stored in `unmatched_webhooks` collection
+- Now triggers referral status updates for referred users
+
+## Referral System v2
+- **Core rule**: 2 verified paid referrals = 1 free month (ledger only, Phase 1)
+- **Status flow**: account_created → verification_pending → verified → rejected
+- **14-day verification**: Referred user must stay subscribed for 14 days
+- **Attribution**: First-touch, locked at signup, cannot be changed
+- **Anti-abuse**: Self-referral blocked, same email/device blocked, rapid referral fraud flagging
+- **Collections**: `referral_codes`, `referral_links`, `referral_rewards`, `referral_popup_dismissals`
+- **Popup**: Shown to active paid subscribers after meaningful app usage, 7-day cooldown
+- **Deep links**: App captures referral codes from URLs, stores in SecureStore, sends at signup
+- **Phase 2 (NOT IMPLEMENTED)**: Reward redemption (granting premium access from free months) — requires compliance strategy document first
 
 ## Promo Code System
 - `BBSORRY` code created, locked to 20 affected customer emails
@@ -60,3 +80,4 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 - Emergent Universal Key budget near limit — needs top-up
 - RevenueCat webhook auth header won't save in RC dashboard
 - Admin endpoints are unauthenticated (P2 security fix)
+- App Store Connect / TestFlight Upload blocked (Mac VM disk full, waiting on Emergent support)

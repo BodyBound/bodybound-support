@@ -24,3 +24,10 @@
 
 ## Promo Codes
 - **BBSORRY**: Walk-In tier, 125 credits, 30 days, locked to 20 affected emails
+
+## Referral System
+- **Demo user code**: BB-257527
+- **Cron Secret**: X-Cron-Secret: bb-cron-2026-refresh-c7f3a1
+- **Referral landing**: GET /api/ref/{code} (no auth)
+- **Dashboard**: GET /api/referral/dashboard (auth required)
+- **Popup check**: GET /api/referral/popup-eligible (auth required)
