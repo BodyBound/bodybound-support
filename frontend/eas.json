@@ -8,7 +8,7 @@
       "distribution": "internal",
       "channel": "development",
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://gemini-tattoo-gen.preview.emergentagent.com"
+        "EXPO_PUBLIC_BACKEND_URL": "https://stencil-ai-fallback.preview.emergentagent.com"
       }
     },
     "preview": {
@@ -21,7 +21,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_BACKEND_URL": "https://gemini-tattoo-gen.preview.emergentagent.com"
+        "EXPO_PUBLIC_BACKEND_URL": "https://stencil-ai-fallback.preview.emergentagent.com"
       }
     },
     "production": {

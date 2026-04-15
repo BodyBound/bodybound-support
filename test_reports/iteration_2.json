@@ -98,7 +98,7 @@
   "test_credentials": {
     "demo_login": "POST /api/auth/demo-login (no auth needed)",
     "cron_secret": "bb-cron-2026-refresh-c7f3a1",
-    "backend_url": "https://gemini-tattoo-gen.preview.emergentagent.com"
+    "backend_url": "https://stencil-ai-fallback.preview.emergentagent.com"
   },
 
   "seed_data_creation": "Demo reviewer account exists at user_id='demo_reviewer_account'. All test accounts (test_zero_*, test_apple_*, rc_test_*, cron_test_*) were cleaned up during test runs.",
@@ -106,11 +106,11 @@
   "retest_needed": false,
   "main_agent_can_self_test": true,
 
-  "context_for_next_testing_agent": "Backend: All 34 tests pass including new cron endpoint and updated webhook (user_id as app_user_id). Frontend: Platform import bug was fixed in mainStyles.ts - app now loads. Auth on web still not possible (expo-secure-store empty stub). PaywallScreen tested via code review - correctly handles web platform (skips getOfferings, shows static prices, shows iOS-specific CTA). Test file at /app/backend/tests/test_auth_credits.py. Backend URL: https://gemini-tattoo-gen.preview.emergentagent.com.",
+  "context_for_next_testing_agent": "Backend: All 34 tests pass including new cron endpoint and updated webhook (user_id as app_user_id). Frontend: Platform import bug was fixed in mainStyles.ts - app now loads. Auth on web still not possible (expo-secure-store empty stub). PaywallScreen tested via code review - correctly handles web platform (skips getOfferings, shows static prices, shows iOS-specific CTA). Test file at /app/backend/tests/test_auth_credits.py. Backend URL: https://stencil-ai-fallback.preview.emergentagent.com.",
 
   "rca_of_issue": {
     "issue": "Frontend Metro bundler crash: 'Platform is not defined'",
-    "reproduction": "Navigate to https://gemini-tattoo-gen.preview.emergentagent.com - sees red error screen 'Server Error: Platform is not defined' pointing to mainStyles.ts:1021",
+    "reproduction": "Navigate to https://stencil-ai-fallback.preview.emergentagent.com - sees red error screen 'Server Error: Platform is not defined' pointing to mainStyles.ts:1021",
     "root_cause": "mainStyles.ts uses Platform.OS at line 1021 (for fontFamily), but Platform was not included in the import statement. Only StyleSheet and Dimensions were imported. Metro's bundler evaluates StyleSheet.create() at module load time, so Platform.OS fails before React is even initialized.",
     "fix_applied": "Added Platform to the import: 'import { StyleSheet, Dimensions, Platform } from react-native;'",
     "verification": "After fix, Metro rebuilt all 1424 modules. App now loads correctly with welcome screen visible."

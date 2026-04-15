@@ -73,7 +73,7 @@
   "retest_needed": true,
   "should_main_agent_self_test": false,
   
-  "context_for_next_testing_agent": "Backend: All 26 auth/credits/webhook tests pass. Test file at /app/backend/tests/test_auth_credits.py. Frontend: This is an iOS-targeted React Native (Expo SDK 54) app with a web preview. Web preview has known limitations: (1) expo-secure-store doesn't work on web, (2) Auth screen not appearing on web after click (possible React Native Web overlay rendering issue), (3) data-testid attributes not in DOM (need testID prop). To test logged-in state: use a real iOS device or simulator. Backend URL: https://gemini-tattoo-gen.preview.emergentagent.com. JWT_SECRET = 'body-bound-jwt-secret-2026'. Demo login endpoint: POST /api/auth/demo-login (no auth needed). All API endpoints work correctly.",
+  "context_for_next_testing_agent": "Backend: All 26 auth/credits/webhook tests pass. Test file at /app/backend/tests/test_auth_credits.py. Frontend: This is an iOS-targeted React Native (Expo SDK 54) app with a web preview. Web preview has known limitations: (1) expo-secure-store doesn't work on web, (2) Auth screen not appearing on web after click (possible React Native Web overlay rendering issue), (3) data-testid attributes not in DOM (need testID prop). To test logged-in state: use a real iOS device or simulator. Backend URL: https://stencil-ai-fallback.preview.emergentagent.com. JWT_SECRET = 'body-bound-jwt-secret-2026'. Demo login endpoint: POST /api/auth/demo-login (no auth needed). All API endpoints work correctly.",
   
   "rca_of_issue": {
     "issue": "Auth screen not appearing on web after clicking 'Let's Get Started'",

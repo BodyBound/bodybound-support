@@ -85,7 +85,7 @@
   "test_credentials": {
     "demo_login": "POST /api/auth/demo-login (no auth needed)",
     "revenuecat_webhook_auth": "bb-rc-webhook-2026-secure-x9k2m",
-    "backend_url": "https://gemini-tattoo-gen.preview.emergentagent.com"
+    "backend_url": "https://stencil-ai-fallback.preview.emergentagent.com"
   },
 
   "seed_data_creation": "Demo account (demo_reviewer_account) used for testing. Restored to booked-out paid (500 credits) after tests.",

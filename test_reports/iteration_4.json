@@ -79,7 +79,7 @@
 
   "test_credentials": {
     "demo_login": "POST /api/auth/demo-login (no auth needed)",
-    "backend_url": "https://gemini-tattoo-gen.preview.emergentagent.com"
+    "backend_url": "https://stencil-ai-fallback.preview.emergentagent.com"
   },
 
   "seed_data_creation": "All test accounts (trial_test_*, abuse_test*, studio_admin_*, studio_member_*, admin_leave_*, admin_self_*) were cleaned up during test runs.",
@@ -87,5 +87,5 @@
   "retest_needed": false,
   "main_agent_can_self_test": true,
 
-  "context_for_next_testing_agent": "Backend: All 28 tests pass. New features verified: 3-day trial (10 credits), device_id + email anti-abuse, studio team management (the-shop tier required, 1500 shared credits, up to 5 members). IMPORTANT: When testing webhooks, use the actual user_id from the auth response (e.g., user_abc123), NOT the apple_user_id input parameter. Test file at /app/backend/tests/test_iter4_credits_studio.py. Backend URL: https://gemini-tattoo-gen.preview.emergentagent.com."
+  "context_for_next_testing_agent": "Backend: All 28 tests pass. New features verified: 3-day trial (10 credits), device_id + email anti-abuse, studio team management (the-shop tier required, 1500 shared credits, up to 5 members). IMPORTANT: When testing webhooks, use the actual user_id from the auth response (e.g., user_abc123), NOT the apple_user_id input parameter. Test file at /app/backend/tests/test_iter4_credits_studio.py. Backend URL: https://stencil-ai-fallback.preview.emergentagent.com."
 }

@@ -13,7 +13,7 @@ import pytest
 import httpx
 import uuid
 
-API_URL = "https://gemini-tattoo-gen.preview.emergentagent.com"
+API_URL = "https://stencil-ai-fallback.preview.emergentagent.com"
 REVENUECAT_WEBHOOK_AUTH = "bb-rc-webhook-2026-secure-x9k2m"
 CRON_SECRET = "bb-cron-2026-refresh-c7f3a1"
 

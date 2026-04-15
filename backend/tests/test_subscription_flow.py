@@ -19,7 +19,7 @@ import uuid
 from datetime import datetime
 
 # Use the preview URL for testing
-BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://gemini-tattoo-gen.preview.emergentagent.com')
+BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://stencil-ai-fallback.preview.emergentagent.com')
 REVENUECAT_WEBHOOK_AUTH = 'bb-rc-webhook-2026-secure-x9k2m'
 
 # Product credit mappings from server.py
