@@ -3652,6 +3652,85 @@ async def admin_create_promo(request: Request):
     
     return {'status': 'created', 'code': code, 'allowed_emails': len(allowed_emails), 'tier': tier, 'credits': credits}
 
+
+@api_router.get("/admin/referral-analytics")
+async def admin_referral_analytics():
+    """Referral funnel analytics — overview of the entire referral system."""
+    # Total referral codes generated
+    total_codes = await db.referral_codes.count_documents({})
+
+    # Referral funnel counts by status
+    all_links = await db.referral_links.find({}, {'_id': 0, 'referrer_id': 1, 'status': 1, 'fraud_flag': 1}).to_list(None)
+    total_referrals = len(all_links)
+    status_counts = {}
+    for link in all_links:
+        s = link.get('status', 'unknown')
+        status_counts[s] = status_counts.get(s, 0) + 1
+
+    account_created = status_counts.get('account_created', 0)
+    verification_pending = status_counts.get('verification_pending', 0)
+    verified = status_counts.get('verified', 0)
+    rejected = status_counts.get('rejected', 0)
+    fraud_flagged = sum(1 for l in all_links if l.get('fraud_flag'))
+
+    # Conversion rates
+    subscribed_total = verification_pending + verified + rejected  # all who subscribed at some point
+    signup_to_sub_rate = round(subscribed_total / total_referrals * 100, 1) if total_referrals > 0 else 0
+    sub_to_verified_rate = round(verified / subscribed_total * 100, 1) if subscribed_total > 0 else 0
+    overall_rate = round(verified / total_referrals * 100, 1) if total_referrals > 0 else 0
+
+    # Rewards issued
+    rewards = await db.referral_rewards.find({}, {'_id': 0}).to_list(None)
+    total_rewards_earned = sum(r.get('rewards_earned', 0) for r in rewards)
+    total_free_months_available = sum(r.get('free_months_available', 0) for r in rewards)
+
+    # Top referrers (by verified count)
+    referrer_counts = {}
+    for link in all_links:
+        rid = link.get('referrer_id', '')
+        if rid not in referrer_counts:
+            referrer_counts[rid] = {'total': 0, 'verified': 0}
+        referrer_counts[rid]['total'] += 1
+        if link.get('status') == 'verified':
+            referrer_counts[rid]['verified'] += 1
+
+    top_referrers_raw = sorted(referrer_counts.items(), key=lambda x: x[1]['verified'], reverse=True)[:10]
+    top_referrers = []
+    for user_id, counts in top_referrers_raw:
+        if counts['total'] == 0:
+            continue
+        user = await db.users.find_one({'user_id': user_id}, {'_id': 0, 'email': 1, 'name': 1})
+        top_referrers.append({
+            'user_id': user_id,
+            'email': user.get('email', '') if user else '',
+            'name': user.get('name', '') if user else '',
+            'total_referrals': counts['total'],
+            'verified_referrals': counts['verified'],
+        })
+
+    return {
+        'funnel': {
+            'referral_codes_generated': total_codes,
+            'total_referrals_created': total_referrals,
+            'account_created': account_created,
+            'subscribed_and_pending': verification_pending,
+            'verified': verified,
+            'rejected': rejected,
+            'fraud_flagged': fraud_flagged,
+        },
+        'conversion_rates': {
+            'signup_to_subscription': f'{signup_to_sub_rate}%',
+            'subscription_to_verified': f'{sub_to_verified_rate}%',
+            'overall_referral_to_verified': f'{overall_rate}%',
+        },
+        'rewards': {
+            'total_free_months_earned': total_rewards_earned,
+            'free_months_currently_available': total_free_months_available,
+        },
+        'top_referrers': top_referrers,
+    }
+
+
 @api_router.post("/webhooks/revenuecat")
 async def revenuecat_webhook(request: FastAPIRequest):
     """Handle RevenueCat subscription lifecycle events.
@@ -4361,6 +4440,30 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup_scheduler():
+    """Start background cron scheduler for daily referral verification."""
+    async def daily_referral_cron():
+        """Runs every 24 hours: processes pending referral verifications."""
+        while True:
+            await asyncio.sleep(86400)  # 24 hours
+            try:
+                result = await process_referral_verifications()
+                logger.info(f'[Cron Auto] Referral verification: verified={result["verified"]}, rejected={result["rejected"]}, checked={result["checked"]}')
+            except Exception as e:
+                logger.error(f'[Cron Auto] Referral verification failed: {e}')
+    # Run initial check 60s after startup, then daily
+    async def initial_check():
+        await asyncio.sleep(60)
+        try:
+            result = await process_referral_verifications()
+            logger.info(f'[Cron Auto] Initial referral verification: verified={result["verified"]}, rejected={result["rejected"]}, checked={result["checked"]}')
+        except Exception as e:
+            logger.error(f'[Cron Auto] Initial referral verification failed: {e}')
+    asyncio.create_task(initial_check())
+    asyncio.create_task(daily_referral_cron())
+    logger.info('[Cron Auto] Referral verification scheduler started (runs daily)')
 
 @app.on_event("shutdown")
 async def shutdown_db_client():

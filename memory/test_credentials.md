@@ -16,18 +16,21 @@
 - POST /api/admin/add-credits {"email": "X", "credits": 25}
 - GET /api/admin/all-users
 - POST /api/admin/create-promo {"code": "X", "tier": "walk-in", "credits": 125, "duration_days": 30, "allowed_emails": []}
+- GET /api/admin/referral-analytics
 
 ## iOS Build
 - **Bundle ID**: app.emergent.tattoostencils115373ef8
 - **ASC App ID**: 6741930631
 - **EAS Project ID**: 6f1631f5-e00d-41d1-b926-deeeb057b429
 
-## Promo Codes
-- **BBSORRY**: Walk-In tier, 125 credits, 30 days, locked to 20 affected emails
-
 ## Referral System
 - **Demo user code**: BB-257527
 - **Cron Secret**: X-Cron-Secret: bb-cron-2026-refresh-c7f3a1
+- **Manual cron**: POST /api/referral/check-verifications (with cron header)
+- **Auto cron**: Built-in, runs daily + 60s after each server restart
 - **Referral landing**: GET /api/ref/{code} (no auth)
 - **Dashboard**: GET /api/referral/dashboard (auth required)
-- **Popup check**: GET /api/referral/popup-eligible (auth required)
+- **Analytics**: GET /api/admin/referral-analytics (no auth)
+
+## Promo Codes
+- **BBSORRY**: Walk-In tier, 125 credits, 30 days, locked to 20 affected emails
