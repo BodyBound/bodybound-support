@@ -1382,6 +1382,47 @@ async def admin_user_lookup(email: str = None, user_id: str = None):
         "unmatched_webhooks_count": len(unmatched)
     }
 
+@api_router.post("/admin/fix-subscription")
+async def admin_fix_subscription(request: Request):
+    """Admin endpoint to manually activate a customer's subscription"""
+    body = await request.json()
+    email = body.get('email', '')
+    product_id = body.get('product_id', '')
+    
+    if not email or not product_id:
+        raise HTTPException(status_code=400, detail="Provide email and product_id")
+    
+    tier_info = PRODUCT_CREDIT_MAP.get(product_id)
+    if not tier_info:
+        raise HTTPException(status_code=400, detail=f"Invalid product_id. Valid: {list(PRODUCT_CREDIT_MAP.keys())}")
+    
+    user = await db.users.find_one({'email': {'$regex': email, '$options': 'i'}}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    uid = user['user_id']
+    
+    await db.subscriptions.update_one(
+        {'user_id': uid},
+        {'$set': {
+            'tier': tier_info['tier'],
+            'available_credits': tier_info['credits'],
+            'is_trial': False,
+            'last_event': 'ADMIN_FIX',
+            'synced_from': 'admin_manual',
+            'renewal_date': (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        }},
+        upsert=True
+    )
+    
+    updated = await db.subscriptions.find_one({'user_id': uid}, {'_id': 0})
+    return {
+        "status": "fixed",
+        "user_email": email,
+        "user_id": uid,
+        "subscription": updated
+    }
+
 @api_router.get("/diagnostics")
 async def diagnostics(request: Request):
     """Diagnostic endpoint - returns HTML dashboard or JSON based on Accept header"""
