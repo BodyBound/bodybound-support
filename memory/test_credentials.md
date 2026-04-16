@@ -33,5 +33,8 @@
 - **Dashboard**: GET /api/referral/dashboard (auth required)
 - **Analytics**: GET /api/admin/referral-analytics (no auth)
 
-## Promo Codes
+## Temporary Bypass
+- **Env var**: `TEMP_BYPASS_ENABLED=true` in backend/.env
+- **Effect**: New signups get `tier=paywall_bypass` + 10 credits (bypasses paywall, excluded from referrals/analytics/refresh)
+- **Turn off**: Set `TEMP_BYPASS_ENABLED=false` or remove the line, then redeploy
 - **BBSORRY**: Walk-In tier, 125 credits, 30 days, locked to 20 affected emails

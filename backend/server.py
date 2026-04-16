@@ -2947,14 +2947,26 @@ async def check_trial_abuse(email: Optional[str], device_id: Optional[str], prov
 async def create_initial_subscription(user_id: str, email: Optional[str], device_id: Optional[str], provider: str, provider_id: str) -> dict:
     """Create an initial subscription record for a new user.
     
-    No free credits are granted — the user must subscribe via Apple/RevenueCat
-    to start their 3-day free trial (managed by Apple, not our backend).
+    If TEMP_BYPASS_ENABLED=true, grants paywall_bypass tier with 10 credits
+    so new users can try the app while subscription loading is unstable.
+    Otherwise, no credits — user must subscribe via Apple/RevenueCat.
     """
     now = datetime.now(timezone.utc)
+    temp_bypass = os.environ.get('TEMP_BYPASS_ENABLED', '').lower() == 'true'
+
+    if temp_bypass:
+        tier = 'paywall_bypass'
+        credits = 10
+        log_msg = f'[Subscription] New user {user_id} — temp bypass: 10 credits, tier=paywall_bypass'
+    else:
+        tier = None
+        credits = 0
+        log_msg = f'[Subscription] New user {user_id} — no trial, must subscribe via Apple'
+
     subscription = {
         'user_id': user_id,
-        'tier': None,
-        'available_credits': 0,
+        'tier': tier,
+        'available_credits': credits,
         'is_trial': False,
         'trial_expires_at': None,
         'renewal_date': None,
@@ -2964,7 +2976,7 @@ async def create_initial_subscription(user_id: str, email: Optional[str], device
         'anti_abuse_provider': f'{provider}:{provider_id}',
         'created_at': now.isoformat(),
     }
-    logger.info(f'[Subscription] New user {user_id} — no trial, must subscribe via Apple')
+    logger.info(log_msg)
     
     await db.subscriptions.insert_one(subscription)
     return subscription
