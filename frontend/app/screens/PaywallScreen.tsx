@@ -16,7 +16,7 @@ import {
 const APPLE_EULA_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 const PRIVACY_POLICY_URL = 'https://bodybound.github.io/bodybound-support/privacy';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
+import Purchases, { PurchasesPackage, CustomerInfo, PurchasesStoreProduct } from 'react-native-purchases';
 import * as SecureStore from 'expo-secure-store';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
@@ -59,14 +59,19 @@ interface PaywallScreenProps {
 
 export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, required = false, revenueCatReady = true }: PaywallScreenProps) {
   const [offerings, setOfferings] = useState<PurchasesPackage[]>([]);
+  const [directProducts, setDirectProducts] = useState<PurchasesStoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<PurchasesStoreProduct | null>(null);
   const [referralCode, setReferralCode] = useState('');
   const [referralApplied, setReferralApplied] = useState(false);
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [offeringsError, setOfferingsError] = useState(false);
+
+  // Known App Store product IDs
+  const PRODUCT_IDS = ['bodybound_1499_1m_3d', 'bodybound_2999_1m_3d', 'bodybound_9999_1m_3d'];
 
   useEffect(() => {
     if (revenueCatReady) {
@@ -75,16 +80,17 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   }, [revenueCatReady]);
 
   const loadOfferings = async () => {
-    // RevenueCat SDK is not available on web - skip and use static plans
     if (Platform.OS === 'web') {
       setLoading(false);
       return;
     }
+    setOfferingsError(false);
+
+    // Step 1: Try RevenueCat offerings (preferred)
     try {
       const allOfferings = await Purchases.getOfferings();
       const packages: PurchasesPackage[] = [];
 
-      // Fetch the monthly package from each offering separately by identifier
       const walkInOffering = allOfferings.all['bodybound_1499_1m_3d'];
       const bookedOutOffering = allOfferings.all['bodybound_2999_1m_3d'];
       const theShopOffering = allOfferings.all['bodybound_9999_1m_3d'];
@@ -96,30 +102,62 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       if (packages.length > 0) {
         setOfferings(packages);
         setSelectedPackage(packages[1] || packages[0]);
-      } else {
-        console.log('[Paywall] No offerings returned from RevenueCat');
-        setOfferingsError(true);
+        console.log(`[Paywall] Loaded ${packages.length} offerings from RevenueCat`);
+        setLoading(false);
+        return;
       }
+      console.log('[Paywall] No offerings from RevenueCat, trying direct product fetch...');
     } catch (err) {
-      console.log('[Paywall] Failed to load offerings:', err);
-      setOfferingsError(true);
-    } finally {
-      setLoading(false);
+      console.log('[Paywall] Offerings failed, trying direct product fetch...', err);
     }
+
+    // Step 2: Fallback — fetch products directly from Apple via RevenueCat SDK
+    try {
+      const products = await Purchases.getProducts(PRODUCT_IDS);
+      if (products.length > 0) {
+        setDirectProducts(products);
+        setSelectedProduct(products[1] || products[0]);
+        console.log(`[Paywall] Loaded ${products.length} products directly from Apple`);
+        setLoading(false);
+        return;
+      }
+      console.log('[Paywall] No products returned from direct fetch either');
+    } catch (err2) {
+      console.log('[Paywall] Direct product fetch also failed:', err2);
+    }
+
+    setOfferingsError(true);
+    setLoading(false);
   };
+
+  // Check if we have products loaded (either via offerings or direct)
+  const hasProducts = offerings.length > 0 || directProducts.length > 0;
+  const usingDirectProducts = offerings.length === 0 && directProducts.length > 0;
 
   const handlePurchase = async () => {
     if (Platform.OS === 'web') {
-      Alert.alert('iOS Only', 'Subscriptions are available in the iOS App Store. Download Body Bound on your iPhone or iPad to subscribe.');
+      Alert.alert('iOS Only', 'Subscriptions are available in the iOS App Store.');
       return;
     }
-    if (!selectedPackage) {
-      Alert.alert('No Plan Selected', 'Please select a subscription plan to continue.');
-      return;
-    }
+
     setPurchasing(true);
     try {
-      const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
+      let customerInfo: CustomerInfo;
+
+      if (selectedPackage && !usingDirectProducts) {
+        // Purchase via RevenueCat package (preferred)
+        const result = await Purchases.purchasePackage(selectedPackage);
+        customerInfo = result.customerInfo;
+      } else if (selectedProduct) {
+        // Fallback: purchase product directly from Apple
+        const result = await Purchases.purchaseStoreProduct(selectedProduct);
+        customerInfo = result.customerInfo;
+      } else {
+        Alert.alert('No Plan Selected', 'Please select a subscription plan to continue.');
+        setPurchasing(false);
+        return;
+      }
+
       if (typeof customerInfo.entitlements.active['BODY BOUND Stencil Generator Pro'] !== 'undefined') {
         if (referralCode.trim()) {
           try {
@@ -162,7 +200,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   const isWeb = Platform.OS === 'web';
   const ctaText = isWeb ? 'Subscribe in iOS App Store' : 'Start Free Trial';
   const ctaSubtext = isWeb ? 'Download Body Bound on iPhone or iPad' : '3 days free, then cancel anytime';
-  const ctaDisabled = purchasing || (!isWeb && !selectedPackage);
+  const ctaDisabled = purchasing || (!isWeb && !selectedPackage && !selectedProduct);
 
   return (
     <View style={styles.container}>
@@ -200,14 +238,23 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             <View style={styles.plans}>
               {Object.entries(TIER_INFO).map(([key, tier], index) => {
                 const pkg = offerings[index];
-                const isSelected = selectedPackage?.identifier === pkg?.identifier;
+                const prod = directProducts[index];
+                const isSelected = usingDirectProducts
+                  ? selectedProduct?.identifier === prod?.identifier
+                  : selectedPackage?.identifier === pkg?.identifier;
 
                 return (
                   <TouchableOpacity
                     key={key}
                     testID={`plan-${key}-btn`}
                     style={[styles.planCard, isSelected && styles.planCardSelected]}
-                    onPress={() => pkg && setSelectedPackage(pkg)}
+                    onPress={() => {
+                      if (usingDirectProducts && prod) {
+                        setSelectedProduct(prod);
+                      } else if (pkg) {
+                        setSelectedPackage(pkg);
+                      }
+                    }}
                     activeOpacity={0.85}
                   >
                     {tier.popular && (
@@ -218,7 +265,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
                     <View style={styles.planHeader}>
                       <Text style={[styles.planName, { color: tier.color }]}>{tier.label}</Text>
                       <Text style={styles.planPrice}>
-                        {pkg ? pkg.product.priceString : tier.price}
+                        {pkg ? pkg.product.priceString : prod ? prod.priceString : tier.price}
                       </Text>
                     </View>
                     <Text style={styles.planDescription}>{tier.description}</Text>
