@@ -135,8 +135,6 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
     setLoading(false);
   };
 
-  const ctaDisabled = purchasing || (!isWeb && !selectedPackage);
-
   const logEntitlements = (customerInfo: CustomerInfo, context: string) => {
     const activeKeys = Object.keys(customerInfo.entitlements.active || {});
     const allKeys = Object.keys(customerInfo.entitlements.all || {});
@@ -230,7 +228,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   const isWeb = Platform.OS === 'web';
   const ctaText = isWeb ? 'Subscribe in iOS App Store' : 'Start Free Trial';
   const ctaSubtext = isWeb ? 'Download Body Bound on iPhone or iPad' : '3 days free, then cancel anytime';
-  const ctaDisabled = purchasing || (!isWeb && !selectedPackage && !selectedProduct);
+  const ctaDisabled = purchasing || (!isWeb && !selectedPackage);
 
   return (
     <View style={styles.container}>

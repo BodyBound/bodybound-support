@@ -65,3 +65,4 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 ## Known Issues
 - TestFlight sandbox can't load RevenueCat offerings (expected, production works)
 - Admin endpoints unauthenticated (P2)
+- EAS Deployment Pipeline overwriting Expo project ID (Blocked on Emergent Support)
