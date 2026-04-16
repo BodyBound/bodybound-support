@@ -44,7 +44,10 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 - Backend: `POST /api/feedback`, `GET /api/feedback/should-prompt`, `GET /api/admin/feedback-summary`
 - Collections: `user_feedback`, `feedback_status`
 
-### Stencil Color Tint
+### Credit Deduction
+- All 3 generation paths deduct 1 credit on success: generateAIStencil, regenerateSingleStyle, generateSingleStyle
+- Credit check (≤0 → upgrade modal) added to all paths
+- No free retry logic exists yet — planned as future feature
 - 5 color options in editor: Black, Red, Blue, Green, White
 - Tint persists to main screen display
 - Applied via React Native `tintColor` on transparent PNG

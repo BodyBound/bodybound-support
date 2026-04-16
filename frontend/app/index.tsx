@@ -1487,6 +1487,13 @@ export default function Index() {
   // Regenerate a single style (Light, Medium, or Heavy) using AI
   const regenerateSingleStyle = async (style: 'light' | 'medium' | 'heavy') => {
     if (!originalImage || regeneratingStyle) return;
+
+    // Check credits before regenerating
+    if (currentUser && availableCredits <= 0) {
+      setLowCreditLevel('empty');
+      setShowLowCreditModal(true);
+      return;
+    }
     
     try {
       setRegeneratingStyle(style);
@@ -1530,6 +1537,21 @@ export default function Index() {
         // Auto-select the regenerated style
         setSelectedVersion(style);
         setStencilImage(data.stencil_base64);
+
+        // Deduct 1 credit for successful regeneration
+        if (sessionToken && currentUser) {
+          try {
+            const deductResp = await fetch(`${API_URL}/api/credits/deduct`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${sessionToken}`, 'Content-Type': 'application/json' },
+            });
+            if (deductResp.ok) {
+              const d = await deductResp.json();
+              handleCreditsUpdate(d.available_credits, d.total_monthly_credits || totalMonthlyCredits);
+              checkCreditThreshold(d.available_credits, d.total_monthly_credits || totalMonthlyCredits);
+            }
+          } catch (e) { console.error('[Credits] Regenerate deduction failed:', e); }
+        }
       } else {
         const errorText = await response.text();
         console.error(`[RegenerateSingle] ${style} version error:`, errorText);
@@ -1547,9 +1569,16 @@ export default function Index() {
   const generateSingleStyle = async (style: 'light' | 'medium' | 'heavy') => {
     if (!originalImage || isGeneratingAI || regeneratingStyle) return;
     
-    // If this style already exists, just select it
+    // If this style already exists, just select it (no credit cost)
     if (stencilVersions[style]) {
       selectVersion(style);
+      return;
+    }
+
+    // Check credits before generating
+    if (currentUser && availableCredits <= 0) {
+      setLowCreditLevel('empty');
+      setShowLowCreditModal(true);
       return;
     }
     
@@ -1646,6 +1675,21 @@ export default function Index() {
             // Always save the freshly generated transparent stencil as the base for edit mode
             setOriginalAIStencil(generatedStencil);
             console.log('[GenerateSingle] Saved originalAIStencil (transparent PNG base)');
+
+            // Deduct 1 credit for successful generation
+            if (sessionToken && currentUser) {
+              try {
+                const deductResp = await fetch(`${API_URL}/api/credits/deduct`, {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${sessionToken}`, 'Content-Type': 'application/json' },
+                });
+                if (deductResp.ok) {
+                  const d = await deductResp.json();
+                  handleCreditsUpdate(d.available_credits, d.total_monthly_credits || totalMonthlyCredits);
+                  checkCreditThreshold(d.available_credits, d.total_monthly_credits || totalMonthlyCredits);
+                }
+              } catch (e) { console.error('[Credits] GenerateSingle deduction failed:', e); }
+            }
           } else {
             console.error(`[GenerateSingle] No stencil in result for style ${style}`);
             Alert.alert('Generation Issue', 'Stencil was generated but not received properly.');
