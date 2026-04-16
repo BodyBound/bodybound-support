@@ -371,6 +371,7 @@ export default function Index() {
   const [showEditHint, setShowEditHint] = useState(true); // Show double-tap hint on first entry
   const [editModeStencilImage, setEditModeStencilImage] = useState<string | null>(null); // Frozen stencil for edit mode
   const [editModeOriginalImage, setEditModeOriginalImage] = useState<string | null>(null); // Frozen original for edit mode
+  const [stencilTintColor, setStencilTintColor] = useState<string | null>(null); // null = original black
   const editCanvasRef = useRef<View>(null); // Ref for capturing the canvas
   const lastTapTimeRef = useRef<number>(0); // For double-tap detection
   const lowCreditNotifiedRef = useRef<boolean>(false); // Prevent repeat low-credit notifications
@@ -4108,7 +4109,7 @@ export default function Index() {
               {editModeStencilImage && (
                 <Image
                   source={{ uri: editModeStencilImage }}
-                  style={styles.procreateStencilImage}
+                  style={[styles.procreateStencilImage, stencilTintColor ? { tintColor: stencilTintColor } : {}]}
                   resizeMode="contain"
                 />
               )}
@@ -4275,6 +4276,31 @@ export default function Index() {
 
           {/* Bottom - Controls */}
           <View style={styles.procreateBottomBar} pointerEvents="box-none">
+            {/* Stencil Color Tint */}
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 6, gap: 6 }}>
+              {[
+                { color: null, display: '#000000', label: 'Black' },
+                { color: '#DC2626', display: '#DC2626', label: 'Red' },
+                { color: '#2563EB', display: '#2563EB', label: 'Blue' },
+                { color: '#16A34A', display: '#16A34A', label: 'Green' },
+                { color: '#FFFFFF', display: '#FFFFFF', label: 'White' },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.label}
+                  data-testid={`stencil-color-${item.label.toLowerCase()}`}
+                  onPress={() => setStencilTintColor(item.color)}
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: 13,
+                    backgroundColor: item.display,
+                    borderWidth: (stencilTintColor === item.color) ? 2.5 : 1,
+                    borderColor: (stencilTintColor === item.color) ? '#C9A227' : 'rgba(255,255,255,0.3)',
+                  }}
+                />
+              ))}
+            </View>
+
             {/* Enable Finger Drawing Toggle - Like Procreate */}
             <TouchableOpacity 
               style={[
