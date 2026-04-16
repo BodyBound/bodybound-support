@@ -294,6 +294,26 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             )}
           </TouchableOpacity>
 
+          {/* Sign Out — right under Restore so it's visible */}
+          {onSignOut && (
+            <TouchableOpacity
+              testID="paywall-sign-out-btn"
+              style={{ paddingVertical: 12, alignItems: 'center', marginBottom: 16 }}
+              onPress={() => {
+                Alert.alert(
+                  'Sign Out',
+                  'Sign out and switch to a different account?',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    { text: 'Sign Out', style: 'destructive', onPress: onSignOut },
+                  ]
+                );
+              }}
+            >
+              <Text style={{ color: '#999', fontSize: 14 }}>Wrong account? Sign out</Text>
+            </TouchableOpacity>
+          )}
+
           {/* Referral / Promo Code */}
           <View style={styles.referralSection}>
             <Text style={styles.referralLabel}>Have a referral or promo code?</Text>
@@ -371,26 +391,6 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
               <Text style={styles.legalLink}>Privacy Policy</Text>
             </TouchableOpacity>
           </View>
-
-          {/* Sign Out — lets users switch accounts if signed into wrong one */}
-          {onSignOut && (
-            <TouchableOpacity
-              testID="paywall-sign-out-btn"
-              style={{ paddingVertical: 16, alignItems: 'center' }}
-              onPress={() => {
-                Alert.alert(
-                  'Sign Out',
-                  'Sign out and switch to a different account?',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Sign Out', style: 'destructive', onPress: onSignOut },
-                  ]
-                );
-              }}
-            >
-              <Text style={{ color: '#555', fontSize: 13 }}>Wrong account? Sign out</Text>
-            </TouchableOpacity>
-          )}
         </ScrollView>
       </SafeAreaView>
     </View>
