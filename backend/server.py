@@ -4518,6 +4518,41 @@ async def stencil_preview_page():
             return HTMLResponse(content=f.read())
     raise HTTPException(status_code=404, detail="Preview page not found")
 
+FALLBACK_CREDITS = 15
+
+@api_router.post("/auth/fallback-credits")
+async def grant_fallback_credits(request: FastAPIRequest):
+    """One-time fallback credits when paywall offerings fail to load."""
+    auth = request.headers.get('authorization', '')
+    token = auth.replace('Bearer ', '') if auth else ''
+    user_id = None
+    if token:
+        try:
+            payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+            user_id = payload.get('user_id')
+        except Exception:
+            pass
+    if not user_id:
+        raise HTTPException(status_code=401, detail='Missing authorization')
+
+    sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+    if sub and sub.get('fallback_credits_granted'):
+        raise HTTPException(status_code=400, detail='Fallback credits already granted')
+    if sub and sub.get('available_credits', 0) > 0:
+        raise HTTPException(status_code=400, detail='You already have credits')
+
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {'$set': {
+            'available_credits': FALLBACK_CREDITS,
+            'tier': 'fallback_trial',
+            'fallback_credits_granted': True,
+        }},
+        upsert=True
+    )
+    logger.info(f"[Fallback] Granted {FALLBACK_CREDITS} credits to {user_id}")
+    return {"status": "granted", "credits": FALLBACK_CREDITS}
+
 # Root health check — nginx in production hits /health (no /api prefix)
 @app.get("/health")
 async def root_health_check():

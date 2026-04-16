@@ -67,6 +67,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   const [referralApplied, setReferralApplied] = useState(false);
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [offeringsError, setOfferingsError] = useState(false);
+  const [grantingFallback, setGrantingFallback] = useState(false);
 
   // Package identifiers as configured in RevenueCat dashboard
   const PACKAGE_IDS = ['walk_in', 'booked_out', 'the_shop'];
@@ -306,10 +307,10 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             <View style={{ backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' }}>
               <Text style={{ color: '#ef4444', fontSize: 14, fontWeight: '700', marginBottom: 6 }}>Unable to load subscription plans</Text>
               <Text style={{ color: '#999', fontSize: 13, lineHeight: 18, marginBottom: 12 }}>
-                This can happen due to a temporary connection issue. Please try again.
+                We're currently experiencing a temporary issue with subscriptions. Please enjoy some free credits while we fix this.
               </Text>
               <TouchableOpacity
-                style={{ backgroundColor: '#ef4444', borderRadius: 8, paddingVertical: 10, alignItems: 'center' }}
+                style={{ backgroundColor: '#ef4444', borderRadius: 8, paddingVertical: 10, alignItems: 'center', marginBottom: 10 }}
                 onPress={() => {
                   setOfferingsError(false);
                   setLoading(true);
@@ -317,6 +318,38 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
                 }}
               >
                 <Text style={{ color: '#fff', fontWeight: '700', fontSize: 14 }}>Retry Loading Plans</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                testID="fallback-credits-btn"
+                style={{ backgroundColor: '#C9A227', borderRadius: 8, paddingVertical: 10, alignItems: 'center' }}
+                onPress={async () => {
+                  setGrantingFallback(true);
+                  try {
+                    const token = await SecureStore.getItemAsync('session_token');
+                    const res = await fetch(`${API_URL}/api/auth/fallback-credits`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                      Alert.alert('Free Credits Granted!', `You've received ${data.credits} free credits to try the app. Enjoy!`);
+                      onPurchaseSuccess();
+                    } else {
+                      Alert.alert('Unavailable', data.detail || 'Could not grant free credits.');
+                    }
+                  } catch (err) {
+                    Alert.alert('Error', 'Something went wrong. Please try again.');
+                  } finally {
+                    setGrantingFallback(false);
+                  }
+                }}
+                disabled={grantingFallback}
+              >
+                {grantingFallback ? (
+                  <ActivityIndicator color="#000" size="small" />
+                ) : (
+                  <Text style={{ color: '#000', fontWeight: '700', fontSize: 14 }}>Get Free Credits Instead</Text>
+                )}
               </TouchableOpacity>
             </View>
           )}

@@ -54,6 +54,7 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 - RevenueCat race condition fixed: PaywallScreen waits for `revenueCatReady`
 - Paywall shows error + retry when offerings fail, sign-out link visible
 - Disabled button now visually gray (not just dimmed)
+- Fallback credits: If RevenueCat offerings fail, user can tap "Get Free Credits Instead" for 15 one-time credits (flag: `fallback_credits_granted` in DB)
 
 ## Critical Rules
 1. **BUNDLE ID**: `app.emergent.tattoostencils115373ef8`
