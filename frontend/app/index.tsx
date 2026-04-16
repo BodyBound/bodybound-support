@@ -51,6 +51,7 @@ import { LowCreditModal } from './screens/LowCreditModal';
 import { ReferralBanner } from './screens/ReferralBanner';
 import { MilestoneModal } from './screens/MilestoneModal';
 import { FlexMessage } from './screens/FlexMessage';
+import { FeedbackFlow } from './screens/FeedbackFlow';
 
 // API URL - hardcoded for reliable production builds
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL ;
@@ -272,6 +273,11 @@ export default function Index() {
   const milestoneTriggeredThisSessionRef = useRef(false);
   const triggeredFlexMilestonesRef = useRef<Set<number>>(new Set());
   const bannerDismissedUntilRef = useRef<number>(0);
+  
+  // Feedback flow state
+  const [showFeedbackFlow, setShowFeedbackFlow] = useState(false);
+  const feedbackShownThisSessionRef = useRef(false);
+  const feedbackCompletedRef = useRef(false);
   
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [stencilImage, setStencilImage] = useState<string | null>(null);
@@ -858,6 +864,27 @@ export default function Index() {
         break; // Only one at a time
       }
     }
+  };
+
+
+  // ---- Feedback Flow Trigger ----
+  const checkFeedbackPrompt = async () => {
+    // Don't show if already shown this session, already completed, or other modal is showing
+    if (feedbackShownThisSessionRef.current || feedbackCompletedRef.current) return;
+    if (showLowCreditModal || showMilestoneModal || showReferralPopup) return;
+    if (!sessionToken) return;
+
+    try {
+      const resp = await fetch(`${API_URL}/api/feedback/should-prompt`, {
+        headers: { 'Authorization': `Bearer ${sessionToken}` },
+      });
+      if (!resp.ok) return;
+      const data = await resp.json();
+      if (data.should_prompt) {
+        feedbackShownThisSessionRef.current = true;
+        setShowFeedbackFlow(true);
+      }
+    } catch (_) {}
   };
 
 
@@ -2173,11 +2200,17 @@ export default function Index() {
         },
         {
           text: 'Save to Photos',
-          onPress: () => saveToPhotoGallery(stencilImage, 'body_bound_stencil'),
+          onPress: async () => {
+            await saveToPhotoGallery(stencilImage, 'body_bound_stencil');
+            checkFeedbackPrompt();
+          },
         },
         {
           text: 'Save Stencil & Reference',
-          onPress: () => saveStencilAndReference(),
+          onPress: async () => {
+            await saveStencilAndReference();
+            checkFeedbackPrompt();
+          },
         },
         {
           text: 'Cancel',
@@ -4595,6 +4628,17 @@ export default function Index() {
         onDismiss={() => {
           setShowMilestoneModal(false);
           handleDismissReferralPopup('dismiss');
+        }}
+      />
+
+      {/* Feedback Flow */}
+      <FeedbackFlow
+        visible={showFeedbackFlow}
+        stencilImageUri={stencilImage}
+        onDismiss={() => setShowFeedbackFlow(false)}
+        onComplete={() => {
+          feedbackCompletedRef.current = true;
+          setShowFeedbackFlow(false);
         }}
       />
 

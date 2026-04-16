@@ -24,49 +24,44 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 - Status flow: account_created → verification_pending → verified → rejected
 - 14-day verification, first-touch attribution, anti-abuse
 - Popup cooldowns: Dismiss=7d, Share/Copy=30d, Has verified referral=60d
+- Daily auto-cron for verification processing
 
 ### Low-Credit Notification & Upgrade System
-- Persistent `X / Total` credit display in header (gold/yellow/red)
-- Threshold modals at 25%, 10%, 0% — each fires once per billing cycle
-- Low-credit modal includes both "Upgrade Plan" and "Invite Artists" CTAs
-- 0-credit modal blocks generation (no dismiss)
+- Persistent `X / Total` credit display (gold/yellow/red)
+- Threshold modals at 25%/10%/0% with upgrade + referral CTAs
+- 0-credit blocks generation
 
 ### Growth Messaging System
-- **Referral Banner**: Persistent, dismissible (7d cooldown), paid users only. "Invite 2 artists → get 1 free month"
-- **Milestone Modal**: After 3rd gen, then every 10th. "That took you minutes." → Invite Artists
-- **Flex Messages**: Inline, auto-fading. At 10/25/50 credits used. Value reinforcement copy.
-- **Priority**: Low credit modal > Milestone modal > Banner > Flex message. Only one prompt at a time.
+- Referral Banner, Milestone Modal, Flex Messages, Low Credit + Referral combo
+- Priority system: only one prompt at a time
 
-### Auth Token Persistence Fix
-- Token only deleted on 401 (not 5xx/network errors)
-- Retry once with 2s delay on network failure
-- Prevents sign-out after iOS app backgrounding
+### Feedback & Review System
+- Triggers after save/export, 3+ generations, once per session
+- "Did this save you time?" → thumbs up/down
+- Positive path: Share (native share sheet), Leave feedback (text), App Store review
+- Negative path: Quick tags (too messy, missing details, not accurate, hard to use, other)
+- Frequency: stops after user shares/reviews/gives feedback
+- Backend: `POST /api/feedback`, `GET /api/feedback/should-prompt`, `GET /api/admin/feedback-summary`
+- Collections: `user_feedback`, `feedback_status`
 
-## Key API Endpoints
-- `POST /api/ai-stencil-async` — AI stencil generation
-- `POST /api/subscription/sync` — Sync RevenueCat subscription
-- `POST /api/webhooks/revenuecat` — RevenueCat webhook
-- `POST /api/credits/deduct` — Deduct 1 credit (returns total_monthly_credits)
-- `GET /api/auth/me` — User info + credits (returns total_monthly_credits)
-- `GET /api/referral/dashboard` — Full referral stats
-- `POST /api/referral/dismiss-popup` — Record dismissal with action type
-- `POST /api/referral/check-verifications` — Cron: 14-day verification
-- `GET /api/ref/{code}` — Referral landing page
+### Stencil Color Tint
+- 5 color options in editor: Black, Red, Blue, Green, White
+- Tint persists to main screen display
+- Applied via React Native `tintColor` on transparent PNG
 
-## Frontend Components
-- `ReferralBanner.tsx` — Persistent banner in main working screen
-- `MilestoneModal.tsx` — Value reinforcement modal after generation milestones
-- `FlexMessage.tsx` — Inline auto-fading achievement message
-- `LowCreditModal.tsx` — Threshold modal with upgrade + referral CTAs
-- `ReferralPopup.tsx` — Original referral popup (still available)
-- `ReferralDashboard.tsx` — Full referral stats screen
+### Auth & Session
+- Token only deleted on 401 (not 5xx/network errors), retry once on failure
+- RevenueCat race condition fixed: PaywallScreen waits for `revenueCatReady`
+- Paywall shows error + retry when offerings fail, sign-out link visible
+- Disabled button now visually gray (not just dimmed)
 
 ## Critical Rules
 1. **BUNDLE ID**: `app.emergent.tattoostencils115373ef8`
 2. **NO ios/ FOLDER**: Expo Managed Workflow only
 3. **AI STENCILS**: gemini-3-pro-image-preview with Emergent key fallback
-4. **NO .metro-cache in git**
+4. **NO credit purchases**: Monetization = subscriptions + referral rewards only
+5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Known Issues
-- TestFlight upload blocked (Mac VM disk full, waiting on Emergent support)
+- TestFlight sandbox can't load RevenueCat offerings (expected, production works)
 - Admin endpoints unauthenticated (P2)

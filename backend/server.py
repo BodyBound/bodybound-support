@@ -3653,6 +3653,99 @@ async def admin_create_promo(request: Request):
     return {'status': 'created', 'code': code, 'allowed_emails': len(allowed_emails), 'tier': tier, 'credits': credits}
 
 
+# ---- Feedback System ----
+
+@api_router.post("/feedback")
+async def submit_feedback(request: FastAPIRequest):
+    """Store user feedback (positive/negative, text, tags)."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+
+    body = await request.json()
+    sentiment = body.get('sentiment', '')  # 'positive' or 'negative'
+    text = body.get('text', '')
+    tags = body.get('tags', [])  # e.g. ['realism', 'speed', 'clean_lines']
+    action_taken = body.get('action_taken', '')  # 'shared', 'feedback', 'review', 'skip'
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.user_feedback.insert_one({
+        'user_id': user_id,
+        'sentiment': sentiment,
+        'text': text,
+        'tags': tags,
+        'action_taken': action_taken,
+        'created_at': now,
+    })
+
+    # Record that user has given feedback (for frequency control)
+    await db.feedback_status.update_one(
+        {'user_id': user_id},
+        {'$set': {
+            'last_feedback_at': now,
+            'has_submitted': True,
+            'last_action': action_taken,
+            'last_sentiment': sentiment,
+        }},
+        upsert=True,
+    )
+
+    logger.info(f'[Feedback] {user_id}: {sentiment} — action={action_taken}, tags={tags}')
+    return {'status': 'ok'}
+
+
+@api_router.get("/feedback/should-prompt")
+async def should_prompt_feedback(request: FastAPIRequest):
+    """Check if user should see the feedback prompt.
+    Rules: 3+ successful generations, not already submitted, max once per session (client-side)."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+
+    # Check if user already submitted feedback or review
+    status = await db.feedback_status.find_one({'user_id': user_id}, {'_id': 0})
+    if status and status.get('has_submitted'):
+        last_action = status.get('last_action', '')
+        # Stop prompting if user shared, left review, or gave feedback
+        if last_action in ('shared', 'review', 'feedback'):
+            return {'should_prompt': False, 'reason': 'already_completed'}
+
+    # Check generation count (from subscriptions/usage)
+    sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+    if not sub:
+        return {'should_prompt': False, 'reason': 'no_subscription'}
+
+    # Count stencil generations for this user
+    gen_count = await db.generation_log.count_documents({'user_id': user_id})
+    if gen_count < 3:
+        return {'should_prompt': False, 'reason': 'insufficient_usage', 'generations': gen_count}
+
+    return {'should_prompt': True, 'generations': gen_count}
+
+
+@api_router.get("/admin/feedback-summary")
+async def admin_feedback_summary():
+    """Admin view of all feedback."""
+    all_feedback = await db.user_feedback.find({}, {'_id': 0}).sort('created_at', -1).to_list(100)
+    positive = sum(1 for f in all_feedback if f.get('sentiment') == 'positive')
+    negative = sum(1 for f in all_feedback if f.get('sentiment') == 'negative')
+
+    # Collect tags
+    tag_counts: dict = {}
+    for f in all_feedback:
+        for tag in f.get('tags', []):
+            tag_counts[tag] = tag_counts.get(tag, 0) + 1
+
+    return {
+        'total': len(all_feedback),
+        'positive': positive,
+        'negative': negative,
+        'top_tags': dict(sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)),
+        'recent': all_feedback[:20],
+    }
+
+
+
 @api_router.get("/admin/referral-analytics")
 async def admin_referral_analytics():
     """Referral funnel analytics — overview of the entire referral system."""
