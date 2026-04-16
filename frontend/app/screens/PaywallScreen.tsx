@@ -70,8 +70,10 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [offeringsError, setOfferingsError] = useState(false);
 
-  // Known App Store product IDs
+  // Known App Store product IDs — these are the StoreKit product identifiers in App Store Connect
   const PRODUCT_IDS = ['bodybound_1499_1m_3d', 'bodybound_2999_1m_3d', 'bodybound_9999_1m_3d'];
+  // The entitlement name configured in RevenueCat dashboard
+  const ENTITLEMENT_ID = 'BODY BOUND Stencil Generator Pro';
 
   useEffect(() => {
     if (revenueCatReady) {
@@ -85,47 +87,84 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       return;
     }
     setOfferingsError(false);
+    console.log('[RC:Paywall] Loading offerings... revenueCatReady:', revenueCatReady);
 
-    // Step 1: Try RevenueCat offerings (preferred)
+    // Step 1: Try current/default offering first, then named offerings
     try {
       const allOfferings = await Purchases.getOfferings();
       const packages: PurchasesPackage[] = [];
 
-      const walkInOffering = allOfferings.all['bodybound_1499_1m_3d'];
-      const bookedOutOffering = allOfferings.all['bodybound_2999_1m_3d'];
-      const theShopOffering = allOfferings.all['bodybound_9999_1m_3d'];
+      // Log what RevenueCat returned
+      const offeringKeys = Object.keys(allOfferings.all || {});
+      console.log('[RC:Paywall] Offering identifiers returned:', JSON.stringify(offeringKeys));
+      console.log('[RC:Paywall] Current offering:', allOfferings.current?.identifier || 'NONE');
 
-      if (walkInOffering?.monthly) packages.push(walkInOffering.monthly);
-      if (bookedOutOffering?.monthly) packages.push(bookedOutOffering.monthly);
-      if (theShopOffering?.monthly) packages.push(theShopOffering.monthly);
+      // Strategy A: Try the current/default offering and match packages by product ID
+      if (allOfferings.current?.availablePackages?.length) {
+        console.log('[RC:Paywall] Current offering has', allOfferings.current.availablePackages.length, 'packages');
+        for (const pkg of allOfferings.current.availablePackages) {
+          const pid = pkg.product.identifier;
+          console.log('[RC:Paywall]   Package:', pkg.identifier, '→ product:', pid, '→ price:', pkg.product.priceString);
+          if (PRODUCT_IDS.includes(pid)) {
+            packages.push(pkg);
+          }
+        }
+      }
+
+      // Strategy B: If current offering didn't have our products, try named offerings
+      if (packages.length === 0) {
+        for (const offId of PRODUCT_IDS) {
+          const offering = allOfferings.all[offId];
+          if (offering?.monthly) {
+            console.log('[RC:Paywall]   Named offering:', offId, '→ monthly product:', offering.monthly.product.identifier);
+            packages.push(offering.monthly);
+          } else if (offering?.availablePackages?.length) {
+            console.log('[RC:Paywall]   Named offering:', offId, '→ first package:', offering.availablePackages[0].product.identifier);
+            packages.push(offering.availablePackages[0]);
+          }
+        }
+      }
 
       if (packages.length > 0) {
-        setOfferings(packages);
-        setSelectedPackage(packages[1] || packages[0]);
-        console.log(`[Paywall] Loaded ${packages.length} offerings from RevenueCat`);
+        // Sort packages to match PRODUCT_IDS order (walk-in, booked-out, shop)
+        const sorted = PRODUCT_IDS.map(pid => packages.find(p => p.product.identifier === pid)).filter(Boolean) as PurchasesPackage[];
+        const finalPackages = sorted.length > 0 ? sorted : packages;
+        setOfferings(finalPackages);
+        setSelectedPackage(finalPackages[1] || finalPackages[0]);
+        console.log('[RC:Paywall] SUCCESS — Loaded', finalPackages.length, 'packages from offerings');
         setLoading(false);
         return;
       }
-      console.log('[Paywall] No offerings from RevenueCat, trying direct product fetch...');
-    } catch (err) {
-      console.log('[Paywall] Offerings failed, trying direct product fetch...', err);
+
+      console.log('[RC:Paywall] No matching packages found in offerings, trying direct product fetch...');
+    } catch (err: any) {
+      console.error('[RC:Paywall] getOfferings() FAILED:', err.message);
     }
 
     // Step 2: Fallback — fetch products directly from Apple via RevenueCat SDK
     try {
+      console.log('[RC:Paywall] Attempting direct getProducts() with IDs:', JSON.stringify(PRODUCT_IDS));
       const products = await Purchases.getProducts(PRODUCT_IDS);
+      console.log('[RC:Paywall] Direct products returned:', products.length);
+      for (const p of products) {
+        console.log('[RC:Paywall]   Product:', p.identifier, '→ price:', p.priceString);
+      }
       if (products.length > 0) {
-        setDirectProducts(products);
-        setSelectedProduct(products[1] || products[0]);
-        console.log(`[Paywall] Loaded ${products.length} products directly from Apple`);
+        // Sort to match PRODUCT_IDS order
+        const sorted = PRODUCT_IDS.map(pid => products.find(p => p.identifier === pid)).filter(Boolean) as PurchasesStoreProduct[];
+        const finalProducts = sorted.length > 0 ? sorted : products;
+        setDirectProducts(finalProducts);
+        setSelectedProduct(finalProducts[1] || finalProducts[0]);
+        console.log('[RC:Paywall] SUCCESS — Loaded', finalProducts.length, 'products directly');
         setLoading(false);
         return;
       }
-      console.log('[Paywall] No products returned from direct fetch either');
-    } catch (err2) {
-      console.log('[Paywall] Direct product fetch also failed:', err2);
+      console.log('[RC:Paywall] No products returned from direct fetch');
+    } catch (err2: any) {
+      console.error('[RC:Paywall] getProducts() FAILED:', err2.message);
     }
 
+    console.error('[RC:Paywall] ALL LOADING METHODS FAILED — showing error state');
     setOfferingsError(true);
     setLoading(false);
   };
@@ -133,6 +172,15 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   // Check if we have products loaded (either via offerings or direct)
   const hasProducts = offerings.length > 0 || directProducts.length > 0;
   const usingDirectProducts = offerings.length === 0 && directProducts.length > 0;
+
+  const logEntitlements = (customerInfo: CustomerInfo, context: string) => {
+    const activeKeys = Object.keys(customerInfo.entitlements.active || {});
+    const allKeys = Object.keys(customerInfo.entitlements.all || {});
+    console.log(`[RC:${context}] Active entitlement keys:`, JSON.stringify(activeKeys));
+    console.log(`[RC:${context}] All entitlement keys:`, JSON.stringify(allKeys));
+    console.log(`[RC:${context}] Active subscriptions:`, JSON.stringify(customerInfo.activeSubscriptions));
+    console.log(`[RC:${context}] Expected entitlement "${ENTITLEMENT_ID}" present:`, activeKeys.includes(ENTITLEMENT_ID));
+  };
 
   const handlePurchase = async () => {
     if (Platform.OS === 'web') {
@@ -145,11 +193,11 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       let customerInfo: CustomerInfo;
 
       if (selectedPackage && !usingDirectProducts) {
-        // Purchase via RevenueCat package (preferred)
+        console.log('[RC:Purchase] Purchasing via package:', selectedPackage.identifier, '→ product:', selectedPackage.product.identifier);
         const result = await Purchases.purchasePackage(selectedPackage);
         customerInfo = result.customerInfo;
       } else if (selectedProduct) {
-        // Fallback: purchase product directly from Apple
+        console.log('[RC:Purchase] Purchasing via direct product:', selectedProduct.identifier);
         const result = await Purchases.purchaseStoreProduct(selectedProduct);
         customerInfo = result.customerInfo;
       } else {
@@ -158,7 +206,9 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
         return;
       }
 
-      if (typeof customerInfo.entitlements.active['BODY BOUND Stencil Generator Pro'] !== 'undefined') {
+      logEntitlements(customerInfo, 'Purchase');
+
+      if (typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
         if (referralCode.trim()) {
           try {
             await SecureStore.setItemAsync('pending_referral_code', referralCode.trim().toUpperCase());
@@ -166,10 +216,26 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
         }
         Alert.alert('Welcome!', 'Your subscription is now active. Enjoy your credits!');
         onPurchaseSuccess();
+      } else {
+        // Purchase succeeded at Apple but entitlement not found — likely dashboard mismatch
+        const activeKeys = Object.keys(customerInfo.entitlements.active || {});
+        console.error('[RC:Purchase] ENTITLEMENT MISMATCH — purchase succeeded but entitlement not found');
+        console.error('[RC:Purchase] Expected:', ENTITLEMENT_ID);
+        console.error('[RC:Purchase] Got:', JSON.stringify(activeKeys));
+        Alert.alert(
+          'Subscription Activated',
+          `Your purchase was processed, but we're having trouble verifying it. Please tap "Restore Purchases" or restart the app. If the issue persists, contact support.\n\nDebug: entitlements=[${activeKeys.join(', ')}]`,
+          [{ text: 'OK' }]
+        );
+        // Still try to proceed — the backend sync may pick it up
+        onPurchaseSuccess();
       }
     } catch (err: any) {
       if (!err.userCancelled) {
+        console.error('[RC:Purchase] FAILED:', err.message, err.code);
         Alert.alert('Purchase Failed', err.message || 'Please try again.');
+      } else {
+        console.log('[RC:Purchase] User cancelled');
       }
     } finally {
       setPurchasing(false);
@@ -183,14 +249,28 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
     }
     setRestoring(true);
     try {
+      console.log('[RC:Restore] Starting restore...');
       const customerInfo: CustomerInfo = await Purchases.restorePurchases();
-      if (typeof customerInfo.entitlements.active['BODY BOUND Stencil Generator Pro'] !== 'undefined') {
+      logEntitlements(customerInfo, 'Restore');
+
+      if (typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
         Alert.alert('Restored!', 'Your previous purchase has been restored.');
         onPurchaseSuccess();
       } else {
-        Alert.alert('No Purchase Found', 'No previous subscription was found for your account.');
+        const activeKeys = Object.keys(customerInfo.entitlements.active || {});
+        if (activeKeys.length > 0) {
+          // Has entitlements but not the one we expect — dashboard naming mismatch
+          console.error('[RC:Restore] ENTITLEMENT MISMATCH — has entitlements but not expected one');
+          Alert.alert(
+            'Subscription Found',
+            `We found an active subscription but couldn't match it to your account. Please contact support.\n\nDebug: entitlements=[${activeKeys.join(', ')}]`
+          );
+        } else {
+          Alert.alert('No Purchase Found', 'No previous subscription was found for your account.');
+        }
       }
     } catch (err: any) {
+      console.error('[RC:Restore] FAILED:', err.message);
       Alert.alert('Restore Failed', err.message || 'Please try again.');
     } finally {
       setRestoring(false);

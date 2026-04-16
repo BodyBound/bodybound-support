@@ -582,14 +582,14 @@ export default function Index() {
     const configureRevenueCat = async () => {
       // Skip RevenueCat in web environment
       if (Platform.OS === 'web') {
-        console.log('[RevenueCat] Skipped on web platform');
+        console.log('[RC:Init] Skipped — web platform');
         setRevenueCatReady(true);
         return;
       }
       
       // Skip RevenueCat in Expo Go - it requires a custom dev build
       if (isExpoGo) {
-        console.log('[RevenueCat] Skipped in Expo Go - use a development build for full functionality');
+        console.log('[RC:Init] Skipped — Expo Go (needs custom dev build)');
         setRevenueCatReady(true);
         return;
       }
@@ -597,15 +597,17 @@ export default function Index() {
       try {
         if (Platform.OS === 'ios') {
           await Purchases.configure({ apiKey: 'appl_dVqjUPRJXPXNpLZThAjtsqApiVU' });
+          console.log('[RC:Init] SUCCESS — iOS configured with key appl_dVqj...VU');
         } else if (Platform.OS === 'android') {
           await Purchases.configure({ apiKey: 'goog_test_IuokLnnASfsuVHgijvsTOFfQAiI' });
+          console.log('[RC:Init] SUCCESS — Android configured');
         }
-        console.log('[RevenueCat] Configured successfully');
+        setRevenueCatReady(true);
       } catch (e: any) {
-        // Expected failure in Expo Go — RevenueCat requires a custom dev build
-        console.log('[RevenueCat] Configure failed:', e.message);
+        console.error('[RC:Init] FAILED —', e.message);
+        // Do NOT mark as ready if configure fails — paywall will show loading then error
+        setRevenueCatReady(false);
       }
-      setRevenueCatReady(true);
     };
     
     configureRevenueCat();
@@ -739,11 +741,14 @@ export default function Index() {
     try {
       const customerInfo = await Purchases.getCustomerInfo();
       const activeSubscriptions = customerInfo.activeSubscriptions;
+      const activeEntitlementKeys = Object.keys(customerInfo.entitlements.active || {});
+      console.log('[RC:Sync] Active subscriptions:', JSON.stringify(activeSubscriptions));
+      console.log('[RC:Sync] Active entitlement keys:', JSON.stringify(activeEntitlementKeys));
       if (activeSubscriptions.length > 0) {
         const productId = activeSubscriptions[0]; // e.g., 'bodybound_2999_1m_3d'
         const entitlement = customerInfo.entitlements.active['BODY BOUND Stencil Generator Pro'];
         const isTrial = entitlement?.periodType === 'TRIAL';
-        console.log('[RevenueCat] Active subscription detected:', productId, isTrial ? '(trial)' : '(paid)');
+        console.log('[RC:Sync] Syncing product:', productId, isTrial ? '(trial)' : '(paid)');
         const resp = await fetch(`${API_URL}/api/subscription/sync`, {
           method: 'POST',
           headers: {
@@ -755,16 +760,19 @@ export default function Index() {
         if (resp.ok) {
           const syncedCredits = await resp.json();
           setAvailableCredits(syncedCredits.available_credits ?? 0);
+          setTotalMonthlyCredits(syncedCredits.total_monthly_credits ?? 0);
           setUserTier(syncedCredits.tier ?? null);
           if (!syncedCredits.needs_subscription) {
             setShowPaywall(false);
             setPaywallRequired(false);
           }
-          console.log('[RevenueCat] Synced with backend:', syncedCredits.tier, syncedCredits.available_credits);
+          console.log('[RC:Sync] Backend synced:', syncedCredits.tier, syncedCredits.available_credits, 'credits');
         }
+      } else {
+        console.log('[RC:Sync] No active subscriptions found');
       }
     } catch (e) {
-      console.log('[RevenueCat] Sync check failed (expected in Expo Go):', e);
+      console.log('[RC:Sync] Failed (expected in Expo Go):', e);
     }
   };
 
