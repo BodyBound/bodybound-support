@@ -3621,6 +3621,35 @@ async def admin_add_credits(request: Request):
     updated = await db.subscriptions.find_one({'user_id': uid}, {'_id': 0})
     return {"status": "credits_added", "email": email, "bonus": bonus, "new_total": updated.get('available_credits', 0)}
 
+@api_router.post("/admin/paywall-bypass")
+async def admin_paywall_bypass(request: Request):
+    """Temporary paywall bypass: grants 10 credits with a non-subscriber tier.
+    Does NOT count as a real subscription for referrals, analytics, or credit refresh."""
+    body = await request.json()
+    email = body.get('email', '')
+    if not email:
+        raise HTTPException(status_code=400, detail="Provide email")
+
+    user = await db.users.find_one({'email': {'$regex': email, '$options': 'i'}}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    uid = user['user_id']
+    await db.subscriptions.update_one(
+        {'user_id': uid},
+        {'$set': {
+            'tier': 'paywall_bypass',
+            'available_credits': 10,
+            'is_trial': False,
+            'last_event': 'PAYWALL_BYPASS',
+            'synced_from': 'admin_temp_bypass',
+            'bypass_granted_at': datetime.now(timezone.utc).isoformat(),
+        }},
+        upsert=True
+    )
+    logger.info(f"[Admin] Paywall bypass granted to {email} ({uid}) — 10 credits, tier=paywall_bypass")
+    return {"status": "bypass_granted", "email": email, "credits": 10, "tier": "paywall_bypass"}
+
 @api_router.post("/admin/create-promo")
 async def admin_create_promo(request: Request):
     """Admin endpoint to create a promo code"""

@@ -14,6 +14,7 @@
 - GET /api/admin/user-lookup?email=X
 - POST /api/admin/fix-subscription {"email": "X", "product_id": "bodybound_1499_1m_3d"}
 - POST /api/admin/add-credits {"email": "X", "credits": 25}
+- POST /api/admin/paywall-bypass {"email": "X"} — SAFE temp bypass (10 credits, tier=paywall_bypass, excluded from referrals/analytics)
 - GET /api/admin/all-users
 - POST /api/admin/create-promo {"code": "X", "tier": "walk-in", "credits": 125, "duration_days": 30, "allowed_emails": []}
 - GET /api/admin/referral-analytics
