@@ -16,7 +16,7 @@ import {
 const APPLE_EULA_URL = 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
 const PRIVACY_POLICY_URL = 'https://bodybound.github.io/bodybound-support/privacy';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Purchases, { PurchasesPackage, CustomerInfo, PurchasesStoreProduct } from 'react-native-purchases';
+import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
 import * as SecureStore from 'expo-secure-store';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
@@ -59,19 +59,17 @@ interface PaywallScreenProps {
 
 export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, required = false, revenueCatReady = true }: PaywallScreenProps) {
   const [offerings, setOfferings] = useState<PurchasesPackage[]>([]);
-  const [directProducts, setDirectProducts] = useState<PurchasesStoreProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<PurchasesPackage | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<PurchasesStoreProduct | null>(null);
   const [referralCode, setReferralCode] = useState('');
   const [referralApplied, setReferralApplied] = useState(false);
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [offeringsError, setOfferingsError] = useState(false);
 
-  // Known App Store product IDs — these are the StoreKit product identifiers in App Store Connect
-  const PRODUCT_IDS = ['bodybound_1499_1m_3d', 'bodybound_2999_1m_3d', 'bodybound_9999_1m_3d'];
+  // Package identifiers as configured in RevenueCat dashboard
+  const PACKAGE_IDS = ['walk_in', 'booked_out', 'the_shop'];
   // The entitlement name configured in RevenueCat dashboard
   const ENTITLEMENT_ID = 'BODY BOUND Stencil Generator Pro';
 
@@ -87,91 +85,57 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       return;
     }
     setOfferingsError(false);
-    console.log('[RC:Paywall] Loading offerings... revenueCatReady:', revenueCatReady);
+    console.log('[RC:Paywall] Loading offerings...');
 
-    // Step 1: Try current/default offering first, then named offerings
     try {
       const allOfferings = await Purchases.getOfferings();
-      const packages: PurchasesPackage[] = [];
+      const offering = allOfferings.current;
 
-      // Log what RevenueCat returned
-      const offeringKeys = Object.keys(allOfferings.all || {});
-      console.log('[RC:Paywall] Offering identifiers returned:', JSON.stringify(offeringKeys));
-      console.log('[RC:Paywall] Current offering:', allOfferings.current?.identifier || 'NONE');
+      console.log('[RC:Paywall] Current offering:', offering?.identifier || 'NONE');
+      console.log('[RC:Paywall] All offering keys:', JSON.stringify(Object.keys(allOfferings.all || {})));
 
-      // Strategy A: Try the current/default offering and match packages by product ID
-      if (allOfferings.current?.availablePackages?.length) {
-        console.log('[RC:Paywall] Current offering has', allOfferings.current.availablePackages.length, 'packages');
-        for (const pkg of allOfferings.current.availablePackages) {
-          const pid = pkg.product.identifier;
-          console.log('[RC:Paywall]   Package:', pkg.identifier, '→ product:', pid, '→ price:', pkg.product.priceString);
-          if (PRODUCT_IDS.includes(pid)) {
-            packages.push(pkg);
-          }
-        }
+      if (!offering) {
+        console.error('[RC:Paywall] No current offering returned');
+        setOfferingsError(true);
+        setLoading(false);
+        return;
       }
 
-      // Strategy B: If current offering didn't have our products, try named offerings
-      if (packages.length === 0) {
-        for (const offId of PRODUCT_IDS) {
-          const offering = allOfferings.all[offId];
-          if (offering?.monthly) {
-            console.log('[RC:Paywall]   Named offering:', offId, '→ monthly product:', offering.monthly.product.identifier);
-            packages.push(offering.monthly);
-          } else if (offering?.availablePackages?.length) {
-            console.log('[RC:Paywall]   Named offering:', offId, '→ first package:', offering.availablePackages[0].product.identifier);
-            packages.push(offering.availablePackages[0]);
-          }
-        }
+      const available = offering.availablePackages || [];
+      console.log('[RC:Paywall] availablePackages count:', available.length);
+      for (const pkg of available) {
+        console.log('[RC:Paywall]   package:', pkg.identifier, '→ product:', pkg.product.identifier, '→ price:', pkg.product.priceString);
       }
+
+      // Map packages by identifier
+      const walkIn = available.find(p => p.identifier === 'walk_in');
+      const bookedOut = available.find(p => p.identifier === 'booked_out');
+      const theShop = available.find(p => p.identifier === 'the_shop');
+
+      console.log('[RC:Paywall] walk_in:', walkIn ? walkIn.product.identifier : 'NOT FOUND');
+      console.log('[RC:Paywall] booked_out:', bookedOut ? bookedOut.product.identifier : 'NOT FOUND');
+      console.log('[RC:Paywall] the_shop:', theShop ? theShop.product.identifier : 'NOT FOUND');
+
+      const packages = [walkIn, bookedOut, theShop].filter(Boolean) as PurchasesPackage[];
 
       if (packages.length > 0) {
-        // Sort packages to match PRODUCT_IDS order (walk-in, booked-out, shop)
-        const sorted = PRODUCT_IDS.map(pid => packages.find(p => p.product.identifier === pid)).filter(Boolean) as PurchasesPackage[];
-        const finalPackages = sorted.length > 0 ? sorted : packages;
-        setOfferings(finalPackages);
-        setSelectedPackage(finalPackages[1] || finalPackages[0]);
-        console.log('[RC:Paywall] SUCCESS — Loaded', finalPackages.length, 'packages from offerings');
-        setLoading(false);
-        return;
+        setOfferings(packages);
+        // Pre-select booked_out if available, else first
+        setSelectedPackage(bookedOut || packages[0]);
+        console.log('[RC:Paywall] SUCCESS — Loaded', packages.length, 'packages');
+      } else {
+        console.error('[RC:Paywall] No matching packages found (expected: walk_in, booked_out, the_shop)');
+        setOfferingsError(true);
       }
-
-      console.log('[RC:Paywall] No matching packages found in offerings, trying direct product fetch...');
     } catch (err: any) {
       console.error('[RC:Paywall] getOfferings() FAILED:', err.message);
+      setOfferingsError(true);
     }
 
-    // Step 2: Fallback — fetch products directly from Apple via RevenueCat SDK
-    try {
-      console.log('[RC:Paywall] Attempting direct getProducts() with IDs:', JSON.stringify(PRODUCT_IDS));
-      const products = await Purchases.getProducts(PRODUCT_IDS);
-      console.log('[RC:Paywall] Direct products returned:', products.length);
-      for (const p of products) {
-        console.log('[RC:Paywall]   Product:', p.identifier, '→ price:', p.priceString);
-      }
-      if (products.length > 0) {
-        // Sort to match PRODUCT_IDS order
-        const sorted = PRODUCT_IDS.map(pid => products.find(p => p.identifier === pid)).filter(Boolean) as PurchasesStoreProduct[];
-        const finalProducts = sorted.length > 0 ? sorted : products;
-        setDirectProducts(finalProducts);
-        setSelectedProduct(finalProducts[1] || finalProducts[0]);
-        console.log('[RC:Paywall] SUCCESS — Loaded', finalProducts.length, 'products directly');
-        setLoading(false);
-        return;
-      }
-      console.log('[RC:Paywall] No products returned from direct fetch');
-    } catch (err2: any) {
-      console.error('[RC:Paywall] getProducts() FAILED:', err2.message);
-    }
-
-    console.error('[RC:Paywall] ALL LOADING METHODS FAILED — showing error state');
-    setOfferingsError(true);
     setLoading(false);
   };
 
-  // Check if we have products loaded (either via offerings or direct)
-  const hasProducts = offerings.length > 0 || directProducts.length > 0;
-  const usingDirectProducts = offerings.length === 0 && directProducts.length > 0;
+  const ctaDisabled = purchasing || (!isWeb && !selectedPackage);
 
   const logEntitlements = (customerInfo: CustomerInfo, context: string) => {
     const activeKeys = Object.keys(customerInfo.entitlements.active || {});
@@ -187,24 +151,15 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       Alert.alert('iOS Only', 'Subscriptions are available in the iOS App Store.');
       return;
     }
+    if (!selectedPackage) {
+      Alert.alert('No Plan Selected', 'Please select a subscription plan to continue.');
+      return;
+    }
 
     setPurchasing(true);
     try {
-      let customerInfo: CustomerInfo;
-
-      if (selectedPackage && !usingDirectProducts) {
-        console.log('[RC:Purchase] Purchasing via package:', selectedPackage.identifier, '→ product:', selectedPackage.product.identifier);
-        const result = await Purchases.purchasePackage(selectedPackage);
-        customerInfo = result.customerInfo;
-      } else if (selectedProduct) {
-        console.log('[RC:Purchase] Purchasing via direct product:', selectedProduct.identifier);
-        const result = await Purchases.purchaseStoreProduct(selectedProduct);
-        customerInfo = result.customerInfo;
-      } else {
-        Alert.alert('No Plan Selected', 'Please select a subscription plan to continue.');
-        setPurchasing(false);
-        return;
-      }
+      console.log('[RC:Purchase] Purchasing package:', selectedPackage.identifier, '→ product:', selectedPackage.product.identifier);
+      const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
 
       logEntitlements(customerInfo, 'Purchase');
 
@@ -217,17 +172,13 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
         Alert.alert('Welcome!', 'Your subscription is now active. Enjoy your credits!');
         onPurchaseSuccess();
       } else {
-        // Purchase succeeded at Apple but entitlement not found — likely dashboard mismatch
         const activeKeys = Object.keys(customerInfo.entitlements.active || {});
-        console.error('[RC:Purchase] ENTITLEMENT MISMATCH — purchase succeeded but entitlement not found');
-        console.error('[RC:Purchase] Expected:', ENTITLEMENT_ID);
-        console.error('[RC:Purchase] Got:', JSON.stringify(activeKeys));
+        console.error('[RC:Purchase] ENTITLEMENT MISMATCH — expected:', ENTITLEMENT_ID, 'got:', JSON.stringify(activeKeys));
         Alert.alert(
           'Subscription Activated',
-          `Your purchase was processed, but we're having trouble verifying it. Please tap "Restore Purchases" or restart the app. If the issue persists, contact support.\n\nDebug: entitlements=[${activeKeys.join(', ')}]`,
+          `Your purchase was processed but we're verifying it. Please tap "Restore Purchases" or restart the app.\n\nDebug: entitlements=[${activeKeys.join(', ')}]`,
           [{ text: 'OK' }]
         );
-        // Still try to proceed — the backend sync may pick it up
         onPurchaseSuccess();
       }
     } catch (err: any) {
@@ -259,11 +210,10 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       } else {
         const activeKeys = Object.keys(customerInfo.entitlements.active || {});
         if (activeKeys.length > 0) {
-          // Has entitlements but not the one we expect — dashboard naming mismatch
           console.error('[RC:Restore] ENTITLEMENT MISMATCH — has entitlements but not expected one');
           Alert.alert(
             'Subscription Found',
-            `We found an active subscription but couldn't match it to your account. Please contact support.\n\nDebug: entitlements=[${activeKeys.join(', ')}]`
+            `We found an active subscription but couldn't match it. Please contact support.\n\nDebug: entitlements=[${activeKeys.join(', ')}]`
           );
         } else {
           Alert.alert('No Purchase Found', 'No previous subscription was found for your account.');
@@ -318,23 +268,14 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             <View style={styles.plans}>
               {Object.entries(TIER_INFO).map(([key, tier], index) => {
                 const pkg = offerings[index];
-                const prod = directProducts[index];
-                const isSelected = usingDirectProducts
-                  ? selectedProduct?.identifier === prod?.identifier
-                  : selectedPackage?.identifier === pkg?.identifier;
+                const isSelected = selectedPackage?.identifier === pkg?.identifier;
 
                 return (
                   <TouchableOpacity
                     key={key}
                     testID={`plan-${key}-btn`}
                     style={[styles.planCard, isSelected && styles.planCardSelected]}
-                    onPress={() => {
-                      if (usingDirectProducts && prod) {
-                        setSelectedProduct(prod);
-                      } else if (pkg) {
-                        setSelectedPackage(pkg);
-                      }
-                    }}
+                    onPress={() => { if (pkg) setSelectedPackage(pkg); }}
                     activeOpacity={0.85}
                   >
                     {tier.popular && (
@@ -345,7 +286,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
                     <View style={styles.planHeader}>
                       <Text style={[styles.planName, { color: tier.color }]}>{tier.label}</Text>
                       <Text style={styles.planPrice}>
-                        {pkg ? pkg.product.priceString : prod ? prod.priceString : tier.price}
+                        {pkg ? pkg.product.priceString : tier.price}
                       </Text>
                     </View>
                     <Text style={styles.planDescription}>{tier.description}</Text>
