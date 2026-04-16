@@ -3698,7 +3698,7 @@ export default function Index() {
                 {/* Image display */}
                 <Image
                   source={{ uri: stencilImage && !showingOriginal ? stencilImage : originalImage }}
-                  style={styles.previewImage}
+                  style={[styles.previewImage, stencilImage && !showingOriginal && stencilTintColor ? { tintColor: stencilTintColor } : {}]}
                   resizeMode="contain"
                 />
                 
