@@ -2136,16 +2136,18 @@ Do NOT rotate, mirror, or flip the composition. Top stays top, left stays left.
 STRUCTURE: Preserve the primary subject's proportions, pose, and key anatomical landmarks exactly.
 Do not merge, omit, or reposition body parts, facial features, or compositional anchors.
 
-STRICT ACCURACY RULE:
-Only translate what is visibly present in the reference image.
+STRICT SOURCE ADHERENCE (CRITICAL):
+The output must be derived ONLY from visible information in the input image.
 DO NOT:
-- add missing anatomy
-- complete partial structures
-- "fix" or "correct" the design
-- infer hidden or implied elements
-- invent details that are not explicitly visible
-If a structure is incomplete, cropped, or stylized (for example: a skull missing a lower jaw), it must remain exactly as-is.
-The stencil must be a direct structural translation of the input image, not an interpreted or improved version.
+- Infer, reconstruct, or complete missing anatomy
+- Add any structures that are not explicitly visible
+- Use anatomical knowledge to "fill in" missing parts
+- Assume symmetry or complete forms
+If a feature is partially visible or missing:
+- Only represent the visible portion
+- Do NOT extend or complete it
+Example: If a skull does NOT show a mandible, do NOT create or suggest a jawline or teeth below the visible structure.
+The stencil must reflect EXACTLY what is seen, not what is expected.
 
 CRITICAL REQUIREMENTS:
 1. Create clean, smooth, continuous lines - NO noise or scattered marks
@@ -2332,16 +2334,18 @@ Do NOT rotate, mirror, or flip the composition. Top stays top, left stays left.
 STRUCTURE: Preserve the primary subject's proportions, pose, and key anatomical landmarks exactly.
 Do not merge, omit, or reposition body parts, facial features, or compositional anchors.
 
-STRICT ACCURACY RULE:
-Only translate what is visibly present in the reference image.
+STRICT SOURCE ADHERENCE (CRITICAL):
+The output must be derived ONLY from visible information in the input image.
 DO NOT:
-- add missing anatomy
-- complete partial structures
-- "fix" or "correct" the design
-- infer hidden or implied elements
-- invent details that are not explicitly visible
-If a structure is incomplete, cropped, or stylized (for example: a skull missing a lower jaw), it must remain exactly as-is.
-The stencil must be a direct structural translation of the input image, not an interpreted or improved version.
+- Infer, reconstruct, or complete missing anatomy
+- Add any structures that are not explicitly visible
+- Use anatomical knowledge to "fill in" missing parts
+- Assume symmetry or complete forms
+If a feature is partially visible or missing:
+- Only represent the visible portion
+- Do NOT extend or complete it
+Example: If a skull does NOT show a mandible, do NOT create or suggest a jawline or teeth below the visible structure.
+The stencil must reflect EXACTLY what is seen, not what is expected.
 
 CRITICAL REQUIREMENTS:
 1. Create clean, smooth, continuous lines - NO noise or scattered marks
