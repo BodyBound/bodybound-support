@@ -3735,6 +3735,32 @@ async def admin_paywall_bypass(request: Request):
     logger.info(f"[Admin] Paywall bypass granted to {email} ({uid}) — 10 credits, tier=paywall_bypass")
     return {"status": "bypass_granted", "email": email, "credits": 10, "tier": "paywall_bypass"}
 
+@api_router.get("/admin/webhook-debug")
+async def admin_webhook_debug():
+    """Inspect recent webhook activity for debugging RevenueCat sync issues."""
+    unmatched = []
+    async for doc in db.unmatched_webhooks.find({}, {'_id': 0}).sort('timestamp', -1).limit(20):
+        unmatched.append(doc)
+    
+    # Check for any subscriptions with last_event from webhooks
+    webhook_updated = []
+    async for doc in db.subscriptions.find(
+        {'last_event': {'$in': ['INITIAL_PURCHASE', 'RENEWAL', 'CANCELLATION', 'EXPIRATION']}},
+        {'_id': 0}
+    ).limit(20):
+        webhook_updated.append(doc)
+    
+    # Count totals
+    total_unmatched = await db.unmatched_webhooks.count_documents({})
+    total_subs = await db.subscriptions.count_documents({})
+    
+    return {
+        "total_unmatched_webhooks": total_unmatched,
+        "total_subscriptions": total_subs,
+        "recent_unmatched": unmatched,
+        "webhook_updated_subscriptions": webhook_updated,
+    }
+
 @api_router.post("/admin/create-promo")
 async def admin_create_promo(request: Request):
     """Admin endpoint to create a promo code"""
