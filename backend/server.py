@@ -2165,19 +2165,25 @@ CLARITY OVER COMPLETENESS:
 - Do not include detail simply because it exists
 - Every line must serve clarity, structure, or tattoo application
 
-FACIAL FEATURE CONSISTENCY (CRITICAL):
-- Eyes are a primary identity feature and must be handled consistently across all detail levels
-- Always include the iris and pupil when visible in the source image
-- Preserve basic eye highlights/glare if present in the reference
-- Do NOT omit or simplify the eyes to blank shapes in any mode
-- Detail level may affect surrounding eye detail (wrinkles, lashes, shading guides), but NOT the core eye structure
+CRITICAL FEATURE LOCK:
+The following features must ALWAYS be preserved at all detail levels (Low, Mid, High), regardless of simplification:
+- Eyes must always include:
+  - Iris
+  - Pupil
+  - Highlight (if visible in the source image)
+- Do NOT reduce eyes to empty outlines or blank shapes
+- Do NOT remove or simplify internal eye structure under any circumstances
+These elements are STRUCTURAL and NON-NEGOTIABLE.
+They must be preserved even when reducing overall detail.
 
 DETAIL LEVEL: {detail_level.upper()}
 {{
-"- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
-"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
-"- Maximum detail: Full detail with hatching, all contours, and shading guides"
+"LOW DETAIL: Clean outer contours and essential structure only. Remove most interior detail while preserving recognizable form. DO NOT add unnecessary texture or complexity. Preserve major anatomical landmarks." if detail_level == "minimal" else
+"MODERATE DETAIL: Outlines plus key interior details and contour guides. Preserve all critical facial structures, especially eyes (iris, pupil, highlights). Do NOT simplify or omit these elements at this level. Use dotted or light contour lines to indicate form, but avoid over-cluttering. Maintain clarity and readability for stencil use." if detail_level == "moderate" else
+"HIGH DETAIL: Full structure with complete interior detail, shading guides, and refined linework. Preserve all anatomical features and important forms. Maintain clear hierarchy between primary lines and secondary detail. Avoid noise—detail should enhance readability, not reduce it."
 }}
+
+DEBUG_MARKER: EYE_LOCK_V2_ACTIVE
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
@@ -2373,19 +2379,25 @@ CLARITY OVER COMPLETENESS:
 - Do not include detail simply because it exists
 - Every line must serve clarity, structure, or tattoo application
 
-FACIAL FEATURE CONSISTENCY (CRITICAL):
-- Eyes are a primary identity feature and must be handled consistently across all detail levels
-- Always include the iris and pupil when visible in the source image
-- Preserve basic eye highlights/glare if present in the reference
-- Do NOT omit or simplify the eyes to blank shapes in any mode
-- Detail level may affect surrounding eye detail (wrinkles, lashes, shading guides), but NOT the core eye structure
+CRITICAL FEATURE LOCK:
+The following features must ALWAYS be preserved at all detail levels (Low, Mid, High), regardless of simplification:
+- Eyes must always include:
+  - Iris
+  - Pupil
+  - Highlight (if visible in the source image)
+- Do NOT reduce eyes to empty outlines or blank shapes
+- Do NOT remove or simplify internal eye structure under any circumstances
+These elements are STRUCTURAL and NON-NEGOTIABLE.
+They must be preserved even when reducing overall detail.
 
 DETAIL LEVEL: {detail_level.upper()}
 {{
-"- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
-"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
-"- Maximum detail: Full detail with hatching, all contours, and shading guides"
+"LOW DETAIL: Clean outer contours and essential structure only. Remove most interior detail while preserving recognizable form. DO NOT add unnecessary texture or complexity. Preserve major anatomical landmarks." if detail_level == "minimal" else
+"MODERATE DETAIL: Outlines plus key interior details and contour guides. Preserve all critical facial structures, especially eyes (iris, pupil, highlights). Do NOT simplify or omit these elements at this level. Use dotted or light contour lines to indicate form, but avoid over-cluttering. Maintain clarity and readability for stencil use." if detail_level == "moderate" else
+"HIGH DETAIL: Full structure with complete interior detail, shading guides, and refined linework. Preserve all anatomical features and important forms. Maintain clear hierarchy between primary lines and secondary detail. Avoid noise—detail should enhance readability, not reduce it."
 }}
+
+DEBUG_MARKER: EYE_LOCK_V2_ACTIVE
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
