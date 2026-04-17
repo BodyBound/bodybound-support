@@ -4068,6 +4068,27 @@ async def revenuecat_webhook(request: FastAPIRequest):
     return {'status': 'ok'}
 
 
+@api_router.post("/subscription/link-rc")
+async def link_revenuecat_id(request: FastAPIRequest):
+    """Store the RevenueCat originalAppUserId on the user's subscription record.
+    This enables webhook matching when RC sends anonymous IDs."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+    
+    body = await request.json()
+    rc_id = body.get('revenuecat_customer_id', '')
+    if not rc_id:
+        raise HTTPException(status_code=400, detail='Missing revenuecat_customer_id')
+    
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {'$set': {'revenuecat_customer_id': rc_id}},
+        upsert=True
+    )
+    logger.info(f'[RC:Link] Stored RC ID {rc_id} for user {user_id}')
+    return {'status': 'linked', 'revenuecat_customer_id': rc_id}
+
 @api_router.post("/subscription/sync")
 async def sync_subscription(request: FastAPIRequest):
     """Sync subscription status from RevenueCat entitlement data sent by the frontend.
@@ -4083,6 +4104,7 @@ async def sync_subscription(request: FastAPIRequest):
     body = await request.json()
     product_id = body.get('product_id')
     is_trial = body.get('is_trial', False)  # Frontend passes trial status from RevenueCat
+    rc_customer_id = body.get('revenuecat_customer_id', '')  # RC anonymous ID for webhook matching
     
     if not product_id:
         raise HTTPException(status_code=400, detail='Missing product_id')
@@ -4104,17 +4126,20 @@ async def sync_subscription(request: FastAPIRequest):
         return credits
     
     next_renewal = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+    update_fields = {
+        'tier': tier_info['tier'],
+        'available_credits': credits_to_grant,
+        'is_trial': is_trial,
+        'trial_expires_at': None,
+        'renewal_date': next_renewal,
+        'synced_from': 'frontend',
+        'last_event': 'FRONTEND_SYNC',
+    }
+    if rc_customer_id:
+        update_fields['revenuecat_customer_id'] = rc_customer_id
     await db.subscriptions.update_one(
         {'user_id': user_id},
-        {'$set': {
-            'tier': tier_info['tier'],
-            'available_credits': credits_to_grant,
-            'is_trial': is_trial,
-            'trial_expires_at': None,
-            'renewal_date': next_renewal,
-            'synced_from': 'frontend',
-            'last_event': 'FRONTEND_SYNC',
-        }},
+        {'$set': update_fields},
         upsert=True
     )
     logger.info(f'[Sync] User {user_id} synced to tier {tier_info["tier"]} with {credits_to_grant} credits ({"trial" if is_trial else "paid"}, product: {product_id})')

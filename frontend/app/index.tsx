@@ -649,7 +649,17 @@ export default function Index() {
             setUserTier(data.credits?.tier ?? null);
             // Link this user to RevenueCat so purchases are tracked per-user
             if (Platform.OS === 'ios' || Platform.OS === 'android') {
-              try { await Purchases.logIn(data.user.user_id); } catch (_) {}
+              try {
+                const { customerInfo: rcInfo } = await Purchases.logIn(data.user.user_id);
+                console.log('[RevenueCat] Logged in as:', data.user.user_id, 'RC ID:', rcInfo?.originalAppUserId);
+                if (rcInfo?.originalAppUserId && token) {
+                  fetch(`${API_URL}/api/subscription/link-rc`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ revenuecat_customer_id: rcInfo.originalAppUserId }),
+                  }).catch(() => {});
+                }
+              } catch (_) {}
             }
             // Check if user needs to subscribe (new paywall-first flow)
             if (data.credits?.needs_subscription) {
@@ -742,12 +752,28 @@ export default function Index() {
       const customerInfo = await Purchases.getCustomerInfo();
       const activeSubscriptions = customerInfo.activeSubscriptions;
       const activeEntitlementKeys = Object.keys(customerInfo.entitlements.active || {});
+      const rcId = customerInfo.originalAppUserId;
       console.log('[RC:Sync] Active subscriptions:', JSON.stringify(activeSubscriptions));
       console.log('[RC:Sync] Active entitlement keys:', JSON.stringify(activeEntitlementKeys));
+      console.log('[RC:Sync] RC originalAppUserId:', rcId);
+
+      // Determine product ID from activeSubscriptions or entitlements
+      let productId = '';
+      let isTrial = false;
+
       if (activeSubscriptions.length > 0) {
-        const productId = activeSubscriptions[0]; // e.g., 'bodybound_2999_1m_3d'
+        productId = activeSubscriptions[0];
         const entitlement = customerInfo.entitlements.active['BODY BOUND Stencil Generator Pro'];
-        const isTrial = entitlement?.periodType === 'TRIAL';
+        isTrial = entitlement?.periodType === 'TRIAL';
+      } else if (activeEntitlementKeys.length > 0) {
+        // Fallback: activeSubscriptions empty but entitlements exist (sandbox edge case)
+        const entitlement = customerInfo.entitlements.active[activeEntitlementKeys[0]];
+        productId = entitlement?.productIdentifier || '';
+        isTrial = entitlement?.periodType === 'TRIAL';
+        console.log('[RC:Sync] Using entitlement fallback — product:', productId);
+      }
+
+      if (productId) {
         console.log('[RC:Sync] Syncing product:', productId, isTrial ? '(trial)' : '(paid)');
         const resp = await fetch(`${API_URL}/api/subscription/sync`, {
           method: 'POST',
@@ -755,7 +781,7 @@ export default function Index() {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ product_id: productId, is_trial: isTrial }),
+          body: JSON.stringify({ product_id: productId, is_trial: isTrial, revenuecat_customer_id: rcId }),
         });
         if (resp.ok) {
           const syncedCredits = await resp.json();
@@ -769,7 +795,7 @@ export default function Index() {
           console.log('[RC:Sync] Backend synced:', syncedCredits.tier, syncedCredits.available_credits, 'credits');
         }
       } else {
-        console.log('[RC:Sync] No active subscriptions found');
+        console.log('[RC:Sync] No active subscriptions or entitlements found');
       }
     } catch (e) {
       console.log('[RC:Sync] Failed (expected in Expo Go):', e);
@@ -4540,6 +4566,14 @@ export default function Index() {
                 try {
                   const { customerInfo } = await Purchases.logIn(user.user_id);
                   console.log('[RevenueCat] Logged in as:', user.user_id, 'RC ID:', customerInfo?.originalAppUserId);
+                  // Store the RC anonymous ID on the backend so webhooks can match this user
+                  if (customerInfo?.originalAppUserId && token) {
+                    fetch(`${API_URL}/api/subscription/link-rc`, {
+                      method: 'POST',
+                      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ revenuecat_customer_id: customerInfo.originalAppUserId }),
+                    }).catch(() => {});
+                  }
                 } catch (loginErr) {
                   console.warn('[RevenueCat] logIn failed:', loginErr);
                 }
