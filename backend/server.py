@@ -2127,49 +2127,89 @@ async def generate_ai_stencil(request: AIStencilRequest):
         else:
             detail_level = "minimal" if request.shading_detail < 30 else "moderate" if request.shading_detail < 60 else "detailed"
         
-        # Create the prompt - Original Feb 16 style that produced excellent stencils
-        prompt = f"""Transform this image into a professional tattoo stencil drawing.
+        # Create the prompt - Structure extraction stencil generation
+        detail_block = ""
+        if detail_level == "minimal":
+            detail_block = """DETAIL LEVEL: LOW FIDELITY (coloring-book simplicity)
+The following instructions OVERRIDE any conflicting instructions above.
+- Draw ONLY the major outer contours and the most essential internal shapes
+- REMOVE all: texture, shading guides, micro detail, ornament clutter, secondary linework
+- NO dotted lines, NO dashed lines, NO cross-hatching, NO black fills
+- This must look like a simple coloring-book outline — the absolute minimum lines needed to recognize the subject
+- When in doubt, LEAVE IT OUT — fewer lines is always correct for this mode
+- Interior detail should be limited to only what is necessary to identify the subject (e.g., eyes on a face, but not eyelid creases)"""
+        elif detail_level == "moderate":
+            detail_block = """DETAIL LEVEL: MID-RANGE (structural form guidance)
+The following instructions OVERRIDE any conflicting instructions above.
+- Draw major contours PLUS useful internal form lines that guide the tattoo artist
+- Allow selective secondary lines for important internal structure
+- Allow sparse dotted lines ONLY for major shadow boundaries or form transitions
+- NO cross-hatching, NO black fills, NO texture rendering
+- This must be clearly MORE informative than a simple outline, but clearly CLEANER than a fully detailed stencil
+- Include: key anatomical landmarks, major fold/crease lines, primary ornament shapes
+- Exclude: fine texture, decorative micro-detail, dense shading guides"""
+        else:
+            detail_block = """DETAIL LEVEL: HIGH DEFINITION (maximum guidance without rendering)
+The following instructions OVERRIDE any conflicting instructions above.
+- Draw all contours, internal structure lines, and refined detail
+- Include dotted/dashed lines for shading boundaries, fade zones, and contour guidance
+- Include ornament detail, decorative elements, and fine structural features
+- NO cross-hatching, NO black fills, NO grayscale rendering
+- This should provide the most complete stencil guidance possible while remaining pure linework
+- The artist should be able to see exactly where every major form, shadow transition, and detail sits"""
 
-ORIENTATION: Maintain the EXACT same orientation as the input image.
-Do NOT rotate, mirror, or flip the composition. Top stays top, left stays left.
+        prompt = f"""Transform this image into a professional tattoo stencil.
 
-STRUCTURE: Preserve the primary subject's proportions, pose, and key anatomical landmarks exactly.
-Do not merge, omit, or reposition body parts, facial features, or compositional anchors.
+PRIMARY OBJECTIVE:
+Extract and simplify the existing structure of the image into clean, tattoo-ready linework.
+Do NOT interpret, invent, or redesign any part of the image.
 
-STRICT SOURCE ADHERENCE (CRITICAL):
-The output must be derived ONLY from visible information in the input image.
-DO NOT:
-- Infer, reconstruct, or complete missing anatomy
-- Add any structures that are not explicitly visible
-- Use anatomical knowledge to "fill in" missing parts
-- Assume symmetry or complete forms
-If a feature is partially visible or missing:
-- Only represent the visible portion
-- Do NOT extend or complete it
-Example: If a skull does NOT show a mandible, do NOT create or suggest a jawline or teeth below the visible structure.
-The stencil must reflect EXACTLY what is seen, not what is expected.
+CORE RULES:
 
-CRITICAL REQUIREMENTS:
-1. Create clean, smooth, continuous lines - NO noise or scattered marks
-2. Use {line_color} colored lines on a pure white background
-3. Draw like a skilled tattoo artist would hand-draw a stencil:
-   - Main outline contours with solid, confident lines
-   - Inner detail lines for important features
-   - Use dotted or dashed lines to indicate shading/contour areas where the tattoo artist would add shading
-4. Simplify the image - remove unnecessary details, keep only the essential form
-5. Lines should be bold enough to transfer clearly to skin
-6. The output should look like a professional tattoo stencil/blueprint
-7. NO grayscale shading - only line work
-8. Ensure all lines are connected and flowing, not broken or pixelated
+1. NO INVENTION
+- Do NOT add missing anatomy, objects, or details that are not clearly present in the reference
+- Do NOT complete partially visible elements (e.g., do not add a jaw if it is not visible)
+- If something is unclear or missing, OMIT it rather than guess
 
-DETAIL LEVEL: {detail_level.upper()}
-{{
-"- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
-"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
-"- Maximum detail: Full detail with hatching, all contours, and shading guides"
-}}
+2. PRESERVE STRUCTURE
+- Maintain exact proportions, placement, and relationships of all features
+- Keep the subject's pose, alignment, and composition unchanged
+- Do NOT shift, rotate, mirror, or recompose the image
 
-Style: Professional tattoo stencil suitable for thermal transfer paper"""
+3. SIMPLIFY — DO NOT REDRAW
+- Reduce complexity by removing unnecessary detail
+- Convert visual information into clean, readable linework
+- Focus on essential contours and structural divisions only
+
+4. LINEWORK ONLY
+- Output must be pure linework
+- NO grayscale, NO shading, NO rendering
+- NO solid black fill areas
+- NO cross-hatching
+- Lines must be clean, controlled, and suitable for stencil transfer
+
+5. EDGE DISCIPLINE
+- Only create lines where real structural edges or meaningful transitions exist
+- Do NOT trace noise, texture, or insignificant detail
+- Avoid jittery, sketchy, or broken lines
+
+6. CONSISTENCY
+- Line weight should feel intentional and even
+- Avoid random variation in thickness or density
+
+ORIENTATION:
+Maintain the EXACT same orientation as the input image.
+Do NOT rotate, mirror, or flip the composition.
+
+STRUCTURE SAFETY:
+- Do NOT merge or distort anatomical features
+- Do NOT fabricate symmetry
+- Do NOT "correct" or "improve" the subject
+- The stencil must reflect the real reference, not an idealized version
+
+{detail_block}
+
+Output must be a clean, professional tattoo stencil suitable for thermal transfer."""
 
         
         image_base64 = None
@@ -2325,49 +2365,89 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
         else:
             detail_level = "detailed"
         
-        # Create the prompt - Original Feb 16 style that produced excellent stencils
-        prompt = f"""Transform this image into a professional tattoo stencil drawing.
+        # Create the prompt - Structure extraction stencil generation
+        detail_block = ""
+        if detail_level == "minimal":
+            detail_block = """DETAIL LEVEL: LOW FIDELITY (coloring-book simplicity)
+The following instructions OVERRIDE any conflicting instructions above.
+- Draw ONLY the major outer contours and the most essential internal shapes
+- REMOVE all: texture, shading guides, micro detail, ornament clutter, secondary linework
+- NO dotted lines, NO dashed lines, NO cross-hatching, NO black fills
+- This must look like a simple coloring-book outline — the absolute minimum lines needed to recognize the subject
+- When in doubt, LEAVE IT OUT — fewer lines is always correct for this mode
+- Interior detail should be limited to only what is necessary to identify the subject (e.g., eyes on a face, but not eyelid creases)"""
+        elif detail_level == "moderate":
+            detail_block = """DETAIL LEVEL: MID-RANGE (structural form guidance)
+The following instructions OVERRIDE any conflicting instructions above.
+- Draw major contours PLUS useful internal form lines that guide the tattoo artist
+- Allow selective secondary lines for important internal structure
+- Allow sparse dotted lines ONLY for major shadow boundaries or form transitions
+- NO cross-hatching, NO black fills, NO texture rendering
+- This must be clearly MORE informative than a simple outline, but clearly CLEANER than a fully detailed stencil
+- Include: key anatomical landmarks, major fold/crease lines, primary ornament shapes
+- Exclude: fine texture, decorative micro-detail, dense shading guides"""
+        else:
+            detail_block = """DETAIL LEVEL: HIGH DEFINITION (maximum guidance without rendering)
+The following instructions OVERRIDE any conflicting instructions above.
+- Draw all contours, internal structure lines, and refined detail
+- Include dotted/dashed lines for shading boundaries, fade zones, and contour guidance
+- Include ornament detail, decorative elements, and fine structural features
+- NO cross-hatching, NO black fills, NO grayscale rendering
+- This should provide the most complete stencil guidance possible while remaining pure linework
+- The artist should be able to see exactly where every major form, shadow transition, and detail sits"""
 
-ORIENTATION: Maintain the EXACT same orientation as the input image.
-Do NOT rotate, mirror, or flip the composition. Top stays top, left stays left.
+        prompt = f"""Transform this image into a professional tattoo stencil.
 
-STRUCTURE: Preserve the primary subject's proportions, pose, and key anatomical landmarks exactly.
-Do not merge, omit, or reposition body parts, facial features, or compositional anchors.
+PRIMARY OBJECTIVE:
+Extract and simplify the existing structure of the image into clean, tattoo-ready linework.
+Do NOT interpret, invent, or redesign any part of the image.
 
-STRICT SOURCE ADHERENCE (CRITICAL):
-The output must be derived ONLY from visible information in the input image.
-DO NOT:
-- Infer, reconstruct, or complete missing anatomy
-- Add any structures that are not explicitly visible
-- Use anatomical knowledge to "fill in" missing parts
-- Assume symmetry or complete forms
-If a feature is partially visible or missing:
-- Only represent the visible portion
-- Do NOT extend or complete it
-Example: If a skull does NOT show a mandible, do NOT create or suggest a jawline or teeth below the visible structure.
-The stencil must reflect EXACTLY what is seen, not what is expected.
+CORE RULES:
 
-CRITICAL REQUIREMENTS:
-1. Create clean, smooth, continuous lines - NO noise or scattered marks
-2. Use purple/violet colored lines on a pure white background
-3. Draw like a skilled tattoo artist would hand-draw a stencil:
-   - Main outline contours with solid, confident lines
-   - Inner detail lines for important features
-   - Use dotted or dashed lines to indicate shading/contour areas where the tattoo artist would add shading
-4. Simplify the image - remove unnecessary details, keep only the essential form
-5. Lines should be bold enough to transfer clearly to skin
-6. The output should look like a professional tattoo stencil/blueprint
-7. NO grayscale shading - only line work
-8. Ensure all lines are connected and flowing, not broken or pixelated
+1. NO INVENTION
+- Do NOT add missing anatomy, objects, or details that are not clearly present in the reference
+- Do NOT complete partially visible elements (e.g., do not add a jaw if it is not visible)
+- If something is unclear or missing, OMIT it rather than guess
 
-DETAIL LEVEL: {detail_level.upper()}
-{{
-"- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
-"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
-"- Maximum detail: Full detail with hatching, all contours, and shading guides"
-}}
+2. PRESERVE STRUCTURE
+- Maintain exact proportions, placement, and relationships of all features
+- Keep the subject's pose, alignment, and composition unchanged
+- Do NOT shift, rotate, mirror, or recompose the image
 
-Style: Professional tattoo stencil suitable for thermal transfer paper"""
+3. SIMPLIFY — DO NOT REDRAW
+- Reduce complexity by removing unnecessary detail
+- Convert visual information into clean, readable linework
+- Focus on essential contours and structural divisions only
+
+4. LINEWORK ONLY
+- Output must be pure linework
+- NO grayscale, NO shading, NO rendering
+- NO solid black fill areas
+- NO cross-hatching
+- Lines must be clean, controlled, and suitable for stencil transfer
+
+5. EDGE DISCIPLINE
+- Only create lines where real structural edges or meaningful transitions exist
+- Do NOT trace noise, texture, or insignificant detail
+- Avoid jittery, sketchy, or broken lines
+
+6. CONSISTENCY
+- Line weight should feel intentional and even
+- Avoid random variation in thickness or density
+
+ORIENTATION:
+Maintain the EXACT same orientation as the input image.
+Do NOT rotate, mirror, or flip the composition.
+
+STRUCTURE SAFETY:
+- Do NOT merge or distort anatomical features
+- Do NOT fabricate symmetry
+- Do NOT "correct" or "improve" the subject
+- The stencil must reflect the real reference, not an idealized version
+
+{detail_block}
+
+Output must be a clean, professional tattoo stencil suitable for thermal transfer."""
 
         # Generate using Gemini
         result_base64, mime_type = await generate_with_gemini(image_data, prompt)
