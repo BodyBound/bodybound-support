@@ -2127,7 +2127,7 @@ async def generate_ai_stencil(request: AIStencilRequest):
         else:
             detail_level = "minimal" if request.shading_detail < 30 else "moderate" if request.shading_detail < 60 else "detailed"
         
-        # Create the prompt - Original Feb 16 style with safety additions
+        # Create the prompt - Original Feb 16 style that produced excellent stencils
         prompt = f"""Transform this image into a professional tattoo stencil drawing.
 
 CRITICAL REQUIREMENTS:
@@ -2143,47 +2143,12 @@ CRITICAL REQUIREMENTS:
 7. NO grayscale shading - only line work
 8. Ensure all lines are connected and flowing, not broken or pixelated
 
-ORIENTATION:
-- Maintain the EXACT same orientation as the input image
-- Do NOT rotate, mirror, or flip the composition
-
-SOURCE ACCURACY (NO INVENTION):
-- Do NOT add or invent any anatomy, objects, or details that are not clearly visible in the reference
-- Do NOT complete missing or partially visible structures (e.g., do NOT create a jaw if it is not present)
-- If information is unclear or missing, OMIT it rather than guess
-
-STRUCTURE PRESERVATION:
-- Maintain accurate proportions and placement of all features
-- Do NOT distort or reinterpret anatomical structure
-
-DETAIL PRIORITIZATION:
-- Prioritize important identity features (face, anatomy, key clothing details, major design elements)
-- Reduce or simplify low-value detail such as random texture noise or insignificant background clutter
-- Only include detail that improves readability or stencil usability
-
-CLARITY OVER COMPLETENESS:
-- Do not include detail simply because it exists
-- Every line must serve clarity, structure, or tattoo application
-
-CRITICAL FEATURE LOCK:
-The following features must ALWAYS be preserved at all detail levels (Low, Mid, High), regardless of simplification:
-- Eyes must always include:
-  - Iris
-  - Pupil
-  - Highlight (if visible in the source image)
-- Do NOT reduce eyes to empty outlines or blank shapes
-- Do NOT remove or simplify internal eye structure under any circumstances
-These elements are STRUCTURAL and NON-NEGOTIABLE.
-They must be preserved even when reducing overall detail.
-
 DETAIL LEVEL: {detail_level.upper()}
 {{
-"LOW DETAIL: Clean outer contours and essential structure only. Remove most interior detail while preserving recognizable form. DO NOT add unnecessary texture or complexity. Preserve major anatomical landmarks." if detail_level == "minimal" else
-"MODERATE DETAIL: Outlines plus key interior details and contour guides. Preserve all critical facial structures, especially eyes (iris, pupil, highlights). Do NOT simplify or omit these elements at this level. Use dotted or light contour lines to indicate form, but avoid over-cluttering. Maintain clarity and readability for stencil use." if detail_level == "moderate" else
-"HIGH DETAIL: Full structure with complete interior detail, shading guides, and refined linework. Preserve all anatomical features and important forms. Maintain clear hierarchy between primary lines and secondary detail. Avoid noise—detail should enhance readability, not reduce it."
+"- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
+"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
+"- Maximum detail: Full detail with hatching, all contours, and shading guides"
 }}
-
-DEBUG_MARKER: EYE_LOCK_V2_ACTIVE
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
@@ -2341,7 +2306,7 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
         else:
             detail_level = "detailed"
         
-        # Create the prompt - Original Feb 16 style with safety additions
+        # Create the prompt - Original Feb 16 style that produced excellent stencils
         prompt = f"""Transform this image into a professional tattoo stencil drawing.
 
 CRITICAL REQUIREMENTS:
@@ -2357,47 +2322,12 @@ CRITICAL REQUIREMENTS:
 7. NO grayscale shading - only line work
 8. Ensure all lines are connected and flowing, not broken or pixelated
 
-ORIENTATION:
-- Maintain the EXACT same orientation as the input image
-- Do NOT rotate, mirror, or flip the composition
-
-SOURCE ACCURACY (NO INVENTION):
-- Do NOT add or invent any anatomy, objects, or details that are not clearly visible in the reference
-- Do NOT complete missing or partially visible structures (e.g., do NOT create a jaw if it is not present)
-- If information is unclear or missing, OMIT it rather than guess
-
-STRUCTURE PRESERVATION:
-- Maintain accurate proportions and placement of all features
-- Do NOT distort or reinterpret anatomical structure
-
-DETAIL PRIORITIZATION:
-- Prioritize important identity features (face, anatomy, key clothing details, major design elements)
-- Reduce or simplify low-value detail such as random texture noise or insignificant background clutter
-- Only include detail that improves readability or stencil usability
-
-CLARITY OVER COMPLETENESS:
-- Do not include detail simply because it exists
-- Every line must serve clarity, structure, or tattoo application
-
-CRITICAL FEATURE LOCK:
-The following features must ALWAYS be preserved at all detail levels (Low, Mid, High), regardless of simplification:
-- Eyes must always include:
-  - Iris
-  - Pupil
-  - Highlight (if visible in the source image)
-- Do NOT reduce eyes to empty outlines or blank shapes
-- Do NOT remove or simplify internal eye structure under any circumstances
-These elements are STRUCTURAL and NON-NEGOTIABLE.
-They must be preserved even when reducing overall detail.
-
 DETAIL LEVEL: {detail_level.upper()}
 {{
-"LOW DETAIL: Clean outer contours and essential structure only. Remove most interior detail while preserving recognizable form. DO NOT add unnecessary texture or complexity. Preserve major anatomical landmarks." if detail_level == "minimal" else
-"MODERATE DETAIL: Outlines plus key interior details and contour guides. Preserve all critical facial structures, especially eyes (iris, pupil, highlights). Do NOT simplify or omit these elements at this level. Use dotted or light contour lines to indicate form, but avoid over-cluttering. Maintain clarity and readability for stencil use." if detail_level == "moderate" else
-"HIGH DETAIL: Full structure with complete interior detail, shading guides, and refined linework. Preserve all anatomical features and important forms. Maintain clear hierarchy between primary lines and secondary detail. Avoid noise—detail should enhance readability, not reduce it."
+"- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
+"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
+"- Maximum detail: Full detail with hatching, all contours, and shading guides"
 }}
-
-DEBUG_MARKER: EYE_LOCK_V2_ACTIVE
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
