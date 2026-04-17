@@ -2165,6 +2165,13 @@ CLARITY OVER COMPLETENESS:
 - Do not include detail simply because it exists
 - Every line must serve clarity, structure, or tattoo application
 
+FACIAL FEATURE CONSISTENCY (CRITICAL):
+- Eyes are a primary identity feature and must be handled consistently across all detail levels
+- Always include the iris and pupil when visible in the source image
+- Preserve basic eye highlights/glare if present in the reference
+- Do NOT omit or simplify the eyes to blank shapes in any mode
+- Detail level may affect surrounding eye detail (wrinkles, lashes, shading guides), but NOT the core eye structure
+
 DETAIL LEVEL: {detail_level.upper()}
 {{
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
@@ -2365,6 +2372,13 @@ DETAIL PRIORITIZATION:
 CLARITY OVER COMPLETENESS:
 - Do not include detail simply because it exists
 - Every line must serve clarity, structure, or tattoo application
+
+FACIAL FEATURE CONSISTENCY (CRITICAL):
+- Eyes are a primary identity feature and must be handled consistently across all detail levels
+- Always include the iris and pupil when visible in the source image
+- Preserve basic eye highlights/glare if present in the reference
+- Do NOT omit or simplify the eyes to blank shapes in any mode
+- Detail level may affect surrounding eye detail (wrinkles, lashes, shading guides), but NOT the core eye structure
 
 DETAIL LEVEL: {detail_level.upper()}
 {{
