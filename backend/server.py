@@ -2136,6 +2136,17 @@ Do NOT rotate, mirror, or flip the composition. Top stays top, left stays left.
 STRUCTURE: Preserve the primary subject's proportions, pose, and key anatomical landmarks exactly.
 Do not merge, omit, or reposition body parts, facial features, or compositional anchors.
 
+STRICT ACCURACY RULE:
+Only translate what is visibly present in the reference image.
+DO NOT:
+- add missing anatomy
+- complete partial structures
+- "fix" or "correct" the design
+- infer hidden or implied elements
+- invent details that are not explicitly visible
+If a structure is incomplete, cropped, or stylized (for example: a skull missing a lower jaw), it must remain exactly as-is.
+The stencil must be a direct structural translation of the input image, not an interpreted or improved version.
+
 CRITICAL REQUIREMENTS:
 1. Create clean, smooth, continuous lines - NO noise or scattered marks
 2. Use {line_color} colored lines on a pure white background
@@ -2320,6 +2331,17 @@ Do NOT rotate, mirror, or flip the composition. Top stays top, left stays left.
 
 STRUCTURE: Preserve the primary subject's proportions, pose, and key anatomical landmarks exactly.
 Do not merge, omit, or reposition body parts, facial features, or compositional anchors.
+
+STRICT ACCURACY RULE:
+Only translate what is visibly present in the reference image.
+DO NOT:
+- add missing anatomy
+- complete partial structures
+- "fix" or "correct" the design
+- infer hidden or implied elements
+- invent details that are not explicitly visible
+If a structure is incomplete, cropped, or stylized (for example: a skull missing a lower jaw), it must remain exactly as-is.
+The stencil must be a direct structural translation of the input image, not an interpreted or improved version.
 
 CRITICAL REQUIREMENTS:
 1. Create clean, smooth, continuous lines - NO noise or scattered marks
