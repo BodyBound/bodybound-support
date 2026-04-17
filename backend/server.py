@@ -439,6 +439,9 @@ def post_process_stencil(base64_string: str) -> str:
         gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
         logger.info("[PostProcess] Converted to grayscale (removed any color)")
         
+        # === STEP 1b: Light blur to reduce micro-noise before thresholding ===
+        gray = cv2.GaussianBlur(gray, (3, 3), 0)
+        
         # === STEP 2: Apply adaptive threshold for better line preservation ===
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         logger.info("[PostProcess] Applied Otsu's adaptive threshold")
@@ -2127,6 +2130,12 @@ async def generate_ai_stencil(request: AIStencilRequest):
         # Create the prompt - Original Feb 16 style that produced excellent stencils
         prompt = f"""Transform this image into a professional tattoo stencil drawing.
 
+ORIENTATION: Maintain the EXACT same orientation as the input image.
+Do NOT rotate, mirror, or flip the composition. Top stays top, left stays left.
+
+STRUCTURE: Preserve the primary subject's proportions, pose, and key anatomical landmarks exactly.
+Do not merge, omit, or reposition body parts, facial features, or compositional anchors.
+
 CRITICAL REQUIREMENTS:
 1. Create clean, smooth, continuous lines - NO noise or scattered marks
 2. Use {line_color} colored lines on a pure white background
@@ -2141,11 +2150,11 @@ CRITICAL REQUIREMENTS:
 8. Ensure all lines are connected and flowing, not broken or pixelated
 
 DETAIL LEVEL: {detail_level.upper()}
-{
+{{
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
 "- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
 "- Maximum detail: Full detail with hatching, all contours, and shading guides"
-}
+}}
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
@@ -2306,6 +2315,12 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
         # Create the prompt - Original Feb 16 style that produced excellent stencils
         prompt = f"""Transform this image into a professional tattoo stencil drawing.
 
+ORIENTATION: Maintain the EXACT same orientation as the input image.
+Do NOT rotate, mirror, or flip the composition. Top stays top, left stays left.
+
+STRUCTURE: Preserve the primary subject's proportions, pose, and key anatomical landmarks exactly.
+Do not merge, omit, or reposition body parts, facial features, or compositional anchors.
+
 CRITICAL REQUIREMENTS:
 1. Create clean, smooth, continuous lines - NO noise or scattered marks
 2. Use purple/violet colored lines on a pure white background
@@ -2320,11 +2335,11 @@ CRITICAL REQUIREMENTS:
 8. Ensure all lines are connected and flowing, not broken or pixelated
 
 DETAIL LEVEL: {detail_level.upper()}
-{
+{{
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
 "- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
 "- Maximum detail: Full detail with hatching, all contours, and shading guides"
-}
+}}
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
