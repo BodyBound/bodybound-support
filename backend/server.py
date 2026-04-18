@@ -3675,7 +3675,7 @@ async def admin_webhook_debug():
     # Check for any subscriptions with last_event from webhooks
     webhook_updated = []
     async for doc in db.subscriptions.find(
-        {'last_event': {'$in': ['INITIAL_PURCHASE', 'RENEWAL', 'CANCELLATION', 'EXPIRATION']}},
+        {'last_event': {'$in': ['INITIAL_PURCHASE', 'RENEWAL', 'CANCELLATION', 'EXPIRATION', 'TRANSFER', 'TRANSFER_DEFAULT', 'TRANSFER_OUT']}},
         {'_id': 0}
     ).limit(20):
         webhook_updated.append(doc)
