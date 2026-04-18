@@ -3965,6 +3965,81 @@ async def revenuecat_webhook(request: FastAPIRequest):
     
     logger.info(f'[RevenueCat] {event_type} | user_id={user_id} | raw_id={raw_user_id} | product={product_id}')
     tier_info = PRODUCT_CREDIT_MAP.get(product_id, {})
+    if event_type == 'TRANSFER':
+        # TRANSFER events move a subscription from one user to another.
+        # transferred_to = user who NOW has the subscription
+        # transferred_from = user who lost it
+        transferred_to = event.get('transferred_to', [])
+        transferred_from = event.get('transferred_from', [])
+        logger.info(f'[RevenueCat:TRANSFER] from={transferred_from} to={transferred_to}')
+        
+        # Find the target user (transferred_to) — should be our backend user_id
+        target_user_id = ''
+        for candidate in transferred_to:
+            if candidate and candidate.startswith('user_'):
+                target_user_id = candidate
+                break
+        
+        if not target_user_id:
+            logger.warning(f'[RevenueCat:TRANSFER] No valid target user_id in transferred_to={transferred_to}')
+            return {'status': 'ok'}
+        
+        # Find the source subscription to copy tier/credits from
+        source_sub = None
+        for candidate in transferred_from:
+            if not candidate:
+                continue
+            sub = await db.subscriptions.find_one(
+                {'$or': [{'user_id': candidate}, {'revenuecat_customer_id': candidate}]},
+                {'_id': 0}
+            )
+            if sub and sub.get('tier') and sub.get('tier') not in (None, 'expired', 'trial_expired', 'paywall_bypass'):
+                source_sub = sub
+                logger.info(f'[RevenueCat:TRANSFER] Found source sub from {candidate}: tier={sub.get("tier")} credits={sub.get("available_credits")}')
+                break
+        
+        if source_sub:
+            # Copy subscription state from source to target
+            await db.subscriptions.update_one(
+                {'user_id': target_user_id},
+                {'$set': {
+                    'tier': source_sub.get('tier'),
+                    'available_credits': source_sub.get('available_credits', 0),
+                    'is_trial': source_sub.get('is_trial', False),
+                    'renewal_date': source_sub.get('renewal_date'),
+                    'last_event': 'TRANSFER',
+                    'transferred_from': transferred_from[0] if transferred_from else '',
+                }},
+                upsert=True
+            )
+            logger.info(f'[RevenueCat:TRANSFER] Granted tier={source_sub.get("tier")} credits={source_sub.get("available_credits")} to {target_user_id}')
+            # Expire the source user's subscription
+            for candidate in transferred_from:
+                if candidate and candidate.startswith('user_'):
+                    await db.subscriptions.update_one(
+                        {'user_id': candidate},
+                        {'$set': {'tier': 'expired', 'last_event': 'TRANSFER_OUT'}}
+                    )
+        else:
+            # No source sub found — grant default walk-in trial as safe fallback
+            # (RC confirmed this user has a subscription by sending TRANSFER)
+            logger.warning(f'[RevenueCat:TRANSFER] No source sub found. Granting default walk-in trial to {target_user_id}')
+            await db.subscriptions.update_one(
+                {'user_id': target_user_id},
+                {'$set': {
+                    'tier': 'walk-in',
+                    'available_credits': TRIAL_CREDITS,
+                    'is_trial': True,
+                    'renewal_date': (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+                    'last_event': 'TRANSFER_DEFAULT',
+                    'transferred_from': transferred_from[0] if transferred_from else '',
+                }},
+                upsert=True
+            )
+            logger.info(f'[RevenueCat:TRANSFER] Default walk-in trial granted to {target_user_id}')
+        
+        return {'status': 'ok'}
+    
     if event_type in ('INITIAL_PURCHASE', 'RENEWAL') and tier_info and user_id:
         # Detect Apple trial vs paid subscription
         period_type = event.get('period_type', 'NORMAL')
