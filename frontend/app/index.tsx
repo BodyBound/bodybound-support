@@ -2553,6 +2553,110 @@ export default function Index() {
     );
   };
 
+  // Full workspace reset — wipes user-bound editor/session state so switching
+  // accounts opens a clean workspace (bug: previous user's image/stencil
+  // was bleeding into the new user's session).
+  const resetWorkspaceState = () => {
+    // Image/stencil state
+    setOriginalImage(null);
+    setStencilImage(null);
+    setReferencePhotoLayer(null);
+    setEditedStencil(null);
+    setOriginalAIStencil(null);
+    // Per-style versions + history
+    setStencilVersions({ light: null, medium: null, heavy: null });
+    setStencilHistory({ light: [], medium: [], heavy: [] });
+    setStencilHistoryIndex({ light: 0, medium: 0, heavy: 0 });
+    setStylesGenerated(new Set());
+    setFreeStyleChangeUsed(false);
+    setFreeRegenUsed(new Set());
+    setSelectedVersion('medium');
+    setRegeneratingStyle(null);
+    setShowingOriginal(false);
+    setStencilTintColor(null);
+    // Edit-mode canvas state
+    setShowEditModal(false);
+    setEditModeStencilImage(null);
+    setEditModeOriginalImage(null);
+    setDrawingPaths([]);
+    setCurrentPath('');
+    setCurrentPoints([]);
+    setDotMarks([]);
+    setIsEraser(false);
+    setEnableFingerPainting(false);
+    setEditOpacity(0.5);
+    setEditOpacityDisplay(50);
+    setBrushSize(3);
+    setBrushSizeDisplay(3);
+    setLineWeight(0);
+    setLineWeightDisplay(0);
+    // Generation/workflow state
+    setIsProcessing(false);
+    setIsLiveUpdating(false);
+    setIsSaving(false);
+    setIsSavingToDevice(false);
+    setIsGeneratingAI(false);
+    setGenerationTimedOut(false);
+    setIsRemovingBackground(false);
+    setIsValidatingImage(false);
+    setHasGeneratedOnce(false);
+    setSuccessfulGenerations(0);
+    // Modals
+    setShowPreviewModal(false);
+    setShowCropModal(false);
+    setShowSaveModal(false);
+    setShowGallery(false);
+    setStencilName('');
+    // Quality warnings
+    setImageQualityWarnings([]);
+    setImageQualitySuggestions([]);
+    setShowQualityWarning(false);
+    // Low-credit / referral nudges
+    setShowLowCreditModal(false);
+    setShowReferralBanner(false);
+    setShowMilestoneModal(false);
+    lowCreditNotifiedRef.current = false;
+    // Canvas transforms (Reanimated shared values)
+    scale.value = 1;
+    translateX.value = 0;
+    translateY.value = 0;
+    rotation.value = 0;
+    savedScale.value = 1;
+    savedTranslateX.value = 0;
+    savedTranslateY.value = 0;
+    savedRotation.value = 0;
+  };
+
+  // Full sign-out — clears auth state AND workspace state so the next user
+  // gets a clean session (no previous user's loaded image/stencil/edits).
+  const handleSignOut = async () => {
+    try {
+      await deleteToken();
+    } catch (_) {}
+    // Workspace first, then auth — order doesn't matter functionally but
+    // this keeps the screen visually clean while the welcome screen mounts.
+    resetWorkspaceState();
+    setCurrentUser(null);
+    setSessionToken(null);
+    setAvailableCredits(0);
+    setTotalMonthlyCredits(0);
+    setUserTier(null);
+    setPaywallRequired(false);
+    setShowPaywall(false);
+    setShowSettings(false);
+    setShowStudioTeam(false);
+    setShowReferralDashboard(false);
+    setShowReferralPopup(false);
+    setShowFeedbackFlow(false);
+    setShowFlexMessage(false);
+    setFlexMessage(null);
+    setReferralPopupData(null);
+    setShowAuth(false);
+    setShowWelcome(true);
+  };
+
+
+
   // Helper: Create smooth bezier curve from points
   // Procreate-style StreamLine smoothing parameters - REDUCED for faster response
   const streamLineAmount = 0.2; // 0 = no smoothing, 1 = max smoothing (was 0.5, now more responsive)
@@ -4717,13 +4821,8 @@ export default function Index() {
           <SettingsScreen
             user={currentUser}
             credits={currentUser ? { available_credits: availableCredits, tier: userTier as any, is_trial: false, trial_expires_at: null, trial_days_remaining: null, renewal_date: null, revenuecat_customer_id: null } : null}
-            onSignOut={() => {
-              setCurrentUser(null);
-              setSessionToken(null);
-              setAvailableCredits(0);
-              setUserTier(null);
-              setShowSettings(false);
-              setShowWelcome(true);
+            onSignOut={async () => {
+              await handleSignOut();
             }}
             onClose={() => setShowSettings(false)}
             onManageSubscription={() => { setShowSettings(false); setShowPaywall(true); }}
@@ -4765,15 +4864,7 @@ export default function Index() {
             }}
             onDismiss={paywallRequired ? undefined : () => setShowPaywall(false)}
             onSignOut={async () => {
-              await deleteToken();
-              setCurrentUser(null);
-              setSessionToken(null);
-              setAvailableCredits(0);
-              setTotalMonthlyCredits(0);
-              setUserTier(null);
-              setPaywallRequired(false);
-              setShowPaywall(false);
-              setShowWelcome(true);
+              await handleSignOut();
             }}
           />
         </View>
