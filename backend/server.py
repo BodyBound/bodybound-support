@@ -5259,13 +5259,41 @@ async def admin_action_grant_credits(request: FastAPIRequest):
     body = await request.json()
     email = body.get('email', '')
     credits = body.get('credits', 0)
-    user = await db.users.find_one({'email': {'$regex': email, '$options': 'i'}}, {'_id': 0})
+    # Use EXACT email match to prevent accidentally hitting the wrong
+    # user when multiple emails share a prefix (e.g. bodyboundstencil
+    # vs bodyboundstencilapp).
+    user = await db.users.find_one({'email': email}, {'_id': 0})
     if not user:
-        raise HTTPException(status_code=404, detail='User not found')
+        raise HTTPException(status_code=404, detail=f'User not found (exact email match: "{email}")')
     await db.subscriptions.update_one({'user_id': user['user_id']}, {'$inc': {'available_credits': credits}}, upsert=True)
     updated = await db.subscriptions.find_one({'user_id': user['user_id']}, {'_id': 0})
+    # Prevent going negative
+    if updated.get('available_credits', 0) < 0:
+        await db.subscriptions.update_one({'user_id': user['user_id']}, {'$set': {'available_credits': 0}})
+        updated['available_credits'] = 0
     await log_admin_action(admin['email'], 'grant_credits', email, {'credits': credits, 'new_total': updated.get('available_credits', 0)})
     return {'status': 'ok', 'new_credits': updated.get('available_credits', 0)}
+
+@api_router.post("/admin-tool/action/set-credits")
+async def admin_action_set_credits(request: FastAPIRequest):
+    """Set credits to an EXACT value (overwrites current balance)."""
+    admin = await verify_admin(request.headers.get('authorization'))
+    body = await request.json()
+    email = body.get('email', '')
+    credits = int(body.get('credits', 0))
+    if credits < 0:
+        raise HTTPException(status_code=400, detail='Credits cannot be negative')
+    user = await db.users.find_one({'email': email}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail=f'User not found (exact email match: "{email}")')
+    await db.subscriptions.update_one(
+        {'user_id': user['user_id']},
+        {'$set': {'available_credits': credits, 'last_event': 'ADMIN_SET_CREDITS'}},
+        upsert=True,
+    )
+    await log_admin_action(admin['email'], 'set_credits', email, {'new_total': credits})
+    return {'status': 'ok', 'new_credits': credits}
+
 
 @api_router.post("/admin-tool/action/change-tier")
 async def admin_action_change_tier(request: FastAPIRequest):

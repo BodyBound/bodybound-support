@@ -302,32 +302,55 @@ async function doSearch(){
 async function loadUser(email){
   CURRENT_USER_EMAIL=email;
   showScreen('user');
+  // Reset all fields to loading state so stale "-" doesn't mask a failed load
+  ['u-name','u-email','u-tier','u-credits','u-trial','u-event','u-rcid','u-created','u-history','u-debug'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent='Loading…';
+  });
   try{
     const r=await fetch(API+'/admin-tool/user/'+encodeURIComponent(email),{headers:authHeaders()});
+    if(!r.ok){
+      const txt=await r.text();
+      alert(`Could not load user "${email}" — ${r.status} ${txt||'(no details)'}. Go back and pick a different account.`);
+      return;
+    }
     const d=await r.json();
-    const u=d.user,s=d.subscription||{};
+    const u=d.user||{},s=d.subscription||{};
     document.getElementById('u-name').textContent=u.name||u.display_name||'Unknown';
     document.getElementById('u-email').textContent=u.email||'No email';
     document.getElementById('u-tier').innerHTML='<span class="badge '+tierBadge(s.tier)+'">'+(s.tier||'none')+'</span>';
-    document.getElementById('u-credits').textContent=s.available_credits||0;
+    const creditsVal=(s.available_credits===undefined||s.available_credits===null)?0:s.available_credits;
+    document.getElementById('u-credits').textContent=creditsVal;
     document.getElementById('u-trial').innerHTML=s.is_trial?'<span class="badge badge-blue">Yes</span>':'<span class="badge badge-green">No</span>';
     document.getElementById('u-event').textContent=s.last_event||'-';
     document.getElementById('u-rcid').textContent=s.revenuecat_customer_id||'Not linked';
     document.getElementById('u-created').textContent=fmtTime(u.created_at);
     // Admin history
     const hEl=document.getElementById('u-history');
-    if(!d.admin_history.length){hEl.innerHTML='<span class="stat-label">No admin actions</span>'}
+    if(!d.admin_history||!d.admin_history.length){hEl.innerHTML='<span class="stat-label">No admin actions</span>'}
     else{hEl.innerHTML=d.admin_history.map(a=>`<div class="error-item"><div class="error-type">${a.action} <span style="color:var(--muted);font-weight:400">${fmtTime(a.timestamp)}</span></div><div class="error-detail">${JSON.stringify(a.details)}</div></div>`).join('')}
     // Debug report
-    document.getElementById('u-debug').textContent=`Email: ${u.email}\nName: ${u.name||u.display_name||'-'}\nUser ID: ${u.user_id}\nTier: ${s.tier||'none'}\nCredits: ${s.available_credits||0}\nTrial: ${s.is_trial||false}\nLast Event: ${s.last_event||'-'}\nRC ID: ${s.revenuecat_customer_id||'none'}\nCreated: ${u.created_at||'-'}\nTimestamp: ${new Date().toISOString()}`;
-  }catch(e){console.error(e)}
+    document.getElementById('u-debug').textContent=`Email: ${u.email}\nName: ${u.name||u.display_name||'-'}\nUser ID: ${u.user_id}\nTier: ${s.tier||'none'}\nCredits: ${creditsVal}\nTrial: ${s.is_trial||false}\nLast Event: ${s.last_event||'-'}\nRC ID: ${s.revenuecat_customer_id||'none'}\nCreated: ${u.created_at||'-'}\nTimestamp: ${new Date().toISOString()}`;
+  }catch(e){
+    console.error(e);
+    alert(`Failed to load user: ${e.message||e}`);
+  }
 }
 
 // Actions
 function showModal(type){
   const el=document.getElementById('modal-content');
   if(type==='credits'){
-    el.innerHTML=`<h3>Grant/Remove Credits</h3><input class="input" id="modal-credits" type="number" placeholder="Credits (negative to remove)"><button class="btn" onclick="actionCredits()">Apply</button>`;
+    el.innerHTML=`
+      <h3>Grant / Remove Credits</h3>
+      <p style="color:var(--muted);font-size:13px;margin:8px 0 12px">Enter a positive number, then tap the action you want.</p>
+      <input class="input" id="modal-credits" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="e.g. 25" autocomplete="off">
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn" style="flex:1;background:#16A34A;color:#fff" onclick="actionCredits(1)">+ Add</button>
+        <button class="btn" style="flex:1;background:#DC2626;color:#fff" onclick="actionCredits(-1)">− Remove</button>
+      </div>
+      <button class="btn" style="width:100%;margin-top:12px;background:#1f2937;color:#fff" onclick="actionCreditsSet()">Set Exact (overwrite)</button>
+    `;
   }else if(type==='tier'){
     el.innerHTML=`<h3>Change Tier</h3><select class="input" id="modal-tier"><option value="walk-in">Walk-In (125 credits)</option><option value="booked-out">Booked-Out (500 credits)</option><option value="the-shop">The Shop (1500 credits)</option></select><button class="btn" onclick="actionTier()">Apply</button>`;
   }
@@ -335,10 +358,20 @@ function showModal(type){
 }
 function closeModal(){document.getElementById('modal-overlay').classList.add('hidden')}
 
-async function actionCredits(){
-  const credits=parseInt(document.getElementById('modal-credits').value);
-  if(isNaN(credits)){alert('Enter a number');return}
+async function actionCredits(sign){
+  const raw=document.getElementById('modal-credits').value.trim();
+  const n=parseInt(raw,10);
+  if(isNaN(n)||n<0){alert('Enter a non-negative number.');return}
+  const credits=sign*n;
   await adminAction('grant-credits',{email:CURRENT_USER_EMAIL,credits});
+  closeModal();loadUser(CURRENT_USER_EMAIL);
+}
+async function actionCreditsSet(){
+  const raw=document.getElementById('modal-credits').value.trim();
+  const n=parseInt(raw,10);
+  if(isNaN(n)||n<0){alert('Enter a non-negative number.');return}
+  if(!confirm(`Overwrite current balance and set credits to exactly ${n}?`))return;
+  await adminAction('set-credits',{email:CURRENT_USER_EMAIL,credits:n});
   closeModal();loadUser(CURRENT_USER_EMAIL);
 }
 async function actionTier(){
