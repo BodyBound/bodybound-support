@@ -345,6 +345,50 @@ export default function Index() {
   const [freeStyleChangeUsed, setFreeStyleChangeUsed] = useState(false);
   const [freeRegenUsed, setFreeRegenUsed] = useState<Set<string>>(new Set());
   
+  // Stencil history per style: allows back/forward navigation between generations
+  const [stencilHistory, setStencilHistory] = useState<{ [key: string]: string[] }>({ light: [], medium: [], heavy: [] });
+  const [stencilHistoryIndex, setStencilHistoryIndex] = useState<{ [key: string]: number }>({ light: 0, medium: 0, heavy: 0 });
+
+  const addToHistory = (style: string, base64: string) => {
+    setStencilHistory(prev => {
+      const current = [...(prev[style] || [])];
+      current.push(base64);
+      return { ...prev, [style]: current };
+    });
+    setStencilHistoryIndex(prev => {
+      const newIdx = (stencilHistory[style]?.length || 0); // points to the newly added item
+      return { ...prev, [style]: newIdx };
+    });
+  };
+
+  const goBackInHistory = (style: string) => {
+    const history = stencilHistory[style] || [];
+    const currentIdx = stencilHistoryIndex[style] || 0;
+    if (currentIdx > 0) {
+      const newIdx = currentIdx - 1;
+      setStencilHistoryIndex(prev => ({ ...prev, [style]: newIdx }));
+      setStencilImage(history[newIdx]);
+      setStencilVersions(prev => ({ ...prev, [style]: history[newIdx] }));
+    }
+  };
+
+  const goForwardInHistory = (style: string) => {
+    const history = stencilHistory[style] || [];
+    const currentIdx = stencilHistoryIndex[style] || 0;
+    if (currentIdx < history.length - 1) {
+      const newIdx = currentIdx + 1;
+      setStencilHistoryIndex(prev => ({ ...prev, [style]: newIdx }));
+      setStencilImage(history[newIdx]);
+      setStencilVersions(prev => ({ ...prev, [style]: history[newIdx] }));
+    }
+  };
+
+  const hasHistoryBack = (style: string) => (stencilHistoryIndex[style] || 0) > 0;
+  const hasHistoryForward = (style: string) => {
+    const history = stencilHistory[style] || [];
+    return (stencilHistoryIndex[style] || 0) < history.length - 1;
+  };
+  
   // Dot marks for pencil taps (for better sensitivity)
   const [dotMarks, setDotMarks] = useState<{x: number, y: number, size: number}[]>([]);
   
@@ -1440,6 +1484,7 @@ export default function Index() {
         // Auto-select the regenerated style
         setSelectedVersion(style);
         setStencilImage(data.stencil_base64);
+        addToHistory(style, data.stencil_base64);
 
         // Deduct 1 credit for successful regeneration (skip if first free regen)
         if (isFirstRegen) {
@@ -1595,6 +1640,7 @@ export default function Index() {
             // Always save the freshly generated transparent stencil as the base for edit mode
             setOriginalAIStencil(generatedStencil);
             console.log('[GenerateSingle] Saved originalAIStencil (transparent PNG base)');
+            addToHistory(style, generatedStencil);
 
             // Deduct 1 credit for successful generation (skip if free style change)
             setStylesGenerated(prev => new Set(prev).add(style));
@@ -3398,6 +3444,8 @@ export default function Index() {
     setStylesGenerated(new Set());
     setFreeStyleChangeUsed(false);
     setFreeRegenUsed(new Set());
+    setStencilHistory({ light: [], medium: [], heavy: [] });
+    setStencilHistoryIndex({ light: 0, medium: 0, heavy: 0 });
     setSettings({
       clarity: 30,
       line_weight: 40,
@@ -3773,12 +3821,27 @@ export default function Index() {
                   </TouchableOpacity>
                 )}
 
-                {/* Revert button - show whenever original AI stencil exists and current image differs */}
-                {originalAIStencil && stencilImage !== originalAIStencil && (
-                  <TouchableOpacity style={styles.revertButton} onPress={revertToOriginal}>
-                    <Text style={styles.revertButtonIcon}>↩️</Text>
-                    <Text style={styles.revertButtonText}>Revert to Original AI Stencil</Text>
-                  </TouchableOpacity>
+                {/* Generation history navigation — back/forward arrows */}
+                {(hasHistoryBack(selectedVersion) || hasHistoryForward(selectedVersion)) && (
+                  <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 8 }}>
+                    <TouchableOpacity 
+                      onPress={() => goBackInHistory(selectedVersion)} 
+                      disabled={!hasHistoryBack(selectedVersion)}
+                      style={{ opacity: hasHistoryBack(selectedVersion) ? 1 : 0.3, backgroundColor: '#1a1a1a', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, borderColor: '#333' }}
+                    >
+                      <Text style={{ color: '#C9A227', fontSize: 14, fontWeight: '600' }}>◀ Prev</Text>
+                    </TouchableOpacity>
+                    <Text style={{ color: '#666', fontSize: 12 }}>
+                      {(stencilHistoryIndex[selectedVersion] || 0) + 1} / {stencilHistory[selectedVersion]?.length || 0}
+                    </Text>
+                    <TouchableOpacity 
+                      onPress={() => goForwardInHistory(selectedVersion)} 
+                      disabled={!hasHistoryForward(selectedVersion)}
+                      style={{ opacity: hasHistoryForward(selectedVersion) ? 1 : 0.3, backgroundColor: '#1a1a1a', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, borderColor: '#333' }}
+                    >
+                      <Text style={{ color: '#C9A227', fontSize: 14, fontWeight: '600' }}>Next ▶</Text>
+                    </TouchableOpacity>
+                  </View>
                 )}
               </View>
             </View>
