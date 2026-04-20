@@ -3954,8 +3954,18 @@ export default function Index() {
             </TouchableOpacity>
           )}
           {originalImage && (
-            <TouchableOpacity style={styles.resetButton} onPress={resetAll}>
-              <Text style={styles.buttonIcon}>🔄</Text>
+            <TouchableOpacity style={styles.resetButton} onPress={() => {
+              Alert.alert(
+                'Start a new stencil?',
+                'Your current stencil will be lost if not saved.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Start New', style: 'destructive', onPress: resetAll },
+                ]
+              );
+            }}>
+              <Text style={styles.buttonIcon}>🆕</Text>
+              <Text style={{color: '#9CA3AF', fontSize: 10, marginTop: 2}}>Start Over</Text>
             </TouchableOpacity>
           )}
         </View>
