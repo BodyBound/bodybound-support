@@ -10,7 +10,28 @@
 - **Webhook Auth**: Bearer bb-rc-webhook-2026-secure-x9k2m (currently not enforced)
 - **Webhook URL**: https://bodybound-subs.emergent.host/api/webhooks/revenuecat
 
-## Admin Endpoints (no auth required currently)
+## Admin Tool
+- URL: https://bodybound-subs.emergent.host/api/admin-panel (after deploy)
+- Preview: https://stencil-ai-fallback.preview.emergentagent.com/api/admin-panel
+- Login: bodyboundstencil@yahoo.com / Body.Bound.72410
+- Session: 12h expiry, rate-limited (5 attempts / 5 min lockout)
+
+## Admin Endpoints (secured — require admin JWT)
+- POST /api/admin-auth/login
+- GET /api/admin-auth/me
+- GET /api/admin-tool/dashboard
+- GET /api/admin-tool/search?q=X
+- GET /api/admin-tool/user/{email}
+- POST /api/admin-tool/action/grant-credits
+- POST /api/admin-tool/action/change-tier
+- POST /api/admin-tool/action/reset-account
+- POST /api/admin-tool/action/paywall-bypass
+- GET /api/admin-tool/errors/webhooks
+- GET /api/admin-tool/errors/generation
+- GET /api/admin-tool/errors/sync
+- GET /api/admin-tool/audit-log
+
+## Legacy Admin Endpoints (no auth required currently)
 - GET /api/admin/user-lookup?email=X
 - POST /api/admin/fix-subscription {"email": "X", "product_id": "bodybound_1499_1m_3d"}
 - POST /api/admin/add-credits {"email": "X", "credits": 25}

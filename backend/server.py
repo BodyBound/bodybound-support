@@ -4723,6 +4723,263 @@ async def grant_fallback_credits(request: FastAPIRequest):
     logger.info(f"[Fallback] Granted {FALLBACK_CREDITS} credits to {user_id}")
     return {"status": "granted", "credits": FALLBACK_CREDITS}
 
+# ============================================
+# ADMIN TOOL — Auth, Audit, Error Monitoring
+# ============================================
+import bcrypt
+
+ADMIN_EMAIL = 'bodyboundstencil@yahoo.com'
+ADMIN_PASSWORD_HASH = '$2b$12$VKq5RzZcTXgsrYdrfTp/BOvL38amaTcj92sgDknjypnhqAZSZh8aW'
+ADMIN_LOGIN_ATTEMPTS = {}  # rate limiting: {ip: [timestamps]}
+ADMIN_MAX_ATTEMPTS = 5
+ADMIN_LOCKOUT_SECONDS = 300
+
+def create_admin_token(email: str) -> str:
+    payload = {
+        'email': email,
+        'role': 'admin',
+        'exp': datetime.now(timezone.utc) + timedelta(hours=12),
+        'iat': datetime.now(timezone.utc),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm='HS256')
+
+async def verify_admin(auth_header: Optional[str]):
+    if not auth_header or not auth_header.startswith('Bearer '):
+        raise HTTPException(status_code=401, detail='Missing admin authorization')
+    token = auth_header[7:]
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        if payload.get('role') != 'admin':
+            raise HTTPException(status_code=403, detail='Not an admin')
+        return payload
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail='Session expired — please log in again')
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail='Invalid session')
+
+async def log_admin_action(admin_email: str, action: str, target_email: str, details: dict):
+    await db.admin_actions.insert_one({
+        'admin_email': admin_email,
+        'action': action,
+        'target_email': target_email,
+        'details': details,
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+    })
+
+@api_router.post("/admin-auth/login")
+async def admin_login(request: FastAPIRequest):
+    body = await request.json()
+    email = body.get('email', '').strip().lower()
+    password = body.get('password', '')
+    client_ip = request.client.host if request.client else 'unknown'
+
+    # Rate limiting
+    now = datetime.now(timezone.utc).timestamp()
+    attempts = ADMIN_LOGIN_ATTEMPTS.get(client_ip, [])
+    attempts = [t for t in attempts if now - t < ADMIN_LOCKOUT_SECONDS]
+    if len(attempts) >= ADMIN_MAX_ATTEMPTS:
+        raise HTTPException(status_code=429, detail='Too many login attempts. Try again in 5 minutes.')
+    
+    if email != ADMIN_EMAIL.lower():
+        attempts.append(now)
+        ADMIN_LOGIN_ATTEMPTS[client_ip] = attempts
+        raise HTTPException(status_code=401, detail='Invalid credentials')
+    
+    if not bcrypt.checkpw(password.encode(), ADMIN_PASSWORD_HASH.encode()):
+        attempts.append(now)
+        ADMIN_LOGIN_ATTEMPTS[client_ip] = attempts
+        raise HTTPException(status_code=401, detail='Invalid credentials')
+    
+    ADMIN_LOGIN_ATTEMPTS.pop(client_ip, None)
+    token = create_admin_token(email)
+    logger.info(f'[Admin] Login success: {email} from {client_ip}')
+    return {'token': token, 'email': email, 'expires_in': '12h'}
+
+@api_router.get("/admin-auth/me")
+async def admin_me(request: FastAPIRequest):
+    admin = await verify_admin(request.headers.get('authorization'))
+    return {'email': admin['email'], 'role': admin['role']}
+
+@api_router.get("/admin-tool/dashboard")
+async def admin_dashboard(request: FastAPIRequest):
+    await verify_admin(request.headers.get('authorization'))
+    
+    total_users = await db.users.count_documents({})
+    total_subs = await db.subscriptions.count_documents({})
+    
+    paid_tiers = ['walk-in', 'booked-out', 'the-shop', 'the-shop-member']
+    paid_count = await db.subscriptions.count_documents({'tier': {'$in': paid_tiers}, 'is_trial': {'$ne': True}})
+    bypass_count = await db.subscriptions.count_documents({'tier': 'paywall_bypass'})
+    trial_count = await db.subscriptions.count_documents({'is_trial': True, 'tier': {'$in': paid_tiers}})
+    
+    # Revenue estimate
+    revenue = 0
+    async for sub in db.subscriptions.find({'tier': {'$in': paid_tiers}, 'is_trial': {'$ne': True}}, {'_id': 0, 'tier': 1}):
+        prices = {'walk-in': 14.99, 'booked-out': 29.99, 'the-shop': 49.99, 'the-shop-member': 49.99}
+        revenue += prices.get(sub.get('tier'), 0)
+    
+    # Recent key failures
+    key_failures = await db.key_failures.count_documents({})
+    recent_key_failures = []
+    async for f in db.key_failures.find({}, {'_id': 0}).sort('timestamp', -1).limit(5):
+        recent_key_failures.append(f)
+    
+    # Unmatched webhooks
+    unmatched_count = await db.unmatched_webhooks.count_documents({})
+    
+    # API health
+    api_health = 'healthy'
+    if recent_key_failures:
+        last_failure = recent_key_failures[0]
+        if not last_failure.get('resolved'):
+            api_health = 'degraded'
+    
+    return {
+        'total_users': total_users,
+        'paid_subscribers': paid_count,
+        'active_trials': trial_count,
+        'bypass_users': bypass_count,
+        'monthly_revenue_gross': round(revenue, 2),
+        'monthly_revenue_net_15': round(revenue * 0.85, 2),
+        'api_health': api_health,
+        'total_key_failures': key_failures,
+        'unmatched_webhooks': unmatched_count,
+        'recent_key_failures': recent_key_failures,
+    }
+
+@api_router.get("/admin-tool/errors/webhooks")
+async def admin_errors_webhooks(request: FastAPIRequest):
+    await verify_admin(request.headers.get('authorization'))
+    errors = []
+    async for doc in db.unmatched_webhooks.find({}, {'_id': 0}).sort('timestamp', -1).limit(50):
+        errors.append(doc)
+    return {'webhook_failures': errors, 'total': await db.unmatched_webhooks.count_documents({})}
+
+@api_router.get("/admin-tool/errors/generation")
+async def admin_errors_generation(request: FastAPIRequest):
+    await verify_admin(request.headers.get('authorization'))
+    errors = []
+    async for doc in db.key_failures.find({}, {'_id': 0}).sort('timestamp', -1).limit(50):
+        errors.append(doc)
+    return {'generation_failures': errors, 'total': await db.key_failures.count_documents({})}
+
+@api_router.get("/admin-tool/errors/sync")
+async def admin_errors_sync(request: FastAPIRequest):
+    await verify_admin(request.headers.get('authorization'))
+    # Subscription sync failures: users with RC webhooks that didn't match
+    sync_issues = []
+    async for doc in db.unmatched_webhooks.find(
+        {'event_type': {'$in': ['INITIAL_PURCHASE', 'RENEWAL', 'TRANSFER']}},
+        {'_id': 0}
+    ).sort('timestamp', -1).limit(50):
+        sync_issues.append(doc)
+    return {'sync_failures': sync_issues, 'total': len(sync_issues)}
+
+@api_router.get("/admin-tool/user/{email}")
+async def admin_user_detail(email: str, request: FastAPIRequest):
+    await verify_admin(request.headers.get('authorization'))
+    user = await db.users.find_one({'email': {'$regex': email, '$options': 'i'}}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    sub = await db.subscriptions.find_one({'user_id': user['user_id']}, {'_id': 0})
+    actions = []
+    async for a in db.admin_actions.find({'target_email': {'$regex': email, '$options': 'i'}}, {'_id': 0}).sort('timestamp', -1).limit(20):
+        actions.append(a)
+    return {'user': user, 'subscription': sub, 'admin_history': actions}
+
+@api_router.post("/admin-tool/action/grant-credits")
+async def admin_action_grant_credits(request: FastAPIRequest):
+    admin = await verify_admin(request.headers.get('authorization'))
+    body = await request.json()
+    email = body.get('email', '')
+    credits = body.get('credits', 0)
+    user = await db.users.find_one({'email': {'$regex': email, '$options': 'i'}}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    await db.subscriptions.update_one({'user_id': user['user_id']}, {'$inc': {'available_credits': credits}}, upsert=True)
+    updated = await db.subscriptions.find_one({'user_id': user['user_id']}, {'_id': 0})
+    await log_admin_action(admin['email'], 'grant_credits', email, {'credits': credits, 'new_total': updated.get('available_credits', 0)})
+    return {'status': 'ok', 'new_credits': updated.get('available_credits', 0)}
+
+@api_router.post("/admin-tool/action/change-tier")
+async def admin_action_change_tier(request: FastAPIRequest):
+    admin = await verify_admin(request.headers.get('authorization'))
+    body = await request.json()
+    email = body.get('email', '')
+    new_tier = body.get('tier', '')
+    tier_credits = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500}
+    user = await db.users.find_one({'email': {'$regex': email, '$options': 'i'}}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    update = {'tier': new_tier, 'last_event': 'ADMIN_TIER_CHANGE', 'is_trial': False}
+    if new_tier in tier_credits:
+        update['available_credits'] = tier_credits[new_tier]
+    await db.subscriptions.update_one({'user_id': user['user_id']}, {'$set': update}, upsert=True)
+    await log_admin_action(admin['email'], 'change_tier', email, {'new_tier': new_tier, 'credits_set': tier_credits.get(new_tier, 'unchanged')})
+    return {'status': 'ok', 'tier': new_tier}
+
+@api_router.post("/admin-tool/action/reset-account")
+async def admin_action_reset_account(request: FastAPIRequest):
+    admin = await verify_admin(request.headers.get('authorization'))
+    body = await request.json()
+    email = body.get('email', '')
+    user = await db.users.find_one({'email': {'$regex': email, '$options': 'i'}}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    await db.subscriptions.update_one({'user_id': user['user_id']}, {'$set': {
+        'tier': None, 'available_credits': 0, 'is_trial': False, 'fallback_credits_granted': False,
+        'last_event': 'ADMIN_RESET',
+    }}, upsert=True)
+    await log_admin_action(admin['email'], 'reset_account', email, {'set_to': 'expired/0'})
+    return {'status': 'ok', 'tier': None, 'credits': 0}
+
+@api_router.post("/admin-tool/action/paywall-bypass")
+async def admin_action_bypass(request: FastAPIRequest):
+    admin = await verify_admin(request.headers.get('authorization'))
+    body = await request.json()
+    email = body.get('email', '')
+    user = await db.users.find_one({'email': {'$regex': email, '$options': 'i'}}, {'_id': 0})
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    await db.subscriptions.update_one({'user_id': user['user_id']}, {'$set': {
+        'tier': 'paywall_bypass', 'available_credits': 10, 'is_trial': False,
+        'last_event': 'ADMIN_BYPASS',
+    }}, upsert=True)
+    await log_admin_action(admin['email'], 'paywall_bypass', email, {'credits': 10, 'tier': 'paywall_bypass'})
+    return {'status': 'ok', 'tier': 'paywall_bypass', 'credits': 10}
+
+@api_router.get("/admin-tool/audit-log")
+async def admin_audit_log(request: FastAPIRequest):
+    await verify_admin(request.headers.get('authorization'))
+    actions = []
+    async for a in db.admin_actions.find({}, {'_id': 0}).sort('timestamp', -1).limit(100):
+        actions.append(a)
+    return {'actions': actions, 'total': await db.admin_actions.count_documents({})}
+
+@api_router.get("/admin-tool/search")
+async def admin_search_users(request: FastAPIRequest, q: str = ''):
+    await verify_admin(request.headers.get('authorization'))
+    if not q or len(q) < 2:
+        raise HTTPException(status_code=400, detail='Search query too short')
+    users = []
+    async for u in db.users.find({'$or': [
+        {'email': {'$regex': q, '$options': 'i'}},
+        {'display_name': {'$regex': q, '$options': 'i'}},
+        {'name': {'$regex': q, '$options': 'i'}},
+    ]}, {'_id': 0}).limit(20):
+        sub = await db.subscriptions.find_one({'user_id': u['user_id']}, {'_id': 0})
+        users.append({**u, **(sub or {})})
+    return {'results': users, 'count': len(users)}
+
+@api_router.get("/admin-panel")
+async def serve_admin_page():
+    html_path = "/app/backend/static/admin.html"
+    try:
+        with open(html_path) as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="Admin page not found")
+
 # Root health check — nginx in production hits /health (no /api prefix)
 @app.get("/health")
 async def root_health_check():

@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Body Bound Admin</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--card:#141414;--border:#222;--gold:#C9A227;--gold-dim:#8a7019;--text:#e8e8e8;--muted:#888;--red:#ef4444;--green:#22c55e;--blue:#3b82f6}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent}
+.hidden{display:none!important}
+/* Login */
+#login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px 24px;width:100%;max-width:360px;text-align:center}
+.login-box h1{font-size:20px;color:var(--gold);margin-bottom:4px;letter-spacing:1px}
+.login-box p{font-size:12px;color:var(--muted);margin-bottom:24px}
+.input{width:100%;padding:12px 14px;background:#1a1a1a;border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;margin-bottom:12px;outline:none}
+.input:focus{border-color:var(--gold)}
+.btn{width:100%;padding:13px;background:var(--gold);color:#000;font-weight:700;font-size:15px;border:none;border-radius:10px;cursor:pointer}
+.btn:active{opacity:0.8}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text);font-weight:500}
+.btn-sm{padding:8px 14px;font-size:13px;width:auto;border-radius:8px}
+.btn-red{background:var(--red);color:#fff}
+.btn-green{background:var(--green);color:#000}
+.btn-blue{background:var(--blue);color:#fff}
+.error-msg{color:var(--red);font-size:13px;margin-top:8px}
+/* App Shell */
+#app{display:none;padding-bottom:70px}
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.topbar h2{font-size:16px;color:var(--gold);letter-spacing:0.5px}
+.topbar button{background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:var(--card);border-top:1px solid var(--border);display:flex;padding:8px 0 max(8px,env(safe-area-inset-bottom))}
+.nav button{flex:1;background:none;border:none;color:var(--muted);font-size:10px;padding:6px 0;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.nav button.active{color:var(--gold)}
+.nav button i{font-size:18px}
+.screen{display:none;padding:16px}
+.screen.active{display:block}
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.card-title{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+.stat-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #1a1a1a}
+.stat-row:last-child{border:none}
+.stat-label{color:var(--muted);font-size:13px}
+.stat-value{font-weight:600;font-size:14px}
+.stat-value.gold{color:var(--gold)}
+.stat-value.green{color:var(--green)}
+.stat-value.red{color:var(--red)}
+.badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(34,197,94,0.15);color:var(--green)}
+.badge-red{background:rgba(239,68,68,0.15);color:var(--red)}
+.badge-gold{background:rgba(201,162,39,0.15);color:var(--gold)}
+.badge-blue{background:rgba(59,130,246,0.15);color:var(--blue)}
+/* User detail */
+.user-header{text-align:center;padding:16px 0}
+.user-header h3{font-size:18px;margin-bottom:4px}
+.user-header p{color:var(--muted);font-size:13px}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+/* Error list */
+.error-item{padding:10px 0;border-bottom:1px solid #1a1a1a}
+.error-item:last-child{border:none}
+.error-type{font-size:12px;font-weight:600;margin-bottom:2px}
+.error-detail{font-size:12px;color:var(--muted);word-break:break-all}
+.error-time{font-size:11px;color:var(--muted);margin-top:2px}
+/* Search */
+.search-input{position:relative;margin-bottom:16px}
+.search-input input{width:100%;padding:12px 14px 12px 38px;background:#1a1a1a;border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;outline:none}
+.search-input i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.user-row{display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid #1a1a1a;cursor:pointer}
+.user-row:active{background:#1a1a1a}
+.user-name{font-size:14px;font-weight:500}
+.user-email{font-size:12px;color:var(--muted)}
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:16px;overflow-x:auto}
+.tab{padding:8px 14px;background:#1a1a1a;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.tab.active{background:var(--gold);color:#000;border-color:var(--gold)}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--card);border-top-left-radius:20px;border-top-right-radius:20px;padding:24px 20px 40px;width:100%;max-width:420px}
+.modal h3{font-size:16px;margin-bottom:16px}
+/* Debug report */
+.debug-box{background:#1a1a1a;border:1px solid var(--border);border-radius:10px;padding:12px;font-family:monospace;font-size:12px;color:var(--muted);white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto;margin:12px 0}
+/* Loading */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 0.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-screen{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+<div class="login-box">
+<h1>BODY BOUND</h1>
+<p>Admin Console</p>
+<input class="input" id="login-email" type="email" placeholder="Admin email" autocapitalize="off">
+<input class="input" id="login-pass" type="password" placeholder="Password">
+<button class="btn" id="login-btn" onclick="doLogin()">Sign In</button>
+<div class="error-msg hidden" id="login-error"></div>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+<div class="topbar">
+<h2 id="screen-title">Dashboard</h2>
+<button onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="screen active" id="screen-dashboard">
+<div class="card">
+<div class="card-title">Users</div>
+<div class="stat-row"><span class="stat-label">Total Users</span><span class="stat-value" id="d-total">-</span></div>
+<div class="stat-row"><span class="stat-label">Paid Subscribers</span><span class="stat-value gold" id="d-paid">-</span></div>
+<div class="stat-row"><span class="stat-label">Active Trials</span><span class="stat-value" id="d-trials">-</span></div>
+<div class="stat-row"><span class="stat-label">Bypass Users</span><span class="stat-value" id="d-bypass">-</span></div>
+</div>
+<div class="card">
+<div class="card-title">Revenue (Monthly)</div>
+<div class="stat-row"><span class="stat-label">Gross</span><span class="stat-value gold" id="d-revenue">-</span></div>
+<div class="stat-row"><span class="stat-label">Net (after Apple 15%)</span><span class="stat-value green" id="d-revenue-net">-</span></div>
+</div>
+<div class="card">
+<div class="card-title">System Health</div>
+<div class="stat-row"><span class="stat-label">API Status</span><span id="d-api-health">-</span></div>
+<div class="stat-row"><span class="stat-label">Key Failures</span><span class="stat-value" id="d-key-failures">-</span></div>
+<div class="stat-row"><span class="stat-label">Unmatched Webhooks</span><span class="stat-value" id="d-unmatched">-</span></div>
+</div>
+<div class="card">
+<div class="card-title">Recent Key Failures</div>
+<div id="d-recent-failures"><span class="stat-label">Loading...</span></div>
+</div>
+</div>
+
+<!-- SEARCH -->
+<div class="screen" id="screen-search">
+<div class="search-input">
+<i class="fa-solid fa-magnifying-glass"></i>
+<input type="text" id="search-q" placeholder="Search by email or name..." oninput="debounceSearch()">
+</div>
+<div id="search-results"></div>
+</div>
+
+<!-- USER DETAIL -->
+<div class="screen" id="screen-user">
+<button class="btn btn-outline btn-sm" onclick="showScreen('search')" style="margin-bottom:16px"><i class="fa-solid fa-arrow-left"></i> Back</button>
+<div class="user-header">
+<h3 id="u-name">-</h3>
+<p id="u-email">-</p>
+</div>
+<div class="card">
+<div class="card-title">Subscription</div>
+<div class="stat-row"><span class="stat-label">Tier</span><span class="stat-value" id="u-tier">-</span></div>
+<div class="stat-row"><span class="stat-label">Credits</span><span class="stat-value gold" id="u-credits">-</span></div>
+<div class="stat-row"><span class="stat-label">Trial</span><span id="u-trial">-</span></div>
+<div class="stat-row"><span class="stat-label">Last Event</span><span class="stat-value" id="u-event">-</span></div>
+<div class="stat-row"><span class="stat-label">RC Customer ID</span><span class="stat-value" id="u-rcid" style="font-size:11px;word-break:break-all">-</span></div>
+<div class="stat-row"><span class="stat-label">Created</span><span class="stat-value" id="u-created">-</span></div>
+</div>
+<div class="card">
+<div class="card-title">Actions</div>
+<div class="action-grid">
+<button class="btn btn-sm btn-green" onclick="showModal('credits')"><i class="fa-solid fa-coins"></i> Credits</button>
+<button class="btn btn-sm btn-blue" onclick="showModal('tier')"><i class="fa-solid fa-layer-group"></i> Tier</button>
+<button class="btn btn-sm btn-gold" style="background:var(--gold);color:#000" onclick="actionBypass()"><i class="fa-solid fa-unlock"></i> Bypass</button>
+<button class="btn btn-sm btn-red" onclick="actionReset()"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+</div>
+</div>
+<div class="card">
+<div class="card-title">Admin History</div>
+<div id="u-history"><span class="stat-label">None</span></div>
+</div>
+<div class="card">
+<div class="card-title">Debug Report</div>
+<div class="debug-box" id="u-debug"></div>
+<button class="btn btn-sm btn-outline" onclick="copyDebug()"><i class="fa-solid fa-copy"></i> Copy to Clipboard</button>
+</div>
+</div>
+
+<!-- ERRORS -->
+<div class="screen" id="screen-errors">
+<div class="tabs">
+<button class="tab active" onclick="loadErrors('webhooks',this)">Webhooks</button>
+<button class="tab" onclick="loadErrors('generation',this)">Generation</button>
+<button class="tab" onclick="loadErrors('sync',this)">Sync</button>
+</div>
+<div id="error-list"><div class="loading-screen"><div class="spinner"></div></div></div>
+</div>
+
+<!-- AUDIT LOG -->
+<div class="screen" id="screen-audit">
+<div id="audit-list"><div class="loading-screen"><div class="spinner"></div></div></div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+<button class="active" onclick="showScreen('dashboard')"><i class="fa-solid fa-gauge"></i><span>Dashboard</span></button>
+<button onclick="showScreen('search')"><i class="fa-solid fa-users"></i><span>Users</span></button>
+<button onclick="showScreen('errors')"><i class="fa-solid fa-triangle-exclamation"></i><span>Errors</span></button>
+<button onclick="showScreen('audit')"><i class="fa-solid fa-clock-rotate-left"></i><span>Audit</span></button>
+</nav>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal()">
+<div class="modal" onclick="event.stopPropagation()">
+<div id="modal-content"></div>
+</div>
+</div>
+
+<script>
+const API=window.location.origin+'/api';
+let TOKEN='',CURRENT_USER_EMAIL='';
+
+// Auth
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pass=document.getElementById('login-pass').value;
+  const err=document.getElementById('login-error');
+  err.classList.add('hidden');
+  try{
+    const r=await fetch(API+'/admin-auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const d=await r.json();
+    if(!r.ok){err.textContent=d.detail||'Login failed';err.classList.remove('hidden');return}
+    TOKEN=d.token;localStorage.setItem('admin_token',TOKEN);
+    document.getElementById('login').style.display='none';
+    document.getElementById('app').style.display='block';
+    loadDashboard();
+  }catch(e){err.textContent='Network error';err.classList.remove('hidden')}
+}
+function doLogout(){TOKEN='';localStorage.removeItem('admin_token');location.reload()}
+function authHeaders(){return{'Authorization':'Bearer '+TOKEN,'Content-Type':'application/json'}}
+
+// Init
+window.onload=function(){
+  TOKEN=localStorage.getItem('admin_token')||'';
+  if(TOKEN){
+    fetch(API+'/admin-auth/me',{headers:authHeaders()}).then(r=>{
+      if(r.ok){document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';loadDashboard()}
+      else{TOKEN='';localStorage.removeItem('admin_token')}
+    }).catch(()=>{})
+  }
+  document.getElementById('login-pass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+}
+
+// Navigation
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  const labels={dashboard:0,search:1,errors:2,audit:3};
+  document.querySelectorAll('.nav button')[labels[name]].classList.add('active');
+  const titles={dashboard:'Dashboard',search:'Users',errors:'Error Log',audit:'Audit Log',user:'User Detail'};
+  document.getElementById('screen-title').textContent=titles[name]||'Admin';
+  if(name==='dashboard')loadDashboard();
+  if(name==='errors')loadErrors('webhooks',document.querySelector('.tab'));
+  if(name==='audit')loadAudit();
+}
+
+// Dashboard
+async function loadDashboard(){
+  try{
+    const r=await fetch(API+'/admin-tool/dashboard',{headers:authHeaders()});
+    if(r.status===401){doLogout();return}
+    const d=await r.json();
+    document.getElementById('d-total').textContent=d.total_users;
+    document.getElementById('d-paid').textContent=d.paid_subscribers;
+    document.getElementById('d-trials').textContent=d.active_trials;
+    document.getElementById('d-bypass').textContent=d.bypass_users;
+    document.getElementById('d-revenue').textContent='$'+d.monthly_revenue_gross.toFixed(2);
+    document.getElementById('d-revenue-net').textContent='$'+d.monthly_revenue_net_15.toFixed(2);
+    document.getElementById('d-key-failures').textContent=d.total_key_failures;
+    document.getElementById('d-unmatched').textContent=d.unmatched_webhooks;
+    const hEl=document.getElementById('d-api-health');
+    hEl.innerHTML=d.api_health==='healthy'?'<span class="badge badge-green">Healthy</span>':'<span class="badge badge-red">Degraded</span>';
+    const fEl=document.getElementById('d-recent-failures');
+    if(!d.recent_key_failures.length){fEl.innerHTML='<span class="stat-label">No recent failures</span>';return}
+    fEl.innerHTML=d.recent_key_failures.map(f=>`<div class="error-item"><div class="error-type">${f.failed_key||'Unknown'} ${f.resolved?'<span class="badge badge-green">Resolved</span>':'<span class="badge badge-red">Active</span>'}</div><div class="error-detail">${(f.error||'').substring(0,120)}...</div><div class="error-time">${fmtTime(f.timestamp)}</div></div>`).join('');
+  }catch(e){console.error(e)}
+}
+
+// Search
+let searchTimer;
+function debounceSearch(){clearTimeout(searchTimer);searchTimer=setTimeout(doSearch,300)}
+async function doSearch(){
+  const q=document.getElementById('search-q').value.trim();
+  const el=document.getElementById('search-results');
+  if(q.length<2){el.innerHTML='';return}
+  el.innerHTML='<div class="loading-screen"><div class="spinner"></div></div>';
+  try{
+    const r=await fetch(API+'/admin-tool/search?q='+encodeURIComponent(q),{headers:authHeaders()});
+    const d=await r.json();
+    if(!d.results.length){el.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">No users found</p>';return}
+    el.innerHTML=d.results.map(u=>`<div class="user-row" onclick="loadUser('${u.email}')"><div><div class="user-name">${u.name||u.display_name||'Unknown'}</div><div class="user-email">${u.email||'No email'}</div></div><div><span class="badge ${tierBadge(u.tier)}">${u.tier||'none'}</span></div></div>`).join('');
+  }catch(e){el.innerHTML='<p style="color:var(--red);text-align:center">Error searching</p>'}
+}
+
+// User Detail
+async function loadUser(email){
+  CURRENT_USER_EMAIL=email;
+  showScreen('user');
+  try{
+    const r=await fetch(API+'/admin-tool/user/'+encodeURIComponent(email),{headers:authHeaders()});
+    const d=await r.json();
+    const u=d.user,s=d.subscription||{};
+    document.getElementById('u-name').textContent=u.name||u.display_name||'Unknown';
+    document.getElementById('u-email').textContent=u.email||'No email';
+    document.getElementById('u-tier').innerHTML='<span class="badge '+tierBadge(s.tier)+'">'+(s.tier||'none')+'</span>';
+    document.getElementById('u-credits').textContent=s.available_credits||0;
+    document.getElementById('u-trial').innerHTML=s.is_trial?'<span class="badge badge-blue">Yes</span>':'<span class="badge badge-green">No</span>';
+    document.getElementById('u-event').textContent=s.last_event||'-';
+    document.getElementById('u-rcid').textContent=s.revenuecat_customer_id||'Not linked';
+    document.getElementById('u-created').textContent=fmtTime(u.created_at);
+    // Admin history
+    const hEl=document.getElementById('u-history');
+    if(!d.admin_history.length){hEl.innerHTML='<span class="stat-label">No admin actions</span>'}
+    else{hEl.innerHTML=d.admin_history.map(a=>`<div class="error-item"><div class="error-type">${a.action} <span style="color:var(--muted);font-weight:400">${fmtTime(a.timestamp)}</span></div><div class="error-detail">${JSON.stringify(a.details)}</div></div>`).join('')}
+    // Debug report
+    document.getElementById('u-debug').textContent=`Email: ${u.email}\nName: ${u.name||u.display_name||'-'}\nUser ID: ${u.user_id}\nTier: ${s.tier||'none'}\nCredits: ${s.available_credits||0}\nTrial: ${s.is_trial||false}\nLast Event: ${s.last_event||'-'}\nRC ID: ${s.revenuecat_customer_id||'none'}\nCreated: ${u.created_at||'-'}\nTimestamp: ${new Date().toISOString()}`;
+  }catch(e){console.error(e)}
+}
+
+// Actions
+function showModal(type){
+  const el=document.getElementById('modal-content');
+  if(type==='credits'){
+    el.innerHTML=`<h3>Grant/Remove Credits</h3><input class="input" id="modal-credits" type="number" placeholder="Credits (negative to remove)"><button class="btn" onclick="actionCredits()">Apply</button>`;
+  }else if(type==='tier'){
+    el.innerHTML=`<h3>Change Tier</h3><select class="input" id="modal-tier"><option value="walk-in">Walk-In (125 credits)</option><option value="booked-out">Booked-Out (500 credits)</option><option value="the-shop">The Shop (1500 credits)</option></select><button class="btn" onclick="actionTier()">Apply</button>`;
+  }
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+function closeModal(){document.getElementById('modal-overlay').classList.add('hidden')}
+
+async function actionCredits(){
+  const credits=parseInt(document.getElementById('modal-credits').value);
+  if(isNaN(credits)){alert('Enter a number');return}
+  await adminAction('grant-credits',{email:CURRENT_USER_EMAIL,credits});
+  closeModal();loadUser(CURRENT_USER_EMAIL);
+}
+async function actionTier(){
+  const tier=document.getElementById('modal-tier').value;
+  await adminAction('change-tier',{email:CURRENT_USER_EMAIL,tier});
+  closeModal();loadUser(CURRENT_USER_EMAIL);
+}
+async function actionBypass(){
+  if(!confirm('Grant paywall bypass (10 credits)?'))return;
+  await adminAction('paywall-bypass',{email:CURRENT_USER_EMAIL});
+  loadUser(CURRENT_USER_EMAIL);
+}
+async function actionReset(){
+  if(!confirm('Reset account to expired / 0 credits?'))return;
+  await adminAction('reset-account',{email:CURRENT_USER_EMAIL});
+  loadUser(CURRENT_USER_EMAIL);
+}
+async function adminAction(action,body){
+  try{
+    const r=await fetch(API+'/admin-tool/action/'+action,{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});
+    const d=await r.json();
+    if(!r.ok)alert(d.detail||'Action failed');
+  }catch(e){alert('Network error')}
+}
+function copyDebug(){
+  const text=document.getElementById('u-debug').textContent;
+  navigator.clipboard.writeText(text).then(()=>alert('Copied to clipboard')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('Copied to clipboard');
+  });
+}
+
+// Errors
+async function loadErrors(type,tabEl){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  if(tabEl)tabEl.classList.add('active');
+  const el=document.getElementById('error-list');
+  el.innerHTML='<div class="loading-screen"><div class="spinner"></div></div>';
+  try{
+    const r=await fetch(API+'/admin-tool/errors/'+type,{headers:authHeaders()});
+    const d=await r.json();
+    const items=d.webhook_failures||d.generation_failures||d.sync_failures||[];
+    if(!items.length){el.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">No errors</p>';return}
+    el.innerHTML=items.slice(0,30).map(e=>{
+      if(type==='webhooks'){
+        const ed=e.event_data||{};
+        return `<div class="error-item"><div class="error-type">TRANSFER <span class="badge badge-red">${e.reconciled?'Reconciled':'Unmatched'}</span></div><div class="error-detail">To: ${JSON.stringify(ed.transferred_to||[])}<br>From: ${JSON.stringify(ed.transferred_from||[])}</div><div class="error-time">${fmtTime(e.timestamp)}</div></div>`;
+      }else if(type==='generation'){
+        return `<div class="error-item"><div class="error-type">${e.failed_key||'Key Failure'} ${e.resolved?'<span class="badge badge-green">Resolved</span>':'<span class="badge badge-red">Active</span>'}</div><div class="error-detail">${(e.error||'').substring(0,200)}</div><div class="error-time">${fmtTime(e.timestamp)}</div></div>`;
+      }else{
+        const ed=e.event_data||{};
+        return `<div class="error-item"><div class="error-type">${ed.type||e.event_type||'Sync'} <span class="badge badge-red">Failed</span></div><div class="error-detail">User: ${e.raw_user_id||'-'}<br>Product: ${ed.product_id||e.product_id||'-'}</div><div class="error-time">${fmtTime(e.timestamp)}</div></div>`;
+      }
+    }).join('');
+  }catch(e){el.innerHTML='<p style="color:var(--red);text-align:center">Error loading</p>'}
+}
+
+// Audit
+async function loadAudit(){
+  const el=document.getElementById('audit-list');
+  el.innerHTML='<div class="loading-screen"><div class="spinner"></div></div>';
+  try{
+    const r=await fetch(API+'/admin-tool/audit-log',{headers:authHeaders()});
+    const d=await r.json();
+    if(!d.actions.length){el.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">No admin actions yet</p>';return}
+    el.innerHTML=d.actions.map(a=>`<div class="error-item"><div class="error-type"><i class="fa-solid fa-user-shield" style="color:var(--gold);margin-right:4px"></i>${a.action}</div><div class="error-detail">Target: ${a.target_email}<br>${JSON.stringify(a.details)}</div><div class="error-time">${a.admin_email} - ${fmtTime(a.timestamp)}</div></div>`).join('');
+  }catch(e){el.innerHTML='<p style="color:var(--red);text-align:center">Error loading</p>'}
+}
+
+// Helpers
+function tierBadge(t){return t==='walk-in'||t==='booked-out'||t==='the-shop'||t==='the-shop-member'?'badge-green':t==='paywall_bypass'?'badge-gold':t==='expired'||t==='trial_expired'?'badge-red':'badge-blue'}
+function fmtTime(t){if(!t)return'-';try{const d=new Date(t);return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}catch(e){return t}}
+</script>
+</body>
+</html>
