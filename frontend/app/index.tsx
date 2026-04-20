@@ -3910,7 +3910,7 @@ export default function Index() {
                   <Animated.View style={[{width: '100%', height: '100%'}, mainImageAnimatedStyle]}>
                     <Image
                       source={{ uri: stencilImage && !showingOriginal ? stencilImage : originalImage }}
-                      style={[styles.previewImage, stencilImage && !showingOriginal && stencilTintColor ? { tintColor: stencilTintColor } : {}]}
+                      style={[styles.previewImage, stencilImage && !showingOriginal ? { tintColor: stencilTintColor || '#000000' } : {}]}
                       resizeMode="contain"
                     />
                   </Animated.View>
@@ -4403,8 +4403,9 @@ export default function Index() {
               {/* Always at FULL OPACITY so linework is always visible */}
               {editModeStencilImage && (
                 <Image
+                  key={`stencil-tint-${stencilTintColor || 'black'}`}
                   source={{ uri: editModeStencilImage }}
-                  style={[styles.procreateStencilImage, stencilTintColor ? { tintColor: stencilTintColor } : {}]}
+                  style={[styles.procreateStencilImage, { tintColor: stencilTintColor || '#000000' }]}
                   resizeMode="contain"
                 />
               )}
