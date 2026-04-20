@@ -49,6 +49,7 @@ import { StudioTeamScreen } from './screens/StudioTeamScreen';
 import { ReferralDashboard } from './screens/ReferralDashboard';
 import { ReferralPopup } from './screens/ReferralPopup';
 import { LowCreditModal } from './screens/LowCreditModal';
+import { EmergencyStencilModal } from './screens/EmergencyStencilModal';
 import { ReferralBanner } from './screens/ReferralBanner';
 import { MilestoneModal } from './screens/MilestoneModal';
 import { FlexMessage } from './screens/FlexMessage';
@@ -264,6 +265,12 @@ export default function Index() {
   // Low-credit notification state
   const [showLowCreditModal, setShowLowCreditModal] = useState(false);
   const [lowCreditLevel, setLowCreditLevel] = useState<'low' | 'critical' | 'empty'>('low');
+  // Emergency Stencil — one-time monthly fallback shown ONLY after a user
+  // with 0 credits opens the paywall from "Continue Generating" and then
+  // cancels/dismisses without purchasing.
+  const [showEmergencyStencil, setShowEmergencyStencil] = useState(false);
+  const [emergencyStencilAvailable, setEmergencyStencilAvailable] = useState(false);
+  const [paywallOpenedFromEmpty, setPaywallOpenedFromEmpty] = useState(false);
   const triggeredThresholdsRef = useRef<Set<string>>(new Set());
 
   // Growth messaging state
@@ -855,6 +862,7 @@ export default function Index() {
         const total = d.credits?.total_monthly_credits ?? 0;
         handleCreditsUpdate(credits, total);
         setUserTier(d.credits?.tier ?? null);
+        setEmergencyStencilAvailable(!!d.credits?.emergency_stencil_available);
         return d.credits;
       }
     } catch (e) { console.error('[Credits] Refresh failed:', e); }
@@ -2651,6 +2659,9 @@ export default function Index() {
     setShowFlexMessage(false);
     setFlexMessage(null);
     setReferralPopupData(null);
+    setShowEmergencyStencil(false);
+    setPaywallOpenedFromEmpty(false);
+    setEmergencyStencilAvailable(false);
     setShowAuth(false);
     setShowWelcome(true);
   };
@@ -4852,10 +4863,25 @@ export default function Index() {
                 await refreshCredits(sessionToken);
                 // Referral attribution happens at signup; subscription verification is automatic via webhook
               }
+              // User converted — clear the emergency-popup trigger
+              setPaywallOpenedFromEmpty(false);
               setPaywallRequired(false);
               setShowPaywall(false);
             }}
-            onDismiss={paywallRequired ? undefined : () => setShowPaywall(false)}
+            onDismiss={paywallRequired ? undefined : () => {
+              setShowPaywall(false);
+              // Trigger emergency-stencil popup ONLY after the user was sent
+              // to the paywall from the out-of-credits screen and then
+              // dismissed without completing a purchase, and only if they
+              // haven't already used their monthly emergency stencil.
+              if (paywallOpenedFromEmpty && emergencyStencilAvailable) {
+                setPaywallOpenedFromEmpty(false);
+                // Small delay so paywall unmount animation completes
+                setTimeout(() => setShowEmergencyStencil(true), 250);
+              } else {
+                setPaywallOpenedFromEmpty(false);
+              }
+            }}
             onSignOut={async () => {
               await handleSignOut();
             }}
@@ -4895,6 +4921,11 @@ export default function Index() {
         totalCredits={totalMonthlyCredits}
         onUpgrade={() => {
           setShowLowCreditModal(false);
+          // Track: paywall opened from empty state → may trigger emergency
+          // popup if user dismisses without purchasing.
+          if (lowCreditLevel === 'empty') {
+            setPaywallOpenedFromEmpty(true);
+          }
           setShowPaywall(true);
         }}
         onInviteArtists={lowCreditLevel !== 'empty' ? () => {
@@ -4910,6 +4941,19 @@ export default function Index() {
           setShowLowCreditModal(false);
         }}
       />
+
+      {/* Emergency Stencil — one-time monthly fallback after cancelled purchase */}
+      <EmergencyStencilModal
+        visible={showEmergencyStencil}
+        onClaim={async () => {
+          setShowEmergencyStencil(false);
+          if (sessionToken) {
+            await refreshCredits(sessionToken);
+          }
+        }}
+        onDismiss={() => setShowEmergencyStencil(false)}
+      />
+
 
       {/* Milestone Modal */}
       <MilestoneModal

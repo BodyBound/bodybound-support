@@ -2958,6 +2958,9 @@ async def get_user_credits(user_id: str) -> dict:
     monthly_allowance = sub.get('monthly_allowance', total_monthly_credits)
     max_balance_cap = sub.get('max_balance_cap', monthly_allowance * BALANCE_CAP_MULTIPLIER if monthly_allowance else 0)
     last_refill_at = sub.get('last_refill_at')
+    # Emergency-stencil one-time monthly flag
+    current_month_key = datetime.now(timezone.utc).strftime('%Y-%m')
+    emergency_stencil_available = sub.get('emergency_stencil_month') != current_month_key
 
     # Referral premium override state (Phase 2 redemption)
     rewards_doc = await db.referral_rewards.find_one({'user_id': user_id}, {'_id': 0})
@@ -2994,6 +2997,7 @@ async def get_user_credits(user_id: str) -> dict:
         'is_referral_premium_active': is_referral_premium_active,
         'referral_premium_until': referral_premium_until,
         'earned_free_months': earned_free_months,
+        'emergency_stencil_available': emergency_stencil_available,
     }
 
 # ---- Apple Sign-In ----
@@ -3257,6 +3261,62 @@ async def deduct_credit(request: FastAPIRequest):
         'total_monthly_credits': TIER_CREDITS_MAP.get(tier, 0),
         'tier': tier,
     }
+
+@api_router.post("/credits/emergency-stencil")
+async def claim_emergency_stencil(request: FastAPIRequest):
+    """One-time monthly Emergency Stencil fallback.
+
+    Rules:
+    - User must have 0 credits.
+    - Not more than one emergency stencil per calendar month (resets on the 1st UTC).
+    - Grants exactly 1 credit.
+    - Atomic via a conditional find_one_and_update — safe against double-tap.
+    """
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+
+    now = datetime.now(timezone.utc)
+    current_month_key = now.strftime('%Y-%m')  # e.g. '2026-04'
+
+    # Atomic claim: only succeeds if credits == 0 AND emergency hasn't been used this month.
+    claimed = await db.subscriptions.find_one_and_update(
+        {
+            'user_id': user_id,
+            'available_credits': 0,
+            '$or': [
+                {'emergency_stencil_month': {'$ne': current_month_key}},
+                {'emergency_stencil_month': {'$exists': False}},
+            ],
+        },
+        {
+            '$set': {
+                'emergency_stencil_month': current_month_key,
+                'emergency_stencil_used_at': now.isoformat(),
+            },
+            '$inc': {'available_credits': 1},
+        },
+        return_document=True,
+        projection={'_id': 0},
+    )
+
+    if not claimed:
+        # Determine why: already used vs. has credits
+        existing = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0}) or {}
+        if existing.get('available_credits', 0) > 0:
+            raise HTTPException(status_code=400, detail='You still have credits available.')
+        if existing.get('emergency_stencil_month') == current_month_key:
+            raise HTTPException(status_code=400, detail='Emergency stencil already used this month.')
+        raise HTTPException(status_code=400, detail='Emergency stencil is not available.')
+
+    logger.info(f'[EmergencyStencil] Granted to {user_id} (month={current_month_key})')
+    return {
+        'status': 'ok',
+        'available_credits': claimed['available_credits'],
+        'emergency_stencil_month': current_month_key,
+    }
+
+
 
 @api_router.delete("/account/delete")
 async def delete_account(request: FastAPIRequest):
