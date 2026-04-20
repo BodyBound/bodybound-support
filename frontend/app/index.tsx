@@ -305,6 +305,22 @@ export default function Index() {
   
   // Handmade Stencil states
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [generationTimedOut, setGenerationTimedOut] = useState(false);
+  const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cancelGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setIsGeneratingAI(false);
+    if (generationTimeoutRef.current) { clearTimeout(generationTimeoutRef.current); generationTimeoutRef.current = null; }    setRegeneratingStyle(null);
+    setGenerationTimedOut(false);
+    if (generationTimeoutRef.current) {
+      clearTimeout(generationTimeoutRef.current);
+      generationTimeoutRef.current = null;
+    }
+    Alert.alert('Generation Cancelled', 'Tap a style to try again.');
+  };
   // Simplified: Only Handmade Stencil mode with black lines
   const lineColor = 'black'; // Fixed to black
   
@@ -1392,6 +1408,8 @@ export default function Index() {
     setIsGeneratingAI(true);
     setIsGeneratingVersions(true);
     setGenerationProgress(0);
+    setGenerationTimedOut(false);
+    generationTimeoutRef.current = setTimeout(() => { setGenerationTimedOut(true); }, 90000);
     setStencilVersions({ light: null, medium: null, heavy: null });
     
     try {
@@ -1557,7 +1575,7 @@ export default function Index() {
       );
     } finally {
       setIsGeneratingAI(false);
-      setIsGeneratingVersions(false);
+    if (generationTimeoutRef.current) { clearTimeout(generationTimeoutRef.current); generationTimeoutRef.current = null; }      setIsGeneratingVersions(false);
       setGenerationProgress(0);
     }
   };
@@ -1692,6 +1710,8 @@ export default function Index() {
     try {
       setRegeneratingStyle(style);
       setIsGeneratingAI(true);
+      setGenerationTimedOut(false);
+      generationTimeoutRef.current = setTimeout(() => { setGenerationTimedOut(true); }, 90000);
       
       // Get base64 from original image
       let imageBase64 = originalImage;
@@ -1825,7 +1845,7 @@ export default function Index() {
     } finally {
       setRegeneratingStyle(null);
       setIsGeneratingAI(false);
-    }
+    if (generationTimeoutRef.current) { clearTimeout(generationTimeoutRef.current); generationTimeoutRef.current = null; }    }
   };
 
   // Ref for debouncing line weight API calls
@@ -4034,6 +4054,18 @@ export default function Index() {
               </View>
             )}
           </View>
+        )}
+
+        {/* Cancel Generation Button - visible when generating */}
+        {(isGeneratingAI || regeneratingStyle) && (
+          <TouchableOpacity 
+            onPress={cancelGeneration}
+            style={{ alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 24, backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: generationTimedOut ? '#ef4444' : '#333', marginBottom: 8 }}
+          >
+            <Text style={{ color: generationTimedOut ? '#ef4444' : '#C9A227', fontSize: 14, fontWeight: '600', textAlign: 'center' }}>
+              {generationTimedOut ? 'Generation timed out — Tap to cancel' : 'Tap to cancel generation'}
+            </Text>
+          </TouchableOpacity>
         )}
 
         {/* Custom Button Style Selector - Always visible when image loaded */}
