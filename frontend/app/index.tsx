@@ -4472,7 +4472,11 @@ export default function Index() {
               style={[styles.procreateToolButton, isEraser && styles.procreateToolActive]}
               onPress={() => setIsEraser(true)}
             >
-              <Text style={styles.procreateToolIcon}>🩷</Text>
+              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                <Path d="M20.48 7.52L16.48 3.52C15.89 2.93 14.94 2.93 14.35 3.52L3.52 14.35C2.93 14.94 2.93 15.89 3.52 16.48L6.52 19.48C6.81 19.77 7.2 19.93 7.6 19.93H12.4C12.8 19.93 13.19 19.77 13.48 19.48L20.48 12.48C21.07 11.89 21.07 10.94 20.48 10.35V7.52Z" stroke={isEraser ? "#000" : "#fff"} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+                <Path d="M3.52 14.35L10 7.87" stroke={isEraser ? "#000" : "#fff"} strokeWidth={1.8} strokeLinecap="round" />
+                <Path d="M6 21H21" stroke={isEraser ? "#000" : "#fff"} strokeWidth={1.8} strokeLinecap="round" />
+              </Svg>
             </TouchableOpacity>
           </View>
 
