@@ -23,6 +23,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import * as Print from 'expo-print';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as Sharing from 'expo-sharing';
 import * as StoreReview from 'expo-store-review';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Share as RNShare } from 'react-native';
@@ -2288,6 +2289,34 @@ export default function Index() {
   };
 
   // Unified Save Options - shows action sheet with all save options
+  // Share stencil via iOS Share Sheet (Open In Procreate, print apps, AirDrop, etc.)
+  const shareStencil = async () => {
+    if (!stencilImage) {
+      Alert.alert('Error', 'No stencil to share.');
+      return;
+    }
+    try {
+      let base64Data = stencilImage;
+      if (base64Data.includes(',')) {
+        base64Data = base64Data.split(',')[1];
+      }
+      const fileUri = FileSystem.documentDirectory + `body_bound_stencil_${Date.now()}.png`;
+      await FileSystem.writeAsStringAsync(fileUri, base64Data, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      await Sharing.shareAsync(fileUri, {
+        mimeType: 'image/png',
+        dialogTitle: 'Share Stencil',
+        UTI: 'public.png',
+      });
+      // Cleanup temp file
+      try { await FileSystem.deleteAsync(fileUri, { idempotent: true }); } catch (_) {}
+    } catch (error) {
+      console.error('[Share] Error:', error);
+      Alert.alert('Error', 'Failed to share stencil.');
+    }
+  };
+
   const showSaveOptions = () => {
     if (!stencilImage) {
       Alert.alert('Error', 'No stencil to save.');
@@ -2315,6 +2344,10 @@ export default function Index() {
             await saveStencilAndReference();
             checkFeedbackPrompt();
           },
+        },
+        {
+          text: 'Share / Open In...',
+          onPress: shareStencil,
         },
         {
           text: 'Cancel',
@@ -4189,9 +4222,9 @@ export default function Index() {
           </TouchableOpacity>
           
           <View style={styles.previewModalActions}>
-            <TouchableOpacity style={styles.previewActionButton} onPress={printStencil}>
-              <Text style={styles.previewActionIcon}>🖨️</Text>
-              <Text style={styles.previewActionText}>Print</Text>
+            <TouchableOpacity style={styles.previewActionButton} onPress={shareStencil}>
+              <Text style={styles.previewActionIcon}>📤</Text>
+              <Text style={styles.previewActionText}>Share</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.previewActionButton} onPress={saveStencilAndReference}>
               <Text style={styles.previewActionIcon}>📤</Text>
