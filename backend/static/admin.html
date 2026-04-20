@@ -252,7 +252,15 @@ function showScreen(name){
   document.getElementById('screen-'+name).classList.add('active');
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   const labels={dashboard:0,search:1,errors:2,audit:3};
-  document.querySelectorAll('.nav button')[labels[name]].classList.add('active');
+  // 'user' is a sub-screen reached via search — no nav button to highlight.
+  if(labels[name]!==undefined){
+    const btn=document.querySelectorAll('.nav button')[labels[name]];
+    if(btn) btn.classList.add('active');
+  }else if(name==='user'){
+    // Keep 'Users' tab highlighted when viewing a user detail
+    const btn=document.querySelectorAll('.nav button')[labels.search];
+    if(btn) btn.classList.add('active');
+  }
   const titles={dashboard:'Dashboard',search:'Users',errors:'Error Log',audit:'Audit Log',user:'User Detail'};
   document.getElementById('screen-title').textContent=titles[name]||'Admin';
   if(name==='dashboard')loadDashboard();
