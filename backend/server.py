@@ -2151,6 +2151,14 @@ STRICT SOURCE ADHERENCE:
 - If a structure is incomplete, cropped, or stylized, keep it exactly as-is
 - The stencil must be a direct translation of the input, not an interpreted version
 
+ORIENTATION LOCK:
+- Maintain the EXACT same orientation as the input image
+- Do NOT rotate, mirror, or flip the composition
+
+STRUCTURE PRESERVATION:
+- Preserve the subject's proportions, pose, and anatomical landmarks exactly
+- Do NOT merge, omit, or reposition body parts, facial features, or key elements
+
 DETAIL LEVEL: {detail_level.upper()}
 {{
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
@@ -2337,6 +2345,14 @@ STRICT SOURCE ADHERENCE:
 - Do NOT infer hidden or implied elements
 - If a structure is incomplete, cropped, or stylized, keep it exactly as-is
 - The stencil must be a direct translation of the input, not an interpreted version
+
+ORIENTATION LOCK:
+- Maintain the EXACT same orientation as the input image
+- Do NOT rotate, mirror, or flip the composition
+
+STRUCTURE PRESERVATION:
+- Preserve the subject's proportions, pose, and anatomical landmarks exactly
+- Do NOT merge, omit, or reposition body parts, facial features, or key elements
 
 DETAIL LEVEL: {detail_level.upper()}
 {{
