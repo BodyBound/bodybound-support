@@ -107,7 +107,10 @@ async def case2_multiple_months_chain_correctly():
 
         sub_after = await server.db.subscriptions.find_one({'user_id': uid})
         assert sub_after['tier'] == server.REFERRAL_PREMIUM_TIER
-        assert sub_after['available_credits'] == server.REFERRAL_PREMIUM_CREDITS
+        # Rollover policy: previous 125 credits + 125 new = 250 (at cap 250)
+        assert sub_after['available_credits'] == 250, (
+            f'Expected 250 (rollover at cap), got {sub_after["available_credits"]}'
+        )
     finally:
         await _clean(uid)
 
@@ -214,7 +217,10 @@ async def case8_trial_user_counts_as_not_paid():
 
         sub = await server.db.subscriptions.find_one({'user_id': uid})
         assert sub['tier'] == server.REFERRAL_PREMIUM_TIER
-        assert sub['available_credits'] == server.REFERRAL_PREMIUM_CREDITS
+        # Rollover: trial's 15 credits + 125 = 140 (below cap 250)
+        assert sub['available_credits'] == 140, (
+            f'Expected 140 (15 + 125 rollover), got {sub["available_credits"]}'
+        )
     finally:
         await _clean(uid)
 

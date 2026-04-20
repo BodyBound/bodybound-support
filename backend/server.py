@@ -2926,6 +2926,10 @@ async def get_user_credits(user_id: str) -> dict:
     TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500, 'referral_premium': 125}
     tier = sub.get('tier')
     total_monthly_credits = TIER_CREDITS_MAP.get(tier, 0)
+    # Rollover policy: balance cap = 2× monthly allowance
+    monthly_allowance = sub.get('monthly_allowance', total_monthly_credits)
+    max_balance_cap = sub.get('max_balance_cap', monthly_allowance * BALANCE_CAP_MULTIPLIER if monthly_allowance else 0)
+    last_refill_at = sub.get('last_refill_at')
 
     # Referral premium override state (Phase 2 redemption)
     rewards_doc = await db.referral_rewards.find_one({'user_id': user_id}, {'_id': 0})
@@ -2947,6 +2951,9 @@ async def get_user_credits(user_id: str) -> dict:
     return {
         'available_credits': available_credits,
         'total_monthly_credits': total_monthly_credits,
+        'monthly_allowance': monthly_allowance,
+        'max_balance_cap': max_balance_cap,
+        'last_refill_at': last_refill_at,
         'tier': tier,
         'is_trial': is_trial,
         'trial_expires_at': trial_expires_at,
@@ -4230,6 +4237,120 @@ REFERRAL_MONTH_DAYS = 30
 # months are safe to auto-activate for these states.
 INACTIVE_TIERS = {None, '', 'expired', 'trial_expired', 'paywall_bypass', REFERRAL_PREMIUM_TIER}
 
+# Tier -> monthly credit allowance. Balance caps at 2× the allowance.
+MONTHLY_ALLOWANCE_MAP = {
+    'walk-in': 125,
+    'booked-out': 500,
+    'the-shop': 1500,
+    'the-shop-member': 1500,
+    REFERRAL_PREMIUM_TIER: 125,
+}
+
+BALANCE_CAP_MULTIPLIER = 2  # max_balance = monthly_allowance × this
+
+
+async def apply_monthly_refill(
+    user_id: str,
+    monthly_allowance: int,
+    cycle_key: str,
+    tier: Optional[str] = None,
+    extra_set: Optional[dict] = None,
+) -> dict:
+    """Atomic rollover-aware monthly credit refill.
+
+    Behavior:
+    - Balance rolls over between cycles; refill ADDS monthly_allowance to
+      whatever the user has left.
+    - Balance is capped at `monthly_allowance × BALANCE_CAP_MULTIPLIER` (2× by
+      default). If a refill would overshoot the cap, balance is truncated.
+    - Refill is idempotent per (user_id, cycle_key) via `last_refill_at`:
+      a second call with the same cycle_key is a no-op.
+    - Safe against concurrent callers — uses a conditional atomic update.
+
+    Returns: {
+        'applied': bool — whether this call performed a refill,
+        'previous_balance': int,
+        'new_balance': int,
+        'monthly_allowance': int,
+        'max_balance_cap': int,
+        'cycle_key': str,
+    }
+    """
+    cap = monthly_allowance * BALANCE_CAP_MULTIPLIER
+
+    # Step 1: Ensure subscription doc exists (idempotent). We use $setOnInsert so
+    # repeated callers don't clobber existing state.
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {
+            '$setOnInsert': {
+                'user_id': user_id,
+                'available_credits': 0,
+                'is_trial': False,
+                'tier': tier,
+            },
+        },
+        upsert=True,
+    )
+
+    # Step 2: Atomic claim. Only the FIRST concurrent caller gets past this
+    # filter; everyone else sees last_refill_at == cycle_key and fails the $ne
+    # check, returning None (no double-refill possible).
+    claim_filter = {
+        'user_id': user_id,
+        '$or': [
+            {'last_refill_at': {'$ne': cycle_key}},
+            {'last_refill_at': {'$exists': False}},
+        ],
+    }
+    set_doc = {
+        'last_refill_at': cycle_key,
+        'monthly_allowance': monthly_allowance,
+        'max_balance_cap': cap,
+    }
+    if tier is not None:
+        set_doc['tier'] = tier
+    if extra_set:
+        set_doc.update(extra_set)
+
+    claimed_before = await db.subscriptions.find_one_and_update(
+        claim_filter,
+        {'$set': set_doc},
+        return_document=False,  # return the doc as it was BEFORE the update
+    )
+
+    if claimed_before is None:
+        # Either already refilled for this cycle OR lost the race to another caller
+        existing = await db.subscriptions.find_one({'user_id': user_id}) or {}
+        return {
+            'applied': False,
+            'previous_balance': existing.get('available_credits', 0),
+            'new_balance': existing.get('available_credits', 0),
+            'monthly_allowance': monthly_allowance,
+            'max_balance_cap': cap,
+            'cycle_key': cycle_key,
+            'reason': 'already_refilled_for_cycle',
+        }
+
+    # We won the claim. Apply rollover + cap.
+    previous_balance = int(claimed_before.get('available_credits', 0) or 0)
+    new_balance = min(previous_balance + monthly_allowance, cap)
+
+    if new_balance != previous_balance:
+        await db.subscriptions.update_one(
+            {'user_id': user_id},
+            {'$set': {'available_credits': new_balance}},
+        )
+
+    return {
+        'applied': True,
+        'previous_balance': previous_balance,
+        'new_balance': new_balance,
+        'monthly_allowance': monthly_allowance,
+        'max_balance_cap': cap,
+        'cycle_key': cycle_key,
+    }
+
 
 async def maybe_redeem_referral_month(user_id: str) -> Optional[dict]:
     """Idempotent referral-month redemption.
@@ -4328,23 +4449,24 @@ async def maybe_redeem_referral_month(user_id: str) -> Optional[dict]:
         # Someone else claimed it first (or no months left) — nothing to do.
         return await db.referral_rewards.find_one({'user_id': user_id})
 
-    # We won the race — grant credits (once).
-    await db.subscriptions.update_one(
-        {'user_id': user_id},
-        {'$set': {
-            'user_id': user_id,
-            'tier': REFERRAL_PREMIUM_TIER,
-            'available_credits': REFERRAL_PREMIUM_CREDITS,
+    # We won the race — apply rollover-aware refill (once).
+    # cycle_key = redeemed_at so repeated calls with same activation don't re-refill.
+    refill = await apply_monthly_refill(
+        user_id=user_id,
+        monthly_allowance=REFERRAL_PREMIUM_CREDITS,
+        cycle_key=f'referral:{redeemed_at}',
+        tier=REFERRAL_PREMIUM_TIER,
+        extra_set={
             'is_trial': False,
             'referral_premium_until': new_until,
             'last_event': 'REFERRAL_MONTH_ACTIVATED',
             'updated_at': redeemed_at,
-        }},
-        upsert=True,
+        },
     )
     logger.info(
         f'[Referral Redeem] Activated referral month for {user_id}: '
-        f'{REFERRAL_PREMIUM_CREDITS} credits, until {new_until}, '
+        f'balance {refill["previous_balance"]} → {refill["new_balance"]} '
+        f'(cap {refill["max_balance_cap"]}), until {new_until}, '
         f'remaining queued={claimed.get("free_months_available", 0)}'
     )
 
@@ -4818,10 +4940,13 @@ async def tasks_refresh_credits(request: FastAPIRequest):
 
 
 async def _do_credit_refresh():
-    """Shared credit refresh logic used by both cron endpoints."""
+    """Shared credit refresh logic used by both cron endpoints.
+
+    Applies rollover-aware monthly refill: adds tier allowance to existing
+    balance, capped at 2× allowance. Idempotent via cycle_key = renewal_date.
+    """
     now = datetime.now(timezone.utc)
     active_tiers = ['walk-in', 'booked-out', 'the-shop']
-    tier_credits = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500}
 
     subs = await db.subscriptions.find(
         {'tier': {'$in': active_tiers}, 'is_trial': False}
@@ -4837,15 +4962,27 @@ async def _do_credit_refresh():
         except Exception:
             continue
         if renewal_date <= now:
-            credits = tier_credits.get(sub.get('tier', ''), 0)
-            if credits:
-                next_renewal = (renewal_date + timedelta(days=30)).isoformat()
-                await db.subscriptions.update_one(
-                    {'user_id': sub['user_id']},
-                    {'$set': {'available_credits': credits, 'renewal_date': next_renewal}}
-                )
+            tier = sub.get('tier', '')
+            allowance = MONTHLY_ALLOWANCE_MAP.get(tier, 0)
+            if not allowance:
+                continue
+            next_renewal = (renewal_date + timedelta(days=30)).isoformat()
+            # cycle_key tied to this billing period — prevents duplicate refills
+            cycle_key = f'sub:{renewal_str}'
+            result = await apply_monthly_refill(
+                user_id=sub['user_id'],
+                monthly_allowance=allowance,
+                cycle_key=cycle_key,
+                tier=tier,
+                extra_set={'renewal_date': next_renewal},
+            )
+            if result['applied']:
                 refreshed += 1
-                logger.info(f'[Cron] Refreshed credits for user {sub["user_id"]}: {credits} credits')
+                logger.info(
+                    f'[Cron] Refreshed credits for user {sub["user_id"]}: '
+                    f'{result["previous_balance"]} → {result["new_balance"]} '
+                    f'(cap {result["max_balance_cap"]})'
+                )
 
     logger.info(f'[Cron] Credit refresh complete: {refreshed}/{len(subs)} subscriptions refreshed')
     return {'refreshed': refreshed, 'checked': len(subs), 'timestamp': now.isoformat()}
@@ -5216,6 +5353,14 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_scheduler():
     """Start background cron scheduler for daily referral verification."""
+    # Ensure unique index on subscriptions.user_id — required for safe
+    # concurrent upserts during credit refills (rollover policy).
+    try:
+        await db.subscriptions.create_index('user_id', unique=True, background=True)
+        logger.info('[Startup] Ensured unique index on subscriptions.user_id')
+    except Exception as e:
+        logger.warning(f'[Startup] Could not create unique index on subscriptions.user_id: {e}')
+
     async def daily_referral_cron():
         """Runs every 24 hours: processes pending referral verifications."""
         while True:

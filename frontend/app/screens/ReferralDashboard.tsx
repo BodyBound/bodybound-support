@@ -87,6 +87,15 @@ export function ReferralDashboard({ onClose }: ReferralDashboardProps) {
     } catch (_) {}
   };
 
+  const handleSendReminder = async () => {
+    if (!data) return;
+    try {
+      await Share.share({
+        message: `Hey — just checking in! Keep using BODY BOUND for a full 14 days and I'll earn a free month. Link if you need it again: ${data.referral_link}`,
+      });
+    } catch (_) {}
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -188,6 +197,20 @@ export function ReferralDashboard({ onClose }: ReferralDashboardProps) {
           </View>
         </View>
 
+        {/* Send Reminder button (only if there are pending referrals) */}
+        {data.pending_referrals > 0 && (
+          <TouchableOpacity
+            onPress={handleSendReminder}
+            style={styles.reminderBtn}
+            data-testid="send-reminder-btn"
+          >
+            <Feather name="bell" size={16} color="#C9A227" />
+            <Text style={styles.reminderBtnText}>
+              Nudge pending referrals
+            </Text>
+          </TouchableOpacity>
+        )}
+
         {/* Share Section */}
         <View style={styles.shareCard}>
           <Text style={styles.shareLabel}>Your Referral Link</Text>
@@ -270,6 +293,8 @@ const styles = StyleSheet.create({
   activeBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#4CAF50', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginTop: 12, alignSelf: 'flex-start', gap: 6 },
   activeBadgeText: { color: '#000', fontWeight: '700', fontSize: 13 },
   queuedText: { color: '#C9A227', fontSize: 12, marginTop: 10, fontStyle: 'italic', lineHeight: 17 },
+  reminderBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#12121f', borderWidth: 1, borderColor: '#C9A227', borderRadius: 10, paddingVertical: 12, marginBottom: 16, gap: 8 },
+  reminderBtnText: { color: '#C9A227', fontSize: 14, fontWeight: '600' },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   statBox: { flex: 1, backgroundColor: '#12121f', borderRadius: 12, padding: 16, alignItems: 'center' },
   statNum: { color: '#C9A227', fontSize: 24, fontWeight: '700' },

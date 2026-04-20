@@ -67,19 +67,26 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb 2026)
+- **Credit Rollover Policy (monthly allowance × 2 cap)** — monthly refills now roll over month-to-month, capped at 2× the plan's monthly allowance.
+  - New helper `apply_monthly_refill(user_id, allowance, cycle_key, tier, extra_set)` in `backend/server.py` — atomic, idempotent per cycle_key. Uses two-step "ensure exists + conditional claim" to handle race storms safely.
+  - Unique index on `subscriptions.user_id` enforced at app startup (prevents duplicate docs under concurrent upserts).
+  - New subscription doc fields: `monthly_allowance`, `max_balance_cap`, `last_refill_at`. Exposed to frontend via `/auth/me` credits payload.
+  - `_do_credit_refresh` cron (paid subs) now uses rollover helper with `cycle_key = 'sub:<renewal_date>'`.
+  - `maybe_redeem_referral_month` (referral months) now uses rollover helper with `cycle_key = 'referral:<redeemed_at>'`.
+  - Tier→allowance map: walk-in 125, booked-out 500, the-shop 1500, the-shop-member 1500, referral_premium 125. Balance cap = allowance × 2.
+  - Test suite `tests/test_credit_rollover.py` — 8/8 scenarios pass (rollover, partial rollover, cap-truncation, 50-way concurrent storm, booked-out tier, referral integration, fresh user, idempotency).
 - **Phase 2 Referral Reward Redemption (simple credit-based premium override)** — earned free months now grant real usable premium access, not just a dashboard counter.
-  - New helper `maybe_redeem_referral_month(user_id)` in `backend/server.py` — atomic, idempotent, race-safe (uses `find_one_and_update` with conditional filter).
-  - New tier `referral_premium` (125 credits/month, same as walk-in) registered in `TIER_CREDITS_MAP` and `get_user_credits`.
+  - New helper `maybe_redeem_referral_month(user_id)` in `backend/server.py` — atomic, idempotent, race-safe.
+  - New tier `referral_premium` (125 credits/month) registered in `TIER_CREDITS_MAP` and `MONTHLY_ALLOWANCE_MAP`.
   - Resolution order: active referral override > paid RC sub > free/expired.
   - Paid-active users bank their earned months — activation only starts after paid sub ends.
-  - Expired periods auto-chain the next queued month; when queue empties, tier falls back to `expired`.
-  - Redemption triggers: every `/auth/me` call, every `/referral/dashboard` call, immediately after a new reward is issued (post-verification).
-  - New dashboard fields returned: `is_referral_premium_active`, `referral_premium_until`, `earned_free_months`, `blocked_by_paid_sub`.
-  - New ReferralDashboard UI states: green "1 free month active until [date]" badge, "Your next earned month will activate automatically" hint when chaining, "X months banked — will activate when paid sub ends" hint for paid users.
-  - Pytest suite `tests/test_referral_phase2_redemption.py` — 8/8 scenarios pass including 50-concurrent-retry idempotency.
-- Per-style stencil history navigation arrows moved from below the stencil image to inline beneath each style button (Light / Medium / Heavy). Each button now owns its own `◀ n/N ▶` row, shown only when that style has >1 generation in session history. Tapping arrows also switches `selectedVersion` so users can jump back to any previously-paid style's variants for free. Tapping a previously-generated style button (no arrows) continues to re-select its latest without charging credits.
+  - Redemption triggers: every `/auth/me`, every `/referral/dashboard`, immediately after a new reward is issued.
+  - New dashboard fields: `is_referral_premium_active`, `referral_premium_until`, `earned_free_months`, `blocked_by_paid_sub`.
+  - New ReferralDashboard UI states: green "1 free month active until [date]" badge, "Your next earned month will activate automatically" chain hint, "X months banked" paid-user hint.
+  - Pytest suite `tests/test_referral_phase2_redemption.py` — 8/8 scenarios pass.
+- **Send Reminder button** on ReferralDashboard — native share sheet with prewritten "14-day reminder" copy, shown only when `pending_referrals > 0`.
+- Per-style stencil history navigation arrows moved from below the stencil image to inline beneath each style button (Light / Medium / Heavy). Each button owns its own `◀ n/N ▶` row; tapping arrows switches `selectedVersion`.
 - New styles added in `mainStyles.ts`: `styleButtonColumn`, `styleHistoryRow`, `styleHistoryArrow`, `styleHistoryArrowText`, `styleHistoryCounter`.
-- `styleButtonsRow` alignItems changed from `center` to `flex-start` to keep all 3 style buttons top-aligned when only one column shows its history row.
 
 ## Known Issues
 - TestFlight sandbox can't load RevenueCat offerings (expected, production works)
