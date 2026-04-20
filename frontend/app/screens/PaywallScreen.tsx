@@ -189,6 +189,35 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             await SecureStore.setItemAsync('pending_referral_code', referralCode.trim().toUpperCase());
           } catch (_) {}
         }
+
+        // CRITICAL: Tell our backend exactly what product was purchased so it
+        // can apply the right tier + credits regardless of how RC's webhook
+        // classifies the event (INITIAL_PURCHASE vs TRANSFER vs PRODUCT_CHANGE).
+        // Without this, a TRANSFER webhook could degrade the subscription to
+        // whatever the previous account had.
+        try {
+          const token = await SecureStore.getItemAsync('session_token');
+          const activeEntitlement = customerInfo.entitlements.active[ENTITLEMENT_ID];
+          const isTrial = activeEntitlement?.periodType === 'TRIAL';
+          const syncResp = await fetch(`${API_URL}/api/subscription/sync`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({
+              product_id: selectedPackage.product.identifier,
+              is_trial: isTrial,
+              revenuecat_customer_id: customerInfo.originalAppUserId || '',
+            }),
+          });
+          if (!syncResp.ok) {
+            const errTxt = await syncResp.text();
+            console.error('[RC:Purchase] Backend sync failed:', syncResp.status, errTxt);
+          } else {
+            console.log('[RC:Purchase] Backend sync OK for product:', selectedPackage.product.identifier);
+          }
+        } catch (syncErr) {
+          console.error('[RC:Purchase] Backend sync exception:', syncErr);
+        }
+
         Alert.alert('Welcome!', 'Your subscription is now active. Enjoy your credits!');
         onPurchaseSuccess();
       } else {
@@ -225,6 +254,36 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       logEntitlements(customerInfo, 'Restore');
 
       if (typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
+        // Sync restored entitlement to backend. Find the active product ID
+        // from the customerInfo to tell the backend what was restored.
+        try {
+          const activeEntitlement = customerInfo.entitlements.active[ENTITLEMENT_ID];
+          const productId = activeEntitlement?.productIdentifier;
+          const isTrial = activeEntitlement?.periodType === 'TRIAL';
+          if (productId) {
+            const token = await SecureStore.getItemAsync('session_token');
+            const syncResp = await fetch(`${API_URL}/api/subscription/sync`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({
+                product_id: productId,
+                is_trial: isTrial,
+                revenuecat_customer_id: customerInfo.originalAppUserId || '',
+              }),
+            });
+            if (!syncResp.ok) {
+              const errTxt = await syncResp.text();
+              console.error('[RC:Restore] Backend sync failed:', syncResp.status, errTxt);
+            } else {
+              console.log('[RC:Restore] Backend sync OK for product:', productId);
+            }
+          } else {
+            console.warn('[RC:Restore] No productIdentifier in active entitlement — skipping sync');
+          }
+        } catch (syncErr) {
+          console.error('[RC:Restore] Backend sync exception:', syncErr);
+        }
+
         Alert.alert('Restored!', 'Your previous purchase has been restored.');
         onPurchaseSuccess();
       } else {

@@ -4091,8 +4091,42 @@ async def revenuecat_webhook(request: FastAPIRequest):
                 source_sub = sub
                 logger.info(f'[RevenueCat:TRANSFER] Found source sub from {candidate}: tier={sub.get("tier")} credits={sub.get("available_credits")}')
                 break
-        
-        if source_sub:
+
+        # Prefer the product_id on the TRANSFER event — it's authoritative.
+        # Only fall back to source_sub when product_id is missing / unmapped.
+        # Bug fix: previously the TRANSFER handler blindly copied source_sub,
+        # which meant a fresh paid purchase could land as walk-in / 0 credits
+        # if the source account was itself in a degraded state.
+        if tier_info:
+            period_type = event.get('period_type', 'NORMAL')
+            is_apple_trial = period_type == 'TRIAL'
+            credits_to_grant = TRIAL_CREDITS if is_apple_trial else tier_info['credits']
+            await db.subscriptions.update_one(
+                {'user_id': target_user_id},
+                {'$set': {
+                    'tier': tier_info['tier'],
+                    'available_credits': credits_to_grant,
+                    'is_trial': is_apple_trial,
+                    'period_type': period_type,
+                    'renewal_date': (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+                    'last_event': 'TRANSFER',
+                    'transferred_from': transferred_from[0] if transferred_from else '',
+                    'revenuecat_customer_id': raw_user_id or target_user_id,
+                }},
+                upsert=True
+            )
+            logger.info(
+                f'[RevenueCat:TRANSFER] Applied product_id={product_id} → tier={tier_info["tier"]} '
+                f'credits={credits_to_grant} (trial={is_apple_trial}) to {target_user_id}'
+            )
+            # Expire source user's subscription(s)
+            for candidate in transferred_from:
+                if candidate and candidate.startswith('user_') and candidate != target_user_id:
+                    await db.subscriptions.update_one(
+                        {'user_id': candidate},
+                        {'$set': {'tier': 'expired', 'last_event': 'TRANSFER_OUT'}}
+                    )
+        elif source_sub:
             # Copy subscription state from source to target
             await db.subscriptions.update_one(
                 {'user_id': target_user_id},
@@ -4106,18 +4140,18 @@ async def revenuecat_webhook(request: FastAPIRequest):
                 }},
                 upsert=True
             )
-            logger.info(f'[RevenueCat:TRANSFER] Granted tier={source_sub.get("tier")} credits={source_sub.get("available_credits")} to {target_user_id}')
+            logger.info(f'[RevenueCat:TRANSFER] Copied from source sub → tier={source_sub.get("tier")} credits={source_sub.get("available_credits")} to {target_user_id}')
             # Expire the source user's subscription
             for candidate in transferred_from:
-                if candidate and candidate.startswith('user_'):
+                if candidate and candidate.startswith('user_') and candidate != target_user_id:
                     await db.subscriptions.update_one(
                         {'user_id': candidate},
                         {'$set': {'tier': 'expired', 'last_event': 'TRANSFER_OUT'}}
                     )
         else:
-            # No source sub found — grant default walk-in trial as safe fallback
+            # No product_id AND no source sub — grant default walk-in trial as safe fallback
             # (RC confirmed this user has a subscription by sending TRANSFER)
-            logger.warning(f'[RevenueCat:TRANSFER] No source sub found. Granting default walk-in trial to {target_user_id}')
+            logger.warning(f'[RevenueCat:TRANSFER] No product_id or source sub. Granting default walk-in trial to {target_user_id}')
             await db.subscriptions.update_one(
                 {'user_id': target_user_id},
                 {'$set': {
