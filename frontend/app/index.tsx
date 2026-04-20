@@ -4430,16 +4430,29 @@ export default function Index() {
 
           {/* Right Side - Tools */}
           <View style={styles.procreateRightBar} pointerEvents="box-none">
-            <TouchableOpacity 
+            {/* Draw tool — combined: select draw mode + toggle finger painting */}
+            <TouchableOpacity
               style={[styles.procreateToolButton, !isEraser && styles.procreateToolActive]}
-              onPress={() => setIsEraser(false)}
+              onPress={() => {
+                if (isEraser) {
+                  setIsEraser(false);
+                } else {
+                  setEnableFingerPainting(!enableFingerPainting);
+                }
+              }}
+              data-testid="edit-draw-tool-btn"
             >
-              <Text style={styles.procreateToolIcon}>✏️</Text>
+              <Text style={[styles.procreateToolIcon, { fontSize: 16 }]}>
+                <Text>✏️</Text>
+                <Text style={{ color: !isEraser ? '#000' : '#fff', opacity: 0.6 }}>/</Text>
+                <Text style={{ opacity: enableFingerPainting ? 1 : 0.25 }}>✋</Text>
+              </Text>
             </TouchableOpacity>
             
             <TouchableOpacity 
               style={[styles.procreateToolButton, isEraser && styles.procreateToolActive]}
               onPress={() => setIsEraser(true)}
+              data-testid="edit-eraser-btn"
             >
               <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
                 <Path d="M20.48 7.52L16.48 3.52C15.89 2.93 14.94 2.93 14.35 3.52L3.52 14.35C2.93 14.94 2.93 15.89 3.52 16.48L6.52 19.48C6.81 19.77 7.2 19.93 7.6 19.93H12.4C12.8 19.93 13.19 19.77 13.48 19.48L20.48 12.48C21.07 11.89 21.07 10.94 20.48 10.35V7.52Z" stroke={isEraser ? "#000" : "#fff"} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
@@ -4476,23 +4489,6 @@ export default function Index() {
               ))}
             </View>
 
-            {/* Enable Finger Drawing Toggle - Like Procreate */}
-            <TouchableOpacity 
-              style={[
-                styles.procreateDrawModeButton,
-                enableFingerPainting && styles.procreateDrawModeButtonActive
-              ]}
-              onPress={() => setEnableFingerPainting(!enableFingerPainting)}
-            >
-              <Text style={styles.procreateDrawModeIcon}>{enableFingerPainting ? '🖐️' : '✏️'}</Text>
-              <Text style={[
-                styles.procreateDrawModeText,
-                enableFingerPainting && styles.procreateDrawModeTextActive
-              ]}>
-                {enableFingerPainting ? 'FINGER DRAWS' : 'PENCIL ONLY'}
-              </Text>
-            </TouchableOpacity>
-            
             <TouchableOpacity 
               style={styles.procreateSaveButton}
               onPress={() => {
