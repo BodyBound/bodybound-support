@@ -68,6 +68,12 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [offeringsError, setOfferingsError] = useState(false);
   const [grantingFallback, setGrantingFallback] = useState(false);
+  // Subscriber state: if user already has an active entitlement, we hide the
+  // purchase flow and show "You're subscribed" / Manage Subscription.
+  const [isActiveSubscriber, setIsActiveSubscriber] = useState(false);
+  // Trial eligibility from RC (Apple decides this based on subscription group
+  // history). We assume eligible until RC tells us otherwise.
+  const [trialEligible, setTrialEligible] = useState(true);
 
   // Package identifiers as configured in RevenueCat dashboard
   const PACKAGE_IDS = ['walk_in', 'booked_out', 'the_shop'];
@@ -121,9 +127,24 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
 
       if (packages.length > 0) {
         setOfferings(packages);
-        // Pre-select booked_out if available, else first
-        setSelectedPackage(bookedOut || packages[0]);
+        // Do NOT pre-select — spec requires explicit user selection to enable CTA.
         console.log('[RC:Paywall] SUCCESS — Loaded', packages.length, 'packages');
+
+        // Check subscriber + trial eligibility from RevenueCat
+        try {
+          const customerInfo = await Purchases.getCustomerInfo();
+          const active = !!customerInfo.entitlements.active[ENTITLEMENT_ID];
+          setIsActiveSubscriber(active);
+          if (!active) {
+            const productIds = packages.map(p => p.product.identifier);
+            const eligibility = await Purchases.checkTrialOrIntroductoryPriceEligibility(productIds);
+            // Status: 0=unknown, 1=ineligible, 2=eligible, 3=no_intro_offer_exists
+            const anyEligible = Object.values(eligibility).some((e: any) => e.status === 2);
+            setTrialEligible(anyEligible);
+          }
+        } catch (e) {
+          console.warn('[RC:Paywall] Could not check subscription/trial state:', e);
+        }
       } else {
         console.error('[RC:Paywall] No matching packages found (expected: walk_in, booked_out, the_shop)');
         setOfferingsError(true);
@@ -227,8 +248,21 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   };
 
   const isWeb = Platform.OS === 'web';
-  const ctaText = isWeb ? 'Subscribe in iOS App Store' : 'Start Free Trial';
-  const ctaSubtext = isWeb ? 'Download Body Bound on iPhone or iPad' : '3 days free, then cancel anytime';
+  // Selected tier label (e.g. "Walk-In", "Booked Out", "The Shop")
+  const selectedTierLabel = (() => {
+    if (!selectedPackage) return '';
+    const idx = offerings.findIndex(p => p.identifier === selectedPackage.identifier);
+    const tier = (Object.values(TIER_INFO)[idx] as any) || null;
+    // Strip leading "The " to keep CTA tight: "The Walk-In" -> "Walk-In"
+    return tier ? tier.label.replace(/^The /, '') : '';
+  })();
+
+  const ctaText = (() => {
+    if (isWeb) return 'Subscribe in iOS App Store';
+    if (!selectedPackage) return 'Select a Plan';
+    if (trialEligible) return `Start Trial — ${selectedTierLabel}`;
+    return `Subscribe — ${selectedTierLabel}`;
+  })();
   const ctaDisabled = purchasing || (!isWeb && !selectedPackage);
 
   return (
@@ -253,11 +287,13 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
           <View style={styles.header}>
             <Text style={styles.headline}>Professional Tattoo Stencils</Text>
             <Text style={styles.subheadline}>
-              Unlimited creativity. Precise results.{'\n'}Built for tattooers, by tattooers.
+              Precision stencil generation. Built for tattooers.
             </Text>
-            <View style={styles.trialBadge}>
-              <Text style={styles.trialBadgeText}>3-Day FREE Trial</Text>
-            </View>
+            {trialEligible && !isActiveSubscriber && (
+              <View style={styles.trialBadge}>
+                <Text style={styles.trialBadgeText}>3-Day Free Trial</Text>
+              </View>
+            )}
           </View>
 
           {/* Plans */}
@@ -279,7 +315,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
                   >
                     {tier.popular && (
                       <View style={styles.popularBadge}>
-                        <Text style={styles.popularText}>MOST POPULAR</Text>
+                        <Text style={styles.popularText}>STUDIO STANDARD</Text>
                       </View>
                     )}
                     <View style={styles.planHeader}>
@@ -354,30 +390,42 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             </View>
           )}
 
-          {/* Trial Info */}
-          <View style={styles.trialInfo}>
-            <Text style={styles.trialInfoText}>
-              Start your 3-day free trial with full access to all credits.{'\n'}
-              Cancel anytime before your trial ends — you won't be charged.
-            </Text>
-          </View>
-
-          {/* CTA */}
-          <TouchableOpacity
-            testID="subscribe-btn"
-            style={[styles.subscribeBtn, ctaDisabled && styles.subscribeBtnDisabled]}
-            onPress={handlePurchase}
-            disabled={ctaDisabled}
-          >
-            {purchasing ? (
-              <ActivityIndicator color="#000" />
-            ) : (
-              <>
+          {/* CTA — single source of purchase action */}
+          {isActiveSubscriber ? (
+            <>
+              <View style={[styles.subscribeBtn, { backgroundColor: 'rgba(76,175,80,0.15)', borderWidth: 1, borderColor: '#4CAF50' }]}>
+                <Text style={[styles.subscribeBtnText, { color: '#4CAF50' }]}>You're subscribed</Text>
+              </View>
+              <TouchableOpacity
+                testID="manage-subscription-btn"
+                style={[styles.restoreBtn, { borderColor: '#C9A227', borderWidth: 1, borderRadius: 12, paddingVertical: 14, marginBottom: 8 }]}
+                onPress={async () => {
+                  try {
+                    if (Platform.OS === 'ios') {
+                      Linking.openURL('https://apps.apple.com/account/subscriptions');
+                    } else {
+                      Linking.openURL('https://play.google.com/store/account/subscriptions');
+                    }
+                  } catch (_) {}
+                }}
+              >
+                <Text style={[styles.restoreBtnText, { color: '#C9A227', fontWeight: '700' }]}>Manage Subscription</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity
+              testID="subscribe-btn"
+              style={[styles.subscribeBtn, ctaDisabled && styles.subscribeBtnDisabled]}
+              onPress={handlePurchase}
+              disabled={ctaDisabled}
+            >
+              {purchasing ? (
+                <ActivityIndicator color="#000" />
+              ) : (
                 <Text style={styles.subscribeBtnText}>{ctaText}</Text>
-                <Text style={styles.subscribeBtnSubtext}>{ctaSubtext}</Text>
-              </>
-            )}
-          </TouchableOpacity>
+              )}
+            </TouchableOpacity>
+          )}
 
           {/* Restore */}
           <TouchableOpacity
