@@ -4521,93 +4521,19 @@ export default function Index() {
             </View>
           </View>
 
-          {/* Top Bar - Done only (X removed; use Done to save + exit) */}
+          {/* Top Bar - Save/Export (compact disc) + Done */}
           <View style={styles.procreateTopBar} pointerEvents="box-none">
-            <TouchableOpacity 
-              style={[styles.procreateTopButton, styles.procreateTopButtonDone]}
-              onPress={saveEditedStencil}
-              data-testid="edit-mode-done-btn"
-            >
-              <Text style={styles.procreateTopButtonTextDone}>Done</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Right Side - Tools */}
-          <View style={styles.procreateRightBar} pointerEvents="box-none">
-            {/* Draw tool — combined: select draw mode + toggle finger painting */}
             <TouchableOpacity
-              style={[styles.procreateToolButton, !isEraser && styles.procreateToolActive]}
-              onPress={() => {
-                if (isEraser) {
-                  setIsEraser(false);
-                } else {
-                  setEnableFingerPainting(!enableFingerPainting);
-                }
-              }}
-              data-testid="edit-draw-tool-btn"
-            >
-              <Text style={[styles.procreateToolIcon, { fontSize: 16 }]}>
-                <Text>✏️</Text>
-                <Text style={{ color: !isEraser ? '#000' : '#fff', opacity: 0.6 }}>/</Text>
-                <Text style={{ opacity: enableFingerPainting ? 1 : 0.25 }}>✋</Text>
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.procreateToolButton, isEraser && styles.procreateToolActive]}
-              onPress={() => setIsEraser(true)}
-              data-testid="edit-eraser-btn"
-            >
-              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-                <Path d="M20.48 7.52L16.48 3.52C15.89 2.93 14.94 2.93 14.35 3.52L3.52 14.35C2.93 14.94 2.93 15.89 3.52 16.48L6.52 19.48C6.81 19.77 7.2 19.93 7.6 19.93H12.4C12.8 19.93 13.19 19.77 13.48 19.48L20.48 12.48C21.07 11.89 21.07 10.94 20.48 10.35V7.52Z" stroke={isEraser ? "#000" : "#fff"} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-                <Path d="M3.52 14.35L10 7.87" stroke={isEraser ? "#000" : "#fff"} strokeWidth={1.8} strokeLinecap="round" />
-                <Path d="M6 21H21" stroke={isEraser ? "#000" : "#fff"} strokeWidth={1.8} strokeLinecap="round" />
-              </Svg>
-            </TouchableOpacity>
-          </View>
-
-          {/* Bottom - Controls */}
-          <View style={styles.procreateBottomBar} pointerEvents="box-none">
-            {/* Stencil Color Tint */}
-            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 6, gap: 6 }}>
-              {[
-                { color: null, display: '#000000', label: 'Black' },
-                { color: '#DC2626', display: '#DC2626', label: 'Red' },
-                { color: '#2563EB', display: '#2563EB', label: 'Blue' },
-                { color: '#16A34A', display: '#16A34A', label: 'Green' },
-                { color: '#FFFFFF', display: '#FFFFFF', label: 'White' },
-              ].map((item) => (
-                <TouchableOpacity
-                  key={item.label}
-                  data-testid={`stencil-color-${item.label.toLowerCase()}`}
-                  onPress={() => setStencilTintColor(item.color)}
-                  style={{
-                    width: 26,
-                    height: 26,
-                    borderRadius: 13,
-                    backgroundColor: item.display,
-                    borderWidth: (stencilTintColor === item.color) ? 2.5 : 1,
-                    borderColor: (stencilTintColor === item.color) ? '#C9A227' : 'rgba(255,255,255,0.3)',
-                  }}
-                />
-              ))}
-            </View>
-
-            <TouchableOpacity 
-              style={styles.procreateSaveButton}
+              style={styles.procreateTopDisc}
               onPress={() => {
                 Alert.alert(
                   'Save / Export',
                   'Choose an option',
                   [
-                    {
-                      text: 'Save to Photos',
-                      onPress: saveEditedToGallery,
-                    },
+                    { text: 'Save to Photos', onPress: saveEditedToGallery },
                     {
                       text: 'Save Stencil & Reference',
                       onPress: async () => {
-                        // Save edits first, then use the reference save flow
                         try {
                           setIsCapturingForExport(true);
                           await new Promise(resolve => setTimeout(resolve, 150));
@@ -4619,7 +4545,6 @@ export default function Index() {
                             setStencilImage(editedImage);
                           }
                           setShowEditModal(false);
-                          // Small delay then trigger the reference save
                           setTimeout(() => saveStencilAndReference(), 300);
                         } catch (e) {
                           setIsCapturingForExport(false);
@@ -4652,9 +4577,76 @@ export default function Index() {
                   { cancelable: true }
                 );
               }}
+              data-testid="edit-mode-save-btn"
             >
-              <Text style={styles.procreateSaveIcon}>📤</Text>
-              <Text style={styles.procreateSaveText}>Save / Export</Text>
+              <Text style={styles.procreateTopDiscIcon}>📤</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.procreateTopButton, styles.procreateTopButtonDone]}
+              onPress={saveEditedStencil}
+              data-testid="edit-mode-done-btn"
+            >
+              <Text style={styles.procreateTopButtonTextDone}>Done</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Right Side - Tools (colors + pencil + eraser stacked vertically) */}
+          <View style={styles.procreateRightBar} pointerEvents="box-none">
+            {/* Color swatches — vertical stack, above the pencil */}
+            <View style={styles.procreateColorStack}>
+              {[
+                { color: null, display: '#000000', label: 'Black' },
+                { color: '#DC2626', display: '#DC2626', label: 'Red' },
+                { color: '#2563EB', display: '#2563EB', label: 'Blue' },
+                { color: '#16A34A', display: '#16A34A', label: 'Green' },
+                { color: '#FFFFFF', display: '#FFFFFF', label: 'White' },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.label}
+                  data-testid={`stencil-color-${item.label.toLowerCase()}`}
+                  onPress={() => setStencilTintColor(item.color)}
+                  style={{
+                    width: 24,
+                    height: 24,
+                    borderRadius: 12,
+                    backgroundColor: item.display,
+                    borderWidth: (stencilTintColor === item.color) ? 2.5 : 1,
+                    borderColor: (stencilTintColor === item.color) ? '#C9A227' : 'rgba(255,255,255,0.3)',
+                  }}
+                />
+              ))}
+            </View>
+
+            {/* Draw tool — combined: select draw mode + toggle finger painting */}
+            <TouchableOpacity
+              style={[styles.procreateToolButton, !isEraser && styles.procreateToolActive]}
+              onPress={() => {
+                if (isEraser) {
+                  setIsEraser(false);
+                } else {
+                  setEnableFingerPainting(!enableFingerPainting);
+                }
+              }}
+              data-testid="edit-draw-tool-btn"
+            >
+              <Text style={[styles.procreateToolIcon, { fontSize: 16 }]}>
+                <Text>✏️</Text>
+                <Text style={{ color: !isEraser ? '#000' : '#fff', opacity: 0.6 }}>/</Text>
+                <Text style={{ opacity: enableFingerPainting ? 1 : 0.25 }}>✋</Text>
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.procreateToolButton, isEraser && styles.procreateToolActive]}
+              onPress={() => setIsEraser(true)}
+              data-testid="edit-eraser-btn"
+            >
+              <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+                <Path d="M20.48 7.52L16.48 3.52C15.89 2.93 14.94 2.93 14.35 3.52L3.52 14.35C2.93 14.94 2.93 15.89 3.52 16.48L6.52 19.48C6.81 19.77 7.2 19.93 7.6 19.93H12.4C12.8 19.93 13.19 19.77 13.48 19.48L20.48 12.48C21.07 11.89 21.07 10.94 20.48 10.35V7.52Z" stroke={isEraser ? "#000" : "#fff"} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+                <Path d="M3.52 14.35L10 7.87" stroke={isEraser ? "#000" : "#fff"} strokeWidth={1.8} strokeLinecap="round" />
+                <Path d="M6 21H21" stroke={isEraser ? "#000" : "#fff"} strokeWidth={1.8} strokeLinecap="round" />
+              </Svg>
             </TouchableOpacity>
           </View>
 

@@ -2591,6 +2591,28 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
+    gap: 10,
+  },
+  procreateTopDisc: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  procreateTopDiscIcon: {
+    fontSize: 18,
+  },
+  procreateColorStack: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    gap: 8,
+    marginBottom: 4,
   },
   procreateTopButton: {
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
