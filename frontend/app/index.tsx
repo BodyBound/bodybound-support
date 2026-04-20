@@ -4902,6 +4902,13 @@ export default function Index() {
           setShowReferralDashboard(true);
         } : undefined}
         onDismiss={lowCreditLevel !== 'empty' ? () => setShowLowCreditModal(false) : undefined}
+        onRestoreSuccess={async () => {
+          // Refresh credits from backend, then dismiss the out-of-credits screen
+          try {
+            if (sessionToken) await refreshCredits(sessionToken);
+          } catch (_) {}
+          setShowLowCreditModal(false);
+        }}
       />
 
       {/* Milestone Modal */}

@@ -284,7 +284,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
           console.error('[RC:Restore] Backend sync exception:', syncErr);
         }
 
-        Alert.alert('Restored!', 'Your previous purchase has been restored.');
+        Alert.alert('Restored!', 'Subscription restored.');
         onPurchaseSuccess();
       } else {
         const activeKeys = Object.keys(customerInfo.entitlements.active || {});
@@ -295,12 +295,12 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             `We found an active subscription but couldn't match it. Please contact support.\n\nDebug: entitlements=[${activeKeys.join(', ')}]`
           );
         } else {
-          Alert.alert('No Purchase Found', 'No previous subscription was found for your account.');
+          Alert.alert('No Subscription', 'No active subscription found.');
         }
       }
     } catch (err: any) {
       console.error('[RC:Restore] FAILED:', err.message);
-      Alert.alert('Restore Failed', err.message || 'Please try again.');
+      Alert.alert('Restore Failed', 'Unable to restore. Try again.');
     } finally {
       setRestoring(false);
     }
@@ -318,9 +318,9 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
 
   const ctaText = (() => {
     if (isWeb) return 'Subscribe in iOS App Store';
+    if (purchasing) return 'Processing…';
     if (!selectedPackage) return 'Select a Plan';
-    if (trialEligible) return `Start Trial — ${selectedTierLabel}`;
-    return `Subscribe — ${selectedTierLabel}`;
+    return `Confirm ${selectedTierLabel} Subscription`;
   })();
   const ctaDisabled = purchasing || (!isWeb && !selectedPackage);
 
@@ -486,19 +486,24 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             </TouchableOpacity>
           )}
 
-          {/* Restore */}
+          {/* Restore — secondary outlined button, clearly tappable, NOT a text link */}
           <TouchableOpacity
             testID="restore-purchases-btn"
             style={styles.restoreBtn}
             onPress={handleRestore}
             disabled={restoring}
+            activeOpacity={0.8}
           >
             {restoring ? (
-              <ActivityIndicator color="#666" size="small" />
+              <>
+                <ActivityIndicator color="#C9A227" size="small" style={{ marginRight: 8 }} />
+                <Text style={styles.restoreBtnText}>Checking subscription…</Text>
+              </>
             ) : (
-              <Text style={styles.restoreBtnText}>Restore Purchases</Text>
+              <Text style={styles.restoreBtnText}>Restore Subscription</Text>
             )}
           </TouchableOpacity>
+          <Text style={styles.restoreHelperText}>Already subscribed? Restore your existing plan.</Text>
 
           {/* Sign Out — right under Restore so it's visible */}
           {onSignOut && (
@@ -686,8 +691,25 @@ const styles = StyleSheet.create({
   subscribeBtnDisabled: { opacity: 0.35, backgroundColor: '#666' },
   subscribeBtnText: { color: '#000', fontSize: 17, fontWeight: '800' },
   subscribeBtnSubtext: { color: 'rgba(0,0,0,0.6)', fontSize: 12 },
-  restoreBtn: { alignItems: 'center', paddingVertical: 12, marginBottom: 16 },
-  restoreBtnText: { color: '#666', fontSize: 14 },
+  restoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderWidth: 1.5,
+    borderColor: '#C9A227',
+    borderRadius: 12,
+    backgroundColor: 'rgba(201,162,39,0.08)',
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  restoreBtnText: { color: '#C9A227', fontSize: 15, fontWeight: '700' },
+  restoreHelperText: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
   referralSection: {
     marginBottom: 16,
     paddingHorizontal: 4,
