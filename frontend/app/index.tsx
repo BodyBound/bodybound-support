@@ -2135,7 +2135,33 @@ export default function Index() {
         base64Data = base64Data.split(',')[1];
       }
       
-      // Write directly to file to preserve transparency for PNGs
+      // For PNGs (stencils), add white background so gallery doesn't show black square
+      if (isPNG) {
+        try {
+          const tempTransparentUri = FileSystem.documentDirectory + `temp_transparent_${Date.now()}.png`;
+          await FileSystem.writeAsStringAsync(tempTransparentUri, base64Data, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          const manipulated = await ImageManipulator.manipulateAsync(
+            tempTransparentUri,
+            [],
+            { format: ImageManipulator.SaveFormat.PNG }
+          );
+          // Read the manipulated image back — ImageManipulator flattens transparency to white on iOS
+          const flattenedBase64 = await FileSystem.readAsStringAsync(manipulated.uri, {
+            encoding: FileSystem.EncodingType.Base64,
+          });
+          base64Data = flattenedBase64;
+          // Cleanup temp file
+          try { await FileSystem.deleteAsync(tempTransparentUri, { idempotent: true }); } catch (_) {}
+          try { await FileSystem.deleteAsync(manipulated.uri, { idempotent: true }); } catch (_) {}
+          console.log('[SaveToGallery] Added white background to PNG');
+        } catch (bgErr) {
+          console.log('[SaveToGallery] White background failed, saving as-is:', bgErr);
+        }
+      }
+      
+      // Write to file
       const fileUri = FileSystem.documentDirectory + `${filename}_${Date.now()}.${fileExtension}`;
       await FileSystem.writeAsStringAsync(fileUri, base64Data, {
         encoding: FileSystem.EncodingType.Base64,
