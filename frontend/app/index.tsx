@@ -331,6 +331,54 @@ export default function Index() {
   
   // Full-size preview state with zoom
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+
+  // Main screen pinch-to-zoom on stencil image
+  const mainScale = useSharedValue(1);
+  const mainTranslateX = useSharedValue(0);
+  const mainTranslateY = useSharedValue(0);
+  const mainSavedScale = useSharedValue(1);
+  const mainSavedTranslateX = useSharedValue(0);
+  const mainSavedTranslateY = useSharedValue(0);
+
+  const mainPinchGesture = Gesture.Pinch()
+    .onUpdate((e) => { mainScale.value = mainSavedScale.value * e.scale; })
+    .onEnd(() => {
+      if (mainScale.value < 1) { mainScale.value = withSpring(1); mainSavedScale.value = 1; }
+      else { mainSavedScale.value = mainScale.value; }
+    });
+
+  const mainPanGesture = Gesture.Pan()
+    .minPointers(2)
+    .onUpdate((e) => {
+      mainTranslateX.value = mainSavedTranslateX.value + e.translationX;
+      mainTranslateY.value = mainSavedTranslateY.value + e.translationY;
+    })
+    .onEnd(() => {
+      if (mainScale.value <= 1) {
+        mainTranslateX.value = withSpring(0); mainTranslateY.value = withSpring(0);
+        mainSavedTranslateX.value = 0; mainSavedTranslateY.value = 0;
+      } else {
+        mainSavedTranslateX.value = mainTranslateX.value;
+        mainSavedTranslateY.value = mainTranslateY.value;
+      }
+    });
+
+  const mainDoubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd(() => {
+      mainScale.value = withSpring(1); mainTranslateX.value = withSpring(0); mainTranslateY.value = withSpring(0);
+      mainSavedScale.value = 1; mainSavedTranslateX.value = 0; mainSavedTranslateY.value = 0;
+    });
+
+  const mainImageGesture = Gesture.Simultaneous(mainPinchGesture, mainPanGesture, mainDoubleTapGesture);
+
+  const mainImageAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: mainTranslateX.value },
+      { translateY: mainTranslateY.value },
+      { scale: mainScale.value },
+    ],
+  }));
   const [previewShowingOriginal, setPreviewShowingOriginal] = useState(false);
   const [previewScale, setPreviewScale] = useState(1);
   const [previewPosition, setPreviewPosition] = useState({ x: 0, y: 0 });
@@ -3849,12 +3897,16 @@ export default function Index() {
                   </TouchableOpacity>
                 </View>
                 
-                {/* Image display */}
-                <Image
-                  source={{ uri: stencilImage && !showingOriginal ? stencilImage : originalImage }}
-                  style={[styles.previewImage, stencilImage && !showingOriginal && stencilTintColor ? { tintColor: stencilTintColor } : {}]}
-                  resizeMode="contain"
-                />
+                {/* Image display — pinch to zoom, two-finger pan, double-tap to reset */}
+                <GestureDetector gesture={mainImageGesture}>
+                  <Animated.View style={[{width: '100%', height: '100%'}, mainImageAnimatedStyle]}>
+                    <Image
+                      source={{ uri: stencilImage && !showingOriginal ? stencilImage : originalImage }}
+                      style={[styles.previewImage, stencilImage && !showingOriginal && stencilTintColor ? { tintColor: stencilTintColor } : {}]}
+                      resizeMode="contain"
+                    />
+                  </Animated.View>
+                </GestureDetector>
                 
                 {/* Compare toggle button - shows when stencil exists */}
                 {stencilImage && (

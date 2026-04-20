@@ -258,6 +258,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
     borderRadius: 12,
     padding: 8,
+    overflow: 'hidden',
   },
   imageLabelRow: {
     flexDirection: 'row',
