@@ -3727,18 +3727,6 @@ export default function Index() {
           {/* Action icons - always visible */}
           <TouchableOpacity
             style={styles.headerIconButton}
-            onPress={() => setShowPreviewModal(true)}
-          >
-            <Text style={styles.headerIconText}>🔍</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerIconButton}
-            onPress={printStencil}
-          >
-            <Text style={styles.headerIconText}>🖨️</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.headerIconButton}
             onPress={showSaveOptions}
           >
             <Text style={styles.headerIconText}>💾</Text>
