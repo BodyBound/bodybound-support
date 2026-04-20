@@ -1409,7 +1409,7 @@ export default function Index() {
     setIsGeneratingVersions(true);
     setGenerationProgress(0);
     setGenerationTimedOut(false);
-    generationTimeoutRef.current = setTimeout(() => { setGenerationTimedOut(true); }, 90000);
+    generationTimeoutRef.current = setTimeout(() => { setGenerationTimedOut(true); }, 45000);
     setStencilVersions({ light: null, medium: null, heavy: null });
     
     try {
@@ -1711,7 +1711,7 @@ export default function Index() {
       setRegeneratingStyle(style);
       setIsGeneratingAI(true);
       setGenerationTimedOut(false);
-      generationTimeoutRef.current = setTimeout(() => { setGenerationTimedOut(true); }, 90000);
+      generationTimeoutRef.current = setTimeout(() => { setGenerationTimedOut(true); }, 45000);
       
       // Get base64 from original image
       let imageBase64 = originalImage;
@@ -4196,9 +4196,18 @@ export default function Index() {
           </View>
         )}
 
-      </View>
+        {/* Single style generation message */}
+        {(isGeneratingAI || regeneratingStyle) && !isGeneratingVersions && (
+          <View style={{ alignItems: 'center', paddingVertical: 8 }}>
+            <Text style={{ color: generationTimedOut ? '#ef4444' : '#C9A227', fontSize: 13, fontWeight: '500' }}>
+              {generationTimedOut 
+                ? 'Taking longer than usual... Tap ✕ to cancel and retry' 
+                : 'Creating your stencil... usually takes 10-30 seconds'}
+            </Text>
+          </View>
+        )}
 
-      {renderGalleryModal()}
+      </View>      {renderGalleryModal()}
       {renderSaveModal()}
       
       {/* Crop Modal with Visual Drag Corners */}
