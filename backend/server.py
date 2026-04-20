@@ -2180,7 +2180,23 @@ CRITICAL GEOMETRY CONSTRAINTS:
 - Preserve exact proportions, alignment, and spatial relationships
 - Maintain exact orientation (no rotation, flipping, or mirroring)
 
-These rules must not be violated under any circumstance."""
+These rules must not be violated under any circumstance.
+
+ANATOMY PROTECTION:
+
+- Do NOT invent, reconstruct, or extend anatomy that is not clearly visible in the source image
+- Do NOT complete partial features (jawlines, skull edges, limbs, facial structures, etc.)
+
+NO FILLS OR HATCHING:
+
+- Do NOT use solid black fills to represent shadows or dark areas
+- Do NOT fill regions such as nostrils, eye sockets, or deep shadows
+- Do NOT use crosshatching, sketch shading, or scribble techniques
+
+SHADING REPRESENTATION:
+
+- Use dotted, dashed, or broken guide lines only to indicate shading and form
+- Keep all marks clean and stencil-appropriate"""
 
         
         image_base64 = None
@@ -2389,7 +2405,23 @@ CRITICAL GEOMETRY CONSTRAINTS:
 - Preserve exact proportions, alignment, and spatial relationships
 - Maintain exact orientation (no rotation, flipping, or mirroring)
 
-These rules must not be violated under any circumstance."""
+These rules must not be violated under any circumstance.
+
+ANATOMY PROTECTION:
+
+- Do NOT invent, reconstruct, or extend anatomy that is not clearly visible in the source image
+- Do NOT complete partial features (jawlines, skull edges, limbs, facial structures, etc.)
+
+NO FILLS OR HATCHING:
+
+- Do NOT use solid black fills to represent shadows or dark areas
+- Do NOT fill regions such as nostrils, eye sockets, or deep shadows
+- Do NOT use crosshatching, sketch shading, or scribble techniques
+
+SHADING REPRESENTATION:
+
+- Use dotted, dashed, or broken guide lines only to indicate shading and form
+- Keep all marks clean and stencil-appropriate"""
 
         # Generate using Gemini
         result_base64, mime_type = await generate_with_gemini(image_data, prompt)
