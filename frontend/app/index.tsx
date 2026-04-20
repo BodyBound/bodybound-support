@@ -326,6 +326,11 @@ export default function Index() {
   const [regeneratingStyle, setRegeneratingStyle] = useState<string | null>(null); // Which single style is being regenerated
   const [isExportingPSD, setIsExportingPSD] = useState(false); // Loading state for saving both images
   
+  // Credit model tracking: 1 free style change + 1 free regen per style
+  const [stylesGenerated, setStylesGenerated] = useState<Set<string>>(new Set());
+  const [freeStyleChangeUsed, setFreeStyleChangeUsed] = useState(false);
+  const [freeRegenUsed, setFreeRegenUsed] = useState<Set<string>>(new Set());
+  
   // Dot marks for pencil taps (for better sensitivity)
   const [dotMarks, setDotMarks] = useState<{x: number, y: number, size: number}[]>([]);
   
@@ -1465,6 +1470,13 @@ export default function Index() {
           
           setHasGeneratedOnce(true);
           
+          // Track all generated styles for the free retry/style change model
+          const generatedStyles = new Set<string>();
+          if (versions.light) generatedStyles.add('light');
+          if (versions.medium) generatedStyles.add('medium');
+          if (versions.heavy) generatedStyles.add('heavy');
+          setStylesGenerated(generatedStyles);
+          
           // Deduct credit and track generation
           if (sessionToken && currentUser) {
             try {
@@ -1563,11 +1575,16 @@ export default function Index() {
   const regenerateSingleStyle = async (style: 'light' | 'medium' | 'heavy') => {
     if (!originalImage || regeneratingStyle) return;
 
-    // Check credits before regenerating
-    if (currentUser && availableCredits <= 0) {
-      setLowCreditLevel('empty');
-      setShowLowCreditModal(true);
-      return;
+    // Check if this regenerate is free (first regen per style)
+    const isFirstRegen = !freeRegenUsed.has(style);
+    
+    if (!isFirstRegen) {
+      // Not free — check credits
+      if (currentUser && availableCredits <= 0) {
+        setLowCreditLevel('empty');
+        setShowLowCreditModal(true);
+        return;
+      }
     }
     
     try {
@@ -1613,8 +1630,11 @@ export default function Index() {
         setSelectedVersion(style);
         setStencilImage(data.stencil_base64);
 
-        // Deduct 1 credit for successful regeneration
-        if (sessionToken && currentUser) {
+        // Deduct 1 credit for successful regeneration (skip if first free regen)
+        if (isFirstRegen) {
+          console.log(`[Credits] Free regenerate used for ${style}`);
+          setFreeRegenUsed(prev => new Set(prev).add(style));
+        } else if (sessionToken && currentUser) {
           try {
             const deductResp = await fetch(`${API_URL}/api/credits/deduct`, {
               method: 'POST',
@@ -1650,11 +1670,23 @@ export default function Index() {
       return;
     }
 
-    // Check credits before generating
-    if (currentUser && availableCredits <= 0) {
-      setLowCreditLevel('empty');
-      setShowLowCreditModal(true);
-      return;
+    // Determine if this is a free style change or paid
+    const isNewStyle = !stylesGenerated.has(style);
+    const isFirstStyle = stylesGenerated.size === 0;
+    const isFreeStyleChange = isNewStyle && !isFirstStyle && !freeStyleChangeUsed;
+    const shouldCharge = isFirstStyle || (!isFreeStyleChange && isNewStyle);
+
+    if (shouldCharge) {
+      // Check credits before generating
+      if (currentUser && availableCredits <= 0) {
+        setLowCreditLevel('empty');
+        setShowLowCreditModal(true);
+        return;
+      }
+    }
+    
+    if (isFreeStyleChange) {
+      console.log(`[Credits] Free style change used for ${style}`);
     }
     
     try {
@@ -1751,8 +1783,12 @@ export default function Index() {
             setOriginalAIStencil(generatedStencil);
             console.log('[GenerateSingle] Saved originalAIStencil (transparent PNG base)');
 
-            // Deduct 1 credit for successful generation
-            if (sessionToken && currentUser) {
+            // Deduct 1 credit for successful generation (skip if free style change)
+            setStylesGenerated(prev => new Set(prev).add(style));
+            if (isFreeStyleChange) {
+              setFreeStyleChangeUsed(true);
+              console.log(`[Credits] Free style change — no charge for ${style}`);
+            } else if (shouldCharge && sessionToken && currentUser) {
               try {
                 const deductResp = await fetch(`${API_URL}/api/credits/deduct`, {
                   method: 'POST',
@@ -3546,6 +3582,9 @@ export default function Index() {
     setImageQualityWarnings([]);
     setImageQualitySuggestions([]);
     setShowQualityWarning(false);
+    setStylesGenerated(new Set());
+    setFreeStyleChangeUsed(false);
+    setFreeRegenUsed(new Set());
     setSettings({
       clarity: 30,
       line_weight: 40,
