@@ -30,6 +30,10 @@ interface ReferralData {
   referrals_needed: number;
   free_months_earned: number;
   free_months_available: number;
+  earned_free_months?: number;
+  is_referral_premium_active?: boolean;
+  referral_premium_until?: string | null;
+  blocked_by_paid_sub?: boolean;
   referrals: Array<{
     status: string;
     created_at: string;
@@ -135,13 +139,36 @@ export function ReferralDashboard({ onClose }: ReferralDashboardProps) {
           <Text style={styles.progressText}>
             {progress} of {needed} verified referrals
           </Text>
-          {data.free_months_available > 0 && (
-            <View style={styles.rewardBadge}>
+          {data.is_referral_premium_active && data.referral_premium_until && (
+            <View style={styles.activeBadge} data-testid="referral-active-banner">
+              <Feather name="zap" size={16} color="#000" />
+              <Text style={styles.activeBadgeText}>
+                1 free month active until {new Date(data.referral_premium_until).toLocaleDateString()}
+              </Text>
+            </View>
+          )}
+          {data.free_months_available > 0 && !data.is_referral_premium_active && !data.blocked_by_paid_sub && (
+            <View style={styles.rewardBadge} data-testid="referral-months-available">
               <Feather name="gift" size={16} color="#000" />
               <Text style={styles.rewardBadgeText}>
                 {data.free_months_available} free month{data.free_months_available > 1 ? 's' : ''} available!
               </Text>
             </View>
+          )}
+          {data.is_referral_premium_active && data.free_months_available > 0 && (
+            <Text style={styles.queuedText} data-testid="referral-queued-text">
+              Your next earned month will activate automatically when this one ends.
+            </Text>
+          )}
+          {data.blocked_by_paid_sub && data.free_months_available > 0 && (
+            <Text style={styles.queuedText} data-testid="referral-banked-text">
+              {data.free_months_available} free month{data.free_months_available > 1 ? 's' : ''} banked — will activate when your paid subscription ends.
+            </Text>
+          )}
+          {data.free_months_available === 0 && !data.is_referral_premium_active && (
+            <Text style={[styles.progressText, { color: '#666', fontSize: 13, marginTop: 8, fontWeight: '400' }]}>
+              Keep inviting to earn more free months.
+            </Text>
           )}
         </View>
 
@@ -240,6 +267,9 @@ const styles = StyleSheet.create({
   progressText: { color: '#fff', fontSize: 15, fontWeight: '600' },
   rewardBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#C9A227', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginTop: 12, alignSelf: 'flex-start', gap: 6 },
   rewardBadgeText: { color: '#000', fontWeight: '700', fontSize: 13 },
+  activeBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#4CAF50', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, marginTop: 12, alignSelf: 'flex-start', gap: 6 },
+  activeBadgeText: { color: '#000', fontWeight: '700', fontSize: 13 },
+  queuedText: { color: '#C9A227', fontSize: 12, marginTop: 10, fontStyle: 'italic', lineHeight: 17 },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
   statBox: { flex: 1, backgroundColor: '#12121f', borderRadius: 12, padding: 16, alignItems: 'center' },
   statNum: { color: '#C9A227', fontSize: 24, fontWeight: '700' },

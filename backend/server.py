@@ -2869,6 +2869,13 @@ async def get_current_user(auth_header: Optional[str]):
         raise HTTPException(status_code=401, detail='Invalid token')
 
 async def get_user_credits(user_id: str) -> dict:
+    # Phase 2 referral redemption: auto-activate queued referral months and
+    # auto-expire finished ones. This is idempotent and safe on every call.
+    try:
+        await maybe_redeem_referral_month(user_id)
+    except Exception as e:
+        logger.error(f'[Referral Redeem] Failed for {user_id}: {e}')
+
     sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
     if not sub:
         return {
@@ -2916,9 +2923,26 @@ async def get_user_credits(user_id: str) -> dict:
             logger.error(f'[Trial] Error parsing trial_expires_at: {e}')
     
     # Tier -> total monthly credits mapping
-    TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500}
+    TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500, 'referral_premium': 125}
     tier = sub.get('tier')
     total_monthly_credits = TIER_CREDITS_MAP.get(tier, 0)
+
+    # Referral premium override state (Phase 2 redemption)
+    rewards_doc = await db.referral_rewards.find_one({'user_id': user_id}, {'_id': 0})
+    referral_premium_until = None
+    is_referral_premium_active = False
+    earned_free_months = 0
+    if rewards_doc:
+        earned_free_months = rewards_doc.get('free_months_available', 0) or 0
+        rpu = rewards_doc.get('referral_premium_until')
+        if rpu:
+            try:
+                rpu_dt = datetime.fromisoformat(rpu.replace('Z', '+00:00'))
+                if rpu_dt > datetime.now(timezone.utc):
+                    referral_premium_until = rpu
+                    is_referral_premium_active = True
+            except Exception:
+                pass
 
     return {
         'available_credits': available_credits,
@@ -2932,6 +2956,9 @@ async def get_user_credits(user_id: str) -> dict:
         'is_studio_team': is_studio_team,
         'studio_team_id': studio_team_id,
         'needs_subscription': tier in (None, 'trial_expired', 'expired'),
+        'is_referral_premium_active': is_referral_premium_active,
+        'referral_premium_until': referral_premium_until,
+        'earned_free_months': earned_free_months,
     }
 
 # ---- Apple Sign-In ----
@@ -3189,7 +3216,7 @@ async def deduct_credit(request: FastAPIRequest):
     if not result:
         raise HTTPException(status_code=402, detail='Insufficient credits')
     tier = result.get('tier', '')
-    TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500}
+    TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500, 'referral_premium': 125}
     return {
         'available_credits': result['available_credits'],
         'total_monthly_credits': TIER_CREDITS_MAP.get(tier, 0),
@@ -4193,6 +4220,137 @@ async def sync_subscription(request: FastAPIRequest):
 
 REFERRAL_ACTIVE_TIERS = ['walk-in', 'booked-out', 'the-shop', 'the-shop-member']
 
+# Referral premium override: "simple credit-based" Phase 2 redemption
+# Each earned free month grants 30 days of premium entitlement + walk-in tier's
+# credit refill, but only when the user's paid RC subscription is NOT active.
+REFERRAL_PREMIUM_TIER = 'referral_premium'
+REFERRAL_PREMIUM_CREDITS = 125  # Same as walk-in tier
+REFERRAL_MONTH_DAYS = 30
+# Tiers that indicate the user is NOT on an active paid subscription — referral
+# months are safe to auto-activate for these states.
+INACTIVE_TIERS = {None, '', 'expired', 'trial_expired', 'paywall_bypass', REFERRAL_PREMIUM_TIER}
+
+
+async def maybe_redeem_referral_month(user_id: str) -> Optional[dict]:
+    """Idempotent referral-month redemption.
+
+    Called on every /auth/me hit, every cron pass, and every subscription event.
+    Safe to call repeatedly AND concurrently; will NEVER double-grant credits.
+
+    Behavior:
+    1. If user has an active referral_premium_until in the future → no-op.
+    2. Else if free_months_available > 0 AND user's paid sub is NOT active:
+       atomically start a new 30-day period, decrement free_months_available,
+       grant walk-in-equivalent credits (once), flip subscription tier to
+       'referral_premium'.
+    3. Else if referral_premium_until has expired and no more months queued:
+       restore subscription tier to 'expired' (only if it was referral_premium).
+
+    Concurrency is handled via an atomic find_one_and_update. Only the first
+    concurrent caller passes the filter; the others see the updated doc and no-op.
+
+    Returns the current reward doc (or None if no ledger exists).
+    """
+    rewards = await db.referral_rewards.find_one({'user_id': user_id})
+    if not rewards:
+        return None
+
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+    until_str = rewards.get('referral_premium_until')
+    is_active = False
+    if until_str:
+        try:
+            until_dt = datetime.fromisoformat(until_str.replace('Z', '+00:00'))
+            is_active = until_dt > now
+        except Exception:
+            is_active = False
+
+    sub = await db.subscriptions.find_one({'user_id': user_id}) or {}
+    sub_tier = sub.get('tier')
+    sub_is_trial = sub.get('is_trial', False)
+    paid_active = (sub_tier in REFERRAL_ACTIVE_TIERS) and not sub_is_trial
+
+    # CASE 1: Already active → nothing to do
+    if is_active:
+        return rewards
+
+    # CASE 2: Period expired and we were holding tier=referral_premium, reset it
+    if until_str and not is_active and sub_tier == REFERRAL_PREMIUM_TIER:
+        await db.subscriptions.update_one(
+            {'user_id': user_id},
+            {'$set': {'tier': 'expired', 'last_event': 'REFERRAL_MONTH_EXPIRED'}}
+        )
+        logger.info(f'[Referral Redeem] User {user_id} referral month expired, tier reset to expired')
+        sub = await db.subscriptions.find_one({'user_id': user_id}) or {}
+        sub_tier = sub.get('tier')
+        paid_active = False
+
+    # CASE 3: Try to atomically claim the next queued month
+    available = rewards.get('free_months_available', 0) or 0
+    if available <= 0:
+        return rewards
+
+    # Paid users bank their months — skip activation
+    if paid_active:
+        return rewards
+
+    new_until = (now + timedelta(days=REFERRAL_MONTH_DAYS)).isoformat()
+    redeemed_at = now_iso
+
+    # Atomic claim: requires free_months_available > 0 AND
+    # (referral_premium_until is null OR referral_premium_until < now_iso).
+    # ISO8601 UTC strings sort lexicographically, so $lt on them is valid.
+    claim_filter = {
+        'user_id': user_id,
+        'free_months_available': {'$gt': 0},
+        '$or': [
+            {'referral_premium_until': {'$in': [None, '']}},
+            {'referral_premium_until': {'$exists': False}},
+            {'referral_premium_until': {'$lt': now_iso}},
+        ],
+    }
+    claim_update = {
+        '$set': {
+            'referral_premium_until': new_until,
+            'last_referral_month_redeemed_at': redeemed_at,
+            'referral_credits_granted_for': redeemed_at,
+        },
+        '$inc': {'free_months_available': -1},
+    }
+
+    # find_one_and_update is atomic — only ONE concurrent caller wins.
+    claimed = await db.referral_rewards.find_one_and_update(
+        claim_filter, claim_update, return_document=True
+    )
+
+    if not claimed:
+        # Someone else claimed it first (or no months left) — nothing to do.
+        return await db.referral_rewards.find_one({'user_id': user_id})
+
+    # We won the race — grant credits (once).
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {'$set': {
+            'user_id': user_id,
+            'tier': REFERRAL_PREMIUM_TIER,
+            'available_credits': REFERRAL_PREMIUM_CREDITS,
+            'is_trial': False,
+            'referral_premium_until': new_until,
+            'last_event': 'REFERRAL_MONTH_ACTIVATED',
+            'updated_at': redeemed_at,
+        }},
+        upsert=True,
+    )
+    logger.info(
+        f'[Referral Redeem] Activated referral month for {user_id}: '
+        f'{REFERRAL_PREMIUM_CREDITS} credits, until {new_until}, '
+        f'remaining queued={claimed.get("free_months_available", 0)}'
+    )
+
+    return claimed
+
+
 async def attribute_referral(new_user_id: str, email: Optional[str], device_id: Optional[str], referral_code: Optional[str]):
     """Called during signup to attribute a new user to a referrer. First-touch only."""
     if not referral_code:
@@ -4399,6 +4557,12 @@ async def check_and_issue_rewards(referrer_id: str):
 
     logger.info(f'[Referral] Issued {rewards_to_issue} free month(s) reward to referrer {referrer_id}')
 
+    # Phase 2: try to auto-activate the first queued month immediately
+    try:
+        await maybe_redeem_referral_month(referrer_id)
+    except Exception as e:
+        logger.error(f'[Referral Redeem] Post-issue redemption failed for {referrer_id}: {e}')
+
 
 @api_router.get("/referral/code")
 async def get_referral_code(request: FastAPIRequest):
@@ -4460,10 +4624,27 @@ async def get_referral_dashboard(request: FastAPIRequest):
     pending = sum(1 for r in all_referrals if r['status'] in ('account_created', 'subscribed', 'verification_pending'))
     rejected = sum(1 for r in all_referrals if r['status'] == 'rejected')
 
-    # Get reward ledger
+    # Get reward ledger (and auto-redeem queued months if applicable)
+    await maybe_redeem_referral_month(user_id)
     rewards = await db.referral_rewards.find_one({'user_id': user_id}, {'_id': 0})
     free_months_earned = rewards['rewards_earned'] if rewards else 0
     free_months_available = rewards['free_months_available'] if rewards else 0
+
+    # Phase 2 redemption state
+    referral_premium_until = rewards.get('referral_premium_until') if rewards else None
+    is_referral_premium_active = False
+    if referral_premium_until:
+        try:
+            until_dt = datetime.fromisoformat(referral_premium_until.replace('Z', '+00:00'))
+            is_referral_premium_active = until_dt > datetime.now(timezone.utc)
+        except Exception:
+            is_referral_premium_active = False
+    if not is_referral_premium_active:
+        referral_premium_until = None
+
+    # Does the user have a paid sub currently blocking auto-activation?
+    sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0}) or {}
+    paid_active = (sub.get('tier') in REFERRAL_ACTIVE_TIERS) and not sub.get('is_trial', False)
 
     # Progress toward next reward: count unconsumed verified referrals
     unconsumed_verified = sum(1 for r in all_referrals if r['status'] == 'verified' and not r.get('reward_consumed', False))
@@ -4485,6 +4666,10 @@ async def get_referral_dashboard(request: FastAPIRequest):
         'referrals_needed': REFERRALS_NEEDED_FOR_REWARD,
         'free_months_earned': free_months_earned,
         'free_months_available': free_months_available,
+        'earned_free_months': free_months_available,
+        'is_referral_premium_active': is_referral_premium_active,
+        'referral_premium_until': referral_premium_until,
+        'blocked_by_paid_sub': paid_active and free_months_available > 0,
         'referrals': referral_list,
     }
 

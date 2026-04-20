@@ -67,6 +67,16 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb 2026)
+- **Phase 2 Referral Reward Redemption (simple credit-based premium override)** — earned free months now grant real usable premium access, not just a dashboard counter.
+  - New helper `maybe_redeem_referral_month(user_id)` in `backend/server.py` — atomic, idempotent, race-safe (uses `find_one_and_update` with conditional filter).
+  - New tier `referral_premium` (125 credits/month, same as walk-in) registered in `TIER_CREDITS_MAP` and `get_user_credits`.
+  - Resolution order: active referral override > paid RC sub > free/expired.
+  - Paid-active users bank their earned months — activation only starts after paid sub ends.
+  - Expired periods auto-chain the next queued month; when queue empties, tier falls back to `expired`.
+  - Redemption triggers: every `/auth/me` call, every `/referral/dashboard` call, immediately after a new reward is issued (post-verification).
+  - New dashboard fields returned: `is_referral_premium_active`, `referral_premium_until`, `earned_free_months`, `blocked_by_paid_sub`.
+  - New ReferralDashboard UI states: green "1 free month active until [date]" badge, "Your next earned month will activate automatically" hint when chaining, "X months banked — will activate when paid sub ends" hint for paid users.
+  - Pytest suite `tests/test_referral_phase2_redemption.py` — 8/8 scenarios pass including 50-concurrent-retry idempotency.
 - Per-style stencil history navigation arrows moved from below the stencil image to inline beneath each style button (Light / Medium / Heavy). Each button now owns its own `◀ n/N ▶` row, shown only when that style has >1 generation in session history. Tapping arrows also switches `selectedVersion` so users can jump back to any previously-paid style's variants for free. Tapping a previously-generated style button (no arrows) continues to re-select its latest without charging credits.
 - New styles added in `mainStyles.ts`: `styleButtonColumn`, `styleHistoryRow`, `styleHistoryArrow`, `styleHistoryArrowText`, `styleHistoryCounter`.
 - `styleButtonsRow` alignItems changed from `center` to `flex-start` to keep all 3 style buttons top-aligned when only one column shows its history row.
