@@ -3881,8 +3881,8 @@ export default function Index() {
                   </TouchableOpacity>
                 )}
 
-                {/* Revert button - only show if user has edited the stencil */}
-                {editedStencil && originalAIStencil && (
+                {/* Revert button - show whenever original AI stencil exists and current image differs */}
+                {originalAIStencil && stencilImage !== originalAIStencil && (
                   <TouchableOpacity style={styles.revertButton} onPress={revertToOriginal}>
                     <Text style={styles.revertButtonIcon}>↩️</Text>
                     <Text style={styles.revertButtonText}>Revert to Original AI Stencil</Text>
@@ -4486,10 +4486,66 @@ export default function Index() {
             
             <TouchableOpacity 
               style={styles.procreateSaveButton}
-              onPress={saveEditedToGallery}
+              onPress={() => {
+                Alert.alert(
+                  'Save / Export',
+                  'Choose an option',
+                  [
+                    {
+                      text: 'Save to Photos',
+                      onPress: saveEditedToGallery,
+                    },
+                    {
+                      text: 'Save Stencil & Reference',
+                      onPress: async () => {
+                        // Save edits first, then use the reference save flow
+                        try {
+                          setIsCapturingForExport(true);
+                          await new Promise(resolve => setTimeout(resolve, 150));
+                          const uri = await captureRef(editCanvasRef, { format: 'png', quality: 1, result: 'base64' });
+                          setIsCapturingForExport(false);
+                          if (uri) {
+                            const editedImage = `data:image/png;base64,${uri}`;
+                            setEditedStencil(editedImage);
+                            setStencilImage(editedImage);
+                          }
+                          setShowEditModal(false);
+                          // Small delay then trigger the reference save
+                          setTimeout(() => saveStencilAndReference(), 300);
+                        } catch (e) {
+                          setIsCapturingForExport(false);
+                          Alert.alert('Error', 'Failed to capture edits.');
+                        }
+                      },
+                    },
+                    {
+                      text: 'Share / Open In...',
+                      onPress: async () => {
+                        try {
+                          setIsCapturingForExport(true);
+                          await new Promise(resolve => setTimeout(resolve, 150));
+                          const uri = await captureRef(editCanvasRef, { format: 'png', quality: 1, result: 'base64' });
+                          setIsCapturingForExport(false);
+                          if (uri) {
+                            const fileUri = FileSystem.documentDirectory + `body_bound_edited_${Date.now()}.png`;
+                            await FileSystem.writeAsStringAsync(fileUri, uri, { encoding: FileSystem.EncodingType.Base64 });
+                            await Sharing.shareAsync(fileUri, { mimeType: 'image/png', dialogTitle: 'Share Stencil', UTI: 'public.png' });
+                            try { await FileSystem.deleteAsync(fileUri, { idempotent: true }); } catch (_) {}
+                          }
+                        } catch (e) {
+                          setIsCapturingForExport(false);
+                          Alert.alert('Error', 'Failed to share.');
+                        }
+                      },
+                    },
+                    { text: 'Cancel', style: 'cancel' },
+                  ],
+                  { cancelable: true }
+                );
+              }}
             >
               <Text style={styles.procreateSaveIcon}>📤</Text>
-              <Text style={styles.procreateSaveText}>Save to Photos</Text>
+              <Text style={styles.procreateSaveText}>Save / Export</Text>
             </TouchableOpacity>
           </View>
 
