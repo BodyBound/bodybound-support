@@ -2143,6 +2143,14 @@ CRITICAL REQUIREMENTS:
 7. NO grayscale shading - only line work
 8. Ensure all lines are connected and flowing, not broken or pixelated
 
+STRICT SOURCE ADHERENCE:
+- Only translate what is visibly present in the reference image
+- Do NOT add missing anatomy or structures not clearly visible
+- Do NOT "fix", complete, or correct the design
+- Do NOT infer hidden or implied elements
+- If a structure is incomplete, cropped, or stylized, keep it exactly as-is
+- The stencil must be a direct translation of the input, not an interpreted version
+
 DETAIL LEVEL: {detail_level.upper()}
 {{
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
@@ -2321,6 +2329,14 @@ CRITICAL REQUIREMENTS:
 6. The output should look like a professional tattoo stencil/blueprint
 7. NO grayscale shading - only line work
 8. Ensure all lines are connected and flowing, not broken or pixelated
+
+STRICT SOURCE ADHERENCE:
+- Only translate what is visibly present in the reference image
+- Do NOT add missing anatomy or structures not clearly visible
+- Do NOT "fix", complete, or correct the design
+- Do NOT infer hidden or implied elements
+- If a structure is incomplete, cropped, or stylized, keep it exactly as-is
+- The stencil must be a direct translation of the input, not an interpreted version
 
 DETAIL LEVEL: {detail_level.upper()}
 {{
