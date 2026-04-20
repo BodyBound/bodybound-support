@@ -5042,6 +5042,18 @@ async def stencil_preview_page():
             return HTMLResponse(content=f.read())
     raise HTTPException(status_code=404, detail="Preview page not found")
 
+@api_router.get("/brand/{filename}")
+async def brand_asset(filename: str):
+    """Serve brand assets (logo, icons) for download during build credential setup."""
+    # Whitelist to prevent path traversal
+    allowed = {'logo.png', 'icon.png', 'adaptive-icon.png'}
+    if filename not in allowed:
+        raise HTTPException(status_code=404, detail="Not found")
+    file_path = f"/app/backend/static/brand/{filename}"
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type='image/png')
+    raise HTTPException(status_code=404, detail="File not found")
+
 FALLBACK_CREDITS = 15
 
 @api_router.post("/auth/fallback-credits")
