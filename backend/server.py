@@ -1922,7 +1922,7 @@ async def generate_with_gemini(image_data: str, prompt: str) -> tuple[str, str]:
             chat = LlmChat(
                 api_key=api_key, 
                 session_id=f"stencil-{uuid.uuid4()}", 
-                system_message="You are an expert tattoo stencil artist. You create clean, professional tattoo stencils from reference images."
+                system_message="You are a professional tattoo stencil translator. You accurately convert reference images into clean stencil linework without interpretation or modification."
             )
             chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["image", "text"])
             
