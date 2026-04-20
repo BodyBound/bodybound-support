@@ -4056,18 +4056,6 @@ export default function Index() {
           </View>
         )}
 
-        {/* Cancel Generation Button - visible when generating */}
-        {(isGeneratingAI || regeneratingStyle) && (
-          <TouchableOpacity 
-            onPress={cancelGeneration}
-            style={{ alignSelf: 'center', paddingVertical: 10, paddingHorizontal: 24, backgroundColor: '#1a1a1a', borderRadius: 10, borderWidth: 1, borderColor: generationTimedOut ? '#ef4444' : '#333', marginBottom: 8 }}
-          >
-            <Text style={{ color: generationTimedOut ? '#ef4444' : '#C9A227', fontSize: 14, fontWeight: '600', textAlign: 'center' }}>
-              {generationTimedOut ? 'Generation timed out — Tap to cancel' : 'Tap to cancel generation'}
-            </Text>
-          </TouchableOpacity>
-        )}
-
         {/* Custom Button Style Selector - Always visible when image loaded */}
         {originalImage && (
           <View style={styles.stencilStyleSection}>
@@ -4092,6 +4080,9 @@ export default function Index() {
                 {regeneratingStyle === 'light' && (
                   <View style={styles.styleGeneratingOverlay}>
                     <ActivityIndicator size="small" color="#C9A227" />
+                    <TouchableOpacity onPress={cancelGeneration} style={{ position: 'absolute', top: -4, right: -4, backgroundColor: generationTimedOut ? '#ef4444' : '#333', borderRadius: 10, width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✕</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
                 {stencilVersions.light && !regeneratingStyle && (
@@ -4127,6 +4118,9 @@ export default function Index() {
                 {regeneratingStyle === 'medium' && (
                   <View style={styles.styleGeneratingOverlay}>
                     <ActivityIndicator size="small" color="#C9A227" />
+                    <TouchableOpacity onPress={cancelGeneration} style={{ position: 'absolute', top: -4, right: -4, backgroundColor: generationTimedOut ? '#ef4444' : '#333', borderRadius: 10, width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✕</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
                 {stencilVersions.medium && !regeneratingStyle && (
@@ -4162,6 +4156,9 @@ export default function Index() {
                 {regeneratingStyle === 'heavy' && (
                   <View style={styles.styleGeneratingOverlay}>
                     <ActivityIndicator size="small" color="#C9A227" />
+                    <TouchableOpacity onPress={cancelGeneration} style={{ position: 'absolute', top: -4, right: -4, backgroundColor: generationTimedOut ? '#ef4444' : '#333', borderRadius: 10, width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}>
+                      <Text style={{ color: '#fff', fontSize: 12, fontWeight: '700' }}>✕</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
                 {stencilVersions.heavy && !regeneratingStyle && (
