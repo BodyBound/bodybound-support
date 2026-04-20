@@ -4417,18 +4417,12 @@ export default function Index() {
             </View>
           </View>
 
-          {/* Top Bar - Done/Cancel */}
+          {/* Top Bar - Done only (X removed; use Done to save + exit) */}
           <View style={styles.procreateTopBar} pointerEvents="box-none">
-            <TouchableOpacity 
-              style={styles.procreateTopButton}
-              onPress={() => setShowEditModal(false)}
-            >
-              <Text style={styles.procreateTopButtonText}>✕</Text>
-            </TouchableOpacity>
-            
             <TouchableOpacity 
               style={[styles.procreateTopButton, styles.procreateTopButtonDone]}
               onPress={saveEditedStencil}
+              data-testid="edit-mode-done-btn"
             >
               <Text style={styles.procreateTopButtonTextDone}>Done</Text>
             </TouchableOpacity>

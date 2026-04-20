@@ -2589,7 +2589,7 @@ export const styles = StyleSheet.create({
     left: 16,
     right: 16,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     alignItems: 'center',
   },
   procreateTopButton: {
