@@ -4472,21 +4472,7 @@ export default function Index() {
               style={[styles.procreateToolButton, isEraser && styles.procreateToolActive]}
               onPress={() => setIsEraser(true)}
             >
-              <Text style={styles.procreateToolIcon}>🧹</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.procreateToolButton}
-              onPress={() => setDrawingPaths(prev => prev.slice(0, -1))}
-            >
-              <Text style={styles.procreateToolIcon}>↩️</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.procreateToolButton}
-              onPress={resetZoom}
-            >
-              <Text style={styles.procreateToolIcon}>⟲</Text>
+              <Text style={styles.procreateToolIcon}>🩷</Text>
             </TouchableOpacity>
           </View>
 
