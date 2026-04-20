@@ -2137,11 +2137,10 @@ CRITICAL REQUIREMENTS:
    - Main outline contours with solid, confident lines
    - Inner detail lines for important features
    - Use dotted or dashed lines to indicate shading/contour areas where the tattoo artist would add shading
-4. Simplify the image - remove unnecessary details, keep only the essential form
-5. Lines should be bold enough to transfer clearly to skin
-6. The output should look like a professional tattoo stencil/blueprint
-7. NO grayscale shading - only line work
-8. Ensure all lines are connected and flowing, not broken or pixelated
+4. Lines should be bold enough to transfer clearly to skin
+5. The output should look like a professional tattoo stencil/blueprint
+6. NO grayscale shading - only line work
+7. Ensure all lines are connected and flowing, not broken or pixelated
 
 STRICT SOURCE ADHERENCE:
 - Only translate what is visibly present in the reference image
@@ -2160,13 +2159,28 @@ STRUCTURE PRESERVATION:
 - Do NOT merge, omit, or reposition body parts, facial features, or key elements
 
 DETAIL LEVEL: {detail_level.upper()}
-{{
-"- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
-"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
-"- Maximum detail: Full detail with hatching, all contours, and shading guides"
-}}
 
-Style: Professional tattoo stencil suitable for thermal transfer paper"""
+- Minimal:
+  Reduce visual complexity and fine detail, focusing on primary outlines and essential features only.
+  HOWEVER: Do not remove structural elements or alter proportions.
+
+- Moderate:
+  Include primary outlines and key interior details and contour guides.
+
+- Detailed:
+  Preserve full structure, including fine details, contours, and shading guides.
+
+Style: Professional tattoo stencil suitable for thermal transfer paper
+
+CRITICAL GEOMETRY CONSTRAINTS:
+
+- The output must remain a flat 2D translation of the input image
+- Do NOT apply perspective, curvature, or 3D projection
+- Do NOT warp, bend, skew, or distort the image in any way
+- Preserve exact proportions, alignment, and spatial relationships
+- Maintain exact orientation (no rotation, flipping, or mirroring)
+
+These rules must not be violated under any circumstance."""
 
         
         image_base64 = None
@@ -2332,11 +2346,10 @@ CRITICAL REQUIREMENTS:
    - Main outline contours with solid, confident lines
    - Inner detail lines for important features
    - Use dotted or dashed lines to indicate shading/contour areas where the tattoo artist would add shading
-4. Simplify the image - remove unnecessary details, keep only the essential form
-5. Lines should be bold enough to transfer clearly to skin
-6. The output should look like a professional tattoo stencil/blueprint
-7. NO grayscale shading - only line work
-8. Ensure all lines are connected and flowing, not broken or pixelated
+4. Lines should be bold enough to transfer clearly to skin
+5. The output should look like a professional tattoo stencil/blueprint
+6. NO grayscale shading - only line work
+7. Ensure all lines are connected and flowing, not broken or pixelated
 
 STRICT SOURCE ADHERENCE:
 - Only translate what is visibly present in the reference image
@@ -2355,13 +2368,28 @@ STRUCTURE PRESERVATION:
 - Do NOT merge, omit, or reposition body parts, facial features, or key elements
 
 DETAIL LEVEL: {detail_level.upper()}
-{{
-"- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
-"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
-"- Maximum detail: Full detail with hatching, all contours, and shading guides"
-}}
 
-Style: Professional tattoo stencil suitable for thermal transfer paper"""
+- Minimal:
+  Reduce visual complexity and fine detail, focusing on primary outlines and essential features only.
+  HOWEVER: Do not remove structural elements or alter proportions.
+
+- Moderate:
+  Include primary outlines and key interior details and contour guides.
+
+- Detailed:
+  Preserve full structure, including fine details, contours, and shading guides.
+
+Style: Professional tattoo stencil suitable for thermal transfer paper
+
+CRITICAL GEOMETRY CONSTRAINTS:
+
+- The output must remain a flat 2D translation of the input image
+- Do NOT apply perspective, curvature, or 3D projection
+- Do NOT warp, bend, skew, or distort the image in any way
+- Preserve exact proportions, alignment, and spatial relationships
+- Maintain exact orientation (no rotation, flipping, or mirroring)
+
+These rules must not be violated under any circumstance."""
 
         # Generate using Gemini
         result_base64, mime_type = await generate_with_gemini(image_data, prompt)
