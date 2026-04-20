@@ -2328,10 +2328,6 @@ export default function Index() {
       'Choose where to save your stencil',
       [
         {
-          text: 'Save to App',
-          onPress: () => setShowSaveModal(true),
-        },
-        {
           text: 'Save to Photos',
           onPress: async () => {
             await saveToPhotoGallery(stencilImage, 'body_bound_stencil');
