@@ -4729,7 +4729,7 @@ async def grant_fallback_credits(request: FastAPIRequest):
 import bcrypt
 
 ADMIN_EMAIL = 'bodyboundstencil@yahoo.com'
-ADMIN_PASSWORD_HASH = '$2b$12$VKq5RzZcTXgsrYdrfTp/BOvL38amaTcj92sgDknjypnhqAZSZh8aW'
+ADMIN_PASSWORD_HASH = '$2b$12$OVZISVhwAYWw.Jlz.fs7Hu0Axbb6TS0dPMtxh7X1KM33H0Rh2JKvW'
 ADMIN_LOGIN_ATTEMPTS = {}  # rate limiting: {ip: [timestamps]}
 ADMIN_MAX_ATTEMPTS = 5
 ADMIN_LOCKOUT_SECONDS = 300

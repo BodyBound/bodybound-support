@@ -13,7 +13,7 @@
 ## Admin Tool
 - URL: https://bodybound-subs.emergent.host/api/admin-panel (after deploy)
 - Preview: https://stencil-ai-fallback.preview.emergentagent.com/api/admin-panel
-- Login: bodyboundstencil@yahoo.com / Body.Bound.72410
+- Login: bodyboundstencil@yahoo.com / Body.Bound.Admin.72410
 - Session: 12h expiry, rate-limited (5 attempts / 5 min lockout)
 
 ## Admin Endpoints (secured — require admin JWT)
