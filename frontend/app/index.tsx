@@ -50,6 +50,7 @@ import { ReferralDashboard } from './screens/ReferralDashboard';
 import { ReferralPopup } from './screens/ReferralPopup';
 import { LowCreditModal } from './screens/LowCreditModal';
 import { EmergencyStencilModal } from './screens/EmergencyStencilModal';
+import { WalkInUpsellBanner } from './screens/WalkInUpsellBanner';
 import { ReferralBanner } from './screens/ReferralBanner';
 import { MilestoneModal } from './screens/MilestoneModal';
 import { FlexMessage } from './screens/FlexMessage';
@@ -271,6 +272,8 @@ export default function Index() {
   const [showEmergencyStencil, setShowEmergencyStencil] = useState(false);
   const [emergencyStencilAvailable, setEmergencyStencilAvailable] = useState(false);
   const [paywallOpenedFromEmpty, setPaywallOpenedFromEmpty] = useState(false);
+  // Walk-In upsell — backend computes eligibility; frontend just renders
+  const [showWalkinUpsell, setShowWalkinUpsell] = useState(false);
   const triggeredThresholdsRef = useRef<Set<string>>(new Set());
 
   // Growth messaging state
@@ -863,6 +866,7 @@ export default function Index() {
         handleCreditsUpdate(credits, total);
         setUserTier(d.credits?.tier ?? null);
         setEmergencyStencilAvailable(!!d.credits?.emergency_stencil_available);
+        setShowWalkinUpsell(!!d.credits?.show_walkin_upsell);
         return d.credits;
       }
     } catch (e) { console.error('[Credits] Refresh failed:', e); }
@@ -2662,6 +2666,7 @@ export default function Index() {
     setShowEmergencyStencil(false);
     setPaywallOpenedFromEmpty(false);
     setEmergencyStencilAvailable(false);
+    setShowWalkinUpsell(false);
     setShowAuth(false);
     setShowWelcome(true);
   };
@@ -3831,6 +3836,24 @@ export default function Index() {
           message={flexMessage}
           visible={showFlexMessage}
           onDone={() => { setShowFlexMessage(false); setFlexMessage(null); }}
+        />
+      )}
+
+      {/* Walk-In behavioral upsell banner — only when backend flags eligibility
+          AND no blocking modal is in the way (paywall, out-of-credits, etc.) */}
+      {showWalkinUpsell &&
+       !showPaywall &&
+       !showLowCreditModal &&
+       !showEmergencyStencil &&
+       !showSettings &&
+       !showAuth && (
+        <WalkInUpsellBanner
+          visible={true}
+          onViewPlans={() => {
+            setShowWalkinUpsell(false);
+            setShowPaywall(true);
+          }}
+          onDismiss={() => setShowWalkinUpsell(false)}
         />
       )}
 

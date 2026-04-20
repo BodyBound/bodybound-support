@@ -2962,6 +2962,22 @@ async def get_user_credits(user_id: str) -> dict:
     current_month_key = datetime.now(timezone.utc).strftime('%Y-%m')
     emergency_stencil_available = sub.get('emergency_stencil_month') != current_month_key
 
+    # Walk-In behavioral upsell — suggest Booked Out BEFORE hitting zero.
+    # Trigger: tier=walk-in AND credits_consumed_this_cycle >= 40 AND
+    # available_credits <= 10 AND not already dismissed/shown this cycle.
+    # No time-based/velocity logic. Banner state is tied to last_refill_at so
+    # it resets naturally each billing cycle.
+    credits_consumed_this_cycle = int(sub.get('credits_consumed_this_cycle', 0) or 0)
+    upsell_cycle_key = sub.get('last_refill_at')
+    upsell_already_dismissed = sub.get('upsell_dismissed_for_cycle') == upsell_cycle_key
+    show_walkin_upsell = (
+        tier == 'walk-in'
+        and not is_trial
+        and credits_consumed_this_cycle >= 40
+        and available_credits <= 10
+        and not upsell_already_dismissed
+    )
+
     # Referral premium override state (Phase 2 redemption)
     rewards_doc = await db.referral_rewards.find_one({'user_id': user_id}, {'_id': 0})
     referral_premium_until = None
@@ -2998,6 +3014,7 @@ async def get_user_credits(user_id: str) -> dict:
         'referral_premium_until': referral_premium_until,
         'earned_free_months': earned_free_months,
         'emergency_stencil_available': emergency_stencil_available,
+        'show_walkin_upsell': show_walkin_upsell,
     }
 
 # ---- Apple Sign-In ----
@@ -3244,11 +3261,71 @@ async def deduct_credit(request: FastAPIRequest):
             'tier': 'the-shop',
             'is_studio_team': True,
         }
-    
+
+# ---- Walk-In behavioral upsell tracking ----
+
+async def _log_upsell_event(user_id: str, event: str, cycle_key: Optional[str]):
+    """Log a Walk-In upsell event to a dedicated audit collection."""
+    await db.upsell_events.insert_one({
+        'user_id': user_id,
+        'event': event,  # 'shown' | 'dismissed' | 'cta_tapped' | 'upgraded'
+        'cycle_key': cycle_key,
+        'created_at': datetime.now(timezone.utc).isoformat(),
+    })
+
+
+@api_router.post("/upsell/walk-in/shown")
+async def upsell_walkin_shown(request: FastAPIRequest):
+    """Mark the Walk-In upsell as shown for the current cycle."""
+    user = await get_current_user(request.headers.get('authorization'))
+    user_id = user['user_id']
+    sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0}) or {}
+    cycle_key = sub.get('last_refill_at')
+    if sub.get('upsell_shown_for_cycle') != cycle_key:
+        await db.subscriptions.update_one(
+            {'user_id': user_id},
+            {'$set': {'upsell_shown_for_cycle': cycle_key}},
+        )
+        await _log_upsell_event(user_id, 'shown', cycle_key)
+    return {'status': 'ok'}
+
+
+@api_router.post("/upsell/walk-in/dismiss")
+async def upsell_walkin_dismiss(request: FastAPIRequest):
+    """Dismiss the Walk-In upsell for the current cycle (permanent until next refill)."""
+    user = await get_current_user(request.headers.get('authorization'))
+    user_id = user['user_id']
+    sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0}) or {}
+    cycle_key = sub.get('last_refill_at')
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {'$set': {'upsell_dismissed_for_cycle': cycle_key}},
+    )
+    await _log_upsell_event(user_id, 'dismissed', cycle_key)
+    return {'status': 'ok'}
+
+
+@api_router.post("/upsell/walk-in/cta-tapped")
+async def upsell_walkin_cta_tapped(request: FastAPIRequest):
+    """Track that the user tapped View Plans from the upsell banner."""
+    user = await get_current_user(request.headers.get('authorization'))
+    user_id = user['user_id']
+    sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0}) or {}
+    await _log_upsell_event(user_id, 'cta_tapped', sub.get('last_refill_at'))
+    return {'status': 'ok'}
+
+
     # Regular individual credit deduction
+    # Also increments `credits_consumed_this_cycle` — used by the Walk-In upsell
+    # banner to decide when to soft-prompt an upgrade.
     result = await db.subscriptions.find_one_and_update(
         {'user_id': user_id, 'available_credits': {'$gt': 0}},
-        {'$inc': {'available_credits': -1}},
+        {
+            '$inc': {
+                'available_credits': -1,
+                'credits_consumed_this_cycle': 1,
+            },
+        },
         return_document=True,
         projection={'_id': 0}
     )
@@ -3261,7 +3338,6 @@ async def deduct_credit(request: FastAPIRequest):
         'total_monthly_credits': TIER_CREDITS_MAP.get(tier, 0),
         'tier': tier,
     }
-
 @api_router.post("/credits/emergency-stencil")
 async def claim_emergency_stencil(request: FastAPIRequest):
     """One-time monthly Emergency Stencil fallback.
@@ -4429,6 +4505,10 @@ async def apply_monthly_refill(
         'last_refill_at': cycle_key,
         'monthly_allowance': monthly_allowance,
         'max_balance_cap': cap,
+        # New cycle → reset the usage counter and any per-cycle upsell state.
+        'credits_consumed_this_cycle': 0,
+        'upsell_shown_for_cycle': None,
+        'upsell_dismissed_for_cycle': None,
     }
     if tier is not None:
         set_doc['tier'] = tier
