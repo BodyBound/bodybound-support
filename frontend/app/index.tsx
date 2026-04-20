@@ -369,6 +369,8 @@ export default function Index() {
       setStencilHistoryIndex(prev => ({ ...prev, [style]: newIdx }));
       setStencilImage(history[newIdx]);
       setStencilVersions(prev => ({ ...prev, [style]: history[newIdx] }));
+      setSelectedVersion(style as 'light' | 'medium' | 'heavy');
+      setShowingOriginal(false);
     }
   };
 
@@ -380,6 +382,8 @@ export default function Index() {
       setStencilHistoryIndex(prev => ({ ...prev, [style]: newIdx }));
       setStencilImage(history[newIdx]);
       setStencilVersions(prev => ({ ...prev, [style]: history[newIdx] }));
+      setSelectedVersion(style as 'light' | 'medium' | 'heavy');
+      setShowingOriginal(false);
     }
   };
 
@@ -3820,29 +3824,6 @@ export default function Index() {
                     </Text>
                   </TouchableOpacity>
                 )}
-
-                {/* Generation history navigation — back/forward arrows */}
-                {(hasHistoryBack(selectedVersion) || hasHistoryForward(selectedVersion)) && (
-                  <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 8 }}>
-                    <TouchableOpacity 
-                      onPress={() => goBackInHistory(selectedVersion)} 
-                      disabled={!hasHistoryBack(selectedVersion)}
-                      style={{ opacity: hasHistoryBack(selectedVersion) ? 1 : 0.3, backgroundColor: '#1a1a1a', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, borderColor: '#333' }}
-                    >
-                      <Text style={{ color: '#C9A227', fontSize: 14, fontWeight: '600' }}>◀ Prev</Text>
-                    </TouchableOpacity>
-                    <Text style={{ color: '#666', fontSize: 12 }}>
-                      {(stencilHistoryIndex[selectedVersion] || 0) + 1} / {stencilHistory[selectedVersion]?.length || 0}
-                    </Text>
-                    <TouchableOpacity 
-                      onPress={() => goForwardInHistory(selectedVersion)} 
-                      disabled={!hasHistoryForward(selectedVersion)}
-                      style={{ opacity: hasHistoryForward(selectedVersion) ? 1 : 0.3, backgroundColor: '#1a1a1a', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 14, borderWidth: 1, borderColor: '#333' }}
-                    >
-                      <Text style={{ color: '#C9A227', fontSize: 14, fontWeight: '600' }}>Next ▶</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
               </View>
             </View>
           )}
@@ -3918,6 +3899,7 @@ export default function Index() {
             {/* Custom Button Images Row - Tap to generate that style */}
             <View style={styles.styleButtonsRow}>
               {/* LOW FIDELITY Button */}
+              <View style={styles.styleButtonColumn}>
               <TouchableOpacity
                 style={[
                   styles.styleButtonWrapper,
@@ -3954,8 +3936,33 @@ export default function Index() {
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
+              {(stencilHistory.light?.length || 0) > 1 && (
+                <View style={styles.styleHistoryRow}>
+                  <TouchableOpacity
+                    onPress={() => goBackInHistory('light')}
+                    disabled={!hasHistoryBack('light')}
+                    style={[styles.styleHistoryArrow, !hasHistoryBack('light') && { opacity: 0.3 }]}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.styleHistoryArrowText}>◀</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.styleHistoryCounter}>
+                    {(stencilHistoryIndex.light || 0) + 1}/{stencilHistory.light?.length || 0}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => goForwardInHistory('light')}
+                    disabled={!hasHistoryForward('light')}
+                    style={[styles.styleHistoryArrow, !hasHistoryForward('light') && { opacity: 0.3 }]}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.styleHistoryArrowText}>▶</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              </View>
               
               {/* MID-RANGE Button */}
+              <View style={styles.styleButtonColumn}>
               <TouchableOpacity
                 style={[
                   styles.styleButtonWrapper,
@@ -3992,8 +3999,33 @@ export default function Index() {
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
+              {(stencilHistory.medium?.length || 0) > 1 && (
+                <View style={styles.styleHistoryRow}>
+                  <TouchableOpacity
+                    onPress={() => goBackInHistory('medium')}
+                    disabled={!hasHistoryBack('medium')}
+                    style={[styles.styleHistoryArrow, !hasHistoryBack('medium') && { opacity: 0.3 }]}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.styleHistoryArrowText}>◀</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.styleHistoryCounter}>
+                    {(stencilHistoryIndex.medium || 0) + 1}/{stencilHistory.medium?.length || 0}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => goForwardInHistory('medium')}
+                    disabled={!hasHistoryForward('medium')}
+                    style={[styles.styleHistoryArrow, !hasHistoryForward('medium') && { opacity: 0.3 }]}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.styleHistoryArrowText}>▶</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              </View>
               
               {/* HIGH DEF Button */}
+              <View style={styles.styleButtonColumn}>
               <TouchableOpacity
                 style={[
                   styles.styleButtonWrapper,
@@ -4030,6 +4062,30 @@ export default function Index() {
                   </TouchableOpacity>
                 )}
               </TouchableOpacity>
+              {(stencilHistory.heavy?.length || 0) > 1 && (
+                <View style={styles.styleHistoryRow}>
+                  <TouchableOpacity
+                    onPress={() => goBackInHistory('heavy')}
+                    disabled={!hasHistoryBack('heavy')}
+                    style={[styles.styleHistoryArrow, !hasHistoryBack('heavy') && { opacity: 0.3 }]}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.styleHistoryArrowText}>◀</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.styleHistoryCounter}>
+                    {(stencilHistoryIndex.heavy || 0) + 1}/{stencilHistory.heavy?.length || 0}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => goForwardInHistory('heavy')}
+                    disabled={!hasHistoryForward('heavy')}
+                    style={[styles.styleHistoryArrow, !hasHistoryForward('heavy') && { opacity: 0.3 }]}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={styles.styleHistoryArrowText}>▶</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              </View>
             </View>
             {/* Regeneration hint text in golden */}
             <Text style={styles.regenHintText}>

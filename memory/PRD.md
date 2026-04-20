@@ -66,6 +66,11 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 4. **NO credit purchases**: Monetization = subscriptions + referral rewards only
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
+## Recent Changes (Feb 2026)
+- Per-style stencil history navigation arrows moved from below the stencil image to inline beneath each style button (Light / Medium / Heavy). Each button now owns its own `◀ n/N ▶` row, shown only when that style has >1 generation in session history. Tapping arrows also switches `selectedVersion` so users can jump back to any previously-paid style's variants for free. Tapping a previously-generated style button (no arrows) continues to re-select its latest without charging credits.
+- New styles added in `mainStyles.ts`: `styleButtonColumn`, `styleHistoryRow`, `styleHistoryArrow`, `styleHistoryArrowText`, `styleHistoryCounter`.
+- `styleButtonsRow` alignItems changed from `center` to `flex-start` to keep all 3 style buttons top-aligned when only one column shows its history row.
+
 ## Known Issues
 - TestFlight sandbox can't load RevenueCat offerings (expected, production works)
 - Admin endpoints unauthenticated (P2)
