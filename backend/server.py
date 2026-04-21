@@ -4316,10 +4316,25 @@ async def revenuecat_webhook(request: FastAPIRequest):
         # Find the target user (our backend user_id) and, if present, store
         # the new RC customer id on their subscription doc so future webhooks
         # reconcile correctly. No tier/credits/trial mutations.
+        # Resolution order for each candidate in transferred_to:
+        #   1. it literally starts with 'user_' (standard backend id format)
+        #   2. it matches a user_id in db.subscriptions (covers legacy ids
+        #      like the demo_reviewer_account fixture)
+        #   3. it matches a revenuecat_customer_id in db.subscriptions
+        #      (covers RC anonymous ids we've already linked)
         target_user_id = ''
         for candidate in transferred_to:
-            if candidate and candidate.startswith('user_'):
+            if not candidate:
+                continue
+            if candidate.startswith('user_'):
                 target_user_id = candidate
+                break
+            sub_match = await db.subscriptions.find_one(
+                {'$or': [{'user_id': candidate}, {'revenuecat_customer_id': candidate}]},
+                {'_id': 0, 'user_id': 1},
+            )
+            if sub_match and sub_match.get('user_id'):
+                target_user_id = sub_match['user_id']
                 break
         if target_user_id:
             reconcile_set = {'last_transfer_at': datetime.now(timezone.utc).isoformat()}

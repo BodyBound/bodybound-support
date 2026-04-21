@@ -66,7 +66,17 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 4. **NO credit purchases**: Monetization = subscriptions + referral rewards only
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
-## Recent Changes (Feb 2026)
+## Recent Changes (Feb-Apr 2026)
+- **Subscription state rewrite (commit `9b852a22`, Apr 21 2026)** — single authoritative writer for paid state, eliminating the "Walk-In card purchased Booked Out" / TRANSFER-overwrites-paid-state regressions.
+  - New helper `apply_paid_subscription_state(user_id, product_id, source, rc_customer_id, is_apple_trial)` in `backend/server.py` — the only place paid tier/credits are written. Raises `ValueError` on unknown product_id (no silent fallback).
+  - New `PRODUCT_CREDIT_MAP`: strict `product_id → (tier, credits)` map. Three known products only.
+  - Rewrote `/api/webhooks/revenuecat` TRANSFER branch to be **log-only** — updates only `revenuecat_customer_id` + `last_transfer_at` on the existing doc, never upserts, never mutates tier/credits/is_trial. Writes to `rc_transfer_log` audit collection.
+  - TRANSFER target resolution order: `candidate.startswith('user_')` → `db.subscriptions.user_id` match → `db.subscriptions.revenuecat_customer_id` match (covers legacy ids like `demo_reviewer_account`).
+  - INITIAL_PURCHASE / RENEWAL / FRONTEND_SYNC paths all flow through `apply_paid_subscription_state` — identical state shape regardless of origin.
+  - New audit fields written every paid state application: `last_product_id`, `last_applied_at`, `last_refill_at`, `monthly_allowance`, `max_balance_cap`, `credits_consumed_this_cycle: 0`, plus cycle upsell flag reset (`upsell_shown_for_cycle`, `upsell_dismissed_for_cycle`).
+  - **Frontend** `app/screens/PaywallScreen.tsx`: package lookup switched from array-index to `offerings.find(p => p.identifier === key)` so RC ordering changes can't crosswire cards. `handlePurchase` + `handleRestore` both POST `/api/subscription/sync` with the exact `product.identifier` before the RC webhook arrives.
+  - Deploy-sanity pytest suite `tests/test_deploy_sanity_subscription_fields.py` (6 cases) — fails hard when any rewrite audit field is missing after `FRONTEND_SYNC` / `INITIAL_PURCHASE` / `RENEWAL`, and when TRANSFER fails to stamp `last_transfer_at` / mutates paid state. Run against any host: `DEPLOY_SANITY_API_URL=<host> pytest tests/test_deploy_sanity_subscription_fields.py`.
+  - Verification script `/app/verify_subscription_rewrite.sh` — end-to-end synthetic TRANSFER / INITIAL_PURCHASE / RENEWAL flow against a live host with before/after state dump.
 - **Credit Rollover Policy (monthly allowance × 2 cap)** — monthly refills now roll over month-to-month, capped at 2× the plan's monthly allowance.
   - New helper `apply_monthly_refill(user_id, allowance, cycle_key, tier, extra_set)` in `backend/server.py` — atomic, idempotent per cycle_key. Uses two-step "ensure exists + conditional claim" to handle race storms safely.
   - Unique index on `subscriptions.user_id` enforced at app startup (prevents duplicate docs under concurrent upserts).
