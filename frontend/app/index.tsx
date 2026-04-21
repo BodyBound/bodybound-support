@@ -15,6 +15,7 @@ import {
   Dimensions,
   PanResponder,
   GestureResponderEvent,
+  StyleSheet,
 } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -854,6 +855,12 @@ export default function Index() {
     return () => subscription?.remove();
   }, []);
 
+  // Early-access credit bridge modal — one-time system-granted 10 credits
+  // for paywall_bypass users who have hit 0. Backend enforces idempotency
+  // and eligibility; this state just controls whether the explanatory
+  // modal is shown after a successful grant.
+  const [earlyAccessBridgeMessage, setEarlyAccessBridgeMessage] = useState<string | null>(null);
+
   const refreshCredits = async (token: string) => {
     try {
       const r = await fetch(`${API_URL}/api/auth/me`, {
@@ -867,6 +874,32 @@ export default function Index() {
         setUserTier(d.credits?.tier ?? null);
         setEmergencyStencilAvailable(!!d.credits?.emergency_stencil_available);
         setShowWalkinUpsell(!!d.credits?.show_walkin_upsell);
+
+        // Early-access bridge: if the user is in paywall_bypass AND has hit
+        // 0 credits, ask the backend for a one-time 10-credit top-up. The
+        // endpoint is idempotent — repeat calls after the first grant are
+        // safe no-ops. Any non-bypass tier is ignored server-side.
+        if ((d.credits?.tier === 'paywall_bypass') && credits <= 0) {
+          try {
+            const bridgeResp = await fetch(`${API_URL}/api/credits/early-access-bridge`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            });
+            if (bridgeResp.ok) {
+              const bridgeBody = await bridgeResp.json();
+              if (bridgeBody?.granted) {
+                setEarlyAccessBridgeMessage(bridgeBody.message || null);
+                // Refresh the local credit state so the top-bar / low-credit
+                // modal reflect the new balance immediately.
+                const newCredits = bridgeBody.credits ?? credits;
+                handleCreditsUpdate(newCredits, total);
+              }
+            }
+          } catch (bridgeErr) {
+            console.error('[EarlyAccessBridge] call failed:', bridgeErr);
+          }
+        }
+
         return d.credits;
       }
     } catch (e) { console.error('[Credits] Refresh failed:', e); }
@@ -5001,6 +5034,79 @@ export default function Index() {
           setShowFeedbackFlow(false);
         }}
       />
+
+      {/* Early Access Credit Bridge modal — fires once for paywall_bypass
+          users when the backend grants their one-time 10-credit top-up
+          (see POST /api/credits/early-access-bridge). All gating is
+          server-side; this is purely the explanatory UI. */}
+      <Modal
+        visible={!!earlyAccessBridgeMessage}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEarlyAccessBridgeMessage(null)}
+        statusBarTranslucent
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.72)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 24,
+        }}>
+          <View
+            data-testid="early-access-bridge-modal"
+            style={{
+              backgroundColor: '#0E0E0E',
+              borderRadius: 18,
+              borderWidth: StyleSheet.hairlineWidth,
+              borderColor: 'rgba(201,162,39,0.45)',
+              padding: 22,
+              maxWidth: 440,
+              width: '100%',
+              shadowColor: '#C9A227',
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 0.35,
+              shadowRadius: 14,
+              elevation: 8,
+            }}
+          >
+            {/* The message includes a title line + body; render as-is so it
+                matches the exact copy dictated by product. */}
+            {(earlyAccessBridgeMessage || '').split('\n\n').map((para, idx) => (
+              <Text
+                key={idx}
+                style={{
+                  color: idx === 0 ? '#C9A227' : '#E7E2D4',
+                  fontSize: idx === 0 ? 18 : 14.5,
+                  fontWeight: idx === 0 ? '700' : '400',
+                  lineHeight: idx === 0 ? 24 : 21,
+                  letterSpacing: idx === 0 ? 0.4 : 0.2,
+                  textAlign: 'center',
+                  marginBottom: idx === 0 ? 14 : 10,
+                }}
+              >
+                {para}
+              </Text>
+            ))}
+            <TouchableOpacity
+              data-testid="early-access-bridge-continue"
+              onPress={() => setEarlyAccessBridgeMessage(null)}
+              style={{
+                marginTop: 8,
+                paddingVertical: 13,
+                borderRadius: 10,
+                backgroundColor: '#C9A227',
+                alignItems: 'center',
+              }}
+              activeOpacity={0.85}
+            >
+              <Text style={{ color: '#0A0A0A', fontSize: 15, fontWeight: '700', letterSpacing: 0.3 }}>
+                Continue
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
     </SafeAreaView>
   );

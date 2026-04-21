@@ -3,6 +3,7 @@ from fastapi.responses import Response, StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import ReturnDocument
 import os
 import logging
 from pathlib import Path
@@ -3289,6 +3290,105 @@ async def get_me(request: FastAPIRequest):
     user = await get_current_user(auth_header)
     credits = await get_user_credits(user['user_id'])
     return {'user': user, 'credits': credits}
+
+
+# ── Early-access credit bridge ───────────────────────────────────────────────
+# ONE-TIME 10-credit top-up for users currently in paywall_bypass mode who
+# have hit 0 credits. Prevents dead-ends while subscription loading is
+# stabilized, without opening a credit firehose for the entire user base.
+#
+# Guardrails (non-negotiable):
+#   • ONLY applies to tier == 'paywall_bypass'. Real paid, referral-premium,
+#     trial, expired, or tier=None users are never touched.
+#   • ONLY fires when available_credits <= 0 AND received_temp_credits is
+#     falsy. The flag is set atomically on the same update so re-invocations
+#     no-op.
+#   • Audit log entry is written to db.admin_actions with admin_email
+#     'system:early-access-bridge' so ops can track every grant.
+#
+# Idempotency: the Mongo update uses a conditional filter on the flag, so
+# concurrent calls from two tabs cannot double-grant.
+EARLY_ACCESS_BRIDGE_CREDITS = 10
+EARLY_ACCESS_BRIDGE_MESSAGE = (
+    "Early Access Update\n\n"
+    "We’re finalizing the credit and subscription system.\n\n"
+    "To keep things running smoothly, we’ve added a complimentary set of "
+    "credits to your account.\n\n"
+    "This early-access phase is temporary while we lock in the full "
+    "experience.\n\n"
+    "Appreciate you being part of it."
+)
+
+
+@api_router.post("/credits/early-access-bridge")
+async def early_access_credit_bridge(request: FastAPIRequest):
+    """Idempotent, one-time 10-credit top-up for paywall_bypass users at 0."""
+    auth_header = request.headers.get('authorization')
+    user = await get_current_user(auth_header)
+    user_id = user['user_id']
+
+    # Atomic eligibility check + grant + flag set. If any guardrail fails
+    # (wrong tier, credits > 0, flag already true) the filter misses and we
+    # return granted=false. This is the ONLY place that increments credits
+    # under the 'early_access_bridge' source label.
+    result = await db.subscriptions.find_one_and_update(
+        {
+            'user_id': user_id,
+            'tier': 'paywall_bypass',
+            'available_credits': {'$lte': 0},
+            '$or': [
+                {'received_temp_credits': {'$exists': False}},
+                {'received_temp_credits': False},
+                {'received_temp_credits': None},
+            ],
+        },
+        {
+            '$set': {
+                'available_credits': EARLY_ACCESS_BRIDGE_CREDITS,
+                'received_temp_credits': True,
+                'received_temp_credits_at': datetime.now(timezone.utc).isoformat(),
+                'received_temp_credits_source': 'early_access_bridge',
+            },
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+
+    if not result:
+        # Not eligible — no state change. Silent no-op for the client.
+        return {
+            'granted': False,
+            'reason': 'not_eligible',
+            'message': None,
+            'credits': None,
+        }
+
+    # Audit log so ops can track exactly who received the bridge.
+    try:
+        await log_admin_action(
+            admin_email='system:early-access-bridge',
+            action='early_access_credit_bridge',
+            target_email=user.get('email', '') or '',
+            details={
+                'user_id': user_id,
+                'tier': 'paywall_bypass',
+                'credits_granted': EARLY_ACCESS_BRIDGE_CREDITS,
+                'new_total': result.get('available_credits'),
+            },
+        )
+    except Exception as audit_err:
+        # Never let audit-log failure block the user. Log + continue.
+        logger.error(f'[EarlyAccessBridge] audit log failed for {user_id}: {audit_err}')
+
+    logger.info(
+        f'[EarlyAccessBridge] Granted {EARLY_ACCESS_BRIDGE_CREDITS} credits to '
+        f'user={user_id} email={user.get("email")}'
+    )
+    return {
+        'granted': True,
+        'reason': 'bypass_zero_credits_onetime',
+        'message': EARLY_ACCESS_BRIDGE_MESSAGE,
+        'credits': result.get('available_credits'),
+    }
 
 @api_router.post("/credits/deduct")
 async def deduct_credit(request: FastAPIRequest):
