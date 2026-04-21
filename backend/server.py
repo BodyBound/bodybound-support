@@ -3100,18 +3100,44 @@ async def create_initial_subscription(user_id: str, email: Optional[str], device
     If TEMP_BYPASS_ENABLED=true, grants paywall_bypass tier with 10 credits
     so new users can try the app while subscription loading is unstable.
     Otherwise, no credits — user must subscribe via Apple/RevenueCat.
+
+    Paywall-QA escape hatch (PAYWALL_NO_BYPASS_EMAILS): a comma-separated
+    allowlist of lowercased emails for which the bypass is NEVER applied,
+    even when TEMP_BYPASS_ENABLED=true. Use this to run clean paid-user
+    tests for specific QA accounts without disturbing the global bypass
+    behavior for everyone else.
     """
     now = datetime.now(timezone.utc)
     temp_bypass = os.environ.get('TEMP_BYPASS_ENABLED', '').lower() == 'true'
 
-    if temp_bypass:
+    # Per-email escape hatch for paywall validation runs. Skip bypass for
+    # any email in the allowlist so the account lands with tier=None,
+    # credits=0, and must go through the real Apple/RC purchase path.
+    no_bypass_emails_raw = os.environ.get('PAYWALL_NO_BYPASS_EMAILS', '') or ''
+    no_bypass_emails = {
+        e.strip().lower()
+        for e in no_bypass_emails_raw.split(',')
+        if e.strip()
+    }
+    email_lc = email.lower() if email else None
+    email_is_blocked_from_bypass = bool(email_lc and email_lc in no_bypass_emails)
+
+    if temp_bypass and not email_is_blocked_from_bypass:
         tier = 'paywall_bypass'
         credits = 10
-        log_msg = f'[Subscription] New user {user_id} — temp bypass: 10 credits, tier=paywall_bypass'
+        log_msg = f'[Subscription] New user {user_id} ({email_lc}) — temp bypass: 10 credits, tier=paywall_bypass'
     else:
         tier = None
         credits = 0
-        log_msg = f'[Subscription] New user {user_id} — no trial, must subscribe via Apple'
+        reason = (
+            'paywall-QA blocklist hit'
+            if email_is_blocked_from_bypass
+            else 'TEMP_BYPASS_ENABLED off'
+        )
+        log_msg = (
+            f'[Subscription] New user {user_id} ({email_lc}) — no trial, must subscribe via Apple '
+            f'({reason})'
+        )
 
     subscription = {
         'user_id': user_id,
