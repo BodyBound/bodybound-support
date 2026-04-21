@@ -190,29 +190,54 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
           } catch (_) {}
         }
 
-        // CRITICAL: Tell our backend exactly what product was purchased so it
-        // can apply the right tier + credits regardless of how RC's webhook
-        // classifies the event (INITIAL_PURCHASE vs TRANSFER vs PRODUCT_CHANGE).
-        // Without this, a TRANSFER webhook could degrade the subscription to
-        // whatever the previous account had.
+        // CRITICAL: Tell our backend exactly what product is ACTIVE on the
+        // customer's account after this purchase settles, regardless of how
+        // RC's webhook classifies the event (INITIAL_PURCHASE vs TRANSFER vs
+        // PRODUCT_CHANGE).
+        //
+        // Source of truth is `activeEntitlement.productIdentifier`, NOT
+        // `selectedPackage.product.identifier`. In sandbox, and whenever an
+        // account already has an active subscription from prior testing,
+        // Apple's StoreKit can report success while leaving the existing
+        // product in place — `customerInfo` will reflect the OLD product,
+        // not the one the user just tapped. If we sync with the tapped
+        // product here, the RC webhook later overwrites it with the real
+        // product, which is exactly the "selected Walk-In, got 500 credits"
+        // bug we hit in sandbox on multiple test accounts.
         try {
           const token = await SecureStore.getItemAsync('session_token');
           const activeEntitlement = customerInfo.entitlements.active[ENTITLEMENT_ID];
           const isTrial = activeEntitlement?.periodType === 'TRIAL';
-          const syncResp = await fetch(`${API_URL}/api/subscription/sync`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({
-              product_id: selectedPackage.product.identifier,
-              is_trial: isTrial,
-              revenuecat_customer_id: customerInfo.originalAppUserId || '',
-            }),
-          });
-          if (!syncResp.ok) {
-            const errTxt = await syncResp.text();
-            console.error('[RC:Purchase] Backend sync failed:', syncResp.status, errTxt);
+          const activeProductId = activeEntitlement?.productIdentifier || '';
+          const tappedProductId = selectedPackage.product.identifier;
+
+          // Only sync if RC gave us a real product id. If it didn't, bail —
+          // letting the RC webhook establish the state is safer than guessing
+          // from the user's tap.
+          if (!activeProductId) {
+            console.error('[RC:Purchase] activeEntitlement.productIdentifier was empty; skipping sync and leaving state to the RC webhook. tapped=', tappedProductId);
           } else {
-            console.log('[RC:Purchase] Backend sync OK for product:', selectedPackage.product.identifier);
+            if (activeProductId !== tappedProductId) {
+              // Non-fatal divergence: Apple granted a different plan than the
+              // one tapped. This is expected for PRODUCT_CHANGE flows but also
+              // happens in sandbox when a prior subscription is still active.
+              console.warn('[RC:Purchase] DIVERGENCE — tapped', tappedProductId, 'but Apple reports active product', activeProductId, '. Syncing the ACTIVE product.');
+            }
+            const syncResp = await fetch(`${API_URL}/api/subscription/sync`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({
+                product_id: activeProductId,
+                is_trial: isTrial,
+                revenuecat_customer_id: customerInfo.originalAppUserId || '',
+              }),
+            });
+            if (!syncResp.ok) {
+              const errTxt = await syncResp.text();
+              console.error('[RC:Purchase] Backend sync failed:', syncResp.status, errTxt);
+            } else {
+              console.log('[RC:Purchase] Backend sync OK for ACTIVE product:', activeProductId, '(tapped was', tappedProductId + ')');
+            }
           }
         } catch (syncErr) {
           console.error('[RC:Purchase] Backend sync exception:', syncErr);
