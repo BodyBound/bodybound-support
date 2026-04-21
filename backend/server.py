@@ -3783,6 +3783,76 @@ PRODUCT_CREDIT_MAP = {
     'bodybound_9999_1m_3d': {'tier': 'the-shop', 'credits': 1500},
 }
 
+
+async def apply_paid_subscription_state(
+    user_id: str,
+    product_id: str,
+    source: str,
+    rc_customer_id: Optional[str] = None,
+    is_apple_trial: bool = False,
+) -> dict:
+    """Single authoritative writer for paid subscription state.
+
+    STRICT RULES (per product spec):
+    - product_id is the ONLY source of truth for tier + credits.
+    - No fallback to walk-in, no default 10 credits, no silent trial.
+    - If product_id is unknown, DO NOT overwrite user state — log and raise.
+    - Always sets is_trial = (is_apple_trial only). Never flips to trial silently.
+    - Resets credits_consumed_this_cycle on every paid-state application.
+
+    The `source` string is stamped into last_event for auditability:
+    one of: 'INITIAL_PURCHASE' | 'RENEWAL' | 'FRONTEND_SYNC' | 'ADMIN' etc.
+
+    Returns the updated subscription doc.
+    """
+    tier_info = PRODUCT_CREDIT_MAP.get(product_id)
+    if not tier_info:
+        logger.error(
+            f'[PaidState] REFUSED to apply unknown product_id={product_id!r} '
+            f'for user_id={user_id} source={source}. User state preserved.'
+        )
+        raise ValueError(f'Unknown product_id: {product_id}')
+
+    tier = tier_info['tier']
+    # Trial period gets the symbolic TRIAL_CREDITS cap; paid gets full allowance.
+    credits = TRIAL_CREDITS if is_apple_trial else tier_info['credits']
+    now_iso = datetime.now(timezone.utc).isoformat()
+    next_renewal = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+
+    set_doc = {
+        'user_id': user_id,
+        'tier': tier,
+        'available_credits': credits,
+        'is_trial': bool(is_apple_trial),
+        'period_type': 'TRIAL' if is_apple_trial else 'NORMAL',
+        'monthly_allowance': tier_info['credits'],
+        'max_balance_cap': tier_info['credits'] * BALANCE_CAP_MULTIPLIER,
+        'credits_consumed_this_cycle': 0,
+        # New cycle → wipe per-cycle upsell flags so the Walk-In nudge can
+        # re-trigger next cycle if criteria are still met.
+        'upsell_shown_for_cycle': None,
+        'upsell_dismissed_for_cycle': None,
+        'trial_expires_at': None,
+        'renewal_date': next_renewal,
+        'last_event': source,
+        'last_product_id': product_id,
+        'last_applied_at': now_iso,
+        'last_refill_at': f'paid:{now_iso}',
+    }
+    if rc_customer_id:
+        set_doc['revenuecat_customer_id'] = rc_customer_id
+
+    await db.subscriptions.update_one(
+        {'user_id': user_id},
+        {'$set': set_doc},
+        upsert=True,
+    )
+    logger.info(
+        f'[PaidState] Applied {source}: user={user_id} product={product_id} '
+        f'→ tier={tier} credits={credits} trial={is_apple_trial}'
+    )
+    return await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+
 # ── Promo Code System ──────────────────────────────────────────
 @api_router.post("/promo/redeem")
 async def redeem_promo_code(request: FastAPIRequest):
@@ -4226,145 +4296,88 @@ async def revenuecat_webhook(request: FastAPIRequest):
         })
     
     logger.info(f'[RevenueCat] {event_type} | user_id={user_id} | raw_id={raw_user_id} | product={product_id}')
-    tier_info = PRODUCT_CREDIT_MAP.get(product_id, {})
+
+    # -------------------------------------------------------------
+    # TRANSFER — informational / reconciliation only.
+    # Per product spec: TRANSFER MUST NOT overwrite tier/credits/is_trial.
+    # We ONLY update the revenuecat_customer_id mapping so subsequent
+    # INITIAL_PURCHASE / RENEWAL webhooks can match the right backend user.
+    # Paid state already applied by a frontend /api/subscription/sync or a
+    # prior INITIAL_PURCHASE webhook MUST survive a TRANSFER event.
+    # -------------------------------------------------------------
     if event_type == 'TRANSFER':
-        # TRANSFER events move a subscription from one user to another.
-        # transferred_to = user who NOW has the subscription
-        # transferred_from = user who lost it
         transferred_to = event.get('transferred_to', [])
         transferred_from = event.get('transferred_from', [])
-        logger.info(f'[RevenueCat:TRANSFER] from={transferred_from} to={transferred_to}')
-        
-        # Find the target user (transferred_to) — should be our backend user_id
+        logger.info(
+            f'[RevenueCat:TRANSFER] IGNORED for state writes. '
+            f'from={transferred_from} to={transferred_to} product={product_id}'
+        )
+
+        # Find the target user (our backend user_id) and, if present, store
+        # the new RC customer id on their subscription doc so future webhooks
+        # reconcile correctly. No tier/credits/trial mutations.
         target_user_id = ''
         for candidate in transferred_to:
             if candidate and candidate.startswith('user_'):
                 target_user_id = candidate
                 break
-        
-        if not target_user_id:
-            logger.warning(f'[RevenueCat:TRANSFER] No valid target user_id in transferred_to={transferred_to}')
-            return {'status': 'ok'}
-        
-        # Find the source subscription to copy tier/credits from
-        source_sub = None
-        for candidate in transferred_from:
-            if not candidate:
-                continue
-            sub = await db.subscriptions.find_one(
-                {'$or': [{'user_id': candidate}, {'revenuecat_customer_id': candidate}]},
-                {'_id': 0}
+        if target_user_id:
+            reconcile_set = {'last_transfer_at': datetime.now(timezone.utc).isoformat()}
+            if raw_user_id:
+                reconcile_set['revenuecat_customer_id'] = raw_user_id
+            if transferred_from:
+                reconcile_set['last_transfer_from'] = transferred_from[0]
+            await db.subscriptions.update_one(
+                {'user_id': target_user_id},
+                {'$set': reconcile_set},
+                upsert=False,  # never create a new doc from a TRANSFER
             )
-            if sub and sub.get('tier') and sub.get('tier') not in (None, 'expired', 'trial_expired', 'paywall_bypass'):
-                source_sub = sub
-                logger.info(f'[RevenueCat:TRANSFER] Found source sub from {candidate}: tier={sub.get("tier")} credits={sub.get("available_credits")}')
-                break
+        # Audit log so ops can inspect TRANSFERs without them mutating state
+        await db.rc_transfer_log.insert_one({
+            'target_user_id': target_user_id,
+            'transferred_from': transferred_from,
+            'transferred_to': transferred_to,
+            'product_id': product_id,
+            'raw_event': event,
+            'received_at': datetime.now(timezone.utc).isoformat(),
+        })
+        return {'status': 'ok', 'handled_as': 'informational'}
 
-        # Prefer the product_id on the TRANSFER event — it's authoritative.
-        # Only fall back to source_sub when product_id is missing / unmapped.
-        # Bug fix: previously the TRANSFER handler blindly copied source_sub,
-        # which meant a fresh paid purchase could land as walk-in / 0 credits
-        # if the source account was itself in a degraded state.
-        if tier_info:
-            period_type = event.get('period_type', 'NORMAL')
-            is_apple_trial = period_type == 'TRIAL'
-            credits_to_grant = TRIAL_CREDITS if is_apple_trial else tier_info['credits']
-            await db.subscriptions.update_one(
-                {'user_id': target_user_id},
-                {'$set': {
-                    'tier': tier_info['tier'],
-                    'available_credits': credits_to_grant,
-                    'is_trial': is_apple_trial,
-                    'period_type': period_type,
-                    'renewal_date': (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
-                    'last_event': 'TRANSFER',
-                    'transferred_from': transferred_from[0] if transferred_from else '',
-                    'revenuecat_customer_id': raw_user_id or target_user_id,
-                }},
-                upsert=True
+    # -------------------------------------------------------------
+    # Authoritative paid events — INITIAL_PURCHASE / RENEWAL.
+    # Route through apply_paid_subscription_state so behavior is identical
+    # to the frontend /api/subscription/sync path.
+    # -------------------------------------------------------------
+    if event_type in ('INITIAL_PURCHASE', 'RENEWAL') and user_id:
+        if not product_id or product_id not in PRODUCT_CREDIT_MAP:
+            logger.error(
+                f'[RevenueCat:{event_type}] REFUSED: unknown product_id={product_id!r} '
+                f'for user={user_id}. State preserved.'
             )
-            logger.info(
-                f'[RevenueCat:TRANSFER] Applied product_id={product_id} → tier={tier_info["tier"]} '
-                f'credits={credits_to_grant} (trial={is_apple_trial}) to {target_user_id}'
-            )
-            # Expire source user's subscription(s)
-            for candidate in transferred_from:
-                if candidate and candidate.startswith('user_') and candidate != target_user_id:
-                    await db.subscriptions.update_one(
-                        {'user_id': candidate},
-                        {'$set': {'tier': 'expired', 'last_event': 'TRANSFER_OUT'}}
-                    )
-        elif source_sub:
-            # Copy subscription state from source to target
-            await db.subscriptions.update_one(
-                {'user_id': target_user_id},
-                {'$set': {
-                    'tier': source_sub.get('tier'),
-                    'available_credits': source_sub.get('available_credits', 0),
-                    'is_trial': source_sub.get('is_trial', False),
-                    'renewal_date': source_sub.get('renewal_date'),
-                    'last_event': 'TRANSFER',
-                    'transferred_from': transferred_from[0] if transferred_from else '',
-                }},
-                upsert=True
-            )
-            logger.info(f'[RevenueCat:TRANSFER] Copied from source sub → tier={source_sub.get("tier")} credits={source_sub.get("available_credits")} to {target_user_id}')
-            # Expire the source user's subscription
-            for candidate in transferred_from:
-                if candidate and candidate.startswith('user_') and candidate != target_user_id:
-                    await db.subscriptions.update_one(
-                        {'user_id': candidate},
-                        {'$set': {'tier': 'expired', 'last_event': 'TRANSFER_OUT'}}
-                    )
-        else:
-            # No product_id AND no source sub — grant default walk-in trial as safe fallback
-            # (RC confirmed this user has a subscription by sending TRANSFER)
-            logger.warning(f'[RevenueCat:TRANSFER] No product_id or source sub. Granting default walk-in trial to {target_user_id}')
-            await db.subscriptions.update_one(
-                {'user_id': target_user_id},
-                {'$set': {
-                    'tier': 'walk-in',
-                    'available_credits': TRIAL_CREDITS,
-                    'is_trial': True,
-                    'renewal_date': (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
-                    'last_event': 'TRANSFER_DEFAULT',
-                    'transferred_from': transferred_from[0] if transferred_from else '',
-                }},
-                upsert=True
-            )
-            logger.info(f'[RevenueCat:TRANSFER] Default walk-in trial granted to {target_user_id}')
-        
-        return {'status': 'ok'}
-    
-    if event_type in ('INITIAL_PURCHASE', 'RENEWAL') and tier_info and user_id:
-        # Detect Apple trial vs paid subscription
+            return {'status': 'error', 'reason': 'unknown_product'}
         period_type = event.get('period_type', 'NORMAL')
         is_apple_trial = period_type == 'TRIAL'
-        credits_to_grant = TRIAL_CREDITS if is_apple_trial else tier_info['credits']
-        next_renewal = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
-        await db.subscriptions.update_one(
-            {'user_id': user_id},
-            {'$set': {
-                'tier': tier_info['tier'],
-                'available_credits': credits_to_grant,
-                'is_trial': is_apple_trial,
-                'renewal_date': next_renewal,
-                'last_event': event_type,
-                'period_type': period_type,
-            }},
-            upsert=True
-        )
-        logger.info(f'[RevenueCat] Granted {credits_to_grant} credits ({"trial" if is_apple_trial else "paid"}) to {user_id}')
-        # Update referral status if this user was referred
+        try:
+            await apply_paid_subscription_state(
+                user_id=user_id,
+                product_id=product_id,
+                source=event_type,
+                rc_customer_id=raw_user_id or None,
+                is_apple_trial=is_apple_trial,
+            )
+        except ValueError as e:
+            return {'status': 'error', 'reason': str(e)}
+        # Update referral ledger (paid only — not during Apple trial)
         if not is_apple_trial:
             await update_referral_on_subscription(user_id, event_type)
+        return {'status': 'ok'}
+
     elif event_type in ('CANCELLATION', 'EXPIRATION') and user_id:
         # Keep remaining credits but mark tier as expired
         await db.subscriptions.update_one(
             {'user_id': user_id},
             {'$set': {'tier': 'expired', 'last_event': event_type}}
         )
-        # Update referral status — cancellation/expiration rejects pending referrals
         await update_referral_on_subscription(user_id, event_type)
     return {'status': 'ok'}
 
@@ -4392,57 +4405,55 @@ async def link_revenuecat_id(request: FastAPIRequest):
 
 @api_router.post("/subscription/sync")
 async def sync_subscription(request: FastAPIRequest):
-    """Sync subscription status from RevenueCat entitlement data sent by the frontend.
-    
-    Called after a successful purchase or on app startup when the frontend detects
-    active RevenueCat entitlements that don't match the backend subscription state.
-    This acts as a fallback when the RevenueCat webhook doesn't fire.
+    """Frontend-authoritative paid subscription application.
+
+    Called by PaywallScreen's handlePurchase/handleRestore right after
+    `Purchases.purchasePackage` / `Purchases.restorePurchases` confirms an
+    active entitlement. This is the MAIN paid-state writer — it runs before
+    the RC webhook arrives and is robust against webhook misclassification
+    (TRANSFER vs INITIAL_PURCHASE).
+
+    Rules (mirrors apply_paid_subscription_state):
+    - product_id MUST be in PRODUCT_CREDIT_MAP — no fallbacks.
+    - No default tier / default credits / silent trial.
+    - is_trial is applied only when the frontend explicitly passes it from
+      the active RC entitlement's periodType === 'TRIAL'.
     """
     auth_header = request.headers.get('authorization')
     user = await get_current_user(auth_header)
     user_id = user['user_id']
-    
+
     body = await request.json()
     product_id = body.get('product_id')
-    is_trial = body.get('is_trial', False)  # Frontend passes trial status from RevenueCat
-    rc_customer_id = body.get('revenuecat_customer_id', '')  # RC anonymous ID for webhook matching
-    
+    is_trial = bool(body.get('is_trial', False))
+    rc_customer_id = body.get('revenuecat_customer_id', '') or None
+
     if not product_id:
         raise HTTPException(status_code=400, detail='Missing product_id')
-    
-    tier_info = PRODUCT_CREDIT_MAP.get(product_id)
-    if not tier_info:
+    if product_id not in PRODUCT_CREDIT_MAP:
         logger.warning(f'[Sync] Unknown product_id: {product_id} for user {user_id}')
-        raise HTTPException(status_code=400, detail='Unknown product')
-    
-    # Cap credits during Apple trial
-    credits_to_grant = TRIAL_CREDITS if is_trial else tier_info['credits']
-    
-    # Check current subscription to avoid overwriting if already correct
-    existing_sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
-    if existing_sub and existing_sub.get('tier') == tier_info['tier'] and existing_sub.get('is_trial', False) == is_trial:
-        # Already synced — return current credits
-        logger.info(f'[Sync] User {user_id} already on tier {tier_info["tier"]}, skipping')
-        credits = await get_user_credits(user_id)
-        return credits
-    
-    next_renewal = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
-    update_fields = {
-        'tier': tier_info['tier'],
-        'available_credits': credits_to_grant,
-        'is_trial': is_trial,
-        'trial_expires_at': None,
-        'renewal_date': next_renewal,
-        'synced_from': 'frontend',
-        'last_event': 'FRONTEND_SYNC',
-    }
-    if rc_customer_id:
-        update_fields['revenuecat_customer_id'] = rc_customer_id
-    await db.subscriptions.update_one(
-        {'user_id': user_id},
-        {'$set': update_fields},
-        upsert=True
+        raise HTTPException(
+            status_code=400,
+            detail=f'Unknown product_id: {product_id}. Valid: {list(PRODUCT_CREDIT_MAP.keys())}',
+        )
+
+    try:
+        await apply_paid_subscription_state(
+            user_id=user_id,
+            product_id=product_id,
+            source='FRONTEND_SYNC',
+            rc_customer_id=rc_customer_id,
+            is_apple_trial=is_trial,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    credits = await get_user_credits(user_id)
+    logger.info(
+        f'[Sync] Applied for user {user_id}: product={product_id} → '
+        f'tier={credits.get("tier")} credits={credits.get("available_credits")} trial={is_trial}'
     )
+    return credits
     logger.info(f'[Sync] User {user_id} synced to tier {tier_info["tier"]} with {credits_to_grant} credits ({"trial" if is_trial else "paid"}, product: {product_id})')
     
     # Update referral status if this user was referred and it's a paid subscription
