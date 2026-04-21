@@ -308,10 +308,12 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
 
   const isWeb = Platform.OS === 'web';
   // Selected tier label (e.g. "Walk-In", "Booked Out", "The Shop")
+  // Look up by IDENTIFIER, not by array index — same class of bug as the
+  // card selection. TIER_INFO keys (walk_in / booked_out / the_shop) match
+  // the RC package identifiers exactly by design.
   const selectedTierLabel = (() => {
     if (!selectedPackage) return '';
-    const idx = offerings.findIndex(p => p.identifier === selectedPackage.identifier);
-    const tier = (Object.values(TIER_INFO)[idx] as any) || null;
+    const tier = (TIER_INFO as any)[selectedPackage.identifier];
     // Strip leading "The " to keep CTA tight: "The Walk-In" -> "Walk-In"
     return tier ? tier.label.replace(/^The /, '') : '';
   })();
@@ -360,16 +362,28 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             <ActivityIndicator color="#C9A227" size="large" style={{ marginVertical: 40 }} />
           ) : (
             <View style={styles.plans}>
-              {Object.entries(TIER_INFO).map(([key, tier], index) => {
-                const pkg = offerings[index];
+              {Object.entries(TIER_INFO).map(([key, tier]) => {
+                // CRITICAL: look up the package by IDENTIFIER, never by array
+                // index. Index-based lookup breaks silently whenever RC's
+                // offering returns packages in a different order or drops one,
+                // causing the Walk-In card to select Booked Out etc.
+                const pkg = offerings.find(p => p.identifier === key);
                 const isSelected = selectedPackage?.identifier === pkg?.identifier;
 
                 return (
                   <TouchableOpacity
                     key={key}
                     testID={`plan-${key}-btn`}
-                    style={[styles.planCard, isSelected && styles.planCardSelected]}
-                    onPress={() => { if (pkg) setSelectedPackage(pkg); }}
+                    style={[styles.planCard, isSelected && styles.planCardSelected, !pkg && { opacity: 0.4 }]}
+                    onPress={() => {
+                      if (!pkg) {
+                        console.warn('[RC:Paywall] Tapped card for', key, 'but no matching package in offerings');
+                        return;
+                      }
+                      console.log('[RC:Paywall] Selected package:', pkg.identifier, '→ product:', pkg.product.identifier);
+                      setSelectedPackage(pkg);
+                    }}
+                    disabled={!pkg}
                     activeOpacity={0.85}
                   >
                     {tier.popular && (
