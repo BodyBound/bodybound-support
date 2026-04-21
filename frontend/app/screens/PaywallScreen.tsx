@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -74,6 +74,35 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   // Trial eligibility from RC (Apple decides this based on subscription group
   // history). We assume eligible until RC tells us otherwise.
   const [trialEligible, setTrialEligible] = useState(true);
+
+  // Divergence toast — a non-blocking, auto-dismissing banner that appears
+  // when RevenueCat reports an ACTIVE product different from the one the
+  // user tapped. Typically triggered by:
+  //   • Apple sandbox accounts that already have an active subscription
+  //   • PRODUCT_CHANGE transitions
+  //   • Pre-existing entitlements from other app installs
+  // The console.warn at the divergence site is kept for debugging; this
+  // toast is purely for user clarity.
+  const [divergenceToast, setDivergenceToast] = useState<string | null>(null);
+  const divergenceShownRef = useRef(false); // once-per-purchase guard
+
+  // Map a raw RC product identifier back to the human tier label. If the
+  // id is unknown we fall back to the generic message from the spec.
+  const tierLabelForProduct = (productId: string): string | null => {
+    switch (productId) {
+      case 'bodybound_1499_1m_3d': return 'Walk-In';
+      case 'bodybound_2999_1m_3d': return 'Booked Out';
+      case 'bodybound_9999_1m_3d': return 'The Shop';
+      default: return null;
+    }
+  };
+
+  // Auto-dismiss the divergence toast. 2.8 s per spec (2–3 seconds).
+  useEffect(() => {
+    if (!divergenceToast) return;
+    const t = setTimeout(() => setDivergenceToast(null), 2800);
+    return () => clearTimeout(t);
+  }, [divergenceToast]);
 
   // Package identifiers as configured in RevenueCat dashboard
   const PACKAGE_IDS = ['walk_in', 'booked_out', 'the_shop'];
@@ -177,6 +206,11 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
     }
 
     setPurchasing(true);
+    // Reset once-per-purchase divergence guard so this attempt can surface
+    // a toast if Apple/RC returns a mismatched product. Previous attempts'
+    // toasts do not carry over.
+    divergenceShownRef.current = false;
+    setDivergenceToast(null);
     try {
       console.log('[RC:Purchase] Purchasing package:', selectedPackage.identifier, '→ product:', selectedPackage.product.identifier);
       const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
@@ -222,6 +256,17 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
               // one tapped. This is expected for PRODUCT_CHANGE flows but also
               // happens in sandbox when a prior subscription is still active.
               console.warn('[RC:Purchase] DIVERGENCE — tapped', tappedProductId, 'but Apple reports active product', activeProductId, '. Syncing the ACTIVE product.');
+              // Non-blocking user-facing toast. Show ONCE per purchase; don't
+              // show on normal matching purchases. Covered by the ref guard.
+              if (!divergenceShownRef.current) {
+                divergenceShownRef.current = true;
+                const tierName = tierLabelForProduct(activeProductId);
+                setDivergenceToast(
+                  tierName
+                    ? `You're already subscribed to ${tierName} — loading your current plan.`
+                    : "You're already subscribed to a different plan — loading your current plan.",
+                );
+              }
             }
             const syncResp = await fetch(`${API_URL}/api/subscription/sync`, {
               method: 'POST',
@@ -243,8 +288,16 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
           console.error('[RC:Purchase] Backend sync exception:', syncErr);
         }
 
-        Alert.alert('Welcome!', 'Your subscription is now active. Enjoy your credits!');
-        onPurchaseSuccess();
+        if (divergenceShownRef.current) {
+          // Divergence flow: skip the blocking 'Welcome!' alert (confusing
+          // when the plan the user ended up with differs from the one they
+          // tapped). Keep the paywall mounted just long enough for the
+          // non-blocking toast to remain visible, then dismiss.
+          setTimeout(() => onPurchaseSuccess(), 2800);
+        } else {
+          Alert.alert('Welcome!', 'Your subscription is now active. Enjoy your credits!');
+          onPurchaseSuccess();
+        }
       } else {
         const activeKeys = Object.keys(customerInfo.entitlements.active || {});
         console.error('[RC:Purchase] ENTITLEMENT MISMATCH — expected:', ENTITLEMENT_ID, 'got:', JSON.stringify(activeKeys));
@@ -360,6 +413,16 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
         resizeMode="cover"
       />
       <View style={styles.overlay} />
+
+      {/* Non-blocking divergence toast — surfaces when Apple/RC returned a
+          different active plan than the one the user tapped. Auto-dismisses
+          in ~2.8s; shown only once per purchase; suppressed entirely when
+          the tapped and active products match. */}
+      {divergenceToast && (
+        <View style={styles.divergenceToast} pointerEvents="none" testID="paywall-divergence-toast">
+          <Text style={styles.divergenceToastText}>{divergenceToast}</Text>
+        </View>
+      )}
 
       <SafeAreaView style={styles.safeArea}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -815,5 +878,37 @@ const styles = StyleSheet.create({
   legalSeparator: {
     color: 'rgba(255,255,255,0.25)',
     fontSize: 11,
+  },
+  // Non-blocking divergence toast. Top-center, gold-ringed, same dark
+  // luxury aesthetic as the rest of the app. pointerEvents='none' on the
+  // containing view ensures it never intercepts taps on the paywall.
+  divergenceToast: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 60 : 40,
+    left: 16,
+    right: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: 'rgba(15,15,15,0.94)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(201,162,39,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+    // Subtle gold glow for visibility without interrupting the flow.
+    shadowColor: '#C9A227',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  divergenceToastText: {
+    color: '#E7E2D4',
+    fontSize: 13.5,
+    lineHeight: 19,
+    textAlign: 'center',
+    letterSpacing: 0.2,
+    fontWeight: '500',
   },
 });
