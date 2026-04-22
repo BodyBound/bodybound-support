@@ -2147,8 +2147,8 @@ CRITICAL REQUIREMENTS:
 DETAIL LEVEL: {detail_level.upper()}
 {
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
-"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
-"- Maximum detail: Everything from moderate, PLUS all visible contours and additional dotted/dashed shading guides on every significant form"
+"- Moderate detail: Outlines plus key interior details and contour guides. When hair is present, suggest its texture with a few flowing directional lines, and outline the main shape of any visible highlights with dotted/dashed guides." if detail_level == "moderate" else
+"- Maximum detail: Everything from moderate, PLUS all visible contours and additional dotted/dashed shading guides on every significant form. When hair is present, read the hair texture and express it with flowing directional lines across the full form. If lighting or highlights are visible in the hair, use dotted/dashed lines to outline the shape of those highlight regions — the same way contour lines are used on a face — so the light-and-shadow shapes remain legible in the stencil."
 }
 
 FIDELITY — strict (applies to all detail levels):
@@ -2332,8 +2332,8 @@ CRITICAL REQUIREMENTS:
 DETAIL LEVEL: {detail_level.upper()}
 {
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
-"- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
-"- Maximum detail: Everything from moderate, PLUS all visible contours and additional dotted/dashed shading guides on every significant form"
+"- Moderate detail: Outlines plus key interior details and contour guides. When hair is present, suggest its texture with a few flowing directional lines, and outline the main shape of any visible highlights with dotted/dashed guides." if detail_level == "moderate" else
+"- Maximum detail: Everything from moderate, PLUS all visible contours and additional dotted/dashed shading guides on every significant form. When hair is present, read the hair texture and express it with flowing directional lines across the full form. If lighting or highlights are visible in the hair, use dotted/dashed lines to outline the shape of those highlight regions — the same way contour lines are used on a face — so the light-and-shadow shapes remain legible in the stencil."
 }
 
 FIDELITY — strict (applies to all detail levels):
