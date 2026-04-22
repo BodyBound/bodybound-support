@@ -5676,6 +5676,15 @@ async def root_health_check():
 # Include the router in the main app
 app.include_router(api_router)
 
+
+# Root-path health probe. Emergent's k8s liveness/readiness probe checks
+# `/` — not `/api/health` — so an unhandled `/` would 404 and the pod
+# would be marked unhealthy. Keep this returning 200 JSON so probes pass
+# and Cloudflare keeps routing traffic to the pod.
+@app.get("/")
+async def root_health():
+    return {"status": "healthy", "service": "tattoo-stencil-api"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
