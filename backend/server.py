@@ -2128,7 +2128,7 @@ async def generate_ai_stencil(request: AIStencilRequest):
         else:
             detail_level = "minimal" if request.shading_detail < 30 else "moderate" if request.shading_detail < 60 else "detailed"
         
-        # Create the prompt - Original Feb 16 style that produced excellent stencils
+        # Create the prompt - Feb 16 baseline + strict fidelity rules
         prompt = f"""Transform this image into a professional tattoo stencil drawing.
 
 CRITICAL REQUIREMENTS:
@@ -2148,8 +2148,14 @@ DETAIL LEVEL: {detail_level.upper()}
 {
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
 "- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
-"- Maximum detail: Full detail with hatching, all contours, and shading guides"
+"- Maximum detail: Everything from moderate, PLUS all visible contours and additional dotted/dashed shading guides on every significant form"
 }
+
+FIDELITY — strict (applies to all detail levels):
+- Replicate only what is visibly present in the source image; do NOT invent, add, extend, or interpret anything not clearly there
+- Do NOT complete, correct, or clean up the subject — keep it exactly as shown
+- NO solid black fills anywhere — all shading must be expressed as dotted/dashed guide lines only
+- NO crosshatching or sketch-style shading
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
@@ -2307,7 +2313,7 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
         else:
             detail_level = "detailed"
         
-        # Create the prompt - Original Feb 16 style that produced excellent stencils
+        # Create the prompt - Feb 16 baseline + strict fidelity rules
         prompt = f"""Transform this image into a professional tattoo stencil drawing.
 
 CRITICAL REQUIREMENTS:
@@ -2327,8 +2333,14 @@ DETAIL LEVEL: {detail_level.upper()}
 {
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
 "- Moderate detail: Outlines plus key interior details and contour guides" if detail_level == "moderate" else
-"- Maximum detail: Full detail with hatching, all contours, and shading guides"
+"- Maximum detail: Everything from moderate, PLUS all visible contours and additional dotted/dashed shading guides on every significant form"
 }
+
+FIDELITY — strict (applies to all detail levels):
+- Replicate only what is visibly present in the source image; do NOT invent, add, extend, or interpret anything not clearly there
+- Do NOT complete, correct, or clean up the subject — keep it exactly as shown
+- NO solid black fills anywhere — all shading must be expressed as dotted/dashed guide lines only
+- NO crosshatching or sketch-style shading
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
