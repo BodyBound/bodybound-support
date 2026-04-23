@@ -67,6 +67,13 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **Reroll + Thumbs-Rating (Apr 23 2026)** — shipped to `main`, shared lib ready for `redesign/unified-editor`:
+  - **Root-cause fix**: `/api/credits/deduct` individual-user branch was previously orphaned module-level code (only studio teams worked); restored inside the function. Plus `/api/ai-stencil` was returning the same cached image on every reroll — cache now skipped when `regenerate_style` is set.
+  - **Reroll cost UX**: per-style inline label under each style button ("Free reroll" in green / "1 credit" in gold). First reroll per style stays free; every reroll after requires a native `Alert.alert` confirmation before the credit is spent. NO hard cap — unlimited rerolls as long as the user has credits.
+  - **Thumbs up/down rating**: inline icons under each style button, toggleable, anonymous-friendly. `POST /api/stencil-rating`. Admin dashboard now shows "Stencil Quality (Thumbs)" card with satisfaction % + per-style breakdown.
+  - **Shared lib**: `frontend/app/lib/stencilApi.ts` exports pure API wrappers (`regenerateStencil`, `deductCredit`, `submitStencilRating`, `isFreeRegen`, `regenCostLabel`) so both `main` and `redesign/unified-editor` reuse the same business logic. Integration notes: `/app/memory/REROLL_RATING_BRANCH_NOTES.md`.
+  - **Tests**: new `test_reroll_and_rating.py` (6 cases) + `test_iter10_reroll_e2e.py` (4 e2e cases). 31/31 backend regression tests pass including end-to-end verification on the live preview URL.
+
 - **AI Stencil Prompt — final tuning pass (Apr 23 2026)** — user-verified against `/api/prompt-preview` (long-hair female portrait) AND `/api/prompt-preview-alt` (short-hair male portrait) on production. Prompt generalises cleanly across subjects. Prompt in `backend/server.py` (both `/ai-stencil` and `process_stencil_job`) now enforces:
   - Strict FIDELITY: replicate only what's visibly present; no inventing / completing / cleaning up.
   - NO solid black fills anywhere. Pupils + irises are explicitly called out as hollow outlines only (this was the last regression the user flagged).
