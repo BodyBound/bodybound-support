@@ -1,28 +1,33 @@
-"""Pre-Scan Visual Demo — 3-Layer Architecture (v2, structure-guidance only).
+"""Pre-Scan Visual Demo — v3 (Constraint-Only + Variance Test).
 
-REGRESSION FIX PASS (per user spec):
-  - Pre-scan is STRUCTURE GUIDANCE, not image cleaning.
-  - No drawing-technique instructions in the preamble. The base prompt already
-    owns line weight, density, and hierarchy. Pre-scan never re-specifies them.
-  - Layer 3 identifies WHAT structural features must be captured from the
-    reference; it never prescribes HOW to render them.
-  - Line-hierarchy preservation (strong contours stay strong, mid-detail stays
-    readable, fine detail never collapses to noise) is lifted into Layer 1.
-  - Enhancement-hints block removed entirely (it was the over-smoothing source).
+Purpose of this pass:
+  The user has asked us to reassess whether pre-scan should exist at all.
+  Pre-scan is now a pure NEGATIVE-CONSTRAINT block (what the model is
+  forbidden to do). There is NO classification step, NO stylistic guidance,
+  NO per-category rules — all of those were acting as weak prompt modifiers.
 
-Layers:
-  L1 — Universal Constraints (hard, always applied).
-  L2 — Subject-Type Detection: exactly one of
-       {portrait, animal, object, landscape, stylized_artwork}.
-  L3 — Subject-Specific STRUCTURAL CHECKLIST (features to preserve from the
-       reference for the detected category). No drawing-technique language.
+What the constraint block contains:
+  - structural preservation (count, pose, orientation, framing, gaze, identity)
+  - explicit line-hierarchy preservation (no softening, no blurring)
+  - explicit black-fill rule (do not introduce new solid black regions unless
+    they are directly derived from the reference's own solid-black structure)
+  - an explicit "do not override the base prompt" clause
+
+Variance test:
+  Each reference is generated TWICE in each condition (WITH preamble and
+  WITHOUT preamble) at temperature=0 via /api/ai-stencil. A pixel-level
+  mean-absolute-difference between the two runs is written alongside the
+  PNGs — lower = more consistent. If pre-scan does not measurably reduce
+  variance, it earns no place in the production pipeline.
 
 Usage:
     python scripts/prescan_visual_demo.py
 """
-import asyncio, base64, json, os, re, time
+import asyncio, base64, json, os, time
 import httpx
-from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+from io import BytesIO
+import numpy as np
+from PIL import Image
 
 BACKEND = "http://127.0.0.1:8001"
 
@@ -32,116 +37,33 @@ IMAGES = {
 }
 
 # ---------------------------------------------------------------------------
-# LAYER 1 — Universal Constraints (applies to every image, never overridden).
-# Pure structural preservation. No drawing-technique directives.
+# Pre-scan is a pure NEGATIVE-CONSTRAINT block. No guidance, no interpretation.
+# Nothing here tells the model HOW to draw. It only tells it what it MUST NOT
+# do. The base prompt remains the single authority on line weight, density,
+# and hierarchy.
 # ---------------------------------------------------------------------------
-LAYER1_UNIVERSAL = [
-    "Preserve the EXACT subject count from the reference. Do not duplicate, mirror, pair, tile, or split-panel the subject.",
-    "Preserve the EXACT pose, head tilt, and body posture shown in the reference.",
-    "Preserve the EXACT orientation and facing direction. Do not rotate or flip.",
-    "Preserve the EXACT framing and crop. Do not re-center, zoom, expand, or recompose.",
-    "Preserve the EXACT gaze direction of the subject.",
-    "Do not reinterpret, replace, or regenerate the subject's identity.",
-    # Line-hierarchy preservation — explicit counterweight to previous softening.
-    "Preserve the reference's LINE HIERARCHY exactly: strong contours in the reference must remain strong in the stencil, mid-detail must remain readable, fine detail must not collapse into uniform noise.",
-    "Do NOT soften, blur, denoise, or normalize edges. Do not reduce edge sharpness below what the reference shows.",
-    "Do not change, override, or weaken any line-weight, density, or hierarchy rules specified in the base prompt. This pre-scan adds structural constraints only.",
-]
+CONSTRAINT_BLOCK = """PRE-SCAN CONSTRAINTS. The rules below are NEGATIVE CONSTRAINTS only.
+They do not suggest a style, do not describe how to render the stencil, and
+must not override any rule in the base prompt. If any rule here conflicts
+with the base prompt's line-weight, density, or hierarchy rules, the base
+prompt wins.
 
-# ---------------------------------------------------------------------------
-# LAYER 3 — Subject-Specific STRUCTURAL CHECKLIST.
-# Each entry names a feature that must be CAPTURED in its exact reference form.
-# No language about line weight, stroke style, density, shading — the base
-# prompt already owns those and is the single authority.
-# ---------------------------------------------------------------------------
-LAYER3_RULES = {
-    "portrait": [
-        "Capture facial structure, proportions, and expression exactly as shown in the reference.",
-        "Capture every facial marking present in the reference (makeup, face paint, scars, tattoos, piercings) in its exact position.",
-        "Capture the exact shape and placement of each facial feature (eyes, brows, lips, nose, lashes) without altering proportions.",
-    ],
-    "animal": [
-        "Capture species-specific anatomy exactly (ear shape, muzzle, fangs, horns, mane, fur direction).",
-        "Capture head shape and distinguishing features exactly as shown.",
-        "Capture the reference's lighting-based coat variation — where the reference shows dense detail, the stencil must too; where it is simpler, keep it simpler.",
-    ],
-    "object": [
-        "Capture geometry, proportions, and symmetry exactly.",
-        "Capture every structural edge visible in the reference without distortion.",
-    ],
-    "landscape": [
-        "Capture the reference's spatial layout and depth exactly.",
-        "Capture the foreground / midground / background separation without removing compositional elements.",
-    ],
-    "stylized_artwork": [
-        "Capture the graphic shapes and contrast boundaries of the stylization exactly as drawn.",
-        "Capture stylized regions (face paint, graphic overlays) in their exact reference positions. Do not normalize, soften, or reinterpret them into a realistic version.",
-    ],
-}
-
-ALLOWED_CATEGORIES = list(LAYER3_RULES.keys())
-
-CLASSIFY_PROMPT = f"""Classify this tattoo reference image.
-
-Return ONLY JSON in this exact shape:
-{{"category": "<one of: {', '.join(ALLOWED_CATEGORIES)}"}}
-
-Rules:
-- "category" must be EXACTLY ONE value from the list. Pick the most accurate.
-- A human face or person photo is "portrait" (even if stylized with makeup).
-- A non-human creature is "animal".
-- Pure illustrations, graphic art, or drawings are "stylized_artwork".
-- No prose, no markdown, no explanation. JSON only."""
+YOU MUST NOT:
+- Change the subject count. Do not duplicate, mirror, pair, tile, or split-panel the subject.
+- Change the pose, head tilt, body posture, orientation, facing direction, framing, crop, or gaze direction shown in the reference.
+- Replace, reinterpret, or regenerate the subject's identity. Only trace what is visibly in the reference.
+- Introduce any new solid black region that is not directly derived from a solid-black region already present in the reference photo. Solid-black output pixels must have a solid-black source counterpart. When in doubt, use line work instead.
+- Soften, blur, denoise, smooth, or normalize edges. Do not reduce edge sharpness below what the reference shows.
+- Collapse fine detail into uniform noise. Strong contours in the reference must remain strong; mid-detail must remain readable.
+- Weaken, override, or replace any line-weight, density, or hierarchy rule that the base prompt specifies. This block adds constraints only."""
 
 
-async def classify(image_b64: str) -> dict:
-    chat = LlmChat(
-        api_key=os.environ["EMERGENT_LLM_KEY"],
-        session_id=f"prescan-{int(time.time()*1000)}",
-        system_message="You classify tattoo reference images. Return only JSON matching the schema.",
-    ).with_model("gemini", "gemini-2.5-pro")
-    msg = UserMessage(text=CLASSIFY_PROMPT, file_contents=[ImageContent(image_base64=image_b64)])
-    resp = await chat.send_message(msg)
-    m = re.search(r"\{.*\}", resp, re.DOTALL)
-    if not m:
-        return {"category": None}
-    try:
-        data = json.loads(m.group(0))
-    except json.JSONDecodeError:
-        return {"category": None}
-    cat = data.get("category") if data.get("category") in ALLOWED_CATEGORIES else None
-    return {"category": cat}
-
-
-def build_preamble(category: str | None) -> str | None:
-    """Compose the structural-guidance preamble. Returns None if classification failed."""
-    if not category:
-        return None
-
-    layer1 = "\n".join(f"- {r}" for r in LAYER1_UNIVERSAL)
-    layer3 = "\n".join(f"- {r}" for r in LAYER3_RULES[category])
-
-    return (
-        "PRE-SCAN STRUCTURAL DIRECTIVES (image-specific, two layers).\n"
-        "Purpose: constrain the structure of the output so the base prompt's line-weight,\n"
-        "density, and hierarchy rules are applied to the CORRECT reference features.\n"
-        "This block adds constraints ONLY. It does not override, weaken, or replace any\n"
-        "drawing-technique rule from the base prompt. If any rule below appears to conflict\n"
-        "with the base prompt's line-weight or hierarchy guidance, the base prompt wins.\n\n"
-        "LAYER 1 — UNIVERSAL CONSTRAINTS (non-negotiable):\n"
-        f"{layer1}\n\n"
-        f"LAYER 2 — DETECTED SUBJECT TYPE: {category}\n\n"
-        f"LAYER 3 — STRUCTURAL CHECKLIST FOR {category.upper()} "
-        "(features to CAPTURE — not how to draw them):\n"
-        f"{layer3}"
-    )
-
-
-async def gen_heavy(client: httpx.AsyncClient, image_b64: str, preamble: str | None, out_path: str) -> None:
+async def gen(client: httpx.AsyncClient, image_b64: str, preamble: str | None, out_path: str) -> None:
     body = {
         "image_base64": image_b64,
         "line_color": "black",
         "regenerate_style": "heavy",
+        "temperature": 0.0,
     }
     if preamble:
         body["extra_preamble"] = preamble
@@ -154,34 +76,56 @@ async def gen_heavy(client: httpx.AsyncClient, image_b64: str, preamble: str | N
         f.write(base64.b64decode(b))
 
 
+def mean_abs_diff(path_a: str, path_b: str) -> float:
+    """Return mean absolute pixel difference (0..255) between two PNGs.
+    Images are resized to the smaller common size and converted to luminance.
+    Lower = more consistent between runs.
+    """
+    a = Image.open(path_a).convert("L")
+    b = Image.open(path_b).convert("L")
+    w = min(a.size[0], b.size[0])
+    h = min(a.size[1], b.size[1])
+    a = a.resize((w, h), Image.Resampling.LANCZOS)
+    b = b.resize((w, h), Image.Resampling.LANCZOS)
+    arr_a = np.asarray(a, dtype=np.int16)
+    arr_b = np.asarray(b, dtype=np.int16)
+    return float(np.abs(arr_a - arr_b).mean())
+
+
 async def process_one(client: httpx.AsyncClient, label: str, path: str) -> dict:
     print(f"\n=== {label.upper()} ===")
     with open(path, "rb") as f:
         image_b64 = base64.b64encode(f.read()).decode()
 
-    t0 = time.time()
-    classification = await classify(image_b64)
-    print(f"  classify: {time.time()-t0:.1f}s  result={classification}")
-    preamble = build_preamble(classification.get("category"))
-    if preamble:
-        print(f"  preamble length: {len(preamble)} chars")
-    else:
-        print("  preamble: NONE (classification failed — skipping AFTER pass)")
-
-    before_path = f"/app/backend/static/prescan_{label}_before.png"
-    after_path = f"/app/backend/static/prescan_{label}_after.png"
+    paths = {
+        "before_a": f"/app/backend/static/prescan_{label}_before_a.png",
+        "before_b": f"/app/backend/static/prescan_{label}_before_b.png",
+        "after_a":  f"/app/backend/static/prescan_{label}_after_a.png",
+        "after_b":  f"/app/backend/static/prescan_{label}_after_b.png",
+    }
 
     t0 = time.time()
-    tasks = [gen_heavy(client, image_b64, None, before_path)]
-    if preamble:
-        tasks.append(gen_heavy(client, image_b64, preamble, after_path))
-    await asyncio.gather(*tasks)
-    print(f"  gen: {time.time()-t0:.1f}s")
-    print(f"  saved {before_path}")
-    if preamble:
-        print(f"  saved {after_path}")
+    await asyncio.gather(
+        gen(client, image_b64, None,             paths["before_a"]),
+        gen(client, image_b64, None,             paths["before_b"]),
+        gen(client, image_b64, CONSTRAINT_BLOCK, paths["after_a"]),
+        gen(client, image_b64, CONSTRAINT_BLOCK, paths["after_b"]),
+    )
+    print(f"  gen x4: {time.time()-t0:.1f}s")
 
-    return {"label": label, "classification": classification}
+    variance_before = mean_abs_diff(paths["before_a"], paths["before_b"])
+    variance_after  = mean_abs_diff(paths["after_a"],  paths["after_b"])
+    print(f"  variance BEFORE (no pre-scan)  : {variance_before:.2f}")
+    print(f"  variance AFTER  (with pre-scan): {variance_after:.2f}")
+    verdict = "PRE-SCAN REDUCES VARIANCE" if variance_after < variance_before else "PRE-SCAN INCREASES VARIANCE"
+    print(f"  verdict: {verdict}")
+
+    return {
+        "label": label,
+        "variance_before": round(variance_before, 2),
+        "variance_after": round(variance_after, 2),
+        "verdict": verdict,
+    }
 
 
 async def main():
@@ -191,7 +135,9 @@ async def main():
             results.append(await process_one(client, label, path))
     with open("/app/backend/static/prescan_summary.json", "w") as f:
         json.dump(results, f, indent=2)
-    print("\nAll done.")
+    print("\nSummary:")
+    for r in results:
+        print(f"  {r['label']}: before={r['variance_before']} after={r['variance_after']} → {r['verdict']}")
 
 
 if __name__ == "__main__":

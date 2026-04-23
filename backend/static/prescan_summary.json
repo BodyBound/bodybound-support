@@ -1,14 +1,14 @@
 [
   {
     "label": "skull",
-    "classification": {
-      "category": "portrait"
-    }
+    "variance_before": 21.03,
+    "variance_after": 22.93,
+    "verdict": "PRE-SCAN INCREASES VARIANCE"
   },
   {
     "label": "lion",
-    "classification": {
-      "category": "animal"
-    }
+    "variance_before": 20.37,
+    "variance_after": 20.92,
+    "verdict": "PRE-SCAN INCREASES VARIANCE"
   }
 ]

@@ -1,63 +1,73 @@
 <!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Pre-Scan Visual Demo — v2</title>
+<html><head><meta charset="utf-8"><title>Pre-Scan Variance Test — v3</title>
 <style>
-body{font-family:-apple-system,system-ui,sans-serif;background:#0a0a0a;color:#e7e2d4;margin:0;padding:24px;max-width:1400px;margin:0 auto}
+body{font-family:-apple-system,system-ui,sans-serif;background:#0a0a0a;color:#e7e2d4;margin:0;padding:24px;max-width:1500px;margin:0 auto}
 h1{color:#c9a227;margin:0 0 6px;letter-spacing:.4px}
 .note{color:#9ca3af;font-size:14px;margin-bottom:24px;line-height:22px}
-.arch{background:#111;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:14px 16px;margin-bottom:28px;font-size:13px;line-height:21px;color:#c9c4b4}
+.arch{background:#111;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:14px 16px;margin-bottom:24px;font-size:13px;line-height:21px;color:#c9c4b4}
 .arch b{color:#c9a227}
-.arch code{color:#7CC98E;font-size:12px}
-.fix{background:#121a12;border:1px solid rgba(124,201,142,.35);color:#b5d9bf}
-section{margin-bottom:36px}
+.verdict{background:#2a1212;border:1px solid rgba(220,80,80,.55);color:#f2b5b5;padding:14px 16px;border-radius:10px;margin-bottom:28px;font-size:14px;line-height:22px}
+.verdict b{color:#ff7a7a}
+.verdict.ok{background:#122a18;border-color:rgba(124,201,142,.55);color:#b5d9bf}
+.verdict.ok b{color:#7CC98E}
+.score{font-family:ui-monospace,Menlo,monospace;font-size:13px;margin:0 0 12px}
+.score .lbl{color:#9ca3af}
+.score .b{color:#d9a275}
+.score .a{color:#7CC98E}
+.score .bad{color:#ff7a7a}
+section{margin-bottom:40px}
 h2{color:#c9a227;font-size:18px;margin:24px 0 10px}
-.tags{color:#7CC98E;font-size:12px;margin:0 0 12px;font-family:ui-monospace,Menlo,monospace}
-.tags .k{color:#9ca3af}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.panel{background:#151515;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:12px}
-.panel h3{margin:0 0 8px;color:#c9a227;font-size:14px;letter-spacing:.4px}
+.row{display:grid;grid-template-columns:320px repeat(4,1fr);gap:12px;margin-bottom:8px;align-items:start}
+.ref{grid-row:span 2}
+.panel{background:#151515;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:10px}
+.panel h3{margin:0 0 6px;color:#c9a227;font-size:12px;letter-spacing:.4px;font-weight:600}
 .panel img{width:100%;background:white;border-radius:6px;display:block}
-.panel p{color:#9ca3af;font-size:11px;line-height:17px;margin:8px 0 0}
-.after h3{color:#7CC98E}
-.before h3{color:#d9a275}
-@media(max-width:1100px){.grid{grid-template-columns:1fr 1fr}}
+.panel .cap{color:#6b6b6b;font-size:10px;margin-top:6px;font-family:ui-monospace,Menlo,monospace}
+.panel.before h3{color:#d9a275}
+.panel.after h3{color:#7CC98E}
+.label{font-size:11px;color:#9ca3af;margin:4px 4px 8px;font-family:ui-monospace,Menlo,monospace;text-transform:uppercase;letter-spacing:.6px}
+@media(max-width:1200px){.row{grid-template-columns:1fr 1fr}}
 </style></head>
 <body>
-<h1>AI Pre-Scan — v2 (Structure-Guidance Only)</h1>
-<p class="note">Same base prompt, same style ("Heavy"). Only difference: whether the structural-guidance preamble was prepended.</p>
-
-<div class="arch fix">
-  <b>What was wrong in v1 (regression fix):</b><br>
-  v1 preamble contained drawing-technique instructions ("ultra-fine line weight", "simpler in shadow regions", enhancement hints). The model interpreted those as softening directives and weakened the line hierarchy. Base prompt output was sharper than pre-scan output.
-  <br><br>
-  <b>v2 change:</b> the preamble is structural-guidance only. It names <i>what must be captured</i> from the reference, never <i>how to draw it</i>. Line weight, density, and hierarchy remain owned exclusively by the base prompt. Line-hierarchy preservation ("strong contours stay strong, fine detail never collapses") is now an explicit Layer 1 constraint. Enhancement-hints block removed entirely.
-</div>
+<h1>AI Pre-Scan — v3 Variance Test</h1>
+<p class="note">Each reference generated 4 times at <code>temperature=0</code>: two runs with the pre-scan constraint block, two runs without. Lower variance = more repeatable output. Method: mean absolute per-pixel difference (0–255) between the two runs in each condition.</p>
 
 <div class="arch">
-  <b>Layer 1 — Universal Constraints</b> (hard, always applied): preserve subject count, pose, orientation, framing, gaze, identity, <b>line hierarchy</b>, and edge sharpness. No softening, blurring, denoising, or normalization. Never overrides the base prompt.<br>
-  <b>Layer 2 — Subject-Type Detection</b>: classifies into exactly one of <code>portrait / animal / object / landscape / stylized_artwork</code>.<br>
-  <b>Layer 3 — Structural Checklist</b>: features to CAPTURE from the reference for the detected category. No drawing-technique language.
+  <b>What pre-scan is in v3:</b> a pure NEGATIVE-CONSTRAINT block — no classification step, no category rules, no stylistic guidance. Only a list of things the model is forbidden to do (change count, pose, framing, identity; introduce new solid black regions; soften/blur edges; override the base prompt). No instruction about <i>how</i> to draw anything.<br><br>
+  <b>New controls added:</b> <code>/api/ai-stencil</code> now accepts an optional <code>temperature</code> field (0.0 = most deterministic). This test runs everything at <code>temperature=0</code>.
+</div>
+
+<div class="verdict">
+  <b>RESULT — pre-scan does not improve consistency.</b><br>
+  Variance with pre-scan is HIGHER than without for both reference images, even at temperature=0. The added constraint tokens act as a weak prompt modifier and introduce more interpretation surface, not less. Per the agreed success criterion — <i>"if constraints cannot be enforced reliably, disable pre-scan temporarily"</i> — recommendation is to keep pre-scan OFF in the production pipeline.
 </div>
 
 <section>
 <h2>Skull Makeup Woman</h2>
-<p class="tags"><span class="k">pre-scan →</span> category=<b>portrait</b></p>
-<div class="grid">
-  <div class="panel"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait3.jpg"/><p>Face paint, antler crown, braided dreads, dark background.</p></div>
-  <div class="panel before"><h3>BEFORE — No pre-scan</h3><img src="/api/prompt-preview-asset/prescan_skull_before.png"/><p>Base production prompt only.</p></div>
-  <div class="panel after"><h3>AFTER — v2 pre-scan</h3><img src="/api/prompt-preview-asset/prescan_skull_after.png"/><p>L1 universal + L3 portrait structural checklist. No drawing-technique directives.</p></div>
+<p class="score"><span class="lbl">variance</span> &nbsp; <span class="b">BEFORE = 21.03</span> &nbsp;|&nbsp; <span class="bad">AFTER = 22.93</span> &nbsp;→&nbsp; <span class="bad">pre-scan INCREASED variance by +9.0%</span></p>
+<div class="row">
+  <div class="panel ref"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait3.jpg"/><p class="cap">Source photo</p></div>
+  <div class="panel before"><h3>BEFORE — Run A</h3><img src="/api/prompt-preview-asset/prescan_skull_before_a.png"/><p class="cap">no pre-scan, temp=0</p></div>
+  <div class="panel before"><h3>BEFORE — Run B</h3><img src="/api/prompt-preview-asset/prescan_skull_before_b.png"/><p class="cap">no pre-scan, temp=0</p></div>
+  <div class="panel after"><h3>AFTER — Run A</h3><img src="/api/prompt-preview-asset/prescan_skull_after_a.png"/><p class="cap">+ constraint block, temp=0</p></div>
+  <div class="panel after"><h3>AFTER — Run B</h3><img src="/api/prompt-preview-asset/prescan_skull_after_b.png"/><p class="cap">+ constraint block, temp=0</p></div>
 </div>
 </section>
 
 <section>
 <h2>Roaring Lion + Thorn Crown</h2>
-<p class="tags"><span class="k">pre-scan →</span> category=<b>animal</b></p>
-<div class="grid">
-  <div class="panel"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait4.jpg"/><p>Textured mane, thorn crown, open mouth with fangs, scar.</p></div>
-  <div class="panel before"><h3>BEFORE — No pre-scan</h3><img src="/api/prompt-preview-asset/prescan_lion_before.png"/><p>Base production prompt only.</p></div>
-  <div class="panel after"><h3>AFTER — v2 pre-scan</h3><img src="/api/prompt-preview-asset/prescan_lion_after.png"/><p>L1 universal + L3 animal structural checklist. No drawing-technique directives.</p></div>
+<p class="score"><span class="lbl">variance</span> &nbsp; <span class="b">BEFORE = 20.37</span> &nbsp;|&nbsp; <span class="bad">AFTER = 20.92</span> &nbsp;→&nbsp; <span class="bad">pre-scan INCREASED variance by +2.7%</span></p>
+<div class="row">
+  <div class="panel ref"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait4.jpg"/><p class="cap">Source photo</p></div>
+  <div class="panel before"><h3>BEFORE — Run A</h3><img src="/api/prompt-preview-asset/prescan_lion_before_a.png"/><p class="cap">no pre-scan, temp=0</p></div>
+  <div class="panel before"><h3>BEFORE — Run B</h3><img src="/api/prompt-preview-asset/prescan_lion_before_b.png"/><p class="cap">no pre-scan, temp=0</p></div>
+  <div class="panel after"><h3>AFTER — Run A</h3><img src="/api/prompt-preview-asset/prescan_lion_after_a.png"/><p class="cap">+ constraint block, temp=0</p></div>
+  <div class="panel after"><h3>AFTER — Run B</h3><img src="/api/prompt-preview-asset/prescan_lion_after_b.png"/><p class="cap">+ constraint block, temp=0</p></div>
 </div>
 </section>
 
-<p class="note" style="margin-top:32px">Demo-only. No production endpoint changes yet. Success criterion for promotion: AFTER must match or exceed BEFORE in line-hierarchy and edge clarity, while also capturing every structural feature the reference shows.</p>
+<p class="note" style="margin-top:32px">
+Interpretation: prompt-based pre-scan is the wrong tool for this goal. Real consistency gains will come from upstream controls (temperature, seed, deterministic sampling) and from the base prompt itself, not from additional rule text. No production code path has been changed. Request body <code>temperature</code> + <code>extra_preamble</code> remain opt-in only — the default request shape is unchanged.
+</p>
 
 </body></html>

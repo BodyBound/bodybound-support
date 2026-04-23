@@ -1891,17 +1891,19 @@ class AIStencilRequest(BaseModel):
     solid_fill: int = Field(default=30, ge=0, le=100)  # 0-100: how much solid black fill
     regenerate_style: Optional[str] = Field(default=None)  # "light", "medium", "heavy" - if set, only regenerate this style
     extra_preamble: Optional[str] = Field(default=None)  # DEMO / experimental: image-specific rules prepended to the prompt (used by pre-scan demo)
+    temperature: Optional[float] = Field(default=None, ge=0.0, le=2.0)  # DEMO / experimental: override sampling temperature for variance tests. None = provider default.
 
 class AIStencilResponse(BaseModel):
     stencil_base64: str
     processing_time_ms: float
     regenerated_style: Optional[str] = None  # Which style was regenerated (if single style request)
     
-async def generate_with_gemini(image_data: str, prompt: str) -> tuple[str, str]:
+async def generate_with_gemini(image_data: str, prompt: str, temperature: Optional[float] = None) -> tuple[str, str]:
     """Generate stencil with Gemini using emergentintegrations LlmChat
     
     Uses gemini-3-pro-image-preview model which produces better quality stencils.
     Tries GOOGLE_API_KEY first, auto-falls back to EMERGENT_LLM_KEY if it fails.
+    If temperature is provided, it is forwarded via with_params for variance control.
     """
     # Decode the base64 image if needed
     if ',' in image_data:
@@ -1927,6 +1929,8 @@ async def generate_with_gemini(image_data: str, prompt: str) -> tuple[str, str]:
                 system_message="You are a professional tattoo stencil translator. You accurately convert reference images into clean stencil linework without interpretation or modification."
             )
             chat.with_model("gemini", "gemini-3-pro-image-preview").with_params(modalities=["image", "text"])
+            if temperature is not None:
+                chat.with_params(temperature=temperature)
             
             # Send the image with prompt
             msg = UserMessage(
@@ -2233,7 +2237,7 @@ Style: Professional tattoo stencil suitable for thermal transfer paper"""
             try:
                 logger.info("Attempting stencil generation with Google Gemini...")
                 image_base64, mime_type = await asyncio.wait_for(
-                    generate_with_gemini(image_data, prompt),
+                    generate_with_gemini(image_data, prompt, temperature=request.temperature),
                     timeout=120.0  # 120 second timeout - image generation takes time
                 )
                 provider_used = "google"
@@ -5620,6 +5624,10 @@ async def prompt_preview_asset(filename: str):
         'portrait4.jpg', 'stencil_light_lion.png', 'stencil_medium_lion.png', 'stencil_heavy_lion.png',
         'prescan_skull_before.png', 'prescan_skull_after.png',
         'prescan_lion_before.png', 'prescan_lion_after.png',
+        'prescan_skull_before_a.png', 'prescan_skull_before_b.png',
+        'prescan_skull_after_a.png', 'prescan_skull_after_b.png',
+        'prescan_lion_before_a.png', 'prescan_lion_before_b.png',
+        'prescan_lion_after_a.png', 'prescan_lion_after_b.png',
     }
     if filename not in allowed:
         raise HTTPException(status_code=404, detail="Not found")
