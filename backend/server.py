@@ -1890,6 +1890,7 @@ class AIStencilRequest(BaseModel):
     shading_detail: int = Field(default=50, ge=0, le=100)  # 0-100: how much cross-hatching
     solid_fill: int = Field(default=30, ge=0, le=100)  # 0-100: how much solid black fill
     regenerate_style: Optional[str] = Field(default=None)  # "light", "medium", "heavy" - if set, only regenerate this style
+    extra_preamble: Optional[str] = Field(default=None)  # DEMO / experimental: image-specific rules prepended to the prompt (used by pre-scan demo)
 
 class AIStencilResponse(BaseModel):
     stencil_base64: str
@@ -2178,6 +2179,14 @@ Style: Professional tattoo stencil suitable for thermal transfer paper"""
         
         image_base64 = None
         mime_type = 'image/png'
+        # === EXPERIMENTAL: inject image-specific pre-scan rules if provided ===
+        # This supports the pre-scan demo/feature: an optional preamble string
+        # is prepended to the main prompt so rules derived from a prior Gemini
+        # classification pass on this exact image take priority over generic rules.
+        if request.extra_preamble:
+            prompt = request.extra_preamble.strip() + "\n\n" + prompt
+            logger.info(f"[AI-Stencil] extra_preamble injected ({len(request.extra_preamble)} chars)")
+
         provider_used = "google"
         last_error = None
         
@@ -5499,6 +5508,15 @@ async def prompt_preview_alt_page():
     raise HTTPException(status_code=404, detail="Preview page not found")
 
 
+@api_router.get("/prompt-preview-prescan")
+async def prompt_preview_prescan_page():
+    html_path = "/app/backend/static/prompt_preview_prescan.html"
+    if os.path.exists(html_path):
+        with open(html_path, 'r') as f:
+            return HTMLResponse(content=f.read())
+    raise HTTPException(status_code=404, detail="Preview page not found")
+
+
 @api_router.get("/prompt-preview-lion")
 async def prompt_preview_lion_page():
     html_path = "/app/backend/static/prompt_preview_lion.html"
@@ -5526,6 +5544,8 @@ async def prompt_preview_asset(filename: str):
         'portrait2.jpg', 'stencil_medium_alt.png', 'stencil_heavy_alt.png',
         'portrait3.jpg', 'stencil_light_skull.png', 'stencil_medium_skull.png', 'stencil_heavy_skull.png',
         'portrait4.jpg', 'stencil_light_lion.png', 'stencil_medium_lion.png', 'stencil_heavy_lion.png',
+        'prescan_skull_before.png', 'prescan_skull_after.png',
+        'prescan_lion_before.png', 'prescan_lion_after.png',
     }
     if filename not in allowed:
         raise HTTPException(status_code=404, detail="Not found")

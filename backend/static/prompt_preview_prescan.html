@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Pre-Scan Visual Demo</title>
+<style>body{font-family:-apple-system,system-ui,sans-serif;background:#0a0a0a;color:#e7e2d4;margin:0;padding:24px}
+h1{color:#c9a227;margin:0 0 8px;letter-spacing:.4px}
+.note{color:#9ca3af;font-size:14px;margin-bottom:24px;line-height:22px}
+section{margin-bottom:32px}
+h2{color:#c9a227;font-size:18px;margin:24px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.panel{background:#151515;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:12px}
+.panel h3{margin:0 0 8px;color:#c9a227;font-size:14px;letter-spacing:.4px}
+.panel img{width:100%;background:white;border-radius:6px;display:block}
+.panel p{color:#9ca3af;font-size:11px;line-height:17px;margin:8px 0 0}
+.after h3{color:#7CC98E}
+.before h3{color:#d9a275}
+@media(max-width:1100px){.grid{grid-template-columns:1fr 1fr}}</style></head>
+<body>
+<h1>AI Pre-Scan — Before vs. After</h1>
+<p class="note">Each row: the reference photo, Heavy generated with the CURRENT production prompt (no pre-scan), and Heavy generated with PRE-SCAN rules injected (classification → rules prepended to the same prompt). Same image, same base prompt, only difference is whether image-specific rules were added.</p>
+
+<section>
+<h2>Skull Makeup Woman</h2>
+<div class="grid">
+  <div class="panel"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait3.jpg"/><p>Face paint, antler crown, braided dreads, dark background.</p></div>
+  <div class="panel before"><h3>BEFORE — No pre-scan</h3><img src="/api/prompt-preview-asset/prescan_skull_before.png"/><p>Current production prompt only.</p></div>
+  <div class="panel after"><h3>AFTER — Pre-scan active</h3><img src="/api/prompt-preview-asset/prescan_skull_after.png"/><p>Rules injected: preserve pose, face paint as outlines, no black fills, dense hair texture.</p></div>
+</div>
+</section>
+
+<section>
+<h2>Roaring Lion + Thorn Crown</h2>
+<div class="grid">
+  <div class="panel"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait4.jpg"/><p>Textured mane, thorn crown, open mouth with fangs, scar.</p></div>
+  <div class="panel before"><h3>BEFORE — No pre-scan</h3><img src="/api/prompt-preview-asset/prescan_lion_before.png"/><p>Current production prompt only.</p></div>
+  <div class="panel after"><h3>AFTER — Pre-scan active</h3><img src="/api/prompt-preview-asset/prescan_lion_after.png"/><p>Rules injected: one subject only, species-correct features, FULL mane with dense strands, preserve pose.</p></div>
+</div>
+</section>
+
+</body></html>
