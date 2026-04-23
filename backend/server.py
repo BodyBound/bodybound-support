@@ -2157,11 +2157,12 @@ FIDELITY — strict (applies to all detail levels):
 - NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color
 - NO crosshatching or sketch-style shading
 - LINE WEIGHT (applies to all detail levels — extremely important for readable tattoo transfer):
-  • This rule is about STROKE THICKNESS ONLY — it does NOT reduce the NUMBER, DENSITY, or COUNT of marks, dots, or contour lines. Keep the full amount of detail called for by the DETAIL LEVEL above; just draw each mark thinner.
-  • Use the THINNEST possible fine line weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines
-  • Use the THINNEST possible fine line weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette; hair strands packed close together must remain clearly individual and not merge into each other
+  • This rule applies ONLY to CONTINUOUS SOLID LINES — it does NOT apply to DOTTED or DASHED shading guides. Dots/dashes must stay at normal, clearly visible weight so they read on skin — do NOT shrink the dots.
+  • This rule is about STROKE THICKNESS ONLY — it does NOT reduce the NUMBER, DENSITY, or COUNT of marks, dots, or contour lines. Keep the full amount of detail called for by the DETAIL LEVEL above; just draw continuous lines thinner.
+  • Use the THINNEST possible fine SOLID-LINE weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker solid lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines
+  • Use the THINNEST possible fine SOLID-LINE weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette; hair strands packed close together must remain clearly individual and not merge into each other
   • Main subject silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold
-  • Rule of thumb: if a region is small or has many lines near each other (hair interior, eyes, lips, nose), use the finest stroke weight; only the outermost body/subject silhouette may be marginally heavier. Facial shading dots / contour guides on cheeks, jawline, nose bridge, brow ridges, under the eyes, and lip volumes must still be drawn in full — just at the thinnest weight.
+  • Dotted/dashed shading guides on cheeks, jawline, brow ridges, nose bridge, under the eyes, lip volumes, and hair light-to-dark transitions keep their normal visible dot size — only the SOLID lines get thinner.
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
@@ -2348,11 +2349,12 @@ FIDELITY — strict (applies to all detail levels):
 - NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color
 - NO crosshatching or sketch-style shading
 - LINE WEIGHT (applies to all detail levels — extremely important for readable tattoo transfer):
-  • This rule is about STROKE THICKNESS ONLY — it does NOT reduce the NUMBER, DENSITY, or COUNT of marks, dots, or contour lines. Keep the full amount of detail called for by the DETAIL LEVEL above; just draw each mark thinner.
-  • Use the THINNEST possible fine line weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines
-  • Use the THINNEST possible fine line weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette; hair strands packed close together must remain clearly individual and not merge into each other
+  • This rule applies ONLY to CONTINUOUS SOLID LINES — it does NOT apply to DOTTED or DASHED shading guides. Dots/dashes must stay at normal, clearly visible weight so they read on skin — do NOT shrink the dots.
+  • This rule is about STROKE THICKNESS ONLY — it does NOT reduce the NUMBER, DENSITY, or COUNT of marks, dots, or contour lines. Keep the full amount of detail called for by the DETAIL LEVEL above; just draw continuous lines thinner.
+  • Use the THINNEST possible fine SOLID-LINE weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker solid lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines
+  • Use the THINNEST possible fine SOLID-LINE weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette; hair strands packed close together must remain clearly individual and not merge into each other
   • Main subject silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold
-  • Rule of thumb: if a region is small or has many lines near each other (hair interior, eyes, lips, nose), use the finest stroke weight; only the outermost body/subject silhouette may be marginally heavier. Facial shading dots / contour guides on cheeks, jawline, nose bridge, brow ridges, under the eyes, and lip volumes must still be drawn in full — just at the thinnest weight.
+  • Dotted/dashed shading guides on cheeks, jawline, brow ridges, nose bridge, under the eyes, lip volumes, and hair light-to-dark transitions keep their normal visible dot size — only the SOLID lines get thinner.
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
