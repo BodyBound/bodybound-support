@@ -2174,6 +2174,43 @@ FIDELITY — strict (applies to all detail levels):
   • Main subject silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold
   • Dotted/dashed shading guides on cheeks, jawline, brow ridges, nose bridge, under the eyes, lip volumes, and hair light-to-dark transitions keep their normal visible dot size — only the SOLID lines get thinner.
 
+DETAIL PLACEMENT AND LIGHTING LOGIC (applies universally, strongest in HIGH DEF):
+- Detail must NOT be distributed evenly across the subject.
+- Texture and line density must follow LIGHT, not just form.
+- In areas where the source image shows BRIGHT HIGHLIGHTS (where light reflects):
+  → use MORE fine line detail and strand definition
+  → hair/fur should show the MOST individual strands in these regions
+- In areas where the source image falls into SHADOW:
+  → REDUCE line density significantly
+  → simplify into clean mass shapes with minimal internal lines
+  → DO NOT fill shadow areas with dense texture lines
+- Hair and fur must NOT be uniformly filled with strands across the entire form.
+  → uneven density is REQUIRED to correctly represent lighting
+
+DOTTED LINE USAGE (STRICT):
+- Dotted or dashed lines are ONLY for marking AREA TRANSITIONS between light and shadow.
+- Dotted lines must:
+  → follow the boundary between light and dark regions (like contour levels)
+  → describe SHAPE transitions, not texture flow
+- Dotted lines must NOT:
+  → follow hair strand direction
+  → be used to simulate hair texture
+  → be placed inside highlight regions
+- Hair/fur texture = fine SOLID lines.
+- Lighting transitions = DOTTED lines.
+- These are separate systems and must NEVER be mixed in the same region.
+
+FACIAL FEATURE CLARITY:
+- Eyes, iris, pupils, eyelids, and lips must remain ultra-clean and readable.
+- Do NOT stack multiple lines close together in small facial areas.
+- Preserve structure using minimal, precise micro-lines only.
+
+OVERALL GOAL — the stencil must read like intentional tattoo linework:
+- light reveals detail
+- shadow simplifies form
+- dots guide shading placement
+- line density is controlled and purposeful, never uniform
+
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
         
@@ -2378,6 +2415,43 @@ FIDELITY — strict (applies to all detail levels):
   • Use the THINNEST possible fine SOLID-LINE weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette; hair strands packed close together must remain clearly individual and not merge into each other
   • Main subject silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold
   • Dotted/dashed shading guides on cheeks, jawline, brow ridges, nose bridge, under the eyes, lip volumes, and hair light-to-dark transitions keep their normal visible dot size — only the SOLID lines get thinner.
+
+DETAIL PLACEMENT AND LIGHTING LOGIC (applies universally, strongest in HIGH DEF):
+- Detail must NOT be distributed evenly across the subject.
+- Texture and line density must follow LIGHT, not just form.
+- In areas where the source image shows BRIGHT HIGHLIGHTS (where light reflects):
+  → use MORE fine line detail and strand definition
+  → hair/fur should show the MOST individual strands in these regions
+- In areas where the source image falls into SHADOW:
+  → REDUCE line density significantly
+  → simplify into clean mass shapes with minimal internal lines
+  → DO NOT fill shadow areas with dense texture lines
+- Hair and fur must NOT be uniformly filled with strands across the entire form.
+  → uneven density is REQUIRED to correctly represent lighting
+
+DOTTED LINE USAGE (STRICT):
+- Dotted or dashed lines are ONLY for marking AREA TRANSITIONS between light and shadow.
+- Dotted lines must:
+  → follow the boundary between light and dark regions (like contour levels)
+  → describe SHAPE transitions, not texture flow
+- Dotted lines must NOT:
+  → follow hair strand direction
+  → be used to simulate hair texture
+  → be placed inside highlight regions
+- Hair/fur texture = fine SOLID lines.
+- Lighting transitions = DOTTED lines.
+- These are separate systems and must NEVER be mixed in the same region.
+
+FACIAL FEATURE CLARITY:
+- Eyes, iris, pupils, eyelids, and lips must remain ultra-clean and readable.
+- Do NOT stack multiple lines close together in small facial areas.
+- Preserve structure using minimal, precise micro-lines only.
+
+OVERALL GOAL — the stencil must read like intentional tattoo linework:
+- light reveals detail
+- shadow simplifies form
+- dots guide shading placement
+- line density is controlled and purposeful, never uniform
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
