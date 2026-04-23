@@ -1951,6 +1951,16 @@ LINE WEIGHT HIERARCHY — three visibly distinct tiers (this is how the artist r
 - TERTIARY (thinnest): texture and fine detail — individual hair strands, fur direction, small surface marks, minor wrinkles.
 The three tiers MUST be visibly separated. A tattoo artist must be able to tell structure from texture at a glance. Do not make everything the same weight.
 
+FINE-LINE REFINEMENTS (extremely important for readable tattoo transfer — applies at every detail level):
+- Use the THINNEST possible fine line weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines.
+- Use the THINNEST possible fine line weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette. Hair strands packed close together must remain clearly individual and not merge into each other.
+- Main subject silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold.
+- EYELASHES must be drawn as individual fine hair strokes with the thinnest possible line weight — never a thick continuous band or heavy shadow along the lash line. Each lash is a delicate separate hair.
+- PUPIL: hollow circle outline only — never filled black, never solid.
+- IRIS: hollow outline only — never filled or shaded solid.
+- Eyebrows, nostrils, and eye liner areas: drawn as outlines only — never filled dark regions, regardless of how dark they appear in the reference.
+- This refinement controls STROKE THICKNESS only — it does not reduce the NUMBER, DENSITY, or COUNT of marks, dots, or lines called for by the detail level. Keep the full amount of structural detail; just draw the lines thinner in these specific areas.
+
 DETAIL LEVEL — {detail_level.upper()}:
 - {detail_text}
 
