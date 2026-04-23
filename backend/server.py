@@ -3935,6 +3935,17 @@ async def leave_studio_team(request: FastAPIRequest):
 REVENUECAT_WEBHOOK_AUTH = os.environ.get('REVENUECAT_WEBHOOK_AUTH', '')
 CRON_SECRET = os.environ.get('CRON_SECRET', '')
 PRODUCT_CREDIT_MAP = {
+    # App Store product identifiers registered in App Store Connect for this
+    # project use short numeric codes — this is what Apple/StoreKit returns
+    # in receipts and what RevenueCat sends through webhooks (event.product_id)
+    # and through CustomerInfo.entitlements[x].productIdentifier. The names
+    # below ("The Walk In", "Booked Out", "The Shop") correspond to these.
+    '01': {'tier': 'walk-in', 'credits': 125},
+    '02': {'tier': 'booked-out', 'credits': 500},
+    '03': {'tier': 'the-shop', 'credits': 1500},
+    # Legacy / RevenueCat package identifiers kept for backwards-compat in
+    # case any older webhook re-delivery references them. Never remove these
+    # without first confirming no in-flight subscriptions still carry them.
     'bodybound_1499_1m_3d': {'tier': 'walk-in', 'credits': 125},
     'bodybound_2999_1m_3d': {'tier': 'booked-out', 'credits': 500},
     'bodybound_9999_1m_3d': {'tier': 'the-shop', 'credits': 1500},
