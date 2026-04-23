@@ -2154,7 +2154,8 @@ DETAIL LEVEL: {detail_level.upper()}
 FIDELITY — strict (applies to all detail levels):
 - Replicate only what is visibly present in the source image; do NOT invent, add, extend, or interpret anything not clearly there
 - Do NOT complete, correct, or clean up the subject — keep it exactly as shown
-- NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color
+- NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color. The PUPIL in particular must be a hollow circle outline only — never filled black, never solid. The IRIS must be a hollow outline only — never filled or shaded solid.
+- EYELASHES must be drawn as individual fine hair strokes with the thinnest possible line weight — never a thick continuous band or heavy shadow along the lash line. Each lash is a delicate separate hair.
 - NO crosshatching or sketch-style shading
 - LINE WEIGHT (applies to all detail levels — extremely important for readable tattoo transfer):
   • This rule applies ONLY to CONTINUOUS SOLID LINES — it does NOT apply to DOTTED or DASHED shading guides. Dots/dashes must stay at normal, clearly visible weight so they read on skin — do NOT shrink the dots.
@@ -2346,7 +2347,8 @@ DETAIL LEVEL: {detail_level.upper()}
 FIDELITY — strict (applies to all detail levels):
 - Replicate only what is visibly present in the source image; do NOT invent, add, extend, or interpret anything not clearly there
 - Do NOT complete, correct, or clean up the subject — keep it exactly as shown
-- NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color
+- NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color. The PUPIL in particular must be a hollow circle outline only — never filled black, never solid. The IRIS must be a hollow outline only — never filled or shaded solid.
+- EYELASHES must be drawn as individual fine hair strokes with the thinnest possible line weight — never a thick continuous band or heavy shadow along the lash line. Each lash is a delicate separate hair.
 - NO crosshatching or sketch-style shading
 - LINE WEIGHT (applies to all detail levels — extremely important for readable tattoo transfer):
   • This rule applies ONLY to CONTINUOUS SOLID LINES — it does NOT apply to DOTTED or DASHED shading guides. Dots/dashes must stay at normal, clearly visible weight so they read on skin — do NOT shrink the dots.
