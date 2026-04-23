@@ -1960,9 +1960,15 @@ def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
             "   - a layered structure sitting BEHIND the primary focal element;\n"
             "   - a repeating form (strand fields, weave, grain, bark, scale, etc.);\n"
             "   - a surface material with directional flow;\n"
-            "   - overlapping forms that sit behind focal features.\n"
-            "Do not name what the zone is — detect it by these properties in the "
-            "reference and treat it accordingly.\n"
+            "   - overlapping forms that sit behind focal features;\n"
+            "   - a recessed / interior / concave region (anything that reads as an "
+            "     opening, cavity, or hollow in the reference);\n"
+            "   - a complex-depth structure made of multiple small overlapping parts "
+            "     (spikes, barbs, points, rings, segmented forms, cluster geometry);\n"
+            "   - any region where the reference clearly shows DENSE structural "
+            "     texture that the current output is underrepresenting.\n"
+            "Detect zones by these properties — do not name the object. The same "
+            "rules must behave the same way on any uploaded image.\n"
             "\n"
             "Inside qualifying zones only:\n"
             "   - Slightly increase line density (~10–15%).\n"
@@ -1970,6 +1976,11 @@ def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
             "     a distinct plane from front layers.\n"
             "   - Add directional flow lines where structure genuinely exists in the "
             "     reference.\n"
+            "   - For complex-depth and recessed zones: add structural outlines for "
+            "     each sub-part you can see (individual spikes/barbs, individual "
+            "     overlapping segments, individual interior forms). Dotted depth cues "
+            "     may be placed where overlap / recession creates significant depth "
+            "     change. These are line work, not fills, not shading.\n"
             "\n"
             "Outside qualifying zones:\n"
             "   - Focal area / face: unchanged.\n"
@@ -1985,7 +1996,25 @@ def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
             "     same way for any uploaded image.\n"
             "   - Every added mark must improve layer SEPARATION, not density within "
             "     a single layer, and must describe structure actually visible in "
-            "     the reference."
+            "     the reference.\n"
+            "\n"
+            "STRUCTURAL DENSITY MATCHING (universal):\n"
+            "Where the reference shows dense, intricate STRUCTURE in a region (many "
+            "small overlapping forms, tight interior detail, rich surface relief), "
+            "the stencil MUST represent that structure with proportional structural "
+            "line work. 'Selective' texture means 'do not blanket the whole image "
+            "evenly' — it does NOT mean 'skip detail-rich regions'. A region that "
+            "is structurally dense in the reference is, by definition, a qualifying "
+            "secondary zone. If a region in the reference shows clearly more "
+            "structure than the current output captures, add that structure (as line "
+            "work, within the noise budget) rather than omit it.\n"
+            "Hard caveats:\n"
+            "   - Added structure must describe real form in the reference — not "
+            "     invented texture or shading.\n"
+            "   - Line-weight hierarchy still applies (new marks sit at Tertiary or "
+            "     Dotted, never Primary).\n"
+            "   - The ZERO-FILL rule still applies. Dark reference regions become "
+            "     outlines and overlapping line work — never fills."
         ),
     }
     detail_text = detail_blocks.get(detail_level, detail_blocks["moderate"])
@@ -2012,7 +2041,7 @@ LINE WEIGHT HIERARCHY — four visibly distinct tiers. Lines MUST NOT be uniform
 - PRIMARY (bold): outer contours, silhouette, foreground elements, major structural boundaries (head/body outline, jawline, crown/antlers outer edge).
 - SECONDARY (medium): internal structure, facial features (eyes, brows, nose, lips), major forms, key folds and creases, feature boundaries, major hair-mass groupings.
 - TERTIARY (fine): texture, hair flow, fur direction, secondary detail, small surface marks, minor wrinkles.
-- DOTTED (light): facial guides for the artist — cheeks, jawline, brow ridges, nose bridge, under eyes, lip volumes. Also used for transitions of form and light-placement hints on the face. Dotted marks stay at clean, readable dot size. They are line work, not fills. (Engaged at Heavy+ only — see DETAIL LEVEL below.)
+- DOTTED (light): guides for the artist at form transitions and depth cues — wherever the reference shows significant depth change, concave/recessed structure, interior/hollow regions, or overlapping layers of form. Applicable anywhere on the subject (face, accessories, hands, interior regions, etc.), not limited to the face. Dotted marks stay at clean, readable dot size. They are line work, not fills. (Engaged at Heavy+ — see DETAIL LEVEL below.)
 The four tiers MUST be visibly separated. A tattoo artist must be able to tell foreground from background, and structure from texture, at a glance.
 
 FINE-LINE REFINEMENTS (extremely important for readable tattoo transfer — applies at every detail level):
