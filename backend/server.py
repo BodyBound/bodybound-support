@@ -442,6 +442,18 @@ def post_process_stencil(base64_string: str) -> str:
         h, w = gray.shape
         logger.info(f"[PostProcess] Grayscale preserved (shape={h}x{w})")
 
+        # Diagnostic: measure large solid-dark regions in the AI output. If the
+        # model violated the zero-fill rule, this number is the evidence.
+        # We count pixels darker than 40/255 (near-black) as a fraction of image.
+        dark_fraction = float((gray < 40).sum()) / float(h * w)
+        if dark_fraction > 0.05:
+            logger.warning(
+                f"[PostProcess] FILL VIOLATION SUSPECTED: {dark_fraction*100:.1f}% of "
+                f"pixels are near-black (>5% threshold). Model output may contain solid fills."
+            )
+        else:
+            logger.info(f"[PostProcess] Fill check passed (near-black pixels: {dark_fraction*100:.2f}%)")
+
         # Background removal via inverted-alpha:
         #   pure white (255)  -> alpha 0   (transparent)
         #   near-white (250)  -> alpha 5   (nearly transparent)
@@ -1879,277 +1891,51 @@ def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
     """
     detail_blocks = {
         "minimal": (
-            "LIGHT — 'The Bones': PRIMARY + SECONDARY lines only. No TERTIARY texture. "
-            "No DOTTED guides. Cleanest possible structural outline of the subject. "
-            "Include every structural feature the reference shows (face, facial features, "
-            "hair silhouette, braids, crown/antlers/adornments, outlines of any face "
-            "paint or skin markings). Omit individual hair strands, fur texture, fabric "
-            "weave, and any fine detail."
+            "LIGHT. Primary silhouette + secondary internal structure only. "
+            "No fine texture, no dotted guides. Clean outline of every "
+            "feature visible in the reference."
         ),
         "moderate": (
-            "MEDIUM — 'Form & Shape': PRIMARY + SECONDARY + a reduced amount of TERTIARY. "
-            "No DOTTED guides. Include the key direction of hair/texture with a light "
-            "pass of fine lines — clearly present but not saturated. More detail than "
-            "Light, cleaner than Heavy."
+            "MEDIUM. Primary + secondary + a light pass of fine texture "
+            "showing the direction of hair/fur/fabric where the reference "
+            "shows it. No dotted guides."
         ),
         "detailed": (
-            "HEAVY+ — 'Full Detail, Toned Down': all four tiers engaged (PRIMARY, "
-            "SECONDARY, TERTIARY, DOTTED).\n"
-            "\n"
-            "Detail policy for Heavy+ (this is the production default — readability "
-            "beats density):\n"
-            "- Preserve the reference's detail, but reduce visual noise by roughly "
-            "10–20% relative to a fully-saturated pass. The blueprint must feel "
-            "readable, not crowded.\n"
-            "- Hair and fur are rendered as DIRECTIONAL FLOW lines — follow the actual "
-            "direction of growth and major hair masses in the reference. Do NOT scatter "
-            "random individual strands across the whole form.\n"
-            "- Texture is SELECTIVE, not full-surface coverage. Place TERTIARY texture "
-            "where the reference shows distinct structural detail; leave calmer regions "
-            "with only PRIMARY + SECONDARY lines.\n"
-            "- Keep DOTTED facial guides (see LINE WEIGHT HIERARCHY → DOTTED tier).\n"
-            "- Avoid clutter, redundant micro-lines, and over-density. Every mark "
-            "describes something the reference actually shows.\n"
-            "- More detail never means more fill or more shading. More detail means "
-            "more directional, selective structural line work.\n"
-            "\n"
-            "REFINEMENT PASS (applies on top of the detail policy above — a targeted "
-            "clarity improvement, not a density increase):\n"
-            "\n"
-            "1) Hair / fur clarity (controlled, ~10–15% lift only):\n"
-            "   - Slightly increase strand break-up — introduce subtle splits in a few "
-            "     strands (not all of them, not uniformly).\n"
-            "   - Add a small number of directional micro-lines that follow the natural "
-            "     flow of the hair/mane.\n"
-            "   - Add LIGHT flow guide-lines that trace the highlight paths in hair/fur "
-            "     — these mark where the light travels along the strands, NOT where "
-            "     shading goes. They remain line work, never fills, never shading.\n"
-            "   - Do NOT add fuzz, random texture, or uniform strand-field coverage. "
-            "     Every new mark follows the direction of flow.\n"
-            "\n"
-            "2) Structural plane clarity (face & major forms):\n"
-            "   - Slightly widen the line separation at major plane changes so the "
-            "     artist can read the form: cheek → jaw transition, brow → eye socket, "
-            "     nose bridge → cheek plane, temple → cheekbone.\n"
-            "   - DOTTED guides in these plane-change zones may be slightly more "
-            "     defined (clearer dot spacing) — but they remain dotted guides, never "
-            "     continuous tonal shading.\n"
-            "   - Do NOT add line count elsewhere on the face. Clarify transitions "
-            "     only where the form actually changes.\n"
-            "\n"
-            "3) Detail priority (strict ordering):\n"
-            "   - STRUCTURE > FLOW > TEXTURE. Readability always wins.\n"
-            "   - If a new detail would hurt readability, drop it.\n"
-            "\n"
-            "4) Noise budget:\n"
-            "   - The 10–20% noise reduction from the detail policy above still holds.\n"
-            "   - Any new refinement mark REPLACES a weaker line — it does not stack "
-            "     on top. Net mark count stays within the same budget.\n"
-            "   - If a region is already readable, add nothing.\n"
-            "\n"
-            "DEPTH REFINEMENT (targeted, universal — applies to any subject. "
-            "~10–15% lift in secondary-material zones only, not global):\n"
-            "\n"
-            "Core rule — detail may only increase as STRUCTURAL PRIORITY decreases:\n"
-            "   FOREGROUND / FOCAL  >  PRIMARY CONTOURS  >  SECONDARY MATERIAL ZONES\n"
-            "The foreground and focal area stay clean. Detail is added only in the "
-            "lower-priority zone, as a controlled lift.\n"
-            "\n"
-            "Secondary material zones (universal definition — no object assumptions):\n"
-            "A zone qualifies if it is ANY of the following:\n"
-            "   - a layered structure sitting BEHIND the primary focal element;\n"
-            "   - a repeating form (strand fields, weave, grain, bark, scale, etc.);\n"
-            "   - a surface material with directional flow;\n"
-            "   - overlapping forms that sit behind focal features;\n"
-            "   - a recessed / interior / concave region (anything that reads as an "
-            "     opening, cavity, or hollow in the reference);\n"
-            "   - a complex-depth structure made of multiple small overlapping parts "
-            "     (spikes, barbs, points, rings, segmented forms, cluster geometry);\n"
-            "   - any region where the reference clearly shows DENSE structural "
-            "     texture that the current output is underrepresenting.\n"
-            "Detect zones by these properties — do not name the object. The same "
-            "rules must behave the same way on any uploaded image.\n"
-            "\n"
-            "Inside qualifying zones only:\n"
-            "   - Slightly increase line density (~10–15%).\n"
-            "   - Improve separation between layered elements so back layers read as "
-            "     a distinct plane from front layers.\n"
-            "   - Add directional flow lines where structure genuinely exists in the "
-            "     reference.\n"
-            "   - For complex-depth and recessed zones: add structural outlines for "
-            "     each sub-part you can see (individual spikes/barbs, individual "
-            "     overlapping segments, individual interior forms). Dotted depth cues "
-            "     may be placed where overlap / recession creates significant depth "
-            "     change. These are line work, not fills, not shading.\n"
-            "\n"
-            "Outside qualifying zones:\n"
-            "   - Focal area / face: unchanged.\n"
-            "   - Primary contours: unchanged.\n"
-            "   - Line-weight hierarchy: unchanged (added marks sit at Tertiary, or "
-            "     Dotted where appropriate — never at Primary or Secondary).\n"
-            "\n"
-            "Hard constraints on this refinement:\n"
-            "   - No global detail increase.\n"
-            "   - No uniform density across the image.\n"
-            "   - No random lines, no fuzz, no noise.\n"
-            "   - No object-specific assumptions — this refinement must behave the "
-            "     same way for any uploaded image.\n"
-            "   - Every added mark must improve layer SEPARATION, not density within "
-            "     a single layer, and must describe structure actually visible in "
-            "     the reference.\n"
-            "\n"
-            "STRUCTURAL DENSITY ENFORCEMENT (universal — required behaviour, not "
-            "stylistic):\n"
-            "\n"
-            "Core rule (non-negotiable). If a region in the reference contains "
-            "visible structural detail and the stencil does NOT reflect it, that is "
-            "a FAILURE CONDITION and the output is incorrect. The model MUST NOT "
-            "skip these regions.\n"
-            "\n"
-            "Secondary / background zones:\n"
-            "   - If the reference shows DENSE structure, the stencil MUST reflect "
-            "     that structure with proportional structural line work.\n"
-            "   - If the output is visibly SIMPLER than the reference in that "
-            "     region, INCREASE line work until the structure is readable.\n"
-            "   - 'Selective' means 'do not blanket the whole image evenly'. It "
-            "     does NOT mean 'skip detail-rich regions'. Skipping a "
-            "     structurally-dense region is a failure condition.\n"
-            "\n"
-            "Interior / recessed regions (concave openings, internal forms, mouths, "
-            "eye sockets, nostrils, hollows, layered-depth cavities of any kind):\n"
-            "   - Draw contour lines that describe the depth of the interior form.\n"
-            "   - Separate each internal shape clearly (e.g. each individual "
-            "     internal sub-part outlined on its own).\n"
-            "   - Represent interior structure as LINE WORK — no shading, no fill.\n"
-            "   - Omitting internal structure is INCORRECT output.\n"
-            "\n"
-            "Repeating / layered structures (strand fields, weave, overlapping "
-            "layers, segmented geometry of any kind):\n"
-            "   - Show visible separation between layers.\n"
-            "   - Follow directional flow.\n"
-            "   - Include enough linework to describe the real structure that is "
-            "     actually present in the reference.\n"
-            "   - Skipping this detail is a failure condition.\n"
-            "\n"
-            "Priority system (unchanged):\n"
-            "   FOREGROUND  >  FACE  >  STRUCTURE  >  BACKGROUND\n"
-            "Detail increases as priority decreases. Face and focal areas remain "
-            "clean. Line hierarchy remains intact.\n"
-            "\n"
-            "Constraints (unchanged — enforcement does not override these):\n"
-            "   - ZERO FILL. Dense reference regions become line work, never fills.\n"
-            "   - NO shading, NO random noise, NO global density increase.\n"
-            "   - New marks sit at Tertiary or Dotted — never promoted to Primary "
-            "     or Secondary.\n"
-            "   - Every added mark must describe structure actually visible in the "
-            "     reference — never invented texture.\n"
-            "\n"
-            "Success criterion: the stencil MUST match the STRUCTURAL COMPLEXITY of "
-            "the reference — not stylistically, structurally. If the reference is "
-            "complex in a region, the stencil is complex in that region. If the "
-            "reference is calm in a region, the stencil is calm in that region."
+            "HEAVY. All four line tiers engaged: primary silhouette (bold), "
+            "secondary internal structure (medium), tertiary fine texture "
+            "following directional flow (thin), dotted guides (light) at "
+            "plane changes and depth transitions anywhere on the subject. "
+            "Match the structural complexity the reference actually shows: "
+            "rich where the reference is rich, calm where the reference is "
+            "calm. Texture follows directional flow, not random scatter."
         ),
     }
     detail_text = detail_blocks.get(detail_level, detail_blocks["moderate"])
 
-    return f"""REFERENCE DOMINANCE — READ FIRST. This is an IMAGE-TO-IMAGE TRANSLATION task, not an image-generation task. The attached reference image is the ABSOLUTE SOURCE OF TRUTH. Your only job is to TRACE what is already in that reference as line work. You are a TRANSLATOR of the reference, not a GENERATOR of a new image.
+    return f"""Trace the attached reference image as a tattoo-stencil line drawing.
 
-Do NOT generate a new subject. Do NOT invent a face. Do NOT replace the person/animal/object with a different one. Do NOT "clean up" or "complete" anatomy. Do NOT reinterpret facial features. Do NOT stylize beyond converting the reference to line work. If the output looks like a DIFFERENT subject from the reference, the output is INVALID and must be corrected.
+This is an image-to-image TRANSLATION of the attached reference. The reference is the source of truth. The stencil reproduces the same subject, the same head angle, the same gaze, the same pose, the same facial features and identity, the same hair style, the same adornments, the same face-paint pattern at the same position — all as line work.
 
-LIKENESS ENFORCEMENT (strict — applies before every other rule below):
-- The exact head angle, head tilt, and facing direction in the reference MUST be preserved. If the reference is 3/4 view, the output is 3/4 view. If the reference is profile, the output is profile. Never default to front-facing.
-- The exact gaze direction in the reference MUST be preserved.
-- The exact facial structure, feature placement, proportions, and identity of the reference MUST be preserved. If a viewer comparing the reference and the stencil would say "these look like different people", the output is INVALID.
-- The exact hair style, adornments, clothing, and visible markings of the reference MUST be preserved — as line work, in their exact reference positions. Do not swap a style for a generic alternative.
-- The exact face-paint / makeup / skull-paint pattern of the reference MUST be preserved as outlines at its exact reference position. If the reference has skull makeup covering half the face at an angle, the stencil shows the same pattern at the same angle.
+The stencil contains ONLY the subject that appears in the reference, drawn in {line_color} lines on a pure white background. Anything not visible in the reference does not appear in the stencil. If the reference background is dark, empty, or plain, the stencil background is pure white. No added scenery, no moons, no clouds, no halos, no decorative elements.
 
-If you feel tempted to draw a "clean" or "better" version of the subject than what the reference shows — stop and trace the reference instead.
+Every dark area in the reference is drawn as OUTLINES AND INTERNAL STRUCTURAL LINE WORK — never as a filled region. This applies to eye sockets, pupils, irises, nostrils, the interior of an open mouth, teeth, tongue, inside of ears, and any shadow, cavity, or hollow. The pupil is a hollow circle. The iris is a hollow ring. Each nostril is an outlined opening. Each tooth is outlined individually. The tongue is outlined. The inside of the mouth shows line work describing the palate and inner cheeks. No region in the output is ever rendered as solid black or filled gray — including dotted marks, which stay spaced out as individual dots, never clustered into a tonal mass.
 
-BACKGROUND DOMINANCE (additional enforcement):
-Do NOT add background elements that are not explicitly present in the reference. Do NOT generate a moon, clouds, sky, stars, sun, smoke, mist, halos, auras, decorative motifs, frames, borders, scenery, landscapes, patterns, textures, or any environmental element unless that exact element appears in the reference image. The background of the stencil is PURE WHITE. If the reference background is dark, complex, or detailed — the stencil background is STILL pure white with no added content behind the subject. Inventing background elements is a FAILURE CONDITION.
+Line-weight hierarchy, visibly distinct:
+- PRIMARY (bold): the subject's outer silhouette and foreground contours.
+- SECONDARY (medium): internal structure and facial features (eyes, brows, nose, lips, major forms).
+- TERTIARY (thin): fine texture and flow — individual hair strands, fur direction, fabric grain, small surface marks. Uses the thinnest possible line weight so strands stay individually readable and never merge.
+- DOTTED (light): soft guide marks at plane changes and depth transitions (cheek-to-jaw, brow-to-socket, nose-to-cheek, crown overlaps, mouth depth, crown/thorn overlaps, recessed openings). Dots are individual and spaced, never grouped into fills.
 
-BLUEPRINT HEAVY+ — Tattoo Stencil (production standard).
-Every rule below applies on top of REFERENCE DOMINANCE and LIKENESS ENFORCEMENT above. Those two always win.
-
-You are producing a line-only BLUEPRINT that a human tattoo artist will use as a guide. You are NOT rendering the final tattoo. You are NOT interpreting shading. You do NOT decide where shading goes — the artist decides that on skin.
-
-OUTPUT FORMAT:
-- {line_color} lines on a pure white background.
-- 100% linework. Lines describe STRUCTURE, not shading.
-- Every dark region in the reference is represented by a CONTOUR, never by a fill.
-
-ZERO-FILL RULE (hard constraint — if any fill appears, the output is incorrect):
-- No solid black anywhere.
-- No gray shading anywhere.
-- No filled regions of any kind — not eyes, not pupils, not hair shadows, not face paint, not background, not anywhere.
-- EYES / PUPILS / IRISES: pupils are HOLLOW CIRCLE OUTLINES only — never filled black, never solid, never dark. Irises are hollow concentric outlines only. Even if the reference shows a very dark pupil, render it as an outline. Solid-black pupils are a FAILURE CONDITION.
-- The background is pure white even if the reference background is dark. Do not invert. Do not reproduce the reference background as a dark shape.
-
-DARK REGION HANDLING (critical — zero-fill applies even when the reference is black):
-The reference image contains naturally dark areas. The model MUST NOT fill these regions with solid black in the stencil. "Zero fill" applies even where the reference appears black. The stencil represents STRUCTURE, not DARKNESS.
-
-For ANY naturally dark region in the reference — including but not limited to eye sockets, pupils, irises, nostrils, inside-the-mouth interior (lips parted, mouth open), teeth shadows, tongue, deep recessed cavities, under-brow shadows, under-chin shadows, hair-part shadows, inside-ear, inside any concave / hollow form:
-- Outline the BOUNDARY of the dark region with a contour line.
-- Use line work to describe the SHAPE of the region.
-- Use internal contour lines to indicate depth and the sub-structures inside the region (e.g. individual teeth outlines, tongue outline, palate curvature) — all as line work.
-- Do NOT fill. Do NOT render as a solid dark shape. Do NOT use gray. Do NOT render "black" pixels to mean "this area is dark in the reference".
-
-Specific per-region enforcement (apply every time the reference shows any of these):
-- Eye sockets → hollow outlines of the socket rim and the eye form inside. If the reference shows a darkened socket, draw the socket rim, the eyelid curvature, and a hollow iris/pupil outline. No solid fill anywhere in the eye region.
-- Nostrils → outlined shapes only. Draw the nostril opening as a curved line on its perimeter. Never a filled dark shape.
-- Inside the mouth (when visible) → contour lines for the tongue, outlines for each individual tooth, line for the lip-interior edge, lines indicating palate / inner cheek curvature. Never a filled dark mass between the lips.
-- Recessed cavities (any hollow opening in any subject) → rim outline + internal structural outlines. Never a filled darker patch.
-- Any solid-black region in the output is a FAILURE CONDITION, regardless of what the reference shows in that region.
-
-MANDATORY FINAL-CHECK (self-verification before output):
-Before finalizing, scan the entire output for any region larger than a single line stroke that is rendered as solid black or uniform dark gray. For any such region found:
-   - It is a FAILURE CONDITION.
-   - Replace it with boundary outlines + internal structural line work.
-This check applies to ALL naturally dark reference features — including (for animal subjects) nostrils, inner eye corners, pupils, mouth interior, ear interiors, under-jaw shadows, paw-pad creases; and (for human subjects) the regions already enumerated above. If the output contains any filled dark area, redraw that area as line work before returning it.
-
-- Face paint, makeup, scars, skull-paint patterns, tattoos are drawn as OUTLINES in their exact reference positions — never as filled shapes.
-- Do not use crosshatching, stippling, gradients, or any mark pattern intended to simulate tone.
-- Dotted/dashed marks are permitted ONLY as the DOTTED tier defined below (facial guides, form transitions, light-placement hints). They are never used to simulate tonal fills.
-- Do not introduce any new solid black region that is not directly derived from a solid-black region already present in the reference photo. When in doubt, use line work instead.
-
-LINE WEIGHT HIERARCHY — four visibly distinct tiers. Lines MUST NOT be uniform weight. Foreground elements must read stronger than background elements:
-- PRIMARY (bold): outer contours, silhouette, foreground elements, major structural boundaries (head/body outline, jawline, crown/antlers outer edge).
-- SECONDARY (medium): internal structure, facial features (eyes, brows, nose, lips), major forms, key folds and creases, feature boundaries, major hair-mass groupings.
-- TERTIARY (fine): texture, hair flow, fur direction, secondary detail, small surface marks, minor wrinkles.
-- DOTTED (light): guides for the artist at form transitions and depth cues — wherever the reference shows significant depth change, concave/recessed structure, interior/hollow regions, or overlapping layers of form. Applicable anywhere on the subject (face, accessories, hands, interior regions, etc.), not limited to the face. Dotted marks stay at clean, readable dot size. They are line work, not fills. (Engaged at Heavy+ — see DETAIL LEVEL below.)
-The four tiers MUST be visibly separated. A tattoo artist must be able to tell foreground from background, and structure from texture, at a glance.
-
-FINE-LINE REFINEMENTS (extremely important for readable tattoo transfer — applies at every detail level):
-- Use the THINNEST possible fine line weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines.
-- Use the THINNEST possible fine line weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette. Hair strands packed close together must remain clearly individual and not merge into each other.
-- PRIMARY silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold.
-- EYELASHES must be drawn as individual fine hair strokes with the thinnest possible line weight — never a thick continuous band or heavy shadow along the lash line. Each lash is a delicate separate hair.
-- PUPIL: hollow circle outline only — never filled black, never solid.
-- IRIS: hollow outline only — never filled or shaded solid.
-- Eyebrows, nostrils, and eye liner areas: drawn as outlines only — never filled dark regions, regardless of how dark they appear in the reference.
-- This refinement controls STROKE THICKNESS only — it does not reduce the COUNT of marks called for by the detail level. Keep the structural detail; just draw thinner in these specific areas.
+Fine-line refinements at every detail level: facial features and interior hair/fur texture use the thinnest possible line weight; pupils and irises are hollow outlines; eyelashes are individual delicate strokes; the subject silhouette may be slightly heavier than internal lines but still never thick.
 
 DETAIL LEVEL — {detail_level.upper()}:
-- {detail_text}
+{detail_text}
 
-READABILITY (thermofax transfer):
-- The stencil must read clearly at real stencil print size.
-- Do not cluster overlapping micro-lines in small areas.
-- Avoid clutter and unnecessary micro-detail. Every mark has a reason.
-- Continuous lines must be clean and confident, never broken, pixelated, or noisy.
+Readability: the stencil must read at real print size. Avoid clustering overlapping micro-lines. Every mark describes a real structural feature visible in the reference.
 
-STRUCTURAL FIDELITY:
-- Replicate only what is visibly present in the reference. Do not invent, add, extend, complete, or clean up.
-- Exactly ONE subject in the frame, in the EXACT same pose, orientation, facing direction, gaze, framing, and crop as the reference. Do not duplicate, mirror, tile, rotate, flip, re-center, re-crop, or re-pose.
-- Preserve identity exactly: face shape, hair style (braided/loose/etc.), adornments (crowns, antlers, jewelry), facial markings. These are drawn as line work — never replaced, cleaned up, or swapped.
-- Do not re-interpret the subject when adding detail. Every added line describes a feature that is already there.
+The output is a clean, line-only blueprint for a human tattoo artist to transfer onto skin."""
 
-CONSISTENCY REQUIREMENT:
-- The same reference image should produce consistent structure and predictable line placement across runs.
-- Do not freely reinterpret the reference. Trace the structure that is actually present.
-- Minimise variation between runs: same reference → same structural decisions.
 
-Style: Line-only Blueprint Heavy+ stencil suitable for thermofax transfer paper."""
 
 
 
