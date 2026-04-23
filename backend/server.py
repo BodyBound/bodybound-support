@@ -2081,6 +2081,23 @@ ZERO-FILL RULE (hard constraint — if any fill appears, the output is incorrect
 - No filled regions of any kind — not eyes, not pupils, not hair shadows, not face paint, not background, not anywhere.
 - EYES / PUPILS / IRISES: pupils are HOLLOW CIRCLE OUTLINES only — never filled black, never solid, never dark. Irises are hollow concentric outlines only. Even if the reference shows a very dark pupil, render it as an outline. Solid-black pupils are a FAILURE CONDITION.
 - The background is pure white even if the reference background is dark. Do not invert. Do not reproduce the reference background as a dark shape.
+
+DARK REGION HANDLING (critical — zero-fill applies even when the reference is black):
+The reference image contains naturally dark areas. The model MUST NOT fill these regions with solid black in the stencil. "Zero fill" applies even where the reference appears black. The stencil represents STRUCTURE, not DARKNESS.
+
+For ANY naturally dark region in the reference — including but not limited to eye sockets, pupils, irises, nostrils, inside-the-mouth interior (lips parted, mouth open), teeth shadows, tongue, deep recessed cavities, under-brow shadows, under-chin shadows, hair-part shadows, inside-ear, inside any concave / hollow form:
+- Outline the BOUNDARY of the dark region with a contour line.
+- Use line work to describe the SHAPE of the region.
+- Use internal contour lines to indicate depth and the sub-structures inside the region (e.g. individual teeth outlines, tongue outline, palate curvature) — all as line work.
+- Do NOT fill. Do NOT render as a solid dark shape. Do NOT use gray. Do NOT render "black" pixels to mean "this area is dark in the reference".
+
+Specific per-region enforcement (apply every time the reference shows any of these):
+- Eye sockets → hollow outlines of the socket rim and the eye form inside. If the reference shows a darkened socket, draw the socket rim, the eyelid curvature, and a hollow iris/pupil outline. No solid fill anywhere in the eye region.
+- Nostrils → outlined shapes only. Draw the nostril opening as a curved line on its perimeter. Never a filled dark shape.
+- Inside the mouth (when visible) → contour lines for the tongue, outlines for each individual tooth, line for the lip-interior edge, lines indicating palate / inner cheek curvature. Never a filled dark mass between the lips.
+- Recessed cavities (any hollow opening in any subject) → rim outline + internal structural outlines. Never a filled darker patch.
+- Any solid-black region in the output is a FAILURE CONDITION, regardless of what the reference shows in that region.
+
 - Face paint, makeup, scars, skull-paint patterns, tattoos are drawn as OUTLINES in their exact reference positions — never as filled shapes.
 - Do not use crosshatching, stippling, gradients, or any mark pattern intended to simulate tone.
 - Dotted/dashed marks are permitted ONLY as the DOTTED tier defined below (facial guides, form transitions, light-placement hints). They are never used to simulate tonal fills.
