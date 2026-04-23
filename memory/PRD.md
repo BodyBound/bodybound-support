@@ -67,6 +67,15 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **Blueprint Mode (Apr 23 2026)** — new default generation behaviour for every stencil produced by `/api/ai-stencil` and `/api/process_stencil_job`. Zero fills, line-only output, three-tier line-weight hierarchy (PRIMARY silhouette / SECONDARY features / TERTIARY texture), blueprint-purpose framing (guide for a human artist, no shading interpretation).
+  - New single-source-of-truth helper `build_blueprint_prompt(line_color, detail_level)` in `backend/server.py`. Both generation endpoints now call it — no more duplicated 80-line prompt blocks drifting out of sync.
+  - Removed from the base prompt: all fill logic, shadow interpretation, dotted-line shading guides, light-to-dark dotted transitions, lighting-density distribution rules, crosshatching.
+  - Detail levels re-mapped to Blueprint tiers: Light = PRIMARY + SECONDARY only (cleanest outline), Medium = + reduced TERTIARY (key texture direction), Heavy = all three tiers fully expressed (line-only texture, never fills).
+  - Opt-in request fields left available for future experimentation without touching core code: `temperature` (forwarded via `with_params` to Gemini through LiteLLM) and `extra_preamble` (prepended string). Default request shape unchanged.
+  - Pre-scan experiment retired: variance test (2 images × 2 runs × 2 conditions at temperature=0) showed the prompt-prepended pre-scan block INCREASED output variance by 9% (skull) and 2.7% (lion). Decision: not wired into any production pipeline.
+  - Live preview: `GET /api/blueprint-mode`. Variance preview: `GET /api/prompt-preview-prescan`.
+  - Demo script: `backend/scripts/blueprint_mode_demo.py` generates Light + Heavy pairs for skull and lion at temperature=0 using the live endpoint.
+
 - **QA-only local reset gesture (Apr 23 2026)** — shipped to `main`:
   - **Problem isolated during paywall validation**: `Delete App → Reinstall` does NOT produce a clean slate on iOS. Root causes: (1) `expo-secure-store` persists our `session_token` in iOS Keychain which survives uninstall by design, (2) RevenueCat's `appUserID` is also Keychain-persisted → `Purchases.getCustomerInfo()` replays cached entitlements attached to the previous identity, causing PaywallScreen to show "You're subscribed" on a supposedly-fresh install (triggered at `PaywallScreen.tsx:164-166`).
   - **Fix shipped** (`frontend/app/screens/SettingsScreen.tsx`): hidden 7-tap gesture on a version-number footer inside Settings → Danger Zone. 7 taps within 3 s → confirmation Alert → performs `Purchases.logOut()` + `SecureStore.deleteItemAsync('session_token')` + `SecureStore.deleteItemAsync('pending_referral_code')` + routes back through `onSignOut()`. Final Alert prompts user to force-quit and relaunch for a guaranteed fresh-install path.

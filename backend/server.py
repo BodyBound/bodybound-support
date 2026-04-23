@@ -1882,6 +1882,85 @@ async def enhance_image_endpoint(request: EnhanceImageRequest):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error enhancing image: {str(e)}")
 
+
+# ---------------------------------------------------------------------------
+# BLUEPRINT MODE — single source of truth for the stencil-generation prompt.
+# Default output behaviour: line-only blueprints for a human tattoo artist.
+# Zero fills, zero shading interpretation, three visibly-distinct line weights.
+# Used by both /api/ai-stencil and /api/process_stencil_job.
+# ---------------------------------------------------------------------------
+def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
+    """Build the stencil-generation prompt in Blueprint Mode.
+
+    Args:
+        line_color: rendered line color (e.g. "purple/violet", "black").
+        detail_level: one of "minimal", "moderate", "detailed".
+    """
+    detail_blocks = {
+        "minimal": (
+            "LIGHT — 'The Bones': PRIMARY + SECONDARY lines only. No TERTIARY texture. "
+            "Cleanest possible structural outline of the subject. Include every structural "
+            "feature the reference shows (face, facial features, hair silhouette, braids, "
+            "crown/antlers/adornments, outlines of any face paint or skin markings). "
+            "Omit individual hair strands, fur texture, fabric weave, and any fine detail."
+        ),
+        "moderate": (
+            "MEDIUM — 'Form & Shape': PRIMARY + SECONDARY + a reduced amount of TERTIARY. "
+            "Include the key direction of hair or texture with a light pass of fine lines — "
+            "clearly present but not saturated. More detail than Light, cleaner than Heavy."
+        ),
+        "detailed": (
+            "HEAVY — 'Full Detail': all three tiers fully expressed. TERTIARY texture is "
+            "saturated — many individual hair/fur strands, small creases, fine structural "
+            "marks. More detail than Medium. CRITICAL: more detail NEVER means more fill "
+            "or more shading. More detail means more TERTIARY STRUCTURAL LINES. Every "
+            "extra mark must describe a real structural feature the reference actually shows."
+        ),
+    }
+    detail_text = detail_blocks.get(detail_level, detail_blocks["moderate"])
+
+    return f"""BLUEPRINT MODE — Tattoo Stencil.
+You are producing a line-only BLUEPRINT that a human tattoo artist will use as a guide. You are NOT rendering the final tattoo. You are NOT interpreting shading. You do NOT decide where shading goes — the artist decides that on skin.
+
+OUTPUT FORMAT:
+- {line_color} lines on a pure white background.
+- 100% linework. Lines describe STRUCTURE, not shading.
+- Every dark region in the reference is represented by a CONTOUR, never by a fill.
+
+ZERO-FILL RULE (hard constraint — if any fill appears, the output is incorrect):
+- No solid black anywhere.
+- No gray shading anywhere.
+- No filled regions of any kind — not eyes, not pupils, not hair shadows, not face paint, not background, not anywhere.
+- The background is pure white even if the reference background is dark. Do not invert. Do not reproduce the reference background as a dark shape.
+- Face paint, makeup, scars, skull-paint patterns, tattoos are drawn as OUTLINES in their exact reference positions — never as filled shapes.
+- Do not use crosshatching, stippling, gradients, or any mark pattern intended to simulate tone.
+- Do not use dotted or dashed marks to indicate shading, tonal transitions, or light-to-dark boundaries. Dotted marks are not a tool for shading in Blueprint Mode.
+
+LINE WEIGHT HIERARCHY — three visibly distinct tiers (this is how the artist reads the blueprint):
+- PRIMARY (heaviest): outer silhouette and major structural contours — head/body outline, jawline, crown/antlers outer edge, major anatomy boundaries.
+- SECONDARY (medium): internal structural lines — facial features (eyes, brows, nose, lips), major hair mass groupings, key folds and creases, feature boundaries.
+- TERTIARY (thinnest): texture and fine detail — individual hair strands, fur direction, small surface marks, minor wrinkles.
+The three tiers MUST be visibly separated. A tattoo artist must be able to tell structure from texture at a glance. Do not make everything the same weight.
+
+DETAIL LEVEL — {detail_level.upper()}:
+- {detail_text}
+
+READABILITY (thermofax transfer):
+- The stencil must read clearly at real print size.
+- Do not cluster overlapping micro-lines in small areas.
+- Every mark has a reason. Avoid clutter and unnecessary detail.
+- Continuous lines must be clean and confident, never broken, pixelated, or noisy.
+
+STRUCTURAL FIDELITY:
+- Replicate only what is visibly present in the reference. Do not invent, add, extend, complete, or clean up.
+- Exactly ONE subject in the frame, in the EXACT same pose, orientation, facing direction, gaze, framing, and crop as the reference. Do not duplicate, mirror, tile, rotate, flip, re-center, re-crop, or re-pose.
+- Preserve identity exactly: face shape, hair style (braided/loose/etc.), adornments (crowns, antlers, jewelry), facial markings. These are drawn as line work — never replaced, cleaned up, or swapped.
+- Do not re-interpret the subject when adding detail. Every added line describes a feature that is already there.
+
+Style: Line-only blueprint suitable for thermofax transfer paper."""
+
+
+
 # AI-Powered Stencil Generation
 class AIStencilRequest(BaseModel):
     image_base64: str
@@ -2137,87 +2216,9 @@ async def generate_ai_stencil(request: AIStencilRequest):
         else:
             detail_level = "minimal" if request.shading_detail < 30 else "moderate" if request.shading_detail < 60 else "detailed"
         
-        # Create the prompt - Feb 16 baseline + strict fidelity rules
-        prompt = f"""Transform this image into a professional tattoo stencil drawing.
+        # Blueprint Mode — line-only stencil for a human artist
+        prompt = build_blueprint_prompt(line_color, detail_level)
 
-CRITICAL REQUIREMENTS:
-1. Create clean, smooth, continuous lines - NO noise or scattered marks
-2. Use {line_color} colored lines on a pure white background
-3. Draw like a skilled tattoo artist would hand-draw a stencil:
-   - Main outline contours with solid, confident lines
-   - Inner detail lines for important features
-   - Use dotted or dashed lines to indicate shading/contour areas where the tattoo artist would add shading
-4. Simplify the image - remove unnecessary details, keep only the essential form
-5. Lines should be bold enough to transfer clearly to skin
-6. The output should look like a professional tattoo stencil/blueprint
-7. NO grayscale shading - only line work
-8. Ensure all lines are connected and flowing, not broken or pixelated
-
-DETAIL LEVEL: {detail_level.upper()}
-{
-"- Minimal detail (LOW FIDELITY — 'The Bones'): A clean, simple line-drawing of the subject. Include ALL main outlines of every element visibly present (face, eyes/nose/mouth, eyebrows, hair silhouette, braid outlines, crown/antlers, and the outlines of any face paint or makeup patterns on the skin). OMIT: individual hair strands, interior hair texture lines, fabric weave, ALL dotted/dashed shading guides (on the face, on the hair, anywhere), and all interior contour guides that describe tonal transitions. Low Fidelity should feel like the cleanest possible line-art outline of the subject — no shading of any kind. ALL visible features of the subject must still be present — you are simplifying the shading, not the subject." if detail_level == "minimal" else
-"- Moderate detail (MID-RANGE — 'Form & Shape'): Everything from Low Fidelity PLUS some key interior contour lines where they meaningfully help a tattoo artist see the form (major face plane breaks, jawline shading hints, nose bridge, main hair flow direction via a few flowing lines, key folds in clothing). Clean and uncluttered, but clearly MORE detailed than Low. NO dense shading dots, NO full hair texture, NO light-to-dark dotted transition guides — those belong to Heavy." if detail_level == "moderate" else
-"- Maximum detail (HIGH DEF — 'Full Detail'): Everything from Mid-Range PLUS full shading guides. Add ALL visible interior contours, AND dotted/dashed shading guides on every significant form (cheeks, jawline, brow ridges, nose bridge, lip volumes, collarbone, clothing folds, fabric wrinkles). When hair is present, read the FULL hair texture with MANY flowing directional lines across its entire form. Then, use DOTTED LINES to mark the hair's light-to-dark transitions — trace the boundary wherever a bright highlight region meets a darker shadow region in the hair (where light bounces off vs. where it falls into shadow). Treat these dotted lines like topographic contour lines that describe the tonal/lighting levels in the hair, showing the artist exactly where contrast shifts occur. Heavy must be visibly DENSER than Moderate with more individual marks and more interior contour detail — never less. CRITICAL: adding more detail does NOT mean re-interpreting the reference. The pose, framing, gaze direction, head tilt, hair style (braided/loose/etc.), face paint, makeup, crowns, and every other visible element must stay EXACTLY as they appear in the source. Every extra mark must describe something already present; do NOT swap braided dreads for loose hair, do NOT rotate the face to front-facing, do NOT soften or omit skull makeup because you're adding shading. Keep the same identity — just render it with more lines."
-}
-
-FIDELITY — strict (applies to all detail levels):
-- Replicate only what is visibly present in the source image; do NOT invent, add, extend, or interpret anything not clearly there
-- Do NOT complete, correct, or clean up the subject — keep it exactly as shown
-- NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color. The PUPIL in particular must be a hollow circle outline only — never filled black, never solid. The IRIS must be a hollow outline only — never filled or shaded solid.
-- CRITICAL for dark/high-contrast references (black backgrounds, dark makeup, stylized fashion photos): ignore the dark background completely — do not reproduce it as black. The background of the stencil is ALWAYS pure white. NEVER invert the image. NEVER trace silhouettes as solid black shapes just because the source photo has dark regions. Every dark region in the source must be represented by LINE WORK only (outlines + dotted shading guides), not filled black.
-- PRESERVE ORIGINAL POSE AND ORIENTATION EXACTLY: subject's head tilt, facing direction, gaze direction, and framing must match the source image. Do NOT rotate, mirror, re-center, re-crop, or re-pose the subject. Do NOT change the subject's identity, face shape, hair style, or visible adornments (crowns, makeup, jewelry) — replicate them as drawn line work.
-- ONE SUBJECT ONLY, EXACTLY AS FRAMED: Output the subject exactly once, in the same position and framing as the source image. Do NOT duplicate, mirror, tile, or create multiple variants of the subject side-by-side. Do NOT lay out the subject in a grid, flash-sheet, before/after, or any multi-panel arrangement. The stencil has exactly one instance of the subject filling the frame, same as the reference.
-- PRESERVE FACIAL FEATURES AS DRAWN: if the source has face paint, makeup, scars, war paint, skull makeup, tattoos, or any visible marking on the skin — these MUST be drawn as outlines/markings in the stencil. Do NOT replace them with a clean unpainted face. Skull makeup in particular: trace the white/black makeup boundaries as line work.
-- EYELASHES must be drawn as individual fine hair strokes with the thinnest possible line weight — never a thick continuous band or heavy shadow along the lash line. Each lash is a delicate separate hair.
-- NO crosshatching or sketch-style shading
-- LINE WEIGHT (applies to all detail levels — extremely important for readable tattoo transfer):
-  • This rule applies ONLY to CONTINUOUS SOLID LINES — it does NOT apply to DOTTED or DASHED shading guides. Dots/dashes must stay at normal, clearly visible weight so they read on skin — do NOT shrink the dots.
-  • This rule is about STROKE THICKNESS ONLY — it does NOT reduce the NUMBER, DENSITY, or COUNT of marks, dots, or contour lines. Keep the full amount of detail called for by the DETAIL LEVEL above; just draw continuous lines thinner.
-  • Use the THINNEST possible fine SOLID-LINE weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker solid lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines
-  • Use the THINNEST possible fine SOLID-LINE weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette; hair strands packed close together must remain clearly individual and not merge into each other
-  • Main subject silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold
-  • Dotted/dashed shading guides on cheeks, jawline, brow ridges, nose bridge, under the eyes, lip volumes, and hair light-to-dark transitions keep their normal visible dot size — only the SOLID lines get thinner.
-
-DETAIL PLACEMENT AND LIGHTING LOGIC (applies universally, strongest in HIGH DEF):
-- Detail must NOT be distributed evenly across the subject.
-- Texture and line density must follow LIGHT, not just form.
-- In areas where the source image shows BRIGHT HIGHLIGHTS (where light reflects):
-  → use MORE fine line detail and strand definition
-  → hair/fur should show the MOST individual strands in these regions
-- In areas where the source image falls into SHADOW:
-  → REDUCE line density significantly
-  → simplify into clean mass shapes with minimal internal lines
-  → DO NOT fill shadow areas with dense texture lines
-- Hair and fur must NOT be uniformly filled with strands across the entire form.
-  → uneven density is REQUIRED to correctly represent lighting
-
-DOTTED LINE USAGE (STRICT):
-- Dotted or dashed lines are ONLY for marking AREA TRANSITIONS between light and shadow.
-- Dotted lines must:
-  → follow the boundary between light and dark regions (like contour levels)
-  → describe SHAPE transitions, not texture flow
-- Dotted lines must NOT:
-  → follow hair strand direction
-  → be used to simulate hair texture
-  → be placed inside highlight regions
-- Hair/fur texture = fine SOLID lines.
-- Lighting transitions = DOTTED lines.
-- These are separate systems and must NEVER be mixed in the same region.
-
-FACIAL FEATURE CLARITY:
-- Eyes, iris, pupils, eyelids, and lips must remain ultra-clean and readable.
-- Do NOT stack multiple lines close together in small facial areas.
-- Preserve structure using minimal, precise micro-lines only.
-
-OVERALL GOAL — the stencil must read like intentional tattoo linework:
-- light reveals detail
-- shadow simplifies form
-- dots guide shading placement
-- line density is controlled and purposeful, never uniform
-
-Style: Professional tattoo stencil suitable for thermal transfer paper"""
-
-        
         image_base64 = None
         mime_type = 'image/png'
         # === EXPERIMENTAL: inject image-specific pre-scan rules if provided ===
@@ -2379,85 +2380,8 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
         else:
             detail_level = "detailed"
         
-        # Create the prompt - Feb 16 baseline + strict fidelity rules
-        prompt = f"""Transform this image into a professional tattoo stencil drawing.
-
-CRITICAL REQUIREMENTS:
-1. Create clean, smooth, continuous lines - NO noise or scattered marks
-2. Use purple/violet colored lines on a pure white background
-3. Draw like a skilled tattoo artist would hand-draw a stencil:
-   - Main outline contours with solid, confident lines
-   - Inner detail lines for important features
-   - Use dotted or dashed lines to indicate shading/contour areas where the tattoo artist would add shading
-4. Simplify the image - remove unnecessary details, keep only the essential form
-5. Lines should be bold enough to transfer clearly to skin
-6. The output should look like a professional tattoo stencil/blueprint
-7. NO grayscale shading - only line work
-8. Ensure all lines are connected and flowing, not broken or pixelated
-
-DETAIL LEVEL: {detail_level.upper()}
-{
-"- Minimal detail (LOW FIDELITY — 'The Bones'): A clean, simple line-drawing of the subject. Include ALL main outlines of every element visibly present (face, eyes/nose/mouth, eyebrows, hair silhouette, braid outlines, crown/antlers, and the outlines of any face paint or makeup patterns on the skin). OMIT: individual hair strands, interior hair texture lines, fabric weave, ALL dotted/dashed shading guides (on the face, on the hair, anywhere), and all interior contour guides that describe tonal transitions. Low Fidelity should feel like the cleanest possible line-art outline of the subject — no shading of any kind. ALL visible features of the subject must still be present — you are simplifying the shading, not the subject." if detail_level == "minimal" else
-"- Moderate detail (MID-RANGE — 'Form & Shape'): Everything from Low Fidelity PLUS some key interior contour lines where they meaningfully help a tattoo artist see the form (major face plane breaks, jawline shading hints, nose bridge, main hair flow direction via a few flowing lines, key folds in clothing). Clean and uncluttered, but clearly MORE detailed than Low. NO dense shading dots, NO full hair texture, NO light-to-dark dotted transition guides — those belong to Heavy." if detail_level == "moderate" else
-"- Maximum detail (HIGH DEF — 'Full Detail'): Everything from Mid-Range PLUS full shading guides. Add ALL visible interior contours, AND dotted/dashed shading guides on every significant form (cheeks, jawline, brow ridges, nose bridge, lip volumes, collarbone, clothing folds, fabric wrinkles). When hair is present, read the FULL hair texture with MANY flowing directional lines across its entire form. Then, use DOTTED LINES to mark the hair's light-to-dark transitions — trace the boundary wherever a bright highlight region meets a darker shadow region in the hair (where light bounces off vs. where it falls into shadow). Treat these dotted lines like topographic contour lines that describe the tonal/lighting levels in the hair, showing the artist exactly where contrast shifts occur. Heavy must be visibly DENSER than Moderate with more individual marks and more interior contour detail — never less. CRITICAL: adding more detail does NOT mean re-interpreting the reference. The pose, framing, gaze direction, head tilt, hair style (braided/loose/etc.), face paint, makeup, crowns, and every other visible element must stay EXACTLY as they appear in the source. Every extra mark must describe something already present; do NOT swap braided dreads for loose hair, do NOT rotate the face to front-facing, do NOT soften or omit skull makeup because you're adding shading. Keep the same identity — just render it with more lines."
-}
-
-FIDELITY — strict (applies to all detail levels):
-- Replicate only what is visibly present in the source image; do NOT invent, add, extend, or interpret anything not clearly there
-- Do NOT complete, correct, or clean up the subject — keep it exactly as shown
-- NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color. The PUPIL in particular must be a hollow circle outline only — never filled black, never solid. The IRIS must be a hollow outline only — never filled or shaded solid.
-- CRITICAL for dark/high-contrast references (black backgrounds, dark makeup, stylized fashion photos): ignore the dark background completely — do not reproduce it as black. The background of the stencil is ALWAYS pure white. NEVER invert the image. NEVER trace silhouettes as solid black shapes just because the source photo has dark regions. Every dark region in the source must be represented by LINE WORK only (outlines + dotted shading guides), not filled black.
-- PRESERVE ORIGINAL POSE AND ORIENTATION EXACTLY: subject's head tilt, facing direction, gaze direction, and framing must match the source image. Do NOT rotate, mirror, re-center, re-crop, or re-pose the subject. Do NOT change the subject's identity, face shape, hair style, or visible adornments (crowns, makeup, jewelry) — replicate them as drawn line work.
-- ONE SUBJECT ONLY, EXACTLY AS FRAMED: Output the subject exactly once, in the same position and framing as the source image. Do NOT duplicate, mirror, tile, or create multiple variants of the subject side-by-side. Do NOT lay out the subject in a grid, flash-sheet, before/after, or any multi-panel arrangement. The stencil has exactly one instance of the subject filling the frame, same as the reference.
-- PRESERVE FACIAL FEATURES AS DRAWN: if the source has face paint, makeup, scars, war paint, skull makeup, tattoos, or any visible marking on the skin — these MUST be drawn as outlines/markings in the stencil. Do NOT replace them with a clean unpainted face. Skull makeup in particular: trace the white/black makeup boundaries as line work.
-- EYELASHES must be drawn as individual fine hair strokes with the thinnest possible line weight — never a thick continuous band or heavy shadow along the lash line. Each lash is a delicate separate hair.
-- NO crosshatching or sketch-style shading
-- LINE WEIGHT (applies to all detail levels — extremely important for readable tattoo transfer):
-  • This rule applies ONLY to CONTINUOUS SOLID LINES — it does NOT apply to DOTTED or DASHED shading guides. Dots/dashes must stay at normal, clearly visible weight so they read on skin — do NOT shrink the dots.
-  • This rule is about STROKE THICKNESS ONLY — it does NOT reduce the NUMBER, DENSITY, or COUNT of marks, dots, or contour lines. Keep the full amount of detail called for by the DETAIL LEVEL above; just draw continuous lines thinner.
-  • Use the THINNEST possible fine SOLID-LINE weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker solid lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines
-  • Use the THINNEST possible fine SOLID-LINE weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette; hair strands packed close together must remain clearly individual and not merge into each other
-  • Main subject silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold
-  • Dotted/dashed shading guides on cheeks, jawline, brow ridges, nose bridge, under the eyes, lip volumes, and hair light-to-dark transitions keep their normal visible dot size — only the SOLID lines get thinner.
-
-DETAIL PLACEMENT AND LIGHTING LOGIC (applies universally, strongest in HIGH DEF):
-- Detail must NOT be distributed evenly across the subject.
-- Texture and line density must follow LIGHT, not just form.
-- In areas where the source image shows BRIGHT HIGHLIGHTS (where light reflects):
-  → use MORE fine line detail and strand definition
-  → hair/fur should show the MOST individual strands in these regions
-- In areas where the source image falls into SHADOW:
-  → REDUCE line density significantly
-  → simplify into clean mass shapes with minimal internal lines
-  → DO NOT fill shadow areas with dense texture lines
-- Hair and fur must NOT be uniformly filled with strands across the entire form.
-  → uneven density is REQUIRED to correctly represent lighting
-
-DOTTED LINE USAGE (STRICT):
-- Dotted or dashed lines are ONLY for marking AREA TRANSITIONS between light and shadow.
-- Dotted lines must:
-  → follow the boundary between light and dark regions (like contour levels)
-  → describe SHAPE transitions, not texture flow
-- Dotted lines must NOT:
-  → follow hair strand direction
-  → be used to simulate hair texture
-  → be placed inside highlight regions
-- Hair/fur texture = fine SOLID lines.
-- Lighting transitions = DOTTED lines.
-- These are separate systems and must NEVER be mixed in the same region.
-
-FACIAL FEATURE CLARITY:
-- Eyes, iris, pupils, eyelids, and lips must remain ultra-clean and readable.
-- Do NOT stack multiple lines close together in small facial areas.
-- Preserve structure using minimal, precise micro-lines only.
-
-OVERALL GOAL — the stencil must read like intentional tattoo linework:
-- light reveals detail
-- shadow simplifies form
-- dots guide shading placement
-- line density is controlled and purposeful, never uniform
-
-Style: Professional tattoo stencil suitable for thermal transfer paper"""
+        # Blueprint Mode — line-only stencil for a human artist (async job path)
+        prompt = build_blueprint_prompt("purple/violet", detail_level)
 
         # Generate using Gemini
         result_base64, mime_type = await generate_with_gemini(image_data, prompt)
@@ -5595,6 +5519,16 @@ async def prompt_preview_prescan_page():
     raise HTTPException(status_code=404, detail="Preview page not found")
 
 
+@api_router.get("/blueprint-mode")
+async def blueprint_mode_page():
+    """Live preview of Blueprint Mode output for skull + lion references."""
+    html_path = "/app/backend/static/blueprint_mode.html"
+    if os.path.exists(html_path):
+        with open(html_path, 'r') as f:
+            return HTMLResponse(content=f.read())
+    raise HTTPException(status_code=404, detail="Preview page not found")
+
+
 @api_router.get("/prompt-preview-lion")
 async def prompt_preview_lion_page():
     html_path = "/app/backend/static/prompt_preview_lion.html"
@@ -5628,6 +5562,8 @@ async def prompt_preview_asset(filename: str):
         'prescan_skull_after_a.png', 'prescan_skull_after_b.png',
         'prescan_lion_before_a.png', 'prescan_lion_before_b.png',
         'prescan_lion_after_a.png', 'prescan_lion_after_b.png',
+        'blueprint_skull_light.png', 'blueprint_skull_heavy.png',
+        'blueprint_lion_light.png', 'blueprint_lion_heavy.png',
     }
     if filename not in allowed:
         raise HTTPException(status_code=404, detail="Not found")

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Blueprint Mode — Live</title>
+<style>
+body{font-family:-apple-system,system-ui,sans-serif;background:#0a0a0a;color:#e7e2d4;margin:0;padding:24px;max-width:1400px;margin:0 auto}
+h1{color:#c9a227;margin:0 0 6px;letter-spacing:.4px}
+.note{color:#9ca3af;font-size:14px;margin-bottom:24px;line-height:22px}
+.spec{background:#111;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:14px 16px;margin-bottom:28px;font-size:13px;line-height:21px;color:#c9c4b4}
+.spec b{color:#c9a227}
+.spec ul{margin:6px 0 0 0;padding-left:20px}
+.spec li{margin-bottom:3px}
+section{margin-bottom:40px}
+h2{color:#c9a227;font-size:18px;margin:24px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.panel{background:#151515;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:12px}
+.panel h3{margin:0 0 8px;color:#c9a227;font-size:13px;letter-spacing:.4px}
+.panel img{width:100%;background:white;border-radius:6px;display:block}
+.panel p{color:#9ca3af;font-size:11px;line-height:17px;margin:8px 0 0}
+.panel.pre h3{color:#d9a275}
+.panel.bp h3{color:#7CC98E}
+@media(max-width:1100px){.grid{grid-template-columns:1fr 1fr}}
+</style></head>
+<body>
+<h1>Blueprint Mode — Live Output</h1>
+<p class="note">This is the new default production prompt. No flags, no pre-scan — every stencil generated through <code>/api/ai-stencil</code> and <code>/api/process_stencil_job</code> now follows Blueprint Mode.</p>
+
+<div class="spec">
+  <b>Blueprint Mode rules:</b>
+  <ul>
+    <li><b>Zero fills</b> — no solid black, no gray, no filled regions anywhere. Every dark region in the reference is rendered as a contour.</li>
+    <li><b>Line-only output</b> — lines describe structure, not shading.</li>
+    <li><b>3-tier line weight hierarchy</b> — PRIMARY (silhouette + major contours) / SECONDARY (internal features) / TERTIARY (texture + fine detail). Visibly distinct.</li>
+    <li><b>Blueprint purpose</b> — a guide for a human tattoo artist. The artist decides shading on skin. The AI does not interpret lighting into fills or dotted shading guides.</li>
+    <li><b>Readability</b> — clear at thermofax print size, no clutter.</li>
+  </ul>
+  <br>
+  <b>Removed:</b> all fill logic, shadow interpretation, dotted-line shading guides, lighting-density rules, dark-region dotted transitions, crosshatching. Pre-scan is <i>not</i> wired into production.
+</div>
+
+<section>
+<h2>Skull Makeup Woman</h2>
+<div class="grid">
+  <div class="panel"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait3.jpg"/><p>Face paint, antler crown, braided dreads, dark background.</p></div>
+  <div class="panel pre"><h3>Old prompt — Heavy</h3><img src="/api/prompt-preview-asset/stencil_heavy_skull.png"/><p>Previous production prompt with dotted shading guides, lighting interpretation.</p></div>
+  <div class="panel bp"><h3>Blueprint Mode — Light</h3><img src="/api/prompt-preview-asset/blueprint_skull_light.png"/><p>PRIMARY + SECONDARY tiers only. No TERTIARY texture.</p></div>
+  <div class="panel bp"><h3>Blueprint Mode — Heavy</h3><img src="/api/prompt-preview-asset/blueprint_skull_heavy.png"/><p>All three tiers. Line-only. No fills.</p></div>
+</div>
+</section>
+
+<section>
+<h2>Roaring Lion + Thorn Crown</h2>
+<div class="grid">
+  <div class="panel"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait4.jpg"/><p>Textured mane, thorn crown, open mouth with fangs, scar.</p></div>
+  <div class="panel pre"><h3>Old prompt — Heavy</h3><img src="/api/prompt-preview-asset/stencil_heavy_lion.png"/><p>Previous production prompt.</p></div>
+  <div class="panel bp"><h3>Blueprint Mode — Light</h3><img src="/api/prompt-preview-asset/blueprint_lion_light.png"/><p>PRIMARY + SECONDARY tiers only.</p></div>
+  <div class="panel bp"><h3>Blueprint Mode — Heavy</h3><img src="/api/prompt-preview-asset/blueprint_lion_heavy.png"/><p>All three tiers. Line-only. No fills.</p></div>
+</div>
+</section>
+
+<p class="note" style="margin-top:32px">These Blueprint outputs are straight from <code>/api/ai-stencil</code> at <code>temperature=0</code>, same endpoint the iOS app hits. What you see here is what an artist will see in their app.</p>
+
+</body></html>
