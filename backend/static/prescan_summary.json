@@ -1,0 +1,14 @@
+[
+  {
+    "label": "skull",
+    "classification": {
+      "category": "portrait"
+    }
+  },
+  {
+    "label": "lion",
+    "classification": {
+      "category": "animal"
+    }
+  }
+]
