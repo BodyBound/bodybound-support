@@ -2076,8 +2076,12 @@ async def generate_ai_stencil(request: AIStencilRequest):
         cache_style = request.regenerate_style or f"shading_{request.shading_detail}"
         
         # === STEP 1: Check cache first for instant results ===
+        # IMPORTANT: when this call is an explicit regeneration (regenerate_style
+        # is set), we SKIP the cache entirely so the user gets a genuinely new
+        # result each time they reroll. The cache only helps first-time generation
+        # where a user might upload the same photo twice in a session.
         cache_key = get_cache_key(request.image_base64, cache_style)
-        cached_result = get_cached_stencil(cache_key)
+        cached_result = get_cached_stencil(cache_key) if not request.regenerate_style else None
         if cached_result:
             logger.info(f"[AI-Stencil] Cache HIT - returning cached result in {(time.time() - start_time) * 1000:.0f}ms")
             return AIStencilResponse(
@@ -3356,6 +3360,30 @@ async def deduct_credit(request: FastAPIRequest):
             'is_studio_team': True,
         }
 
+    # Regular individual credit deduction
+    # Also increments `credits_consumed_this_cycle` — used by the Walk-In upsell
+    # banner to decide when to soft-prompt an upgrade.
+    result = await db.subscriptions.find_one_and_update(
+        {'user_id': user_id, 'available_credits': {'$gt': 0}},
+        {
+            '$inc': {
+                'available_credits': -1,
+                'credits_consumed_this_cycle': 1,
+            },
+        },
+        return_document=True,
+        projection={'_id': 0}
+    )
+    if not result:
+        raise HTTPException(status_code=402, detail='Insufficient credits')
+    tier = result.get('tier', '')
+    TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500, 'referral_premium': 125}
+    return {
+        'available_credits': result['available_credits'],
+        'total_monthly_credits': TIER_CREDITS_MAP.get(tier, 0),
+        'tier': tier,
+    }
+
 # ---- Walk-In behavioral upsell tracking ----
 
 async def _log_upsell_event(user_id: str, event: str, cycle_key: Optional[str]):
@@ -3409,29 +3437,96 @@ async def upsell_walkin_cta_tapped(request: FastAPIRequest):
     return {'status': 'ok'}
 
 
-    # Regular individual credit deduction
-    # Also increments `credits_consumed_this_cycle` — used by the Walk-In upsell
-    # banner to decide when to soft-prompt an upgrade.
-    result = await db.subscriptions.find_one_and_update(
-        {'user_id': user_id, 'available_credits': {'$gt': 0}},
-        {
-            '$inc': {
-                'available_credits': -1,
-                'credits_consumed_this_cycle': 1,
-            },
-        },
-        return_document=True,
-        projection={'_id': 0}
-    )
-    if not result:
-        raise HTTPException(status_code=402, detail='Insufficient credits')
-    tier = result.get('tier', '')
-    TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500, 'referral_premium': 125}
-    return {
-        'available_credits': result['available_credits'],
-        'total_monthly_credits': TIER_CREDITS_MAP.get(tier, 0),
-        'tier': tier,
+# ---- Stencil Quality Ratings (thumbs up / down) ----
+
+class StencilRatingRequest(BaseModel):
+    style: str = Field(..., description="light | medium | heavy")
+    rating: str = Field(..., description="up | down")
+    stencil_hash: Optional[str] = Field(default=None, description="Optional hash/id of the stencil image for dedupe")
+    prompt_version: Optional[str] = Field(default=None, description="Optional tag for which prompt produced this stencil")
+
+
+@api_router.post("/stencil-rating")
+async def submit_stencil_rating(payload: StencilRatingRequest, request: FastAPIRequest):
+    """Submit a thumbs up/down rating for a generated stencil.
+
+    Anonymous-friendly: if no auth header, `user_id` is stored as None. This is an
+    intentionally low-friction feedback pipe — no PII, no comments, just signal.
+    """
+    if payload.style not in {"light", "medium", "heavy"}:
+        raise HTTPException(status_code=400, detail="style must be light|medium|heavy")
+    if payload.rating not in {"up", "down"}:
+        raise HTTPException(status_code=400, detail="rating must be up|down")
+
+    user_id: Optional[str] = None
+    auth = request.headers.get('authorization', '')
+    token = auth.replace('Bearer ', '') if auth else ''
+    if token:
+        try:
+            decoded = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+            user_id = decoded.get('user_id')
+        except Exception:
+            user_id = None
+
+    doc = {
+        'user_id': user_id,
+        'style': payload.style,
+        'rating': payload.rating,
+        'stencil_hash': payload.stencil_hash,
+        'prompt_version': payload.prompt_version,
+        'created_at': datetime.now(timezone.utc).isoformat(),
     }
+    await db.stencil_ratings.insert_one(doc)
+    logger.info(f"[StencilRating] user={user_id} style={payload.style} rating={payload.rating}")
+    return {'status': 'ok'}
+
+
+@api_router.get("/admin/stencil-ratings")
+async def admin_stencil_ratings(request: FastAPIRequest):
+    """Admin dashboard view: aggregated thumbs-up/down counts per style + recent ratings."""
+    await verify_admin(request.headers.get('authorization'))
+
+    # Aggregate counts per style × rating
+    pipeline = [
+        {'$group': {
+            '_id': {'style': '$style', 'rating': '$rating'},
+            'count': {'$sum': 1},
+        }}
+    ]
+    agg_rows = [row async for row in db.stencil_ratings.aggregate(pipeline)]
+    summary: dict = {
+        'light': {'up': 0, 'down': 0},
+        'medium': {'up': 0, 'down': 0},
+        'heavy': {'up': 0, 'down': 0},
+    }
+    for row in agg_rows:
+        style = row['_id'].get('style')
+        rating = row['_id'].get('rating')
+        if style in summary and rating in ('up', 'down'):
+            summary[style][rating] = int(row['count'])
+
+    total_up = sum(s['up'] for s in summary.values())
+    total_down = sum(s['down'] for s in summary.values())
+    total = total_up + total_down
+
+    # Recent 50 ratings (no _id, latest first)
+    recent_cursor = db.stencil_ratings.find({}, {'_id': 0}).sort('created_at', -1).limit(50)
+    recent = [doc async for doc in recent_cursor]
+
+    return {
+        'summary': summary,
+        'totals': {
+            'up': total_up,
+            'down': total_down,
+            'total': total,
+            'satisfaction_pct': round((total_up / total) * 100, 1) if total else None,
+        },
+        'recent': recent,
+    }
+
+
+
+
 @api_router.post("/credits/emergency-stencil")
 async def claim_emergency_stencil(request: FastAPIRequest):
     """One-time monthly Emergency Stencil fallback.

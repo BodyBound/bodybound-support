@@ -42,6 +42,7 @@ import Purchases from 'react-native-purchases';
 import * as Device from 'expo-device';
 import { styles } from './styles/mainStyles';
 import { StencilSettings, SavedStencil, StencilListItem, User, UserCredits } from './types';
+import { regenerateStencil, deductCredit, submitStencilRating, regenCostLabel, isFreeRegen, type StencilStyle } from './lib/stencilApi';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { AuthScreen } from './screens/AuthScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -355,6 +356,31 @@ export default function Index() {
   const [stylesGenerated, setStylesGenerated] = useState<Set<string>>(new Set());
   const [freeStyleChangeUsed, setFreeStyleChangeUsed] = useState(false);
   const [freeRegenUsed, setFreeRegenUsed] = useState<Set<string>>(new Set());
+
+  // Per-style thumbs up/down rating (local; submitted to backend on tap).
+  // Resets when user clears workspace or regenerates a style (fresh stencil = fresh rating).
+  const [stencilRatings, setStencilRatings] = useState<{ [k: string]: 'up' | 'down' }>({});
+  const rateStencil = async (style: 'light' | 'medium' | 'heavy', rating: 'up' | 'down') => {
+    // Toggle off if tapping the same button again
+    const current = stencilRatings[style];
+    const next: 'up' | 'down' | undefined = current === rating ? undefined : rating;
+    setStencilRatings(prev => {
+      const copy = { ...prev };
+      if (next) copy[style] = next; else delete copy[style];
+      return copy;
+    });
+    if (!next) return; // toggled off — don't POST; keeps pipe simple
+    try {
+      await submitStencilRating({
+        apiUrl: API_URL,
+        style: style as StencilStyle,
+        rating: next,
+        sessionToken: sessionToken || undefined,
+      });
+    } catch (e) {
+      console.error('[Rating] submit failed (non-blocking):', e);
+    }
+  };
   
   // Stencil history per style: allows back/forward navigation between generations
   const [stencilHistory, setStencilHistory] = useState<{ [key: string]: string[] }>({ light: [], medium: [], heavy: [] });
@@ -1480,20 +1506,33 @@ export default function Index() {
     if (!originalImage || regeneratingStyle) return;
 
     // Check if this regenerate is free (first regen per style)
-    const isFirstRegen = !freeRegenUsed.has(style);
-    
-    if (!isFirstRegen) {
-      // Not free — check credits
+    const free = isFreeRegen(style, freeRegenUsed);
+
+    if (!free) {
+      // Not free — must have credits
       if (currentUser && availableCredits <= 0) {
         setLowCreditLevel('empty');
         setShowLowCreditModal(true);
         return;
       }
+      // Always confirm paid rerolls — user explicitly requested "no silent credit usage"
+      const confirmed = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          'Reroll will cost 1 credit',
+          `You have ${availableCredits} credit${availableCredits === 1 ? '' : 's'} left. Generate a new ${style} stencil for 1 credit?`,
+          [
+            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Use 1 Credit', style: 'default', onPress: () => resolve(true) },
+          ],
+          { cancelable: true, onDismiss: () => resolve(false) },
+        );
+      });
+      if (!confirmed) return;
     }
-    
+
     try {
       setRegeneratingStyle(style);
-      
+
       // Get base64 from original image
       let imageBase64 = originalImage;
       if (!imageBase64.startsWith('data:')) {
@@ -1502,64 +1541,44 @@ export default function Index() {
         });
         imageBase64 = `data:image/jpeg;base64,${base64Data}`;
       }
-      
-      const base64Part = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-      
-      console.log(`[RegenerateSingle] Regenerating ${style} version...`);
-      
-      const response = await fetch(`${API_URL}/api/ai-stencil`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image_base64: imageBase64,
-          style: 'tattoo',
-          line_color: 'black',
-          shading_detail: style === 'light' ? 5 : style === 'medium' ? 30 : 50,
-          solid_fill: style === 'heavy' ? 30 : 0,
-          regenerate_style: style,
-        }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`[RegenerateSingle] ${style} version regenerated successfully`);
-        
-        // Update only this style in stencilVersions
-        setStencilVersions(prev => ({
-          ...prev,
-          [style]: data.stencil_base64
-        }));
-        
-        // Auto-select the regenerated style
-        setSelectedVersion(style);
-        setStencilImage(data.stencil_base64);
-        addToHistory(style, data.stencil_base64);
 
-        // Deduct 1 credit for successful regeneration (skip if first free regen)
-        if (isFirstRegen) {
-          console.log(`[Credits] Free regenerate used for ${style}`);
-          setFreeRegenUsed(prev => new Set(prev).add(style));
-        } else if (sessionToken && currentUser) {
-          try {
-            const deductResp = await fetch(`${API_URL}/api/credits/deduct`, {
-              method: 'POST',
-              headers: { 'Authorization': `Bearer ${sessionToken}`, 'Content-Type': 'application/json' },
-            });
-            if (deductResp.ok) {
-              const d = await deductResp.json();
-              handleCreditsUpdate(d.available_credits, d.total_monthly_credits || totalMonthlyCredits);
-              checkCreditThreshold(d.available_credits, d.total_monthly_credits || totalMonthlyCredits);
-            }
-          } catch (e) { console.error('[Credits] Regenerate deduction failed:', e); }
-        }
-      } else {
-        const errorText = await response.text();
-        console.error(`[RegenerateSingle] ${style} version error:`, errorText);
-        Alert.alert('Regeneration Failed', `Could not regenerate ${style} version. Please try again.`);
+      console.log(`[RegenerateSingle] Regenerating ${style} version (${free ? 'FREE' : 'PAID'})...`);
+
+      const { stencilBase64 } = await regenerateStencil({
+        apiUrl: API_URL,
+        imageBase64,
+        style: style as StencilStyle,
+      });
+      console.log(`[RegenerateSingle] ${style} version regenerated successfully`);
+
+      // Update only this style in stencilVersions
+      setStencilVersions(prev => ({ ...prev, [style]: stencilBase64 }));
+
+      // Auto-select the regenerated style
+      setSelectedVersion(style);
+      setStencilImage(stencilBase64);
+      addToHistory(style, stencilBase64);
+      // Clear any prior rating on this style — this is a fresh stencil
+      setStencilRatings(prev => {
+        const next = { ...prev };
+        delete next[style];
+        return next;
+      });
+
+      // Deduct 1 credit for successful regeneration (skip if first free regen)
+      if (free) {
+        console.log(`[Credits] Free regenerate used for ${style}`);
+        setFreeRegenUsed(prev => new Set(prev).add(style));
+      } else if (sessionToken && currentUser) {
+        try {
+          const d = await deductCredit(API_URL, sessionToken);
+          handleCreditsUpdate(d.available_credits, d.total_monthly_credits || totalMonthlyCredits);
+          checkCreditThreshold(d.available_credits, d.total_monthly_credits || totalMonthlyCredits);
+        } catch (e) { console.error('[Credits] Regenerate deduction failed:', e); }
       }
     } catch (error: any) {
       console.error(`Error regenerating ${style} version:`, error);
-      Alert.alert('Connection Issue', 'Failed to regenerate. Please check your internet connection.');
+      Alert.alert('Regeneration Failed', `Could not regenerate ${style} version. Please try again.`);
     } finally {
       setRegeneratingStyle(null);
     }
@@ -2615,6 +2634,7 @@ export default function Index() {
     setStylesGenerated(new Set());
     setFreeStyleChangeUsed(false);
     setFreeRegenUsed(new Set());
+    setStencilRatings({});
     setSelectedVersion('medium');
     setRegeneratingStyle(null);
     setShowingOriginal(false);
@@ -3601,6 +3621,7 @@ export default function Index() {
     setStylesGenerated(new Set());
     setFreeStyleChangeUsed(false);
     setFreeRegenUsed(new Set());
+    setStencilRatings({});
     setStencilHistory({ light: [], medium: [], heavy: [] });
     setStencilHistoryIndex({ light: 0, medium: 0, heavy: 0 });
     setSettings({
@@ -4130,6 +4151,34 @@ export default function Index() {
                   </TouchableOpacity>
                 </View>
               )}
+              {stencilVersions.light && (
+                <>
+                  <Text
+                    testID="reroll-cost-light"
+                    style={[styles.rerollCostLabel, isFreeRegen('light', freeRegenUsed) ? styles.rerollCostFree : styles.rerollCostPaid]}
+                  >
+                    {regenCostLabel('light', freeRegenUsed)}
+                  </Text>
+                  <View style={styles.ratingRow} testID="rating-row-light">
+                    <TouchableOpacity
+                      testID="rating-light-up"
+                      style={[styles.ratingButton, stencilRatings.light === 'up' && styles.ratingButtonActiveUp]}
+                      onPress={() => rateStencil('light', 'up')}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="thumbs-up" size={14} color={stencilRatings.light === 'up' ? '#7CC98E' : '#888'} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      testID="rating-light-down"
+                      style={[styles.ratingButton, stencilRatings.light === 'down' && styles.ratingButtonActiveDown]}
+                      onPress={() => rateStencil('light', 'down')}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="thumbs-down" size={14} color={stencilRatings.light === 'down' ? '#d97575' : '#888'} />
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
               </View>
               
               {/* MID-RANGE Button */}
@@ -4193,6 +4242,34 @@ export default function Index() {
                   </TouchableOpacity>
                 </View>
               )}
+              {stencilVersions.medium && (
+                <>
+                  <Text
+                    testID="reroll-cost-medium"
+                    style={[styles.rerollCostLabel, isFreeRegen('medium', freeRegenUsed) ? styles.rerollCostFree : styles.rerollCostPaid]}
+                  >
+                    {regenCostLabel('medium', freeRegenUsed)}
+                  </Text>
+                  <View style={styles.ratingRow} testID="rating-row-medium">
+                    <TouchableOpacity
+                      testID="rating-medium-up"
+                      style={[styles.ratingButton, stencilRatings.medium === 'up' && styles.ratingButtonActiveUp]}
+                      onPress={() => rateStencil('medium', 'up')}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="thumbs-up" size={14} color={stencilRatings.medium === 'up' ? '#7CC98E' : '#888'} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      testID="rating-medium-down"
+                      style={[styles.ratingButton, stencilRatings.medium === 'down' && styles.ratingButtonActiveDown]}
+                      onPress={() => rateStencil('medium', 'down')}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="thumbs-down" size={14} color={stencilRatings.medium === 'down' ? '#d97575' : '#888'} />
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
               </View>
               
               {/* HIGH DEF Button */}
@@ -4255,6 +4332,34 @@ export default function Index() {
                     <Text style={styles.styleHistoryArrowText}>▶</Text>
                   </TouchableOpacity>
                 </View>
+              )}
+              {stencilVersions.heavy && (
+                <>
+                  <Text
+                    testID="reroll-cost-heavy"
+                    style={[styles.rerollCostLabel, isFreeRegen('heavy', freeRegenUsed) ? styles.rerollCostFree : styles.rerollCostPaid]}
+                  >
+                    {regenCostLabel('heavy', freeRegenUsed)}
+                  </Text>
+                  <View style={styles.ratingRow} testID="rating-row-heavy">
+                    <TouchableOpacity
+                      testID="rating-heavy-up"
+                      style={[styles.ratingButton, stencilRatings.heavy === 'up' && styles.ratingButtonActiveUp]}
+                      onPress={() => rateStencil('heavy', 'up')}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="thumbs-up" size={14} color={stencilRatings.heavy === 'up' ? '#7CC98E' : '#888'} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      testID="rating-heavy-down"
+                      style={[styles.ratingButton, stencilRatings.heavy === 'down' && styles.ratingButtonActiveDown]}
+                      onPress={() => rateStencil('heavy', 'down')}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Ionicons name="thumbs-down" size={14} color={stencilRatings.heavy === 'down' ? '#d97575' : '#888'} />
+                    </TouchableOpacity>
+                  </View>
+                </>
               )}
               </View>
             </View>

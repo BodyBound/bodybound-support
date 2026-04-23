@@ -1064,6 +1064,46 @@ export const styles = StyleSheet.create({
     minWidth: 24,
     textAlign: 'center',
   },
+  // Reroll cost hint shown below a style button. "Free reroll" = green, "1 credit" = gold.
+  rerollCostLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 3,
+    letterSpacing: 0.3,
+  },
+  rerollCostFree: {
+    color: '#7CC98E',
+  },
+  rerollCostPaid: {
+    color: '#C9A227',
+  },
+  // Inline thumbs up/down row beneath each style button.
+  ratingRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 4,
+  },
+  ratingButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: '#333',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ratingButtonActiveUp: {
+    backgroundColor: '#1f3b22',
+    borderColor: '#7CC98E',
+  },
+  ratingButtonActiveDown: {
+    backgroundColor: '#3b1f1f',
+    borderColor: '#d97575',
+  },
   regenHintText: {
     color: '#C9A227',
     fontSize: 11,

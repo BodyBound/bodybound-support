@@ -133,6 +133,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <div class="card-title">Recent Key Failures</div>
 <div id="d-recent-failures"><span class="stat-label">Loading...</span></div>
 </div>
+<div class="card">
+<div class="card-title">Stencil Quality (Thumbs)</div>
+<div class="stat-row"><span class="stat-label">Satisfaction</span><span class="stat-value gold" id="sr-sat">-</span></div>
+<div class="stat-row"><span class="stat-label">Total Ratings</span><span class="stat-value" id="sr-total">-</span></div>
+<div class="stat-row"><span class="stat-label">Light &nbsp;👍 / 👎</span><span class="stat-value" id="sr-light">-</span></div>
+<div class="stat-row"><span class="stat-label">Medium &nbsp;👍 / 👎</span><span class="stat-value" id="sr-medium">-</span></div>
+<div class="stat-row"><span class="stat-label">Heavy &nbsp;👍 / 👎</span><span class="stat-value" id="sr-heavy">-</span></div>
+</div>
 </div>
 
 <!-- SEARCH -->
@@ -288,6 +296,19 @@ async function loadDashboard(){
     if(!d.recent_key_failures.length){fEl.innerHTML='<span class="stat-label">No recent failures</span>';return}
     fEl.innerHTML=d.recent_key_failures.map(f=>`<div class="error-item"><div class="error-type">${f.failed_key||'Unknown'} ${f.resolved?'<span class="badge badge-green">Resolved</span>':'<span class="badge badge-red">Active</span>'}</div><div class="error-detail">${(f.error||'').substring(0,120)}...</div><div class="error-time">${fmtTime(f.timestamp)}</div></div>`).join('');
   }catch(e){console.error(e)}
+  // Stencil ratings (thumbs up/down summary)
+  try{
+    const r2=await fetch(API+'/admin/stencil-ratings',{headers:authHeaders()});
+    if(r2.ok){
+      const sr=await r2.json();
+      const sat=sr.totals.satisfaction_pct;
+      document.getElementById('sr-sat').textContent=(sat==null?'—':sat+'%');
+      document.getElementById('sr-total').textContent=sr.totals.total;
+      document.getElementById('sr-light').textContent=sr.summary.light.up+' / '+sr.summary.light.down;
+      document.getElementById('sr-medium').textContent=sr.summary.medium.up+' / '+sr.summary.medium.down;
+      document.getElementById('sr-heavy').textContent=sr.summary.heavy.up+' / '+sr.summary.heavy.down;
+    }
+  }catch(e){console.error('stencil ratings load failed',e)}
 }
 
 // Search

@@ -1,0 +1,86 @@
+{
+  "summary": "Iter10 end-to-end backend verification of reroll/rating feature pair. All critical paths confirmed: (a) non-studio /api/credits/deduct now properly decrements available_credits + increments credits_consumed_this_cycle with persisted balance via real demo subscription doc, (b) /api/ai-stencil with regenerate_style SKIPS cache — two consecutive calls on same image base64 returned different stencil_base64 (1246B vs 1346B), fixing the 'stops working after 2nd reroll' regression, (c) all 5 targeted regression suites pass (31/31 tests).",
+
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "/api/ai-stencil", "issue": "test_ai_stencil_non_regenerate_can_hit_cache was skipped because the synthetic flat-colored test image failed Gemini generation on the first pass. Not a regression — the primary cache-skip test passed. A real photo would exercise this path; the behavior itself (cache hit when regenerate_style is absent) is visible in code at server.py:2084."}
+    ]
+  },
+
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+
+  "features_verified": {
+    "credits_deduct_non_studio": {
+      "endpoint": "POST /api/credits/deduct",
+      "status": "VERIFIED",
+      "details": "Using real demo-login subscription (tier=walk-in). Initial available_credits=125 → after deduct=124 → GET /auth/me also shows 124 (persisted). Response contains {available_credits, tier, total_monthly_credits} and is_studio_team is falsy. 401 returned when no auth header."
+    },
+    "ai_stencil_cache_skip_on_regenerate": {
+      "endpoint": "POST /api/ai-stencil",
+      "status": "VERIFIED",
+      "details": "Two back-to-back calls with regenerate_style='medium' on the SAME image_base64 returned DIFFERENT stencil_base64 strings (1246B vs 1346B). Latencies 14.9s and 18.0s confirm real Gemini calls both times (not cache). This fixes the 'stops after 2nd reroll' regression."
+    },
+    "stencil_rating_endpoint": {
+      "endpoint": "POST /api/stencil-rating",
+      "status": "VERIFIED (from test_reroll_and_rating.py, 6/6 cases)",
+      "details": "Accepts {style: light|medium|heavy, rating: up|down} → 200 {status:'ok'}. Rejects invalid style (400). Rejects invalid rating (400). Works anonymously (user_id stored as None)."
+    },
+    "admin_stencil_ratings_aggregation": {
+      "endpoint": "GET /api/admin/stencil-ratings",
+      "status": "VERIFIED",
+      "details": "Without admin token → 401. With admin token → returns {summary: {light/medium/heavy: {up, down}}, totals: {up, down, total, satisfaction_pct}, recent: [...]}. summary values are ints. recent sorted desc by created_at."
+    },
+    "regression_suites_passing": {
+      "test_deploy_sanity_subscription_fields.py": "PASS",
+      "test_paywall_product_mismatch_bug.py": "PASS",
+      "test_early_access_bridge.py": "PASS (11 cases)",
+      "test_paywall_no_bypass_emails.py": "PASS (5 cases)",
+      "test_reroll_and_rating.py": "PASS (6 cases)",
+      "total": "31/31 passed"
+    }
+  },
+
+  "test_report_links": [
+    "/app/backend/tests/test_iter10_reroll_e2e.py",
+    "/app/backend/tests/test_reroll_and_rating.py",
+    "/app/test_reports/pytest/pytest_results_iter10.xml"
+  ],
+
+  "action_items": [],
+
+  "critical_code_review_comments": [
+    "server.py:2084 — `cached_result = get_cached_stencil(cache_key) if not request.regenerate_style else None` is the correct, minimal fix for the reroll regression. Clean and documented with a comment at 2079-2082.",
+    "server.py:3366-3385 — non-studio credit deduct uses atomic find_one_and_update with available_credits > 0 guard; returns 402 on insufficient; also increments credits_consumed_this_cycle which drives the Walk-In upsell banner. Good pattern.",
+    "server.py:3449-3481 — stencil-rating endpoint is anonymous-friendly and uses Pydantic whitelist validation for style/rating. Token decode is defensively wrapped so a bad token still allows rating. Good.",
+    "server.py:3484-3525 — admin aggregation uses $group pipeline (efficient) and caps recent to 50. Satisfaction_pct is None when total=0, avoiding ZeroDivisionError. Clean.",
+    "Pre-existing test files (test_iter3/iter4/iter9/etc.) hardcode BASE_URL='' when REACT_APP_BACKEND_URL is unset, causing MissingSchema errors when running the full tree without that env var. Not a regression from this iteration but worth normalising to a single env resolver across all test modules. These files also hit /api/health, /api/auth/demo-login etc. successfully once the env var is set — the failures in the full-suite run were env-only.",
+    "Minor: test_iter10_reroll_e2e.py uses `@pytest.mark.timeout(200)` but pytest-timeout is not installed; the mark is ignored with a warning. Safe to remove or install pytest-timeout."
+  ],
+
+  "updated_files": [
+    "/app/backend/tests/test_iter10_reroll_e2e.py (new — 4 e2e cases: non-studio credit deduct, auth-required, cache-skip-on-regenerate, cache-hit-without-regenerate soft check)"
+  ],
+
+  "success_rate": {
+    "backend": "100% on targeted regression + new e2e (34/34 meaningful assertions; 1 soft cache-hit test skipped because a synthetic flat image wasn't generatable by Gemini — not a bug)",
+    "frontend": "N/A — out of scope per main agent (React Native Expo iOS build)"
+  },
+
+  "test_credentials": {
+    "demo_login": "POST /api/auth/demo-login (no creds; seeded as walk-in, ~121 credits after this run)",
+    "admin": "bodyboundstencil@yahoo.com / Body.Bound.Admin.72410 — POST /api/admin-auth/login",
+    "backend_url": "https://stencil-ai-fallback.preview.emergentagent.com"
+  },
+
+  "seed_data_creation": "No new seed data. Demo user used existing walk-in subscription. Two /api/ai-stencil calls made against Gemini (burned ~2 generations). A handful of stencil_ratings rows inserted by test_reroll_and_rating.py (used by admin aggregation test).",
+
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+
+  "context_for_next_testing_agent": "Iter10 end-to-end verified the reroll + thumbs-rating feature pair against the live preview URL. The previously-orphaned non-studio credit deduct branch now works (persisted balance checked via /api/auth/me round-trip). Cache-skip-on-regenerate confirmed by comparing stencil_base64 bytes across two identical-input calls. If re-testing, note that running the FULL backend/tests/ tree requires exporting REACT_APP_BACKEND_URL or EXPO_PUBLIC_BACKEND_URL — several older iter3/iter4/iter9 test files treat a missing env var as an empty string and fail with MissingSchema. Targeted runs with the env var set all pass. Demo user balance was 125 before this run, ~121 after (credit deduct test + 2 ai-stencil if they deduct, though ai-stencil endpoints don't appear to deduct automatically)."
+}

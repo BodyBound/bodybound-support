@@ -1,0 +1,1624 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="33" failures="76" skipped="0" tests="243" time="32.386" timestamp="2026-04-23T02:20:02.236174+00:00" hostname="agent-env-d25fbf9d-32eb-43a2-bc0d-b325b61c270d"><testcase classname="tests.test_auth_credits.TestHealth" name="test_health_returns_200" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/health': No scheme supplied. Perhaps you meant https:///api/health?">tests/test_auth_credits.py:46: in test_health_returns_200
+    response = api_client.get(f"{BASE_URL}/api/health")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/health': No scheme supplied. Perhaps you meant https:///api/health?</failure></testcase><testcase classname="tests.test_auth_credits.TestHealth" name="test_health_returns_healthy_status" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/health': No scheme supplied. Perhaps you meant https:///api/health?">tests/test_auth_credits.py:50: in test_health_returns_healthy_status
+    response = api_client.get(f"{BASE_URL}/api/health")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/health': No scheme supplied. Perhaps you meant https:///api/health?</failure></testcase><testcase classname="tests.test_auth_credits.TestDemoLogin" name="test_demo_login_returns_200" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?">tests/test_auth_credits.py:63: in test_demo_login_returns_200
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</failure></testcase><testcase classname="tests.test_auth_credits.TestDemoLogin" name="test_demo_login_returns_user_and_session_token" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?">tests/test_auth_credits.py:67: in test_demo_login_returns_user_and_session_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</failure></testcase><testcase classname="tests.test_auth_credits.TestDemoLogin" name="test_demo_login_user_has_required_fields" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?">tests/test_auth_credits.py:76: in test_demo_login_user_has_required_fields
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</failure></testcase><testcase classname="tests.test_auth_credits.TestDemoLogin" name="test_demo_login_idempotent" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?">tests/test_auth_credits.py:85: in test_demo_login_idempotent
+    resp1 = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</failure></testcase><testcase classname="tests.test_auth_credits.TestAuthMe" name="test_me_with_valid_token" time="0.001"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_auth_credits.py:28: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_auth_credits.TestAuthMe" name="test_me_returns_user_and_credits" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_auth_credits.py:28: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_auth_credits.TestAuthMe" name="test_me_user_has_required_fields" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_auth_credits.py:28: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_auth_credits.TestAuthMe" name="test_me_credits_has_required_fields" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_auth_credits.py:28: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_auth_credits.TestAuthMe" name="test_me_demo_account_has_credits" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_auth_credits.py:28: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_auth_credits.TestAuthMe" name="test_me_without_token_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/me': No scheme supplied. Perhaps you meant https:///api/auth/me?">tests/test_auth_credits.py:131: in test_me_without_token_returns_401
+    response = api_client.get(f"{BASE_URL}/api/auth/me")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/me': No scheme supplied. Perhaps you meant https:///api/auth/me?</failure></testcase><testcase classname="tests.test_auth_credits.TestAuthMe" name="test_me_with_invalid_token_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/me': No scheme supplied. Perhaps you meant https:///api/auth/me?">tests/test_auth_credits.py:135: in test_me_with_invalid_token_returns_401
+    response = api_client.get(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/me': No scheme supplied. Perhaps you meant https:///api/auth/me?</failure></testcase><testcase classname="tests.test_auth_credits.TestCreditsDeduct" name="test_deduct_credit_with_valid_token" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_auth_credits.py:28: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_auth_credits.TestCreditsDeduct" name="test_deduct_credit_decrements_atomically" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_auth_credits.py:28: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_auth_credits.TestCreditsDeduct" name="test_deduct_credit_without_token_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/credits/deduct': No scheme supplied. Perhaps you meant https:///api/credits/deduct?">tests/test_auth_credits.py:181: in test_deduct_credit_without_token_returns_401
+    response = api_client.post(f"{BASE_URL}/api/credits/deduct")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/credits/deduct': No scheme supplied. Perhaps you meant https:///api/credits/deduct?</failure></testcase><testcase classname="tests.test_auth_credits.TestCreditsDeduct" name="test_deduct_credit_zero_credits_returns_402" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_auth_credits.py:189: in test_deduct_credit_zero_credits_returns_402
+    resp1 = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_auth_credits.TestAppleSignIn" name="test_apple_signin_with_mock_token" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_auth_credits.py:221: in test_apple_signin_with_mock_token
+    response = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_auth_credits.TestAppleSignIn" name="test_apple_signin_gives_trial_credits" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_auth_credits.py:238: in test_apple_signin_gives_trial_credits
+    response = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_auth_credits.TestAccountDelete" name="test_delete_account" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_auth_credits.py:273: in test_delete_account
+    resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_auth_credits.TestAccountDelete" name="test_delete_account_removes_user" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_auth_credits.py:295: in test_delete_account_removes_user
+    resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_auth_credits.TestAccountDelete" name="test_delete_account_without_token_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/account/delete': No scheme supplied. Perhaps you meant https:///api/account/delete?">tests/test_auth_credits.py:319: in test_delete_account_without_token_returns_401
+    response = api_client.delete(f"{BASE_URL}/api/account/delete")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:671: in delete
+    return self.request("DELETE", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/account/delete': No scheme supplied. Perhaps you meant https:///api/account/delete?</failure></testcase><testcase classname="tests.test_auth_credits.TestRevenueCatWebhook" name="test_webhook_accepts_initial_purchase" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/webhooks/revenuecat': No scheme supplied. Perhaps you meant https:///api/webhooks/revenuecat?">tests/test_auth_credits.py:342: in test_webhook_accepts_initial_purchase
+    response = api_client.post(f"{BASE_URL}/api/webhooks/revenuecat", json=payload)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/webhooks/revenuecat': No scheme supplied. Perhaps you meant https:///api/webhooks/revenuecat?</failure></testcase><testcase classname="tests.test_auth_credits.TestRevenueCatWebhook" name="test_webhook_with_valid_user_id_updates_subscription" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_auth_credits.py:350: in test_webhook_with_valid_user_id_updates_subscription
+    resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_auth_credits.TestRevenueCatWebhook" name="test_webhook_pro_tier_gives_500_credits" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_auth_credits.py:403: in test_webhook_pro_tier_gives_500_credits
+    resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_auth_credits.TestRevenueCatWebhook" name="test_webhook_renewal_updates_credits" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_auth_credits.py:443: in test_webhook_renewal_updates_credits
+    resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_auth_credits.TestRevenueCatWebhook" name="test_webhook_accepts_cancellation" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/webhooks/revenuecat': No scheme supplied. Perhaps you meant https:///api/webhooks/revenuecat?">tests/test_auth_credits.py:494: in test_webhook_accepts_cancellation
+    response = api_client.post(f"{BASE_URL}/api/webhooks/revenuecat", json=payload)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/webhooks/revenuecat': No scheme supplied. Perhaps you meant https:///api/webhooks/revenuecat?</failure></testcase><testcase classname="tests.test_auth_credits.TestRevenueCatWebhook" name="test_webhook_unknown_product_id_still_ok" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/webhooks/revenuecat': No scheme supplied. Perhaps you meant https:///api/webhooks/revenuecat?">tests/test_auth_credits.py:506: in test_webhook_unknown_product_id_still_ok
+    response = api_client.post(f"{BASE_URL}/api/webhooks/revenuecat", json=payload)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/webhooks/revenuecat': No scheme supplied. Perhaps you meant https:///api/webhooks/revenuecat?</failure></testcase><testcase classname="tests.test_auth_credits.TestCronEndpoint" name="test_cron_without_auth_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?">tests/test_auth_credits.py:521: in test_cron_without_auth_returns_401
+    response = api_client.post(f"{BASE_URL}/api/cron/refresh-credits")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?</failure></testcase><testcase classname="tests.test_auth_credits.TestCronEndpoint" name="test_cron_with_wrong_secret_returns_401" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?">tests/test_auth_credits.py:526: in test_cron_with_wrong_secret_returns_401
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?</failure></testcase><testcase classname="tests.test_auth_credits.TestCronEndpoint" name="test_cron_with_correct_secret_returns_200" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?">tests/test_auth_credits.py:534: in test_cron_with_correct_secret_returns_200
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?</failure></testcase><testcase classname="tests.test_auth_credits.TestCronEndpoint" name="test_cron_response_has_required_fields" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?">tests/test_auth_credits.py:542: in test_cron_response_has_required_fields
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?</failure></testcase><testcase classname="tests.test_auth_credits.TestCronEndpoint" name="test_cron_refreshes_expired_subscriptions" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_auth_credits.py:558: in test_cron_refreshes_expired_subscriptions
+    resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_auth_credits.TestCronEndpoint" name="test_cron_does_not_refresh_future_renewals" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_auth_credits.py:639: in test_cron_does_not_refresh_future_renewals
+    resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_credit_rollover" name="test_rollover_cap_walk_in" time="0.008" /><testcase classname="tests.test_credit_rollover" name="test_partial_rollover" time="0.001"><failure message="RuntimeError: Event loop is closed">tests/test_credit_rollover.py:62: in test_partial_rollover
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed
+
+During handling of the above exception, another exception occurred:
+tests/test_credit_rollover.py:76: in test_partial_rollover
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed</failure></testcase><testcase classname="tests.test_credit_rollover" name="test_idempotent_same_cycle_key" time="0.001"><failure message="RuntimeError: Event loop is closed">tests/test_credit_rollover.py:83: in test_idempotent_same_cycle_key
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed
+
+During handling of the above exception, another exception occurred:
+tests/test_credit_rollover.py:101: in test_idempotent_same_cycle_key
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed</failure></testcase><testcase classname="tests.test_credit_rollover" name="test_concurrent_refill_storm" time="0.001"><failure message="RuntimeError: Event loop is closed">tests/test_credit_rollover.py:108: in test_concurrent_refill_storm
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed
+
+During handling of the above exception, another exception occurred:
+tests/test_credit_rollover.py:119: in test_concurrent_refill_storm
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed</failure></testcase><testcase classname="tests.test_credit_rollover" name="test_booked_out_tier_500_cap_1000" time="0.001"><failure message="RuntimeError: Event loop is closed">tests/test_credit_rollover.py:126: in test_booked_out_tier_500_cap_1000
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed
+
+During handling of the above exception, another exception occurred:
+tests/test_credit_rollover.py:135: in test_booked_out_tier_500_cap_1000
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed</failure></testcase><testcase classname="tests.test_credit_rollover" name="test_referral_uses_rollover_refill" time="0.001"><failure message="RuntimeError: Event loop is closed">tests/test_credit_rollover.py:144: in test_referral_uses_rollover_refill
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed
+
+During handling of the above exception, another exception occurred:
+tests/test_credit_rollover.py:170: in test_referral_uses_rollover_refill
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed</failure></testcase><testcase classname="tests.test_credit_rollover" name="test_referral_fresh_user_gets_full_allowance" time="0.001"><failure message="RuntimeError: Event loop is closed">tests/test_credit_rollover.py:177: in test_referral_fresh_user_gets_full_allowance
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed
+
+During handling of the above exception, another exception occurred:
+tests/test_credit_rollover.py:189: in test_referral_fresh_user_gets_full_allowance
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed</failure></testcase><testcase classname="tests.test_credit_rollover" name="test_referral_idempotent_no_duplicate_refill" time="0.001"><failure message="RuntimeError: Event loop is closed">tests/test_credit_rollover.py:196: in test_referral_idempotent_no_duplicate_refill
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed
+
+During handling of the above exception, another exception occurred:
+tests/test_credit_rollover.py:216: in test_referral_idempotent_no_duplicate_refill
+    await _clean(uid)
+tests/test_credit_rollover.py:22: in _clean
+    await server.db.subscriptions.delete_many({'user_id': uid})
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/motor/metaprogramming.py:74: in method
+    return framework.run_on_executor(
+/root/.venv/lib/python3.11/site-packages/motor/frameworks/asyncio/__init__.py:85: in run_on_executor
+    return loop.run_in_executor(_EXECUTOR, functools.partial(fn, *args, **kwargs))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.11/asyncio/base_events.py:817: in run_in_executor
+    self._check_closed()
+/usr/local/lib/python3.11/asyncio/base_events.py:520: in _check_closed
+    raise RuntimeError('Event loop is closed')
+E   RuntimeError: Event loop is closed</failure></testcase><testcase classname="tests.test_deploy_sanity_subscription_fields" name="test_frontend_sync_writes_rewrite_fields[walk-in-product0]" time="0.405" /><testcase classname="tests.test_deploy_sanity_subscription_fields" name="test_frontend_sync_writes_rewrite_fields[booked-out-product1]" time="0.358" /><testcase classname="tests.test_deploy_sanity_subscription_fields" name="test_frontend_sync_writes_rewrite_fields[the-shop-product2]" time="0.258" /><testcase classname="tests.test_deploy_sanity_subscription_fields" name="test_initial_purchase_webhook_writes_rewrite_fields" time="0.200" /><testcase classname="tests.test_deploy_sanity_subscription_fields" name="test_renewal_webhook_writes_rewrite_fields" time="0.238" /><testcase classname="tests.test_deploy_sanity_subscription_fields" name="test_transfer_webhook_does_not_mutate_and_stamps_audit_field" time="0.406" /><testcase classname="tests.test_early_access_bridge" name="test_eligible_bypass_user_at_zero_gets_grant" time="0.105" /><testcase classname="tests.test_early_access_bridge" name="test_repeat_call_is_noop" time="0.149" /><testcase classname="tests.test_early_access_bridge" name="test_non_bypass_tier_never_gets_grant[walk-in]" time="0.106" /><testcase classname="tests.test_early_access_bridge" name="test_non_bypass_tier_never_gets_grant[booked-out]" time="0.105" /><testcase classname="tests.test_early_access_bridge" name="test_non_bypass_tier_never_gets_grant[the-shop]" time="0.105" /><testcase classname="tests.test_early_access_bridge" name="test_non_bypass_tier_never_gets_grant[expired]" time="0.104" /><testcase classname="tests.test_early_access_bridge" name="test_non_bypass_tier_never_gets_grant[referral_premium]" time="0.171" /><testcase classname="tests.test_early_access_bridge" name="test_non_bypass_tier_never_gets_grant[None]" time="0.105" /><testcase classname="tests.test_early_access_bridge" name="test_bypass_user_with_positive_credits_is_ignored" time="0.104" /><testcase classname="tests.test_early_access_bridge" name="test_already_flagged_user_is_ignored" time="0.104" /><testcase classname="tests.test_early_access_bridge" name="test_audit_log_is_written_on_grant" time="0.105" /><testcase classname="tests.test_iter3_tasks_refresh.TestOldCronEndpointGone" name="test_old_cron_endpoint_returns_404_or_405" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?">tests/test_iter3_tasks_refresh.py:36: in test_old_cron_endpoint_returns_404_or_405
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?</failure></testcase><testcase classname="tests.test_iter3_tasks_refresh.TestOldCronEndpointGone" name="test_old_cron_endpoint_no_auth_also_returns_404_or_405" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?">tests/test_iter3_tasks_refresh.py:47: in test_old_cron_endpoint_no_auth_also_returns_404_or_405
+    response = api_client.post(f"{BASE_URL}/api/cron/refresh-credits")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/cron/refresh-credits': No scheme supplied. Perhaps you meant https:///api/cron/refresh-credits?</failure></testcase><testcase classname="tests.test_iter3_tasks_refresh.TestTasksRefreshCreditsAuth" name="test_no_header_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?">tests/test_iter3_tasks_refresh.py:63: in test_no_header_returns_401
+    response = api_client.post(f"{BASE_URL}/api/tasks/refresh-credits")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?</failure></testcase><testcase classname="tests.test_iter3_tasks_refresh.TestTasksRefreshCreditsAuth" name="test_wrong_secret_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?">tests/test_iter3_tasks_refresh.py:70: in test_wrong_secret_returns_401
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?</failure></testcase><testcase classname="tests.test_iter3_tasks_refresh.TestTasksRefreshCreditsAuth" name="test_old_authorization_bearer_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?">tests/test_iter3_tasks_refresh.py:80: in test_old_authorization_bearer_returns_401
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?</failure></testcase><testcase classname="tests.test_iter3_tasks_refresh.TestTasksRefreshCreditsAuth" name="test_correct_x_cron_secret_returns_200" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?">tests/test_iter3_tasks_refresh.py:90: in test_correct_x_cron_secret_returns_200
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?</failure></testcase><testcase classname="tests.test_iter3_tasks_refresh.TestTasksRefreshCreditsAuth" name="test_correct_x_cron_secret_returns_required_fields" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?">tests/test_iter3_tasks_refresh.py:100: in test_correct_x_cron_secret_returns_required_fields
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?</failure></testcase><testcase classname="tests.test_iter3_tasks_refresh.TestTasksRefreshCreditsAuth" name="test_response_refreshed_lte_checked" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?">tests/test_iter3_tasks_refresh.py:115: in test_response_refreshed_lte_checked
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/tasks/refresh-credits': No scheme supplied. Perhaps you meant https:///api/tasks/refresh-credits?</failure></testcase><testcase classname="tests.test_iter3_tasks_refresh.TestTasksRefreshCreditsLogic" name="test_expired_subscription_gets_refreshed" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_iter3_tasks_refresh.py:137: in test_expired_subscription_gets_refreshed
+    resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_iter3_tasks_refresh.TestTasksRefreshCreditsLogic" name="test_future_renewal_not_refreshed" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_iter3_tasks_refresh.py:210: in test_future_renewal_not_refreshed
+    resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_iter3_tasks_refresh.TestRevenueCatWebhookUserIdMapping" name="test_initial_purchase_via_user_id_updates_credits" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_iter3_tasks_refresh.py:266: in test_initial_purchase_via_user_id_updates_credits
+    resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestHealth" name="test_health_returns_200" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/health': No scheme supplied. Perhaps you meant https:///api/health?">tests/test_iter4_credits_studio.py:57: in test_health_returns_200
+    response = api_client.get(f"{BASE_URL}/api/health")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/health': No scheme supplied. Perhaps you meant https:///api/health?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestHealth" name="test_health_returns_healthy_status" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/health': No scheme supplied. Perhaps you meant https:///api/health?">tests/test_iter4_credits_studio.py:61: in test_health_returns_healthy_status
+    response = api_client.get(f"{BASE_URL}/api/health")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/health': No scheme supplied. Perhaps you meant https:///api/health?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestDemoLogin" name="test_demo_login_returns_200" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?">tests/test_iter4_credits_studio.py:74: in test_demo_login_returns_200
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestDemoLogin" name="test_demo_login_returns_user_and_session_token" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?">tests/test_iter4_credits_studio.py:78: in test_demo_login_returns_user_and_session_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestAuthMeNewFields" name="test_me_returns_credits_with_trial_fields" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestAuthMeNewFields" name="test_me_returns_credits_with_studio_team_fields" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestAuthMeNewFields" name="test_me_demo_account_not_in_studio_team" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestTrialCreditsWithDeviceId" name="test_new_user_gets_10_trial_credits" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_iter4_credits_studio.py:135: in test_new_user_gets_10_trial_credits
+    response = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestTrialCreditsWithDeviceId" name="test_same_device_id_denied_second_trial" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_iter4_credits_studio.py:171: in test_same_device_id_denied_second_trial
+    resp1 = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestTrialCreditsWithDeviceId" name="test_same_email_denied_second_trial" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_iter4_credits_studio.py:214: in test_same_email_denied_second_trial
+    resp1 = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestCreditDeduction" name="test_deduct_credit_returns_200" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestCreditDeduction" name="test_deduct_credit_decrements_by_one" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestCreditDeduction" name="test_deduct_without_auth_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/credits/deduct': No scheme supplied. Perhaps you meant https:///api/credits/deduct?">tests/test_iter4_credits_studio.py:284: in test_deduct_without_auth_returns_401
+    response = api_client.post(f"{BASE_URL}/api/credits/deduct")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/credits/deduct': No scheme supplied. Perhaps you meant https:///api/credits/deduct?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamGet" name="test_studio_team_returns_404_for_non_team_user" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamGet" name="test_studio_team_without_auth_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/studio/team': No scheme supplied. Perhaps you meant https:///api/studio/team?">tests/test_iter4_credits_studio.py:300: in test_studio_team_without_auth_returns_401
+    response = api_client.get(f"{BASE_URL}/api/studio/team")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/studio/team': No scheme supplied. Perhaps you meant https:///api/studio/team?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamCreate" name="test_studio_create_requires_the_shop_tier" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamCreate" name="test_studio_create_without_auth_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/studio/create': No scheme supplied. Perhaps you meant https:///api/studio/create?">tests/test_iter4_credits_studio.py:321: in test_studio_create_without_auth_returns_401
+    response = api_client.post(f"{BASE_URL}/api/studio/create")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/studio/create': No scheme supplied. Perhaps you meant https:///api/studio/create?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamInvite" name="test_studio_invite_requires_team_admin" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamInvite" name="test_studio_invite_without_auth_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/studio/invite': No scheme supplied. Perhaps you meant https:///api/studio/invite?">tests/test_iter4_credits_studio.py:342: in test_studio_invite_without_auth_returns_401
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/studio/invite': No scheme supplied. Perhaps you meant https:///api/studio/invite?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamAcceptInvite" name="test_accept_invite_invalid_code_returns_404" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamAcceptInvite" name="test_accept_invite_without_auth_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/studio/accept-invite': No scheme supplied. Perhaps you meant https:///api/studio/accept-invite?">tests/test_iter4_credits_studio.py:365: in test_accept_invite_without_auth_returns_401
+    response = api_client.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/studio/accept-invite': No scheme supplied. Perhaps you meant https:///api/studio/accept-invite?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamRemoveMember" name="test_remove_member_requires_admin" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamRemoveMember" name="test_remove_member_without_auth_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/studio/member/some_user_id': No scheme supplied. Perhaps you meant https:///api/studio/member/some_user_id?">tests/test_iter4_credits_studio.py:388: in test_remove_member_without_auth_returns_401
+    response = api_client.delete(f"{BASE_URL}/api/studio/member/some_user_id")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:671: in delete
+    return self.request("DELETE", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/studio/member/some_user_id': No scheme supplied. Perhaps you meant https:///api/studio/member/some_user_id?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamLeave" name="test_leave_team_returns_404_for_non_member" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter4_credits_studio.py:39: in demo_token
+    response = api_client.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamLeave" name="test_leave_team_without_auth_returns_401" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/studio/leave': No scheme supplied. Perhaps you meant https:///api/studio/leave?">tests/test_iter4_credits_studio.py:404: in test_leave_team_without_auth_returns_401
+    response = api_client.post(f"{BASE_URL}/api/studio/leave")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/studio/leave': No scheme supplied. Perhaps you meant https:///api/studio/leave?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamFullFlow" name="test_studio_team_full_flow_with_the_shop_subscription" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_iter4_credits_studio.py:428: in test_studio_team_full_flow_with_the_shop_subscription
+    admin_resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamAdminCannotLeave" name="test_admin_cannot_leave_own_team" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_iter4_credits_studio.py:565: in test_admin_cannot_leave_own_team
+    admin_resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_iter4_credits_studio.TestStudioTeamAdminCannotRemoveSelf" name="test_admin_cannot_remove_self" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?">tests/test_iter4_credits_studio.py:608: in test_admin_cannot_remove_self
+    admin_resp = api_client.post(f"{BASE_URL}/api/auth/apple", json={
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/apple': No scheme supplied. Perhaps you meant https:///api/auth/apple?</failure></testcase><testcase classname="tests.test_iter9_credits_referral.TestHealthEndpoint" name="test_health_returns_healthy" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/health': No scheme supplied. Perhaps you meant https:///api/health?">tests/test_iter9_credits_referral.py:54: in test_health_returns_healthy
+    response = session.get(f"{BASE_URL}/api/health")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/health': No scheme supplied. Perhaps you meant https:///api/health?</failure></testcase><testcase classname="tests.test_iter9_credits_referral.TestAuthMeTotalMonthlyCredits" name="test_auth_me_returns_total_monthly_credits" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestAuthMeTotalMonthlyCredits" name="test_auth_me_walk_in_tier_credits" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestAuthMeTotalMonthlyCredits" name="test_auth_me_requires_auth" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/auth/me': No scheme supplied. Perhaps you meant https:///api/auth/me?">tests/test_iter9_credits_referral.py:109: in test_auth_me_requires_auth
+    response = session.get(f"{BASE_URL}/api/auth/me")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/me': No scheme supplied. Perhaps you meant https:///api/auth/me?</failure></testcase><testcase classname="tests.test_iter9_credits_referral.TestCreditsDeductTotalMonthlyCredits" name="test_credits_deduct_returns_total_monthly_credits" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestCreditsDeductTotalMonthlyCredits" name="test_credits_deduct_requires_auth" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/credits/deduct': No scheme supplied. Perhaps you meant https:///api/credits/deduct?">tests/test_iter9_credits_referral.py:155: in test_credits_deduct_requires_auth
+    response = session.post(f"{BASE_URL}/api/credits/deduct")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/credits/deduct': No scheme supplied. Perhaps you meant https:///api/credits/deduct?</failure></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralPopupDismissAction" name="test_dismiss_popup_accepts_dismiss_action" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralPopupDismissAction" name="test_dismiss_popup_accepts_shared_action" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralPopupDismissAction" name="test_dismiss_popup_accepts_copy_action" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralPopupDismissAction" name="test_dismiss_popup_accepts_invite_action" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralPopupDismissAction" name="test_dismiss_popup_defaults_to_dismiss" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralPopupDismissAction" name="test_dismiss_popup_requires_auth" time="0.001"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/referral/dismiss-popup': No scheme supplied. Perhaps you meant https:///api/referral/dismiss-popup?">tests/test_iter9_credits_referral.py:225: in test_dismiss_popup_requires_auth
+    response = session.post(
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/referral/dismiss-popup': No scheme supplied. Perhaps you meant https:///api/referral/dismiss-popup?</failure></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralPopupEligibility" name="test_popup_eligible_returns_response" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralPopupEligibility" name="test_popup_eligible_after_dismiss_action" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralPopupEligibility" name="test_popup_eligible_after_shared_action" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralPopupEligibility" name="test_popup_eligible_requires_auth" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/referral/popup-eligible': No scheme supplied. Perhaps you meant https:///api/referral/popup-eligible?">tests/test_iter9_credits_referral.py:311: in test_popup_eligible_requires_auth
+    response = session.get(f"{BASE_URL}/api/referral/popup-eligible")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:602: in get
+    return self.request("GET", url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/referral/popup-eligible': No scheme supplied. Perhaps you meant https:///api/referral/popup-eligible?</failure></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralEndpointsRegression" name="test_referral_code_endpoint" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralEndpointsRegression" name="test_referral_dashboard_endpoint" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralEndpointsRegression" name="test_referral_landing_page" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_iter9_credits_referral.TestReferralEndpointsRegression" name="test_referral_cron_requires_secret" time="0.000"><failure message="requests.exceptions.MissingSchema: Invalid URL '/api/referral/check-verifications': No scheme supplied. Perhaps you meant https:///api/referral/check-verifications?">tests/test_iter9_credits_referral.py:372: in test_referral_cron_requires_secret
+    response = session.post(f"{BASE_URL}/api/referral/check-verifications")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/referral/check-verifications': No scheme supplied. Perhaps you meant https:///api/referral/check-verifications?</failure></testcase><testcase classname="tests.test_iter9_credits_referral.TestCreditFieldsConsistency" name="test_credits_fields_match_between_endpoints" time="0.000"><error message="failed on setup with &quot;requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?&quot;">tests/test_iter9_credits_referral.py:41: in demo_auth
+    response = session.post(f"{BASE_URL}/api/auth/demo-login")
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:637: in post
+    return self.request("POST", url, data=data, json=json, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:575: in request
+    prep = self.prepare_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+/root/.venv/lib/python3.11/site-packages/requests/sessions.py:484: in prepare_request
+    p.prepare(
+/root/.venv/lib/python3.11/site-packages/requests/models.py:367: in prepare
+    self.prepare_url(url, params)
+/root/.venv/lib/python3.11/site-packages/requests/models.py:438: in prepare_url
+    raise MissingSchema(
+E   requests.exceptions.MissingSchema: Invalid URL '/api/auth/demo-login': No scheme supplied. Perhaps you meant https:///api/auth/demo-login?</error></testcase><testcase classname="tests.test_paywall_flow" name="test_health" time="0.095" /><testcase classname="tests.test_paywall_flow" name="test_demo_login_returns_credits" time="0.173" /><testcase classname="tests.test_paywall_flow" name="test_subscription_sync_requires_auth" time="0.078" /><testcase classname="tests.test_paywall_flow" name="test_subscription_sync_requires_product_id" time="0.151" /><testcase classname="tests.test_paywall_flow" name="test_subscription_sync_rejects_unknown_product" time="0.211" /><testcase classname="tests.test_paywall_flow" name="test_subscription_sync_updates_correctly" time="0.248" /><testcase classname="tests.test_paywall_flow" name="test_needs_subscription_field_present" time="0.165" /><testcase classname="tests.test_paywall_flow_extended" name="test_health_endpoint" time="0.085" /><testcase classname="tests.test_paywall_flow_extended" name="test_demo_login_returns_session_token_and_user" time="0.081" /><testcase classname="tests.test_paywall_flow_extended" name="test_auth_me_returns_needs_subscription_field" time="0.154" /><testcase classname="tests.test_paywall_flow_extended" name="test_needs_subscription_false_for_active_tier" time="0.156" /><testcase classname="tests.test_paywall_flow_extended" name="test_subscription_sync_requires_auth" time="0.085" /><testcase classname="tests.test_paywall_flow_extended" name="test_subscription_sync_requires_product_id" time="0.161" /><testcase classname="tests.test_paywall_flow_extended" name="test_subscription_sync_rejects_unknown_product" time="0.173" /><testcase classname="tests.test_paywall_flow_extended" name="test_subscription_sync_updates_tier_and_credits" time="0.241" /><testcase classname="tests.test_paywall_flow_extended" name="test_subscription_sync_walk_in_tier" time="0.238" /><testcase classname="tests.test_paywall_flow_extended" name="test_subscription_sync_booked_out_tier" time="0.153" /><testcase classname="tests.test_paywall_flow_extended" name="test_subscription_sync_the_shop_tier" time="0.291" /><testcase classname="tests.test_paywall_flow_extended" name="test_subscription_sync_idempotent" time="0.309" /><testcase classname="tests.test_paywall_flow_extended" name="test_revenuecat_webhook_initial_purchase" time="0.095"><failure message="AssertionError: Expected 401 without auth, got 200&#10;assert 200 == 401&#10; +  where 200 = &lt;Response [200 OK]&gt;.status_code">tests/test_paywall_flow_extended.py:277: in test_revenuecat_webhook_initial_purchase
+    assert r_no_auth.status_code == 401, f"Expected 401 without auth, got {r_no_auth.status_code}"
+E   AssertionError: Expected 401 without auth, got 200
+E   assert 200 == 401
+E    +  where 200 = &lt;Response [200 OK]&gt;.status_code</failure></testcase><testcase classname="tests.test_paywall_flow_extended" name="test_refresh_credits_endpoint" time="0.159" /><testcase classname="tests.test_paywall_flow_extended" name="test_auth_me_credit_fields_complete" time="0.179" /><testcase classname="tests.test_paywall_flow_extended" name="test_tier_transitions" time="0.321" /><testcase classname="tests.test_paywall_no_bypass_emails" name="test_bypass_granted_to_normal_email" time="0.041" /><testcase classname="tests.test_paywall_no_bypass_emails" name="test_blocklisted_email_skips_bypass" time="0.034" /><testcase classname="tests.test_paywall_no_bypass_emails" name="test_blocklist_is_case_insensitive" time="0.033" /><testcase classname="tests.test_paywall_no_bypass_emails" name="test_blocklist_tolerates_whitespace" time="0.033" /><testcase classname="tests.test_paywall_no_bypass_emails" name="test_empty_blocklist_preserves_bypass" time="0.103" /><testcase classname="tests.test_paywall_product_mismatch_bug" name="test_sync_applies_active_product_not_tapped_product" time="0.232" /><testcase classname="tests.test_paywall_product_mismatch_bug" name="test_webhook_is_authoritative_over_mismatched_sync" time="0.337" /><testcase classname="tests.test_paywall_product_mismatch_bug" name="test_double_sync_same_product_is_idempotent" time="0.363" /><testcase classname="tests.test_referral_integration.TestReferralAttribution" name="test_referral_link_created_on_attribution" time="0.812" /><testcase classname="tests.test_referral_integration.TestReferralAttribution" name="test_self_referral_blocked" time="0.186" /><testcase classname="tests.test_referral_integration.TestReferralAttribution" name="test_duplicate_attribution_blocked" time="0.181" /><testcase classname="tests.test_referral_integration.TestReferralStatusFlow" name="test_status_flow_account_created_to_verification_pending" time="0.108" /><testcase classname="tests.test_referral_integration.TestReferralStatusFlow" name="test_status_flow_cancellation_rejects_referral" time="0.108" /><testcase classname="tests.test_referral_integration.TestVerificationCron" name="test_cron_verifies_active_referrals" time="0.077" /><testcase classname="tests.test_referral_integration.TestVerificationCron" name="test_cron_rejects_inactive_referrals" time="0.088" /><testcase classname="tests.test_referral_integration.TestRewardIssuance" name="test_reward_issued_after_two_verified" time="0.258" /><testcase classname="tests.test_referral_integration.TestPopupCooldown" name="test_popup_cooldown_enforced" time="0.294" /><testcase classname="tests.test_referral_integration.TestPopupCooldown" name="test_popup_eligible_after_cooldown" time="0.160" /><testcase classname="tests.test_referral_system_v2.TestHealthCheck" name="test_health_endpoint" time="0.084" /><testcase classname="tests.test_referral_system_v2.TestReferralCode" name="test_get_referral_code_requires_auth" time="0.083" /><testcase classname="tests.test_referral_system_v2.TestReferralCode" name="test_get_referral_code_success" time="0.201" /><testcase classname="tests.test_referral_system_v2.TestReferralCode" name="test_get_referral_code_idempotent" time="0.252" /><testcase classname="tests.test_referral_system_v2.TestReferralDashboard" name="test_dashboard_requires_auth" time="0.094" /><testcase classname="tests.test_referral_system_v2.TestReferralDashboard" name="test_dashboard_returns_full_stats" time="0.190" /><testcase classname="tests.test_referral_system_v2.TestPopupEligibility" name="test_popup_eligible_requires_auth" time="0.071" /><testcase classname="tests.test_referral_system_v2.TestPopupEligibility" name="test_popup_eligible_returns_status" time="0.199" /><testcase classname="tests.test_referral_system_v2.TestDismissPopup" name="test_dismiss_popup_requires_auth" time="0.082" /><testcase classname="tests.test_referral_system_v2.TestDismissPopup" name="test_dismiss_popup_success" time="0.188" /><testcase classname="tests.test_referral_system_v2.TestDismissPopup" name="test_dismiss_popup_affects_eligibility" time="0.278" /><testcase classname="tests.test_referral_system_v2.TestCronVerification" name="test_cron_requires_secret" time="0.100" /><testcase classname="tests.test_referral_system_v2.TestCronVerification" name="test_cron_rejects_wrong_secret" time="0.119" /><testcase classname="tests.test_referral_system_v2.TestCronVerification" name="test_cron_success_with_correct_secret" time="0.105" /><testcase classname="tests.test_referral_system_v2.TestReferralLandingPage" name="test_landing_page_valid_code" time="0.264" /><testcase classname="tests.test_referral_system_v2.TestReferralLandingPage" name="test_landing_page_invalid_code" time="0.078" /><testcase classname="tests.test_referral_system_v2.TestReferralLandingPage" name="test_landing_page_case_insensitive" time="0.248" /><testcase classname="tests.test_referral_system_v2.TestAntiAbuse" name="test_referral_code_format_validation" time="0.161" /><testcase classname="tests.test_referral_system_v2.TestAntiAbuse" name="test_dashboard_tracks_fraud_flags" time="0.182" /><testcase classname="tests.test_referral_system_v2.TestReferralStatusFlow" name="test_webhook_endpoint_exists" time="0.099" /><testcase classname="tests.test_referral_system_v2.TestReferralStatusFlow" name="test_webhook_with_auth_requires_body" time="0.095" /><testcase classname="tests.test_referral_system_v2.TestReferralStatusFlow" name="test_webhook_rejects_wrong_auth" time="0.073" /><testcase classname="tests.test_referral_system_v2.TestRewardLogic" name="test_dashboard_shows_reward_progress" time="0.212" /><testcase classname="tests.test_referral_system_v2.TestRewardLogic" name="test_dashboard_shows_free_months" time="0.199" /><testcase classname="tests.test_referral_system_v2.TestAuthWithReferralCode" name="test_apple_auth_accepts_referral_code" time="0.578" /><testcase classname="tests.test_referral_system_v2.TestAuthWithReferralCode" name="test_google_session_accepts_referral_code" time="0.292" /><testcase classname="tests.test_referral_system_v2.TestRegressionHealthEndpoint" name="test_health_endpoint" time="0.105" /><testcase classname="tests.test_reroll_and_rating" name="test_rating_accepts_valid_payload" time="0.370" /><testcase classname="tests.test_reroll_and_rating" name="test_rating_rejects_invalid_style" time="0.052" /><testcase classname="tests.test_reroll_and_rating" name="test_rating_rejects_invalid_rating" time="0.044" /><testcase classname="tests.test_reroll_and_rating" name="test_rating_works_anonymously" time="0.057" /><testcase classname="tests.test_reroll_and_rating" name="test_admin_stencil_ratings_requires_admin" time="0.051" /><testcase classname="tests.test_reroll_and_rating" name="test_admin_stencil_ratings_returns_aggregates" time="0.396" /><testcase classname="tests.test_subscription_flow.TestDemoLogin" name="test_demo_login_returns_user_and_token" time="0.089" /><testcase classname="tests.test_subscription_flow.TestAuthMe" name="test_auth_me_returns_credits_with_needs_subscription" time="0.187" /><testcase classname="tests.test_subscription_flow.TestAuthMe" name="test_auth_me_without_token_returns_401" time="0.094" /><testcase classname="tests.test_subscription_flow.TestSubscriptionSync" name="test_sync_requires_auth" time="0.117" /><testcase classname="tests.test_subscription_flow.TestSubscriptionSync" name="test_sync_requires_product_id" time="0.159" /><testcase classname="tests.test_subscription_flow.TestSubscriptionSync" name="test_sync_invalid_product_id_returns_400" time="0.200" /><testcase classname="tests.test_subscription_flow.TestSubscriptionSync" name="test_sync_walk_in_tier_paid" time="0.172" /><testcase classname="tests.test_subscription_flow.TestSubscriptionSync" name="test_sync_booked_out_tier_paid" time="0.156" /><testcase classname="tests.test_subscription_flow.TestSubscriptionSync" name="test_sync_the_shop_tier_paid" time="0.185" /><testcase classname="tests.test_subscription_flow.TestSubscriptionSync" name="test_sync_trial_caps_at_10_credits_walk_in" time="0.206" /><testcase classname="tests.test_subscription_flow.TestSubscriptionSync" name="test_sync_trial_caps_at_10_credits_booked_out" time="0.167" /><testcase classname="tests.test_subscription_flow.TestSubscriptionSync" name="test_sync_trial_caps_at_10_credits_the_shop" time="0.165" /><testcase classname="tests.test_subscription_flow.TestSubscriptionSyncIdempotency" name="test_sync_idempotent_same_tier_same_trial_status" time="2.370" /><testcase classname="tests.test_subscription_flow.TestRevenueCatWebhook" name="test_webhook_requires_auth" time="0.074"><failure message="AssertionError: Expected 401, got 200&#10;assert 200 == 401&#10; +  where 200 = &lt;Response [200]&gt;.status_code">tests/test_subscription_flow.py:261: in test_webhook_requires_auth
+    assert response.status_code == 401, f"Expected 401, got {response.status_code}"
+E   AssertionError: Expected 401, got 200
+E   assert 200 == 401
+E    +  where 200 = &lt;Response [200]&gt;.status_code</failure></testcase><testcase classname="tests.test_subscription_flow.TestRevenueCatWebhook" name="test_webhook_initial_purchase_paid" time="0.084" /><testcase classname="tests.test_subscription_flow.TestRevenueCatWebhook" name="test_webhook_initial_purchase_trial" time="0.085" /><testcase classname="tests.test_subscription_flow.TestRevenueCatWebhook" name="test_webhook_cancellation_sets_tier_expired" time="0.171" /><testcase classname="tests.test_subscription_flow.TestNeedsSubscriptionLogic" name="test_needs_subscription_false_for_walk_in" time="0.281" /><testcase classname="tests.test_subscription_flow.TestNeedsSubscriptionLogic" name="test_needs_subscription_false_for_booked_out" time="0.266" /><testcase classname="tests.test_subscription_flow.TestNeedsSubscriptionLogic" name="test_needs_subscription_false_for_the_shop" time="0.267" /><testcase classname="tests.test_subscription_flow.TestCreditsDeduct" name="test_deduct_requires_auth" time="0.094" /><testcase classname="tests.test_subscription_flow.TestCreditsDeduct" name="test_deduct_credit_atomically" time="0.269" /><testcase classname="tests.test_subscription_flow.TestSubscriptionReactivation" name="test_sync_after_expiration_reactivates" time="0.331" /><testcase classname="tests.test_subscription_flow.TestCleanup" name="test_restore_demo_account" time="0.164" /><testcase classname="tests.test_trial_referral" name="test_health" time="0.083" /><testcase classname="tests.test_trial_referral.TestTrialCreditCapSync" name="test_sync_trial_walk_in_returns_10_credits" time="0.151" /><testcase classname="tests.test_trial_referral.TestTrialCreditCapSync" name="test_sync_trial_booked_out_returns_10_credits" time="0.172" /><testcase classname="tests.test_trial_referral.TestTrialCreditCapSync" name="test_sync_trial_the_shop_returns_10_credits" time="0.146" /><testcase classname="tests.test_trial_referral.TestTrialCreditCapSync" name="test_sync_paid_walk_in_returns_125_credits" time="0.167" /><testcase classname="tests.test_trial_referral.TestTrialCreditCapSync" name="test_sync_paid_booked_out_returns_500_credits" time="0.185" /><testcase classname="tests.test_trial_referral.TestTrialCreditCapSync" name="test_sync_paid_the_shop_returns_1500_credits" time="0.153" /><testcase classname="tests.test_trial_referral.TestTrialCreditCapSync" name="test_sync_sets_is_trial_flag" time="0.250" /><testcase classname="tests.test_trial_referral.TestTrialCreditCapWebhook" name="test_webhook_trial_grants_10_credits" time="0.219" /><testcase classname="tests.test_trial_referral.TestTrialCreditCapWebhook" name="test_webhook_paid_grants_full_credits" time="0.235" /><testcase classname="tests.test_trial_referral.TestNeedsSubscriptionTrial" name="test_needs_subscription_false_for_trial_users" time="0.188" /><testcase classname="tests.test_trial_referral.TestReferralCodeGet" name="test_get_referral_code_returns_code" time="0.162" /><testcase classname="tests.test_trial_referral.TestReferralCodeGet" name="test_get_referral_code_idempotent" time="0.262" /><testcase classname="tests.test_trial_referral.TestReferralCodeGet" name="test_get_referral_code_returns_stats" time="0.163"><failure message="AssertionError: assert 'total_referrals' in {'referral_code': 'BB-257527', 'referral_link': 'https://bodybound-subs.emergent.host/api/ref/BB-257527'}">tests/test_trial_referral.py:285: in test_get_referral_code_returns_stats
+    assert "total_referrals" in data
+E   AssertionError: assert 'total_referrals' in {'referral_code': 'BB-257527', 'referral_link': 'https://bodybound-subs.emergent.host/api/ref/BB-257527'}</failure></testcase><testcase classname="tests.test_trial_referral.TestReferralCodeGet" name="test_get_referral_code_requires_auth" time="0.105" /><testcase classname="tests.test_trial_referral.TestReferralRedeem" name="test_redeem_requires_auth" time="0.096"><failure message="assert 404 == 401&#10; +  where 404 = &lt;Response [404 Not Found]&gt;.status_code">tests/test_trial_referral.py:306: in test_redeem_requires_auth
+    assert r.status_code == 401
+E   assert 404 == 401
+E    +  where 404 = &lt;Response [404 Not Found]&gt;.status_code</failure></testcase><testcase classname="tests.test_trial_referral.TestReferralRedeem" name="test_redeem_missing_code_returns_400" time="0.192"><failure message="assert 404 == 400&#10; +  where 404 = &lt;Response [404 Not Found]&gt;.status_code">tests/test_trial_referral.py:311: in test_redeem_missing_code_returns_400
+    assert r.status_code == 400
+E   assert 404 == 400
+E    +  where 404 = &lt;Response [404 Not Found]&gt;.status_code</failure></testcase><testcase classname="tests.test_trial_referral.TestReferralRedeem" name="test_redeem_invalid_code_returns_404" time="0.200"><failure message="AssertionError: assert 'Invalid referral code' in 'Not Found'&#10; +  where 'Not Found' = &lt;built-in method get of dict object at 0xff7290322f00&gt;('detail', '')&#10; +    where &lt;built-in method get of dict object at 0xff7290322f00&gt; = {'detail': 'Not Found'}.get&#10; +      where {'detail': 'Not Found'} = json()&#10; +        where json = &lt;Response [404 Not Found]&gt;.json">tests/test_trial_referral.py:322: in test_redeem_invalid_code_returns_404
+    assert "Invalid referral code" in r.json().get("detail", "")
+E   AssertionError: assert 'Invalid referral code' in 'Not Found'
+E    +  where 'Not Found' = &lt;built-in method get of dict object at 0xff7290322f00&gt;('detail', '')
+E    +    where &lt;built-in method get of dict object at 0xff7290322f00&gt; = {'detail': 'Not Found'}.get
+E    +      where {'detail': 'Not Found'} = json()
+E    +        where json = &lt;Response [404 Not Found]&gt;.json</failure></testcase><testcase classname="tests.test_trial_referral.TestReferralRedeem" name="test_redeem_self_referral_blocked" time="0.246"><failure message="assert 404 == 400&#10; +  where 404 = &lt;Response [404 Not Found]&gt;.status_code">tests/test_trial_referral.py:337: in test_redeem_self_referral_blocked
+    assert r.status_code == 400
+E   assert 404 == 400
+E    +  where 404 = &lt;Response [404 Not Found]&gt;.status_code</failure></testcase><testcase classname="tests.test_trial_referral.TestPaywallRegression" name="test_demo_login_works" time="0.082" /><testcase classname="tests.test_trial_referral.TestPaywallRegression" name="test_subscription_sync_requires_auth" time="0.079" /><testcase classname="tests.test_trial_referral.TestPaywallRegression" name="test_subscription_sync_requires_product_id" time="0.156" /><testcase classname="tests.test_trial_referral.TestPaywallRegression" name="test_subscription_sync_rejects_unknown_product" time="0.142" /><testcase classname="tests.test_trial_referral.TestPaywallRegression" name="test_webhook_requires_auth" time="0.078"><failure message="assert 200 == 401&#10; +  where 200 = &lt;Response [200 OK]&gt;.status_code">tests/test_trial_referral.py:376: in test_webhook_requires_auth
+    assert r.status_code == 401
+E   assert 200 == 401
+E    +  where 200 = &lt;Response [200 OK]&gt;.status_code</failure></testcase><testcase classname="tests.test_trial_referral.TestPaywallRegression" name="test_cron_refresh_requires_secret" time="0.084" /><testcase classname="tests.test_trial_referral.TestCleanup" name="test_cleanup_restore_demo_to_booked_out_paid" time="0.158" /></testsuite></testsuites>
