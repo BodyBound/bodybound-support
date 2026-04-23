@@ -2156,7 +2156,11 @@ FIDELITY — strict (applies to all detail levels):
 - Do NOT complete, correct, or clean up the subject — keep it exactly as shown
 - NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color
 - NO crosshatching or sketch-style shading
-- Use consistent, thin-to-medium line weight throughout. Avoid thick or bold outlines, especially around small features like eyes, lips, and nostrils, so lines read clearly at tattoo-stencil scale without bleeding or blurring when transferred to skin
+- LINE WEIGHT (applies to all detail levels):
+  • Main silhouette / subject outline: consistent, thin-to-medium weight — never thick or bold
+  • Interior HAIR texture and flow lines: THE THINNEST possible line weight, noticeably finer than the hair silhouette itself — these lines are packed together in a small area and will merge/blur on skin if drawn any thicker
+  • ALL EYE details (eyelid edges, iris contour, pupil outline, eyelashes): THE THINNEST possible line weight — the eye is a very small region and thick lines will bleed together when transferred to skin
+  • Generally: small, dense, or tightly packed detail areas (hair, eyes, lips, nostrils) must use the thinnest lines in the stencil; only large-scale silhouette outlines may be slightly heavier
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
@@ -2342,7 +2346,11 @@ FIDELITY — strict (applies to all detail levels):
 - Do NOT complete, correct, or clean up the subject — keep it exactly as shown
 - NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color
 - NO crosshatching or sketch-style shading
-- Use consistent, thin-to-medium line weight throughout. Avoid thick or bold outlines, especially around small features like eyes, lips, and nostrils, so lines read clearly at tattoo-stencil scale without bleeding or blurring when transferred to skin
+- LINE WEIGHT (applies to all detail levels):
+  • Main silhouette / subject outline: consistent, thin-to-medium weight — never thick or bold
+  • Interior HAIR texture and flow lines: THE THINNEST possible line weight, noticeably finer than the hair silhouette itself — these lines are packed together in a small area and will merge/blur on skin if drawn any thicker
+  • ALL EYE details (eyelid edges, iris contour, pupil outline, eyelashes): THE THINNEST possible line weight — the eye is a very small region and thick lines will bleed together when transferred to skin
+  • Generally: small, dense, or tightly packed detail areas (hair, eyes, lips, nostrils) must use the thinnest lines in the stencil; only large-scale silhouette outlines may be slightly heavier
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
