@@ -5375,10 +5375,23 @@ async def prompt_preview_page():
     raise HTTPException(status_code=404, detail="Preview page not found")
 
 
+@api_router.get("/prompt-preview-alt")
+async def prompt_preview_alt_page():
+    """Serve a second reference-photo preview (different subject — short hair, beard)."""
+    html_path = "/app/backend/static/prompt_preview_alt.html"
+    if os.path.exists(html_path):
+        with open(html_path, 'r') as f:
+            return HTMLResponse(content=f.read())
+    raise HTTPException(status_code=404, detail="Preview page not found")
+
+
 @api_router.get("/prompt-preview-asset/{filename}")
 async def prompt_preview_asset(filename: str):
-    """Serve the three prompt-preview images. Whitelist only; no path traversal."""
-    allowed = {'portrait.jpg', 'stencil_medium.png', 'stencil_heavy.png'}
+    """Serve the prompt-preview images. Whitelist only; no path traversal."""
+    allowed = {
+        'portrait.jpg', 'stencil_medium.png', 'stencil_heavy.png',
+        'portrait2.jpg', 'stencil_medium_alt.png', 'stencil_heavy_alt.png',
+    }
     if filename not in allowed:
         raise HTTPException(status_code=404, detail="Not found")
     file_path = f"/app/backend/static/{filename}"

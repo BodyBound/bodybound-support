@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Stencil Prompt Preview — Alt Photo</title>
+  <style>
+    body {
+      font-family: -apple-system, system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #e7e2d4;
+      margin: 0;
+      padding: 24px;
+    }
+    h1 { color: #c9a227; letter-spacing: 0.4px; margin-top: 0; }
+    .note {
+      color: #9ca3af;
+      font-size: 14px;
+      margin-bottom: 24px;
+      line-height: 22px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .panel {
+      background: #151515;
+      border: 1px solid rgba(201,162,39,0.25);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .panel h3 {
+      margin: 0 0 8px 0;
+      color: #c9a227;
+      font-size: 15px;
+      letter-spacing: 0.4px;
+    }
+    .panel img {
+      width: 100%;
+      background: white;
+      border-radius: 6px;
+      display: block;
+    }
+    .panel p {
+      color: #9ca3af;
+      font-size: 12px;
+      line-height: 18px;
+      margin: 10px 0 0 0;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Prompt Preview — Second Reference Photo</h1>
+  <p class="note">
+    Different subject type from the first preview — male with short hair and beard —
+    to confirm the locked-in prompt generalises beyond long-hair portraits. Same
+    prompt, no other changes. Black line color for inspection contrast.
+  </p>
+  <div class="grid">
+    <div class="panel">
+      <h3>Reference</h3>
+      <img src="/api/prompt-preview-asset/portrait2.jpg" alt="reference portrait 2" />
+      <p>Different subject: short hair, beard, sharp male facial structure.</p>
+    </div>
+    <div class="panel">
+      <h3>Moderate</h3>
+      <img src="/api/prompt-preview-asset/stencil_medium_alt.png" alt="medium stencil alt" />
+      <p>Key interior lines only. Thin solid lines on facial features; beard texture in fine strokes.</p>
+    </div>
+    <div class="panel">
+      <h3>Heavy</h3>
+      <img src="/api/prompt-preview-asset/stencil_heavy_alt.png" alt="heavy stencil alt" />
+      <p>Full face contours + dotted shading guides + hair light-to-dark transitions.</p>
+    </div>
+  </div>
+</body>
+</html>
