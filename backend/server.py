@@ -2147,15 +2147,16 @@ CRITICAL REQUIREMENTS:
 DETAIL LEVEL: {detail_level.upper()}
 {
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
-"- Moderate detail: Outlines plus key interior details and contour guides. When hair is present, suggest its texture with a few flowing directional lines, and outline the main shape of any visible highlights with dotted/dashed guides." if detail_level == "moderate" else
-"- Maximum detail: Everything from moderate, PLUS all visible contours and additional dotted/dashed shading guides on every significant form. When hair is present, read the hair texture and express it with flowing directional lines across the full form. If lighting or highlights are visible in the hair, use dotted/dashed lines to outline the shape of those highlight regions — the same way contour lines are used on a face — so the light-and-shadow shapes remain legible in the stencil."
+"- Moderate detail: Outlines plus a small number of key interior lines only where they meaningfully help a tattoo artist (major face structure, jawline, main features). Keep it clean and uncluttered — minimal shading guides. When hair is present, indicate its main flow direction with only a few flowing lines; do not map the full texture." if detail_level == "moderate" else
+"- Maximum detail: ALL outlines, ALL visible interior contours, AND dotted/dashed shading guides on every significant form (cheeks, jawline, brow ridges, nose bridge, lip volumes, collarbone, clothing folds, fabric wrinkles). When hair is present, read the FULL hair texture with MANY flowing directional lines across its entire form, and outline EVERY visible highlight region with dotted/dashed contour guides — the same way contour lines describe a face. Heavy must be visibly DENSER than Moderate with more individual marks and more interior contour detail — never less."
 }
 
 FIDELITY — strict (applies to all detail levels):
 - Replicate only what is visibly present in the source image; do NOT invent, add, extend, or interpret anything not clearly there
 - Do NOT complete, correct, or clean up the subject — keep it exactly as shown
-- NO solid black fills anywhere — all shading must be expressed as dotted/dashed guide lines only
+- NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color
 - NO crosshatching or sketch-style shading
+- Use consistent, thin-to-medium line weight throughout. Avoid thick or bold outlines, especially around small features like eyes, lips, and nostrils, so lines read clearly at tattoo-stencil scale without bleeding or blurring when transferred to skin
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
@@ -2332,15 +2333,16 @@ CRITICAL REQUIREMENTS:
 DETAIL LEVEL: {detail_level.upper()}
 {
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
-"- Moderate detail: Outlines plus key interior details and contour guides. When hair is present, suggest its texture with a few flowing directional lines, and outline the main shape of any visible highlights with dotted/dashed guides." if detail_level == "moderate" else
-"- Maximum detail: Everything from moderate, PLUS all visible contours and additional dotted/dashed shading guides on every significant form. When hair is present, read the hair texture and express it with flowing directional lines across the full form. If lighting or highlights are visible in the hair, use dotted/dashed lines to outline the shape of those highlight regions — the same way contour lines are used on a face — so the light-and-shadow shapes remain legible in the stencil."
+"- Moderate detail: Outlines plus a small number of key interior lines only where they meaningfully help a tattoo artist (major face structure, jawline, main features). Keep it clean and uncluttered — minimal shading guides. When hair is present, indicate its main flow direction with only a few flowing lines; do not map the full texture." if detail_level == "moderate" else
+"- Maximum detail: ALL outlines, ALL visible interior contours, AND dotted/dashed shading guides on every significant form (cheeks, jawline, brow ridges, nose bridge, lip volumes, collarbone, clothing folds, fabric wrinkles). When hair is present, read the FULL hair texture with MANY flowing directional lines across its entire form, and outline EVERY visible highlight region with dotted/dashed contour guides — the same way contour lines describe a face. Heavy must be visibly DENSER than Moderate with more individual marks and more interior contour detail — never less."
 }
 
 FIDELITY — strict (applies to all detail levels):
 - Replicate only what is visibly present in the source image; do NOT invent, add, extend, or interpret anything not clearly there
 - Do NOT complete, correct, or clean up the subject — keep it exactly as shown
-- NO solid black fills anywhere — all shading must be expressed as dotted/dashed guide lines only
+- NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color
 - NO crosshatching or sketch-style shading
+- Use consistent, thin-to-medium line weight throughout. Avoid thick or bold outlines, especially around small features like eyes, lips, and nostrils, so lines read clearly at tattoo-stencil scale without bleeding or blurring when transferred to skin
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
