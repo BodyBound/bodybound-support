@@ -2159,6 +2159,8 @@ FIDELITY — strict (applies to all detail levels):
 - Replicate only what is visibly present in the source image; do NOT invent, add, extend, or interpret anything not clearly there
 - Do NOT complete, correct, or clean up the subject — keep it exactly as shown
 - NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color. The PUPIL in particular must be a hollow circle outline only — never filled black, never solid. The IRIS must be a hollow outline only — never filled or shaded solid.
+- CRITICAL for dark/high-contrast references (black backgrounds, dark makeup, stylized fashion photos): ignore the dark background completely — do not reproduce it as black. The background of the stencil is ALWAYS pure white. NEVER invert the image. NEVER trace silhouettes as solid black shapes just because the source photo has dark regions. Every dark region in the source must be represented by LINE WORK only (outlines + dotted shading guides), not filled black.
+- PRESERVE ORIGINAL POSE AND ORIENTATION EXACTLY: subject's head tilt, facing direction, gaze direction, and framing must match the source image. Do NOT rotate, mirror, re-center, re-crop, or re-pose the subject. Do NOT change the subject's identity, face shape, hair style, or visible adornments (crowns, makeup, jewelry) — replicate them as drawn line work.
 - EYELASHES must be drawn as individual fine hair strokes with the thinnest possible line weight — never a thick continuous band or heavy shadow along the lash line. Each lash is a delicate separate hair.
 - NO crosshatching or sketch-style shading
 - LINE WEIGHT (applies to all detail levels — extremely important for readable tattoo transfer):
@@ -2352,6 +2354,8 @@ FIDELITY — strict (applies to all detail levels):
 - Replicate only what is visibly present in the source image; do NOT invent, add, extend, or interpret anything not clearly there
 - Do NOT complete, correct, or clean up the subject — keep it exactly as shown
 - NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color. The PUPIL in particular must be a hollow circle outline only — never filled black, never solid. The IRIS must be a hollow outline only — never filled or shaded solid.
+- CRITICAL for dark/high-contrast references (black backgrounds, dark makeup, stylized fashion photos): ignore the dark background completely — do not reproduce it as black. The background of the stencil is ALWAYS pure white. NEVER invert the image. NEVER trace silhouettes as solid black shapes just because the source photo has dark regions. Every dark region in the source must be represented by LINE WORK only (outlines + dotted shading guides), not filled black.
+- PRESERVE ORIGINAL POSE AND ORIENTATION EXACTLY: subject's head tilt, facing direction, gaze direction, and framing must match the source image. Do NOT rotate, mirror, re-center, re-crop, or re-pose the subject. Do NOT change the subject's identity, face shape, hair style, or visible adornments (crowns, makeup, jewelry) — replicate them as drawn line work.
 - EYELASHES must be drawn as individual fine hair strokes with the thinnest possible line weight — never a thick continuous band or heavy shadow along the lash line. Each lash is a delicate separate hair.
 - NO crosshatching or sketch-style shading
 - LINE WEIGHT (applies to all detail levels — extremely important for readable tattoo transfer):
@@ -5491,12 +5495,23 @@ async def prompt_preview_alt_page():
     raise HTTPException(status_code=404, detail="Preview page not found")
 
 
+@api_router.get("/prompt-preview-skull")
+async def prompt_preview_skull_page():
+    """Serve a third-reference preview (stylized skull-makeup photo)."""
+    html_path = "/app/backend/static/prompt_preview_skull.html"
+    if os.path.exists(html_path):
+        with open(html_path, 'r') as f:
+            return HTMLResponse(content=f.read())
+    raise HTTPException(status_code=404, detail="Preview page not found")
+
+
 @api_router.get("/prompt-preview-asset/{filename}")
 async def prompt_preview_asset(filename: str):
     """Serve the prompt-preview images. Whitelist only; no path traversal."""
     allowed = {
         'portrait.jpg', 'stencil_medium.png', 'stencil_heavy.png',
         'portrait2.jpg', 'stencil_medium_alt.png', 'stencil_heavy_alt.png',
+        'portrait3.jpg', 'stencil_light_skull.png', 'stencil_medium_skull.png', 'stencil_heavy_skull.png',
     }
     if filename not in allowed:
         raise HTTPException(status_code=404, detail="Not found")

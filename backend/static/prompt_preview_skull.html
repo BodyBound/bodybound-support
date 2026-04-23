@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Stencil Prompt Preview — Skull Reference</title>
+  <style>
+    body { font-family: -apple-system, system-ui, sans-serif; background:#0a0a0a; color:#e7e2d4; margin:0; padding:24px; }
+    h1 { color:#c9a227; margin-top:0; letter-spacing:.4px; }
+    .note { color:#9ca3af; font-size:14px; margin-bottom:24px; line-height:22px; }
+    .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .panel { background:#151515; border:1px solid rgba(201,162,39,.25); border-radius:10px; padding:12px; }
+    .panel h3 { margin:0 0 8px; color:#c9a227; font-size:14px; letter-spacing:.4px; }
+    .panel img { width:100%; background:white; border-radius:6px; display:block; }
+    .panel p { color:#9ca3af; font-size:11px; line-height:17px; margin:8px 0 0; }
+    @media (max-width: 1100px) { .grid { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>Prompt Preview — Skull + Antlers Reference (regression test)</h1>
+  <p class="note">
+    High-contrast stylized reference that broke the previously-validated prompt
+    (solid-black inversions, orientation drift, face pose distortion). Prompt
+    is iteratively tuned against this image until all three styles keep the
+    pose, avoid solid black fills, and faithfully reflect the reference.
+  </p>
+  <div class="grid">
+    <div class="panel"><h3>Reference</h3>
+      <img src="/api/prompt-preview-asset/portrait3.jpg" />
+      <p>Skull makeup, antler crown, braided dreads, looking up-right. Very dark background.</p>
+    </div>
+    <div class="panel"><h3>Low Fidelity</h3>
+      <img src="/api/prompt-preview-asset/stencil_light_skull.png" />
+      <p>Clean outlines only. "The Bones".</p>
+    </div>
+    <div class="panel"><h3>Mid-Range</h3>
+      <img src="/api/prompt-preview-asset/stencil_medium_skull.png" />
+      <p>Form &amp; shape. Interior contours, no dense shading.</p>
+    </div>
+    <div class="panel"><h3>High Def</h3>
+      <img src="/api/prompt-preview-asset/stencil_heavy_skull.png" />
+      <p>Full shading guides + dotted light-to-dark transitions.</p>
+    </div>
+  </div>
+</body>
+</html>
