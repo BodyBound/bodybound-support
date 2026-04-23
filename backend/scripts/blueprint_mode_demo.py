@@ -18,7 +18,7 @@ IMAGES = {
     "skull": ("/app/backend/static/portrait3.jpg", "stencil_heavy_skull.png", "stencil_light_skull.png"),
     "lion":  ("/app/backend/static/portrait4.jpg", "stencil_heavy_lion.png",  "stencil_light_lion.png"),
 }
-STYLES = ["light", "heavy"]  # skip medium to keep runtime short
+STYLES = ["heavy"]  # focused: heavy-only preview
 
 
 async def gen(client: httpx.AsyncClient, image_b64: str, style: str, out_path: str) -> None:

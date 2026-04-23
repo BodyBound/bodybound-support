@@ -1914,7 +1914,16 @@ def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
             "saturated — many individual hair/fur strands, small creases, fine structural "
             "marks. More detail than Medium. CRITICAL: more detail NEVER means more fill "
             "or more shading. More detail means more TERTIARY STRUCTURAL LINES. Every "
-            "extra mark must describe a real structural feature the reference actually shows."
+            "extra mark must describe a real structural feature the reference actually shows.\n"
+            "\n"
+            "FACIAL DOTTED SHADING GUIDES (Heavy only, face only): In addition to the three "
+            "line tiers, add DOTTED or DASHED shading guides on the facial contours only — "
+            "cheeks, jawline, brow ridges, nose bridge, under the eyes, and lip volumes — "
+            "to mark where the tattoo artist will add shading on skin. These dotted guides "
+            "stay at normal visible dot size (do not shrink them). They are permitted ONLY "
+            "at the Heavy detail level, ONLY on the face, and they remain line work — "
+            "never filled regions. This is the single exception to the no-dotted-shading "
+            "rule in the ZERO-FILL section above."
         ),
     }
     detail_text = detail_blocks.get(detail_level, detail_blocks["moderate"])
@@ -5523,6 +5532,16 @@ async def prompt_preview_prescan_page():
 async def blueprint_mode_page():
     """Live preview of Blueprint Mode output for skull + lion references."""
     html_path = "/app/backend/static/blueprint_mode.html"
+    if os.path.exists(html_path):
+        with open(html_path, 'r') as f:
+            return HTMLResponse(content=f.read())
+    raise HTTPException(status_code=404, detail="Preview page not found")
+
+
+@api_router.get("/blueprint-heavy")
+async def blueprint_heavy_page():
+    """Focused preview: Heavy-only with facial dotted shading guides."""
+    html_path = "/app/backend/static/blueprint_heavy.html"
     if os.path.exists(html_path):
         with open(html_path, 'r') as f:
             return HTMLResponse(content=f.read())
