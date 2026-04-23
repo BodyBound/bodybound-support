@@ -23,6 +23,32 @@ TAG_TO_RULE = {
     "detailed_features": "Capture every visible detail in the reference (teeth, scars, wrinkles, small accessories, texture).",
 }
 
+# Two-layer preamble: HARD constraints always lead, SOFT enhancements follow.
+# Intent: texture/detail rules must NEVER be allowed to alter subject count,
+# pose, orientation, framing, or identity. If any rule conflicts with another,
+# hard constraints win.
+HARD_CONSTRAINT_RULES = [
+    "ONE SUBJECT ONLY — exactly one instance of the subject filling the frame. Do NOT duplicate, mirror, tile, pair, split-panel, or render the subject twice side-by-side.",
+    "Preserve the EXACT framing and crop from the reference — do not re-center, zoom, expand, or recompose.",
+    "Preserve the EXACT head tilt and gaze direction shown in the reference.",
+    "Preserve the EXACT orientation and facing direction of the subject — do not rotate, mirror, or flip.",
+    "Preserve the EXACT placement of any facial markings, face paint, makeup, tattoos, or scars — render them as outlines in their original position.",
+    "Preserve the EXACT silhouette structure of any crown, antlers, hair, or accessories — the outer profile must match the reference.",
+    "Do NOT reinterpret the subject's identity, face shape, hairstyle, or adornments — replicate them as drawn line work.",
+]
+TAG_TO_SOFT_RULE = {
+    "textured_fur": "Render mane/fur with many individual flowing strands in highlight regions; simplify shadow regions.",
+    "dense_hair_texture": "Render hair with many flowing strands concentrated in highlight regions; leave shadow regions simpler.",
+    "dark_background": "The stencil background must be PURE WHITE regardless of how dark the reference photo is.",
+    "high_contrast": "Dark regions in the source must become line work, NEVER solid black fills. Do not invert the image.",
+    "face_paint": "Face paint / makeup patterns must be drawn as outlines on the skin — do NOT omit or soften them.",
+    "animal_subject": "Preserve species-correct features (ears, muzzle, fangs, fur direction) exactly as shown in the reference.",
+    "detailed_features": "Capture fine visible details (teeth, scars, wrinkles, small accessories).",
+    "stylized_artwork": "",  # Intentionally empty — stylization is covered by hard constraints.
+    "symmetrical": "",        # Intentionally empty — covered by hard constraint #1.
+    "portrait": "",
+}
+
 CLASSIFY_PROMPT = """Analyze this tattoo reference image. Return a JSON array of lowercase tags from this list (omit any that don't apply):
 portrait, animal_subject, stylized_artwork, landscape, object, symmetrical,
 face_paint, textured_fur, dense_hair_texture, dark_background, high_contrast,
@@ -44,12 +70,19 @@ async def classify(image_b64: str) -> list[str]:
 
 
 def build_preamble(tags: list[str]) -> str:
-    rules = [TAG_TO_RULE[t] for t in tags if t in TAG_TO_RULE]
-    if not rules:
-        return ""
-    return ("IMAGE-SPECIFIC RULES (derived from automatic pre-scan of THIS "
-            "reference image — these take priority over the generic rules below):\n"
-            + "\n".join(f"- {r}" for r in rules))
+    soft_rules = [TAG_TO_SOFT_RULE[t] for t in tags if t in TAG_TO_SOFT_RULE and TAG_TO_SOFT_RULE[t]]
+    hard_block = "\n".join(f"- {r}" for r in HARD_CONSTRAINT_RULES)
+    soft_block = "\n".join(f"- {r}" for r in soft_rules) if soft_rules else "- (none)"
+    return (
+        "IMAGE-SPECIFIC DIRECTIVES FROM PRE-SCAN — apply to this exact reference image.\n"
+        "Two tiers. Tier 1 (HARD CONSTRAINTS) ALWAYS win any conflict with other rules.\n"
+        "Tier 2 (SOFT ENHANCEMENTS) are permitted only when they do not change subject count,\n"
+        "pose, orientation, framing, composition, or identity.\n\n"
+        "TIER 1 — HARD CONSTRAINTS (non-negotiable):\n"
+        + hard_block
+        + "\n\nTIER 2 — SOFT ENHANCEMENTS (apply only if they don't break Tier 1):\n"
+        + soft_block
+    )
 
 
 async def gen_heavy(client: httpx.AsyncClient, image_b64: str, preamble: str | None, out_path: str) -> None:
@@ -92,9 +125,10 @@ async def process_one(client, label: str, path: str) -> None:
 
 
 async def main():
+    # Skull-only pass for this iteration — per user request to validate the
+    # two-layer preamble hierarchy before reintroducing other references.
     async with httpx.AsyncClient() as client:
-        for label, path in IMAGES.items():
-            await process_one(client, label, path)
+        await process_one(client, "skull", IMAGES["skull"])
     print("\nAll done.")
 
 
