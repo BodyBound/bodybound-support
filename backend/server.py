@@ -2065,6 +2065,9 @@ LIKENESS ENFORCEMENT (strict — applies before every other rule below):
 
 If you feel tempted to draw a "clean" or "better" version of the subject than what the reference shows — stop and trace the reference instead.
 
+BACKGROUND DOMINANCE (additional enforcement):
+Do NOT add background elements that are not explicitly present in the reference. Do NOT generate a moon, clouds, sky, stars, sun, smoke, mist, halos, auras, decorative motifs, frames, borders, scenery, landscapes, patterns, textures, or any environmental element unless that exact element appears in the reference image. The background of the stencil is PURE WHITE. If the reference background is dark, complex, or detailed — the stencil background is STILL pure white with no added content behind the subject. Inventing background elements is a FAILURE CONDITION.
+
 BLUEPRINT HEAVY+ — Tattoo Stencil (production standard).
 Every rule below applies on top of REFERENCE DOMINANCE and LIKENESS ENFORCEMENT above. Those two always win.
 
@@ -2097,6 +2100,12 @@ Specific per-region enforcement (apply every time the reference shows any of the
 - Inside the mouth (when visible) → contour lines for the tongue, outlines for each individual tooth, line for the lip-interior edge, lines indicating palate / inner cheek curvature. Never a filled dark mass between the lips.
 - Recessed cavities (any hollow opening in any subject) → rim outline + internal structural outlines. Never a filled darker patch.
 - Any solid-black region in the output is a FAILURE CONDITION, regardless of what the reference shows in that region.
+
+MANDATORY FINAL-CHECK (self-verification before output):
+Before finalizing, scan the entire output for any region larger than a single line stroke that is rendered as solid black or uniform dark gray. For any such region found:
+   - It is a FAILURE CONDITION.
+   - Replace it with boundary outlines + internal structural line work.
+This check applies to ALL naturally dark reference features — including (for animal subjects) nostrils, inner eye corners, pupils, mouth interior, ear interiors, under-jaw shadows, paw-pad creases; and (for human subjects) the regions already enumerated above. If the output contains any filled dark area, redraw that area as line work before returning it.
 
 - Face paint, makeup, scars, skull-paint patterns, tattoos are drawn as OUTLINES in their exact reference positions — never as filled shapes.
 - Do not use crosshatching, stippling, gradients, or any mark pattern intended to simulate tone.
