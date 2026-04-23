@@ -18,6 +18,8 @@ const PRIVACY_POLICY_URL = 'https://bodybound.github.io/bodybound-support/privac
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Purchases, { PurchasesPackage, CustomerInfo } from 'react-native-purchases';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
+import { performQaLocalReset, createTapCounter } from '../utils/qaReset';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
 
@@ -85,6 +87,53 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   // toast is purely for user clarity.
   const [divergenceToast, setDivergenceToast] = useState<string | null>(null);
   const divergenceShownRef = useRef(false); // once-per-purchase guard
+
+  // --- QA-ONLY hidden reset gesture ---
+  // Mirrors the one in SettingsScreen. Critical here because the paywall
+  // auto-shows "You're subscribed" on launch when RC has a cached entitlement
+  // for the persisted appUserID, leaving QA with no path to Settings. This
+  // 7-tap gesture on the muted version footer is reachable from BOTH the
+  // subscribed and unsubscribed states.
+  const [qaResetting, setQaResetting] = useState(false);
+  const qaTapperRef = useRef(
+    createTapCounter({
+      requiredTaps: 7,
+      windowMs: 3000,
+      onTrigger: () => {
+        Alert.alert(
+          'QA Reset',
+          'This wipes the locally stored session token AND the RevenueCat identity on this device.\n\nThe app will return to its fresh-install welcome screen. Use this only for subscription QA.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Reset Local State', style: 'destructive', onPress: runQaReset },
+          ],
+        );
+      },
+    }),
+  );
+  const runQaReset = async () => {
+    setQaResetting(true);
+    try {
+      await performQaLocalReset();
+      Alert.alert(
+        'Local state cleared',
+        'You are now anonymous. Force-close the app and relaunch to complete the reset.',
+        [{ text: 'OK', onPress: () => onSignOut && onSignOut() }],
+      );
+    } catch (err: any) {
+      Alert.alert('Reset failed', err?.message || 'Something went wrong. Try again.');
+    } finally {
+      setQaResetting(false);
+    }
+  };
+  const appVersion = Constants.expoConfig?.version || '—';
+  const buildNumber =
+    (Platform.OS === 'ios' && (Constants.expoConfig as any)?.ios?.buildNumber) ||
+    (Platform.OS === 'android' && (Constants.expoConfig as any)?.android?.versionCode) ||
+    '';
+  const versionLabel = buildNumber
+    ? `BODY BOUND · v${appVersion} (${buildNumber})`
+    : `BODY BOUND · v${appVersion}`;
 
   // Map a raw RC product identifier back to the human tier label. If the
   // id is unknown we fall back to the generic message from the spec.
@@ -704,6 +753,23 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
               <Text style={styles.legalLink}>Privacy Policy</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Hidden QA reset — 7 taps on the version string.
+              Reachable even when user is trapped on "You're subscribed".
+              Indistinguishable from a standard footer version label. */}
+          <TouchableOpacity
+            testID="paywall-qa-reset-version-tap"
+            activeOpacity={1}
+            onPress={() => { if (!qaResetting) qaTapperRef.current.tap(); }}
+            style={styles.qaVersionTapTarget}
+            accessible={false}
+          >
+            {qaResetting ? (
+              <ActivityIndicator color="rgba(255,255,255,0.2)" size="small" />
+            ) : (
+              <Text style={styles.qaVersionText}>{versionLabel}</Text>
+            )}
+          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -910,5 +976,18 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.2,
     fontWeight: '500',
+  },
+  // Hidden QA reset tap target — deliberately indistinguishable from a
+  // normal footer version label. 7 taps within 3 s triggers the reset.
+  qaVersionTapTarget: {
+    paddingVertical: 28,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qaVersionText: {
+    color: 'rgba(255,255,255,0.18)',
+    fontSize: 11,
+    letterSpacing: 1,
   },
 });

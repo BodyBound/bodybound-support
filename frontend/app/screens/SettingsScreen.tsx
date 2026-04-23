@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Purchases from 'react-native-purchases';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
+import { performQaLocalReset, createTapCounter } from '../utils/qaReset';
 import { User, UserCredits } from '../types';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
@@ -54,17 +55,42 @@ export function SettingsScreen({
   const [loadingReferral, setLoadingReferral] = useState(false);
 
   // --- QA-ONLY hidden reset gesture ---
-  // Purpose: iOS Keychain persists both our `session_token` AND RevenueCat's
-  // appUserID across app uninstall. A "Delete App → Reinstall" cycle does
-  // NOT give QA a clean slate — cached RC entitlements replay on launch and
-  // the old JWT silently re-authenticates.
-  // This tap gesture (7 taps on the version string within ~3 s) runs a hard
-  // local reset: RC logOut + JWT delete + any other persisted auth keys.
-  // Invisible in normal use. Safe in production — no backend mutation, no
-  // PII exposure; it only wipes local caches and forces a fresh auth flow.
-  const qaTapCountRef = useRef(0);
-  const qaTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // See /app/frontend/app/utils/qaReset.ts for the rationale. The same
+  // gesture is wired into PaywallScreen so QA can reach the reset even when
+  // they're trapped on "You're subscribed" and can't reach Settings.
   const [qaResetting, setQaResetting] = useState(false);
+  const qaTapperRef = useRef(
+    createTapCounter({
+      requiredTaps: 7,
+      windowMs: 3000,
+      onTrigger: () => {
+        Alert.alert(
+          'QA Reset',
+          'This wipes the locally stored session token AND the RevenueCat identity on this device.\n\nThe app will return to its fresh-install welcome screen. Use this only for subscription QA.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Reset Local State', style: 'destructive', onPress: runQaReset },
+          ],
+        );
+      },
+    }),
+  );
+
+  const runQaReset = async () => {
+    setQaResetting(true);
+    try {
+      await performQaLocalReset();
+      Alert.alert(
+        'Local state cleared',
+        'You are now anonymous. Force-close the app and relaunch to complete the reset.',
+        [{ text: 'OK', onPress: onSignOut }],
+      );
+    } catch (err: any) {
+      Alert.alert('Reset failed', err?.message || 'Something went wrong. Try again.');
+    } finally {
+      setQaResetting(false);
+    }
+  };
   
   // Check if user has The Shop subscription (admin or member)
   const isShopTier = credits?.tier === 'the-shop' || credits?.tier === 'the-shop-member';
@@ -440,7 +466,7 @@ export function SettingsScreen({
           <TouchableOpacity
             testID="qa-reset-version-tap"
             activeOpacity={1}
-            onPress={handleQaResetTap}
+            onPress={() => { if (!qaResetting) qaTapperRef.current.tap(); }}
             style={styles.qaVersionTapTarget}
             accessible={false}
           >
