@@ -51,6 +51,14 @@ __pycache__/
 venv/
 .venv/
 
+# Environment files (NEVER commit — contains API keys, DB URLs, secrets)
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+.secrets-local/
+
 # Development tools
 chainlit.md
 .chainlit
