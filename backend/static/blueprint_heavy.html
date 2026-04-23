@@ -24,6 +24,7 @@ h2{color:#c9a227;font-size:18px;margin:18px 0 10px}
     <li><b>Four-tier hierarchy:</b> Primary (bold outer contours, foreground) / Secondary (medium internal structure, facial features) / Tertiary (fine texture, hair flow) / Dotted (light facial guides & form transitions). Lines must NOT be uniform weight. Foreground reads stronger than background.</li>
     <li><b>Heavy+ detail policy:</b> preserve detail, reduce visual noise ~10–20%. Hair follows directional flow (not random strands). Texture is selective, not full-surface coverage. Facial dotted guides retained. Avoid clutter.</li>
     <li><b>Consistency:</b> <code>temperature=0.0</code> is now the default. Same reference → consistent structure → predictable line placement.</li>
+    <li><b>Post-processing:</b> Otsu thresholding removed. Grayscale line values preserved → anti-aliased edges, line-weight variation, and dotted-line integrity now match the raw AI output. Background still removed via alpha channel (transparent PNG).</li>
     <li><b>Removed entirely:</b> fill logic, shading generation, structure-altering "enhancement", random black region creation.</li>
   </ul>
 </div>

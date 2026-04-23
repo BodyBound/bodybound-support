@@ -412,78 +412,58 @@ def fix_exif_orientation(base64_string: str) -> str:
 
 def post_process_stencil(base64_string: str) -> str:
     """Post-process AI-generated stencil to create a TRANSPARENT PNG.
-    
-    This function:
-    1. Removes ANY color - converts to pure grayscale
-    2. Forces TRUE BINARY output - only black and transparent pixels
-    3. White background becomes TRANSPARENT
-    4. Black linework remains solid
+
+    Value-preserving pipeline — NO thresholding, NO flattening.
+    1. Convert to grayscale (removes color cast only).
+    2. Use the grayscale value as an inverted alpha mask: dark pixels stay
+       fully opaque, mid-gray pixels stay partially opaque, near-white pixels
+       become transparent. This preserves anti-aliased line edges, line-weight
+       variation, and dotted-line integrity exactly as the model drew them.
+    3. RGB channel is fixed to black so all line values composite as black
+       over any background, at their actual intensity.
+
+    What this does NOT do: Otsu, binary threshold, Gaussian pre-blur, forced
+    inversion, or any other operation that flattens line values.
     """
     try:
-        logger.info("[PostProcess] Starting stencil post-processing...")
-        
+        logger.info("[PostProcess] Starting stencil post-processing (value-preserving)...")
+
         # Decode image
         if ',' in base64_string:
-            prefix = base64_string.split(',')[0] + ','
             base64_data = base64_string.split(',')[1]
         else:
-            prefix = "data:image/png;base64,"
             base64_data = base64_string
-        
+
         img_data = base64.b64decode(base64_data)
         img = Image.open(BytesIO(img_data))
-        
-        # Convert to OpenCV format
-        img_cv = cv2.cvtColor(np.array(img.convert('RGB')), cv2.COLOR_RGB2BGR)
-        
-        # === STEP 1: Force grayscale to remove any color ===
-        gray = cv2.cvtColor(img_cv, cv2.COLOR_BGR2GRAY)
-        logger.info("[PostProcess] Converted to grayscale (removed any color)")
-        
-        # === STEP 1b: Light blur to reduce micro-noise before thresholding ===
-        gray = cv2.GaussianBlur(gray, (3, 3), 0)
-        
-        # === STEP 2: Apply adaptive threshold for better line preservation ===
-        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        logger.info("[PostProcess] Applied Otsu's adaptive threshold")
-        
-        # === STEP 3: Ensure lines are solid black, background is white ===
-        white_pixels = np.sum(binary == 255)
-        black_pixels = np.sum(binary == 0)
-        if black_pixels > white_pixels:
-            binary = 255 - binary
-            logger.info("[PostProcess] Inverted to ensure white background")
-        
-        # === STEP 4: Create transparent PNG - white becomes transparent ===
-        # Create RGBA image (4 channels: R, G, B, Alpha)
-        height, width = binary.shape
-        rgba = np.zeros((height, width, 4), dtype=np.uint8)
-        
-        # Black pixels (linework) = solid black with full opacity
-        # White pixels (background) = transparent
-        black_mask = binary == 0
-        white_mask = binary == 255
-        
-        # Set black linework (R=0, G=0, B=0, A=255)
-        rgba[black_mask] = [0, 0, 0, 255]
-        
-        # Set white background as transparent (R=255, G=255, B=255, A=0)
-        rgba[white_mask] = [255, 255, 255, 0]
-        
-        logger.info("[PostProcess] Created transparent PNG - white background removed")
-        
-        # Convert to PIL Image and save as PNG with alpha
+
+        # Grayscale (preserves full 0–255 line-value range)
+        gray = np.asarray(img.convert('L'))  # shape: (H, W), dtype uint8
+        h, w = gray.shape
+        logger.info(f"[PostProcess] Grayscale preserved (shape={h}x{w})")
+
+        # Background removal via inverted-alpha:
+        #   pure white (255)  -> alpha 0   (transparent)
+        #   near-white (250)  -> alpha 5   (nearly transparent)
+        #   mid-gray (128)    -> alpha 127 (semi-transparent)
+        #   pure black (0)    -> alpha 255 (solid)
+        alpha = 255 - gray
+
+        # RGB = black everywhere. With the alpha matte above, this produces
+        # anti-aliased black line work whose softness matches the model output.
+        rgba = np.zeros((h, w, 4), dtype=np.uint8)
+        rgba[..., 3] = alpha  # R, G, B stay 0; A carries the line intensity
+
+        logger.info("[PostProcess] Transparent PNG composed — line values preserved, no threshold applied")
+
         result_img = Image.fromarray(rgba, 'RGBA')
-        
-        # Save to buffer
         buffer = BytesIO()
         result_img.save(buffer, format='PNG')
         result_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-        
-        logger.info("[PostProcess] Stencil post-processing complete - transparent PNG output")
-        
+
+        logger.info("[PostProcess] Stencil post-processing complete")
         return f"data:image/png;base64,{result_base64}"
-        
+
     except Exception as e:
         logger.error(f"[PostProcess] Error: {str(e)}")
         import traceback
