@@ -67,6 +67,17 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **AI Stencil Prompt — final tuning pass (Apr 23 2026)** — user-verified against `/api/prompt-preview` on production. Prompt in `backend/server.py` (both `/ai-stencil` and `process_stencil_job`) now enforces:
+  - Strict FIDELITY: replicate only what's visibly present; no inventing / completing / cleaning up.
+  - NO solid black fills anywhere. Pupils + irises are explicitly called out as hollow outlines only (this was the last regression the user flagged).
+  - Eyelashes drawn as individual fine hair strokes — never a thick band.
+  - LINE WEIGHT rule split: applies **only to continuous solid lines** (eyes/brows/lips/nose/hair flow/silhouette). Dotted/dashed shading guides keep full visible dot size, since thinning them made face-contour dots disappear.
+  - Facial contour dotted shading (cheeks, jawline, brow ridges, nose bridge, under eyes, lip volumes) preserved at full density in Heavy.
+  - Heavy hair dots now trace **light-to-dark transitions** (highlight-to-shadow boundaries) rather than just outlining highlight regions.
+  - Moderate/Heavy intensity ordering corrected — Heavy is visibly denser than Moderate.
+  - New one-off script `backend/scripts/generate_preview_stencils.py` regenerates the Medium + Heavy preview PNGs served by `/api/prompt-preview` using the live prompt — used for visual QA passes without needing a TestFlight build.
+  - All 25 monetization/paywall regression tests still green after the prompt rewrite.
+
 - **Subscription state rewrite (commit `9b852a22`, Apr 21 2026)** — single authoritative writer for paid state, eliminating the "Walk-In card purchased Booked Out" / TRANSFER-overwrites-paid-state regressions.
   - New helper `apply_paid_subscription_state(user_id, product_id, source, rc_customer_id, is_apple_trial)` in `backend/server.py` — the only place paid tier/credits are written. Raises `ValueError` on unknown product_id (no silent fallback).
   - New `PRODUCT_CREDIT_MAP`: strict `product_id → (tier, credits)` map. Three known products only.
