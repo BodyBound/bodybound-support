@@ -67,7 +67,7 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
-- **AI Stencil Prompt — final tuning pass (Apr 23 2026)** — user-verified against `/api/prompt-preview` on production. Prompt in `backend/server.py` (both `/ai-stencil` and `process_stencil_job`) now enforces:
+- **AI Stencil Prompt — final tuning pass (Apr 23 2026)** — user-verified against `/api/prompt-preview` (long-hair female portrait) AND `/api/prompt-preview-alt` (short-hair male portrait) on production. Prompt generalises cleanly across subjects. Prompt in `backend/server.py` (both `/ai-stencil` and `process_stencil_job`) now enforces:
   - Strict FIDELITY: replicate only what's visibly present; no inventing / completing / cleaning up.
   - NO solid black fills anywhere. Pupils + irises are explicitly called out as hollow outlines only (this was the last regression the user flagged).
   - Eyelashes drawn as individual fine hair strokes — never a thick band.
