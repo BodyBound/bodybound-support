@@ -5517,6 +5517,47 @@ async def blueprint_heavy_page():
     raise HTTPException(status_code=404, detail="Preview page not found")
 
 
+@api_router.get("/raw-vs-processed")
+async def raw_vs_processed_page():
+    """Side-by-side: raw AI output vs post-processed output."""
+    html_path = "/app/backend/static/raw_vs_processed.html"
+    if os.path.exists(html_path):
+        with open(html_path, 'r') as f:
+            return HTMLResponse(content=f.read())
+    raise HTTPException(status_code=404, detail="Preview page not found")
+
+
+class AIStencilDebugRequest(BaseModel):
+    image_base64: str
+    regenerate_style: Optional[str] = "heavy"
+    temperature: Optional[float] = 0.0
+
+
+@api_router.post("/ai-stencil-debug")
+async def ai_stencil_debug(request: AIStencilDebugRequest):
+    """Debug endpoint: return the raw AI output AND the post-processed output.
+
+    Exists so the user can visually verify that post-processing is not altering
+    line values. Skips cache and resize to keep the comparison honest.
+    """
+    style_to_detail = {"light": "minimal", "medium": "moderate", "heavy": "detailed"}
+    detail_level = style_to_detail.get(request.regenerate_style or "heavy", "detailed")
+    prompt = build_blueprint_prompt("black", detail_level)
+
+    image_data = request.image_base64.split(",", 1)[1] if "," in request.image_base64 else request.image_base64
+
+    raw_b64, mime = await generate_with_gemini(image_data, prompt, temperature=request.temperature)
+
+    raw_data_url = f"data:{mime};base64,{raw_b64}"
+    processed_data_url = post_process_stencil(raw_data_url)
+
+    return {
+        "raw_base64": raw_data_url,
+        "processed_base64": processed_data_url,
+        "prompt_length": len(prompt),
+    }
+
+
 @api_router.get("/prompt-preview-lion")
 async def prompt_preview_lion_page():
     html_path = "/app/backend/static/prompt_preview_lion.html"
@@ -5552,6 +5593,8 @@ async def prompt_preview_asset(filename: str):
         'prescan_lion_after_a.png', 'prescan_lion_after_b.png',
         'blueprint_skull_light.png', 'blueprint_skull_heavy.png',
         'blueprint_lion_light.png', 'blueprint_lion_heavy.png',
+        'rawvp_skull_raw.png', 'rawvp_skull_processed.png',
+        'rawvp_lion_raw.png', 'rawvp_lion_processed.png',
     }
     if filename not in allowed:
         raise HTTPException(status_code=404, detail="Not found")

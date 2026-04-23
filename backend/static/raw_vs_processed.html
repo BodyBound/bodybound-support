@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Raw vs Processed — Post-Processing Verification</title>
+<style>
+body{font-family:-apple-system,system-ui,sans-serif;background:#0a0a0a;color:#e7e2d4;margin:0;padding:24px;max-width:1400px;margin:0 auto}
+h1{color:#c9a227;margin:0 0 6px;letter-spacing:.4px}
+.note{color:#9ca3af;font-size:14px;margin-bottom:24px;line-height:22px}
+.spec{background:#111;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:14px 16px;margin-bottom:28px;font-size:13px;line-height:21px;color:#c9c4b4}
+.spec b{color:#c9a227}
+section{margin-bottom:36px}
+h2{color:#c9a227;font-size:18px;margin:24px 0 10px}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.panel{background:#151515;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:12px}
+.panel h3{margin:0 0 8px;color:#c9a227;font-size:13px;letter-spacing:.4px}
+.panel img{width:100%;background:white;border-radius:6px;display:block}
+.panel p{color:#9ca3af;font-size:11px;line-height:17px;margin:8px 0 0;font-family:ui-monospace,Menlo,monospace}
+.panel.raw h3{color:#d9a275}
+.panel.proc h3{color:#7CC98E}
+.fill{color:#ff7a7a}
+.ok{color:#7CC98E}
+@media(max-width:1100px){.grid{grid-template-columns:1fr}}
+</style></head>
+<body>
+<h1>Raw AI Output vs Post-Processed — Side by Side</h1>
+<p class="note">This page proves post-processing is non-destructive. Each row shows the original reference, the raw base64 PNG returned by Gemini (no processing applied), and the final post-processed image the app delivers.</p>
+
+<div class="spec">
+  <b>What post-processing actually does (current):</b>
+  <ol style="margin:6px 0 0 0;padding-left:20px">
+    <li>Decode PNG.</li>
+    <li>Convert to grayscale (removes color cast, preserves full 0–255 range).</li>
+    <li>Diagnostic: count near-black pixels (&lt;40/255). Log <code>FILL VIOLATION SUSPECTED</code> if &gt;5% — read-only, no pixel changes.</li>
+    <li>Compose transparent PNG: RGB = black everywhere, alpha = 255 − grayscale. Pure white → transparent, mid-gray → partial alpha, pure black → fully opaque.</li>
+    <li>Save PNG, return.</li>
+  </ol>
+  <b>Removed:</b> Otsu thresholding, binary conversion, Gaussian pre-blur, forced inversion. None of that runs.
+</div>
+
+<section>
+<h2>Skull Makeup Woman — Heavy</h2>
+<div class="grid">
+  <div class="panel"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait3.jpg"/><p>Source photo</p></div>
+  <div class="panel raw"><h3>RAW — straight from Gemini</h3><img src="/api/prompt-preview-asset/rawvp_skull_raw.png"/><p>No post-processing applied. This is the pure model output.</p></div>
+  <div class="panel proc"><h3>PROCESSED — alpha-matted</h3><img src="/api/prompt-preview-asset/rawvp_skull_processed.png"/><p>Same pixel line values, background converted to transparent via alpha channel only.</p></div>
+</div>
+</section>
+
+<section>
+<h2>Roaring Lion + Thorn Crown — Heavy</h2>
+<div class="grid">
+  <div class="panel"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait4.jpg"/><p>Source photo</p></div>
+  <div class="panel raw"><h3>RAW — straight from Gemini</h3><img src="/api/prompt-preview-asset/rawvp_lion_raw.png"/><p>No post-processing applied.</p></div>
+  <div class="panel proc"><h3>PROCESSED — alpha-matted</h3><img src="/api/prompt-preview-asset/rawvp_lion_processed.png"/><p>Same pixel line values, transparent background.</p></div>
+</div>
+</section>
+
+<p class="note" style="margin-top:32px">Compare RAW vs PROCESSED in each row. Line weights, dotted marks, anti-aliased edges should look identical — only the white background is replaced with transparency. If RAW shows a solid black region and PROCESSED still shows that same region as solid black, that's the model filling — not post-processing.</p>
+
+</body></html>
