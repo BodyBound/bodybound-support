@@ -410,20 +410,18 @@ def fix_exif_orientation(base64_string: str) -> str:
 # STENCIL POST-PROCESSING
 # ============================================
 
-def post_process_stencil(base64_string: str) -> str:
+def post_process_stencil(base64_string: str) -> tuple[str, float]:
     """Post-process AI-generated stencil to create a TRANSPARENT PNG.
 
     Value-preserving pipeline — NO thresholding, NO flattening.
-    1. Convert to grayscale (removes color cast only).
-    2. Use the grayscale value as an inverted alpha mask: dark pixels stay
-       fully opaque, mid-gray pixels stay partially opaque, near-white pixels
-       become transparent. This preserves anti-aliased line edges, line-weight
-       variation, and dotted-line integrity exactly as the model drew them.
-    3. RGB channel is fixed to black so all line values composite as black
-       over any background, at their actual intensity.
 
-    What this does NOT do: Otsu, binary threshold, Gaussian pre-blur, forced
-    inversion, or any other operation that flattens line values.
+    Returns:
+        (data_url, near_black_fraction)
+        - data_url: PNG data URL with alpha-matted transparent background
+        - near_black_fraction: fraction of pixels darker than 40/255 in the raw
+          model output (before alpha matting). Callers can surface this to
+          clients as a signal that the model may have violated the zero-fill
+          rule. Typical clean outputs: 3-5%. >5% indicates possible fills.
     """
     try:
         logger.info("[PostProcess] Starting stencil post-processing (value-preserving)...")
@@ -474,13 +472,13 @@ def post_process_stencil(base64_string: str) -> str:
         result_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
 
         logger.info("[PostProcess] Stencil post-processing complete")
-        return f"data:image/png;base64,{result_base64}"
+        return f"data:image/png;base64,{result_base64}", dark_fraction
 
     except Exception as e:
         logger.error(f"[PostProcess] Error: {str(e)}")
         import traceback
         traceback.print_exc()
-        return base64_string  # Return original on error
+        return base64_string, 0.0  # Return original on error
 
 def generate_thumbnail(base64_string: str, max_size: int = 150) -> str:
     """Generate a thumbnail from a base64 image for gallery preview
@@ -2076,6 +2074,7 @@ class AIStencilResponse(BaseModel):
     stencil_base64: str
     processing_time_ms: float
     regenerated_style: Optional[str] = None  # Which style was regenerated (if single style request)
+    near_black_fraction: Optional[float] = None  # 0..1 — fraction of raw-output pixels darker than 40/255. >0.05 indicates possible zero-fill violation.
     
 async def generate_with_gemini(image_data: str, prompt: str, temperature: Optional[float] = None) -> tuple[str, str]:
     """Generate stencil with Gemini using emergentintegrations LlmChat
@@ -2403,7 +2402,7 @@ async def generate_ai_stencil(request: AIStencilRequest):
         
         # === STEP 7: POST-PROCESS STENCIL ===
         # Boost line weight, clean artifacts, ensure consistent quality
-        stencil_base64 = post_process_stencil(stencil_base64)
+        stencil_base64, near_black_fraction = post_process_stencil(stencil_base64)
         
         # === STEP 8: CACHE THE RESULT for future instant retrieval ===
         cache_stencil(cache_key, stencil_base64)
@@ -2416,7 +2415,8 @@ async def generate_ai_stencil(request: AIStencilRequest):
             stencil_base64=stencil_base64,
             processing_time_ms=round(processing_time, 2),
             provider=provider_used,
-            regenerated_style=request.regenerate_style
+            regenerated_style=request.regenerate_style,
+            near_black_fraction=round(near_black_fraction, 4),
         )
         
     except HTTPException:
@@ -2516,7 +2516,7 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
             
             # Apply post-processing to ensure clean B&W output
             stencil_with_prefix = f"data:{mime_type};base64,{result_base64}"
-            processed_stencil = post_process_stencil(stencil_with_prefix)
+            processed_stencil, _fill_frac = post_process_stencil(stencil_with_prefix)
             
             job.result[style] = processed_stencil
             logger.info(f"[AsyncJob {job.job_id}] {style} version completed")
@@ -5671,12 +5671,13 @@ async def ai_stencil_debug(request: AIStencilDebugRequest):
     raw_b64, mime = await generate_with_gemini(image_data, prompt, temperature=request.temperature)
 
     raw_data_url = f"data:{mime};base64,{raw_b64}"
-    processed_data_url = post_process_stencil(raw_data_url)
+    processed_data_url, near_black_fraction = post_process_stencil(raw_data_url)
 
     return {
         "raw_base64": raw_data_url,
         "processed_base64": processed_data_url,
         "prompt_length": len(prompt),
+        "near_black_fraction": round(near_black_fraction, 4),
     }
 
 
