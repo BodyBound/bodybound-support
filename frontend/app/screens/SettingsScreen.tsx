@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Purchases from 'react-native-purchases';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 import { User, UserCredits } from '../types';
 
 const API_URL = process.env.EXPO_PUBLIC_BACKEND_URL || '';
@@ -51,6 +52,19 @@ export function SettingsScreen({
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralLink, setReferralLink] = useState<string | null>(null);
   const [loadingReferral, setLoadingReferral] = useState(false);
+
+  // --- QA-ONLY hidden reset gesture ---
+  // Purpose: iOS Keychain persists both our `session_token` AND RevenueCat's
+  // appUserID across app uninstall. A "Delete App → Reinstall" cycle does
+  // NOT give QA a clean slate — cached RC entitlements replay on launch and
+  // the old JWT silently re-authenticates.
+  // This tap gesture (7 taps on the version string within ~3 s) runs a hard
+  // local reset: RC logOut + JWT delete + any other persisted auth keys.
+  // Invisible in normal use. Safe in production — no backend mutation, no
+  // PII exposure; it only wipes local caches and forces a fresh auth flow.
+  const qaTapCountRef = useRef(0);
+  const qaTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [qaResetting, setQaResetting] = useState(false);
   
   // Check if user has The Shop subscription (admin or member)
   const isShopTier = credits?.tier === 'the-shop' || credits?.tier === 'the-shop-member';
@@ -154,6 +168,83 @@ export function SettingsScreen({
     await SecureStore.deleteItemAsync('session_token');
     onSignOut();
   };
+
+  // QA-only: nuke every piece of locally persisted auth/identity state so
+  // the next app launch behaves exactly like a fresh install on a virgin
+  // device — without requiring the user to Erase All Content.
+  const handleQaResetTap = () => {
+    if (qaResetting) return;
+    qaTapCountRef.current += 1;
+    // Reset the counter if taps slow down (must hit 7 within ~3 s)
+    if (qaTapTimerRef.current) clearTimeout(qaTapTimerRef.current);
+    qaTapTimerRef.current = setTimeout(() => {
+      qaTapCountRef.current = 0;
+    }, 3000);
+    if (qaTapCountRef.current < 7) return;
+
+    // Fired on the 7th tap. Reset counter so repeating the gesture works.
+    qaTapCountRef.current = 0;
+    if (qaTapTimerRef.current) clearTimeout(qaTapTimerRef.current);
+
+    Alert.alert(
+      'QA Reset',
+      'This wipes the locally stored session token AND the RevenueCat identity on this device.\n\nThe app will return to its fresh-install welcome screen. Use this only for subscription QA.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset Local State',
+          style: 'destructive',
+          onPress: performQaReset,
+        },
+      ],
+    );
+  };
+
+  const performQaReset = async () => {
+    setQaResetting(true);
+    try {
+      // 1. RevenueCat: generates a new anonymous appUserID on-device and
+      //    discards any entitlements cached for the previous identity.
+      //    Safe on production accounts too — logOut is always reversible
+      //    by calling logIn() again with the real user_id.
+      if (Platform.OS === 'ios' || Platform.OS === 'android') {
+        try {
+          await Purchases.logOut();
+          console.log('[QAReset] Purchases.logOut() complete');
+        } catch (e) {
+          // RC throws if the current user is already anonymous — not fatal.
+          console.log('[QAReset] Purchases.logOut() threw (expected if anonymous):', e);
+        }
+      }
+
+      // 2. Delete every SecureStore key we've ever written. These are the
+      //    only two; documented here so a future audit can spot drift.
+      try { await SecureStore.deleteItemAsync('session_token'); } catch (_) {}
+      try { await SecureStore.deleteItemAsync('pending_referral_code'); } catch (_) {}
+      console.log('[QAReset] SecureStore keys deleted');
+
+      // 3. Hand control back to index.tsx which will re-evaluate auth on
+      //    mount and route the user to WelcomeScreen (same as fresh install).
+      Alert.alert(
+        'Local state cleared',
+        'You are now anonymous. Force-close the app and relaunch to complete the reset.',
+        [{ text: 'OK', onPress: onSignOut }],
+      );
+    } catch (err: any) {
+      Alert.alert('Reset failed', err?.message || 'Something went wrong. Try again.');
+    } finally {
+      setQaResetting(false);
+    }
+  };
+
+  const appVersion = Constants.expoConfig?.version || '—';
+  const buildNumber =
+    (Platform.OS === 'ios' && (Constants.expoConfig as any)?.ios?.buildNumber) ||
+    (Platform.OS === 'android' && (Constants.expoConfig as any)?.android?.versionCode) ||
+    '';
+  const versionLabel = buildNumber
+    ? `BODY BOUND · v${appVersion} (${buildNumber})`
+    : `BODY BOUND · v${appVersion}`;
 
   const tierLabel = credits?.tier ? TIER_LABELS[credits.tier] || credits.tier : 'No Subscription';
   const renewalDate = credits?.renewal_date
@@ -344,6 +435,21 @@ export function SettingsScreen({
               This permanently deletes your account and all data.
             </Text>
           </View>
+
+          {/* Hidden QA reset — 7 taps on the version string */}
+          <TouchableOpacity
+            testID="qa-reset-version-tap"
+            activeOpacity={1}
+            onPress={handleQaResetTap}
+            style={styles.qaVersionTapTarget}
+            accessible={false}
+          >
+            {qaResetting ? (
+              <ActivityIndicator color="rgba(255,255,255,0.2)" size="small" />
+            ) : (
+              <Text style={styles.qaVersionText}>{versionLabel}</Text>
+            )}
+          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -478,5 +584,18 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '700',
     fontSize: 14,
+  },
+  // Hidden QA reset tap target — deliberately indistinguishable from a
+  // normal footer version label. 7 taps within 3 s triggers the reset.
+  qaVersionTapTarget: {
+    paddingVertical: 32,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  qaVersionText: {
+    color: 'rgba(255,255,255,0.18)',
+    fontSize: 11,
+    letterSpacing: 1,
   },
 });

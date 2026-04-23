@@ -67,6 +67,12 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **QA-only local reset gesture (Apr 23 2026)** — shipped to `main`:
+  - **Problem isolated during paywall validation**: `Delete App → Reinstall` does NOT produce a clean slate on iOS. Root causes: (1) `expo-secure-store` persists our `session_token` in iOS Keychain which survives uninstall by design, (2) RevenueCat's `appUserID` is also Keychain-persisted → `Purchases.getCustomerInfo()` replays cached entitlements attached to the previous identity, causing PaywallScreen to show "You're subscribed" on a supposedly-fresh install (triggered at `PaywallScreen.tsx:164-166`).
+  - **Fix shipped** (`frontend/app/screens/SettingsScreen.tsx`): hidden 7-tap gesture on a version-number footer inside Settings → Danger Zone. 7 taps within 3 s → confirmation Alert → performs `Purchases.logOut()` + `SecureStore.deleteItemAsync('session_token')` + `SecureStore.deleteItemAsync('pending_referral_code')` + routes back through `onSignOut()`. Final Alert prompts user to force-quit and relaunch for a guaranteed fresh-install path.
+  - **Production-safe**: footer renders as a muted `rgba(255,255,255,0.18)` version label — indistinguishable from a normal copyright line. No backend mutation, no PII exposure, `Purchases.logOut()` is reversible by next `Purchases.logIn(user_id)` call on real sign-in.
+  - **Not a permanent fix for end-users**: this is a QA tool. A long-term solution would be "on first launch after fresh install, auto-wipe Keychain via a NSUserDefaults sentinel" — tracked as P2 backlog.
+
 - **Reroll + Thumbs-Rating (Apr 23 2026)** — shipped to `main`, shared lib ready for `redesign/unified-editor`:
   - **Root-cause fix**: `/api/credits/deduct` individual-user branch was previously orphaned module-level code (only studio teams worked); restored inside the function. Plus `/api/ai-stencil` was returning the same cached image on every reroll — cache now skipped when `regenerate_style` is set.
   - **Reroll cost UX**: per-style inline label under each style button ("Free reroll" in green / "1 credit" in gold). First reroll per style stays free; every reroll after requires a native `Alert.alert` confirmation before the credit is spent. NO hard cap — unlimited rerolls as long as the user has credits.
