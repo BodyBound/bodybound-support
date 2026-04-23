@@ -611,8 +611,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
-  // Hidden QA reset tap target — deliberately indistinguishable from a
-  // normal footer version label. 7 taps within 3 s triggers the reset.
+  // Hidden QA reset tap target — footer visibly legible so build/version is
+  // verifiable at a glance; reset still requires 7 taps in 3 s to trigger.
   qaVersionTapTarget: {
     paddingVertical: 32,
     paddingHorizontal: 20,
@@ -620,8 +620,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   qaVersionText: {
-    color: 'rgba(255,255,255,0.18)',
-    fontSize: 11,
+    color: 'rgba(255,255,255,0.55)',
+    fontSize: 12,
     letterSpacing: 1,
+    fontWeight: '600',
   },
 });

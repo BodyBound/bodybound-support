@@ -2,7 +2,7 @@
   "expo": {
     "name": "Body Bound Stencil Generator",
     "slug": "body-bound-stencil",
-    "version": "3.0.59",
+    "version": "3.0.65",
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "body-bound-stencil",
@@ -16,7 +16,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "buildNumber": "59",
+      "buildNumber": "65",
       "infoPlist": {
         "NSCameraUsageDescription": "Take photos to convert into tattoo stencils",
         "NSPhotoLibraryUsageDescription": "Select reference photos to convert into stencils",

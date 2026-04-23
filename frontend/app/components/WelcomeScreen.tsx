@@ -5,14 +5,26 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
 }
 
 export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
+  // Live version label — pulled from expo-constants so it always reflects the
+  // running build, not a hardcoded string. Previously hardcoded to "v2.2.0"
+  // which was massively stale vs. the real 3.0.x build numbers in TestFlight.
+  const appVersion = Constants.expoConfig?.version || '—';
+  const buildNumber =
+    (Platform.OS === 'ios' && (Constants.expoConfig as any)?.ios?.buildNumber) ||
+    (Platform.OS === 'android' && (Constants.expoConfig as any)?.android?.versionCode) ||
+    '';
+  const versionLabel = buildNumber ? `v${appVersion} (${buildNumber})` : `v${appVersion}`;
+
   return (
     <View style={styles.welcomeContainer}>
       {/* Full-screen Background Image */}
@@ -56,9 +68,9 @@ export function WelcomeScreen({ onGetStarted }: WelcomeScreenProps) {
         {/* Middle Spacer - Let the artwork show */}
         <View style={styles.welcomeMiddleSpacer} />
 
-        {/* Bottom - Just version */}
+        {/* Bottom - live version pulled from expo-constants (was "v2.2.0" hardcoded). */}
         <View style={styles.welcomeBottomVersion}>
-          <Text style={styles.welcomeVersionNew}>v2.2.0</Text>
+          <Text style={styles.welcomeVersionNew} testID="welcome-version-label">{versionLabel}</Text>
         </View>
       </SafeAreaView>
     </View>
