@@ -2148,7 +2148,7 @@ DETAIL LEVEL: {detail_level.upper()}
 {
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
 "- Moderate detail: Outlines plus a small number of key interior lines only where they meaningfully help a tattoo artist (major face structure, jawline, main features). Keep it clean and uncluttered — minimal shading guides. When hair is present, indicate its main flow direction with only a few flowing lines; do not map the full texture." if detail_level == "moderate" else
-"- Maximum detail: ALL outlines, ALL visible interior contours, AND dotted/dashed shading guides on every significant form (cheeks, jawline, brow ridges, nose bridge, lip volumes, collarbone, clothing folds, fabric wrinkles). When hair is present, read the FULL hair texture with MANY flowing directional lines across its entire form, and outline EVERY visible highlight region with dotted/dashed contour guides — the same way contour lines describe a face. Heavy must be visibly DENSER than Moderate with more individual marks and more interior contour detail — never less."
+"- Maximum detail: ALL outlines, ALL visible interior contours, AND dotted/dashed shading guides on every significant form (cheeks, jawline, brow ridges, nose bridge, lip volumes, collarbone, clothing folds, fabric wrinkles). When hair is present, read the FULL hair texture with MANY flowing directional lines across its entire form. Then, use DOTTED LINES to mark the hair's light-to-dark transitions — trace the boundary wherever a bright highlight region meets a darker shadow region in the hair (where light bounces off vs. where it falls into shadow). Treat these dotted lines like topographic contour lines that describe the tonal/lighting levels in the hair, showing the artist exactly where contrast shifts occur. Heavy must be visibly DENSER than Moderate with more individual marks and more interior contour detail — never less."
 }
 
 FIDELITY — strict (applies to all detail levels):
@@ -2156,11 +2156,11 @@ FIDELITY — strict (applies to all detail levels):
 - Do NOT complete, correct, or clean up the subject — keep it exactly as shown
 - NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color
 - NO crosshatching or sketch-style shading
-- LINE WEIGHT (applies to all detail levels):
-  • Main silhouette / subject outline: consistent, thin-to-medium weight — never thick or bold
-  • Interior HAIR texture and flow lines: THE THINNEST possible line weight, noticeably finer than the hair silhouette itself — these lines are packed together in a small area and will merge/blur on skin if drawn any thicker
-  • ALL EYE details (eyelid edges, iris contour, pupil outline, eyelashes): THE THINNEST possible line weight — the eye is a very small region and thick lines will bleed together when transferred to skin
-  • Generally: small, dense, or tightly packed detail areas (hair, eyes, lips, nostrils) must use the thinnest lines in the stencil; only large-scale silhouette outlines may be slightly heavier
+- LINE WEIGHT (applies to all detail levels — extremely important for readable tattoo transfer):
+  • Use the THINNEST possible fine line weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines
+  • Use the THINNEST possible fine line weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette; hair strands packed close together must remain clearly individual and not merge into each other
+  • Main subject silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold
+  • Rule of thumb: if a region is small or has many lines near each other (hair interior, eyes, lips, nose), use the finest weight; only the outermost body/subject silhouette may be marginally heavier
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
@@ -2338,7 +2338,7 @@ DETAIL LEVEL: {detail_level.upper()}
 {
 "- Minimal detail: Just essential outlines, very clean and simple" if detail_level == "minimal" else
 "- Moderate detail: Outlines plus a small number of key interior lines only where they meaningfully help a tattoo artist (major face structure, jawline, main features). Keep it clean and uncluttered — minimal shading guides. When hair is present, indicate its main flow direction with only a few flowing lines; do not map the full texture." if detail_level == "moderate" else
-"- Maximum detail: ALL outlines, ALL visible interior contours, AND dotted/dashed shading guides on every significant form (cheeks, jawline, brow ridges, nose bridge, lip volumes, collarbone, clothing folds, fabric wrinkles). When hair is present, read the FULL hair texture with MANY flowing directional lines across its entire form, and outline EVERY visible highlight region with dotted/dashed contour guides — the same way contour lines describe a face. Heavy must be visibly DENSER than Moderate with more individual marks and more interior contour detail — never less."
+"- Maximum detail: ALL outlines, ALL visible interior contours, AND dotted/dashed shading guides on every significant form (cheeks, jawline, brow ridges, nose bridge, lip volumes, collarbone, clothing folds, fabric wrinkles). When hair is present, read the FULL hair texture with MANY flowing directional lines across its entire form. Then, use DOTTED LINES to mark the hair's light-to-dark transitions — trace the boundary wherever a bright highlight region meets a darker shadow region in the hair (where light bounces off vs. where it falls into shadow). Treat these dotted lines like topographic contour lines that describe the tonal/lighting levels in the hair, showing the artist exactly where contrast shifts occur. Heavy must be visibly DENSER than Moderate with more individual marks and more interior contour detail — never less."
 }
 
 FIDELITY — strict (applies to all detail levels):
@@ -2346,11 +2346,11 @@ FIDELITY — strict (applies to all detail levels):
 - Do NOT complete, correct, or clean up the subject — keep it exactly as shown
 - NO solid black fills ANYWHERE. This applies even to features that appear dark in the source image: eyebrows, pupils, irises, nostrils, eye liner, hair shadows, and any deep shadow area MUST be drawn as OUTLINES ONLY, never filled with black or any solid color
 - NO crosshatching or sketch-style shading
-- LINE WEIGHT (applies to all detail levels):
-  • Main silhouette / subject outline: consistent, thin-to-medium weight — never thick or bold
-  • Interior HAIR texture and flow lines: THE THINNEST possible line weight, noticeably finer than the hair silhouette itself — these lines are packed together in a small area and will merge/blur on skin if drawn any thicker
-  • ALL EYE details (eyelid edges, iris contour, pupil outline, eyelashes): THE THINNEST possible line weight — the eye is a very small region and thick lines will bleed together when transferred to skin
-  • Generally: small, dense, or tightly packed detail areas (hair, eyes, lips, nostrils) must use the thinnest lines in the stencil; only large-scale silhouette outlines may be slightly heavier
+- LINE WEIGHT (applies to all detail levels — extremely important for readable tattoo transfer):
+  • Use the THINNEST possible fine line weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines
+  • Use the THINNEST possible fine line weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette; hair strands packed close together must remain clearly individual and not merge into each other
+  • Main subject silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold
+  • Rule of thumb: if a region is small or has many lines near each other (hair interior, eyes, lips, nose), use the finest weight; only the outermost body/subject silhouette may be marginally heavier
 
 Style: Professional tattoo stencil suitable for thermal transfer paper"""
 
