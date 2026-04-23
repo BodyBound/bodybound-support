@@ -5348,6 +5348,29 @@ async def stencil_preview_page():
             return HTMLResponse(content=f.read())
     raise HTTPException(status_code=404, detail="Preview page not found")
 
+
+@api_router.get("/prompt-preview")
+async def prompt_preview_page():
+    """Serve the new-prompt side-by-side preview HTML (temporary QA tool)."""
+    html_path = "/app/backend/static/prompt_preview.html"
+    if os.path.exists(html_path):
+        with open(html_path, 'r') as f:
+            return HTMLResponse(content=f.read())
+    raise HTTPException(status_code=404, detail="Preview page not found")
+
+
+@api_router.get("/prompt-preview-asset/{filename}")
+async def prompt_preview_asset(filename: str):
+    """Serve the three prompt-preview images. Whitelist only; no path traversal."""
+    allowed = {'portrait.jpg', 'stencil_medium.png', 'stencil_heavy.png'}
+    if filename not in allowed:
+        raise HTTPException(status_code=404, detail="Not found")
+    file_path = f"/app/backend/static/{filename}"
+    if os.path.exists(file_path):
+        mime = 'image/png' if filename.endswith('.png') else 'image/jpeg'
+        return FileResponse(file_path, media_type=mime)
+    raise HTTPException(status_code=404, detail="File not found")
+
 @api_router.get("/brand/{filename}")
 async def brand_asset(filename: str):
     """Serve brand assets (logo, icons) for download during build credential setup."""

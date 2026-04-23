@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Stencil Prompt Preview</title>
+  <style>
+    body {
+      font-family: -apple-system, system-ui, sans-serif;
+      background: #0a0a0a;
+      color: #e7e2d4;
+      margin: 0;
+      padding: 24px;
+    }
+    h1 { color: #c9a227; letter-spacing: 0.4px; margin-top: 0; }
+    .note {
+      color: #9ca3af;
+      font-size: 14px;
+      margin-bottom: 24px;
+      line-height: 22px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .panel {
+      background: #151515;
+      border: 1px solid rgba(201,162,39,0.25);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .panel h3 {
+      margin: 0 0 8px 0;
+      color: #c9a227;
+      font-size: 15px;
+      letter-spacing: 0.4px;
+    }
+    .panel img {
+      width: 100%;
+      background: white;
+      border-radius: 6px;
+      display: block;
+    }
+    .panel p {
+      color: #9ca3af;
+      font-size: 12px;
+      line-height: 18px;
+      margin: 10px 0 0 0;
+    }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <h1>New Prompt Preview</h1>
+  <p class="note">
+    Reference photo on the left. Medium and Heavy stencils generated using
+    the new Feb-16-baseline prompt + strict FIDELITY block + hair/highlight
+    contour rules just shipped. Black line color on purpose (highest contrast
+    for inspection). No TestFlight needed — this runs the real production
+    endpoint against the new prompt.
+  </p>
+  <div class="grid">
+    <div class="panel">
+      <h3>Reference</h3>
+      <img src="/api/prompt-preview-asset/portrait.jpg" alt="reference portrait" />
+      <p>Portrait with long hair and visible highlight play along the length — the exact case the new hair instructions target.</p>
+    </div>
+    <div class="panel">
+      <h3>Moderate</h3>
+      <img src="/api/prompt-preview-asset/stencil_medium.png" alt="medium stencil" />
+      <p>Outlines + key interior details. Hair: flowing directional lines for texture, dotted/dashed guides for main highlight shapes.</p>
+    </div>
+    <div class="panel">
+      <h3>Heavy</h3>
+      <img src="/api/prompt-preview-asset/stencil_heavy.png" alt="heavy stencil" />
+      <p>Everything in Moderate + all visible contours + shading guides on every significant form. Hair: full flow map + explicit highlight-shape contour lines like on a face.</p>
+    </div>
+  </div>
+</body>
+</html>
