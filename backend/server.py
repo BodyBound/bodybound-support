@@ -1884,13 +1884,14 @@ async def enhance_image_endpoint(request: EnhanceImageRequest):
 
 
 # ---------------------------------------------------------------------------
-# BLUEPRINT MODE — single source of truth for the stencil-generation prompt.
-# Default output behaviour: line-only blueprints for a human tattoo artist.
-# Zero fills, zero shading interpretation, three visibly-distinct line weights.
-# Used by both /api/ai-stencil and /api/process_stencil_job.
+# BLUEPRINT HEAVY+ — production standard for every stencil we ship.
+# Single source of truth for both /api/ai-stencil and /api/process_stencil_job.
+# Line-only. Zero fills. Four-tier weight hierarchy (Primary / Secondary /
+# Tertiary / Dotted). Detail is toned down vs. the previous Heavy so the
+# artist receives readable structure, not noise.
 # ---------------------------------------------------------------------------
 def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
-    """Build the stencil-generation prompt in Blueprint Mode.
+    """Build the stencil-generation prompt (Blueprint Heavy+ standard).
 
     Args:
         line_color: rendered line color (e.g. "purple/violet", "black").
@@ -1899,36 +1900,43 @@ def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
     detail_blocks = {
         "minimal": (
             "LIGHT — 'The Bones': PRIMARY + SECONDARY lines only. No TERTIARY texture. "
-            "Cleanest possible structural outline of the subject. Include every structural "
-            "feature the reference shows (face, facial features, hair silhouette, braids, "
-            "crown/antlers/adornments, outlines of any face paint or skin markings). "
-            "Omit individual hair strands, fur texture, fabric weave, and any fine detail."
+            "No DOTTED guides. Cleanest possible structural outline of the subject. "
+            "Include every structural feature the reference shows (face, facial features, "
+            "hair silhouette, braids, crown/antlers/adornments, outlines of any face "
+            "paint or skin markings). Omit individual hair strands, fur texture, fabric "
+            "weave, and any fine detail."
         ),
         "moderate": (
             "MEDIUM — 'Form & Shape': PRIMARY + SECONDARY + a reduced amount of TERTIARY. "
-            "Include the key direction of hair or texture with a light pass of fine lines — "
-            "clearly present but not saturated. More detail than Light, cleaner than Heavy."
+            "No DOTTED guides. Include the key direction of hair/texture with a light "
+            "pass of fine lines — clearly present but not saturated. More detail than "
+            "Light, cleaner than Heavy."
         ),
         "detailed": (
-            "HEAVY — 'Full Detail': all three tiers fully expressed. TERTIARY texture is "
-            "saturated — many individual hair/fur strands, small creases, fine structural "
-            "marks. More detail than Medium. CRITICAL: more detail NEVER means more fill "
-            "or more shading. More detail means more TERTIARY STRUCTURAL LINES. Every "
-            "extra mark must describe a real structural feature the reference actually shows.\n"
+            "HEAVY+ — 'Full Detail, Toned Down': all four tiers engaged (PRIMARY, "
+            "SECONDARY, TERTIARY, DOTTED).\n"
             "\n"
-            "FACIAL DOTTED SHADING GUIDES (Heavy only, face only): In addition to the three "
-            "line tiers, add DOTTED or DASHED shading guides on the facial contours only — "
-            "cheeks, jawline, brow ridges, nose bridge, under the eyes, and lip volumes — "
-            "to mark where the tattoo artist will add shading on skin. These dotted guides "
-            "stay at normal visible dot size (do not shrink them). They are permitted ONLY "
-            "at the Heavy detail level, ONLY on the face, and they remain line work — "
-            "never filled regions. This is the single exception to the no-dotted-shading "
-            "rule in the ZERO-FILL section above."
+            "Detail policy for Heavy+ (this is the production default — readability "
+            "beats density):\n"
+            "- Preserve the reference's detail, but reduce visual noise by roughly "
+            "10–20% relative to a fully-saturated pass. The blueprint must feel "
+            "readable, not crowded.\n"
+            "- Hair and fur are rendered as DIRECTIONAL FLOW lines — follow the actual "
+            "direction of growth and major hair masses in the reference. Do NOT scatter "
+            "random individual strands across the whole form.\n"
+            "- Texture is SELECTIVE, not full-surface coverage. Place TERTIARY texture "
+            "where the reference shows distinct structural detail; leave calmer regions "
+            "with only PRIMARY + SECONDARY lines.\n"
+            "- Keep DOTTED facial guides (see LINE WEIGHT HIERARCHY → DOTTED tier).\n"
+            "- Avoid clutter, redundant micro-lines, and over-density. Every mark "
+            "describes something the reference actually shows.\n"
+            "- More detail never means more fill or more shading. More detail means "
+            "more directional, selective structural line work."
         ),
     }
     detail_text = detail_blocks.get(detail_level, detail_blocks["moderate"])
 
-    return f"""BLUEPRINT MODE — Tattoo Stencil.
+    return f"""BLUEPRINT HEAVY+ — Tattoo Stencil (production standard).
 You are producing a line-only BLUEPRINT that a human tattoo artist will use as a guide. You are NOT rendering the final tattoo. You are NOT interpreting shading. You do NOT decide where shading goes — the artist decides that on skin.
 
 OUTPUT FORMAT:
@@ -1943,31 +1951,33 @@ ZERO-FILL RULE (hard constraint — if any fill appears, the output is incorrect
 - The background is pure white even if the reference background is dark. Do not invert. Do not reproduce the reference background as a dark shape.
 - Face paint, makeup, scars, skull-paint patterns, tattoos are drawn as OUTLINES in their exact reference positions — never as filled shapes.
 - Do not use crosshatching, stippling, gradients, or any mark pattern intended to simulate tone.
-- Do not use dotted or dashed marks to indicate shading, tonal transitions, or light-to-dark boundaries. Dotted marks are not a tool for shading in Blueprint Mode.
+- Dotted/dashed marks are permitted ONLY as the DOTTED tier defined below (facial guides, form transitions, light-placement hints). They are never used to simulate tonal fills.
+- Do not introduce any new solid black region that is not directly derived from a solid-black region already present in the reference photo. When in doubt, use line work instead.
 
-LINE WEIGHT HIERARCHY — three visibly distinct tiers (this is how the artist reads the blueprint):
-- PRIMARY (heaviest): outer silhouette and major structural contours — head/body outline, jawline, crown/antlers outer edge, major anatomy boundaries.
-- SECONDARY (medium): internal structural lines — facial features (eyes, brows, nose, lips), major hair mass groupings, key folds and creases, feature boundaries.
-- TERTIARY (thinnest): texture and fine detail — individual hair strands, fur direction, small surface marks, minor wrinkles.
-The three tiers MUST be visibly separated. A tattoo artist must be able to tell structure from texture at a glance. Do not make everything the same weight.
+LINE WEIGHT HIERARCHY — four visibly distinct tiers. Lines MUST NOT be uniform weight. Foreground elements must read stronger than background elements:
+- PRIMARY (bold): outer contours, silhouette, foreground elements, major structural boundaries (head/body outline, jawline, crown/antlers outer edge).
+- SECONDARY (medium): internal structure, facial features (eyes, brows, nose, lips), major forms, key folds and creases, feature boundaries, major hair-mass groupings.
+- TERTIARY (fine): texture, hair flow, fur direction, secondary detail, small surface marks, minor wrinkles.
+- DOTTED (light): facial guides for the artist — cheeks, jawline, brow ridges, nose bridge, under eyes, lip volumes. Also used for transitions of form and light-placement hints on the face. Dotted marks stay at clean, readable dot size. They are line work, not fills. (Engaged at Heavy+ only — see DETAIL LEVEL below.)
+The four tiers MUST be visibly separated. A tattoo artist must be able to tell foreground from background, and structure from texture, at a glance.
 
 FINE-LINE REFINEMENTS (extremely important for readable tattoo transfer — applies at every detail level):
 - Use the THINNEST possible fine line weight for ALL facial features: eyebrows, eyelids, eyelashes, iris, pupil, nose bridge, nostrils, lip edges, lip creases. These are small, tightly-spaced areas and thicker lines will bleed together and hide the true form when applied to skin — the goal is to reveal the form, not bury it under thick outlines.
 - Use the THINNEST possible fine line weight for ALL interior hair texture / flow lines — noticeably finer than the hair silhouette. Hair strands packed close together must remain clearly individual and not merge into each other.
-- Main subject silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold.
+- PRIMARY silhouette / outer body outline may be slightly heavier (thin-to-medium) but still never thick or bold.
 - EYELASHES must be drawn as individual fine hair strokes with the thinnest possible line weight — never a thick continuous band or heavy shadow along the lash line. Each lash is a delicate separate hair.
 - PUPIL: hollow circle outline only — never filled black, never solid.
 - IRIS: hollow outline only — never filled or shaded solid.
 - Eyebrows, nostrils, and eye liner areas: drawn as outlines only — never filled dark regions, regardless of how dark they appear in the reference.
-- This refinement controls STROKE THICKNESS only — it does not reduce the NUMBER, DENSITY, or COUNT of marks, dots, or lines called for by the detail level. Keep the full amount of structural detail; just draw the lines thinner in these specific areas.
+- This refinement controls STROKE THICKNESS only — it does not reduce the COUNT of marks called for by the detail level. Keep the structural detail; just draw thinner in these specific areas.
 
 DETAIL LEVEL — {detail_level.upper()}:
 - {detail_text}
 
 READABILITY (thermofax transfer):
-- The stencil must read clearly at real print size.
+- The stencil must read clearly at real stencil print size.
 - Do not cluster overlapping micro-lines in small areas.
-- Every mark has a reason. Avoid clutter and unnecessary detail.
+- Avoid clutter and unnecessary micro-detail. Every mark has a reason.
 - Continuous lines must be clean and confident, never broken, pixelated, or noisy.
 
 STRUCTURAL FIDELITY:
@@ -1976,7 +1986,12 @@ STRUCTURAL FIDELITY:
 - Preserve identity exactly: face shape, hair style (braided/loose/etc.), adornments (crowns, antlers, jewelry), facial markings. These are drawn as line work — never replaced, cleaned up, or swapped.
 - Do not re-interpret the subject when adding detail. Every added line describes a feature that is already there.
 
-Style: Line-only blueprint suitable for thermofax transfer paper."""
+CONSISTENCY REQUIREMENT:
+- The same reference image should produce consistent structure and predictable line placement across runs.
+- Do not freely reinterpret the reference. Trace the structure that is actually present.
+- Minimise variation between runs: same reference → same structural decisions.
+
+Style: Line-only Blueprint Heavy+ stencil suitable for thermofax transfer paper."""
 
 
 
@@ -1989,7 +2004,7 @@ class AIStencilRequest(BaseModel):
     solid_fill: int = Field(default=30, ge=0, le=100)  # 0-100: how much solid black fill
     regenerate_style: Optional[str] = Field(default=None)  # "light", "medium", "heavy" - if set, only regenerate this style
     extra_preamble: Optional[str] = Field(default=None)  # DEMO / experimental: image-specific rules prepended to the prompt (used by pre-scan demo)
-    temperature: Optional[float] = Field(default=None, ge=0.0, le=2.0)  # DEMO / experimental: override sampling temperature for variance tests. None = provider default.
+    temperature: Optional[float] = Field(default=0.0, ge=0.0, le=2.0)  # Blueprint Heavy+ consistency default. Near-deterministic sampling. Overridable per-request.
 
 class AIStencilResponse(BaseModel):
     stencil_base64: str
@@ -2402,8 +2417,8 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
         # Blueprint Mode — line-only stencil for a human artist (async job path)
         prompt = build_blueprint_prompt("purple/violet", detail_level)
 
-        # Generate using Gemini
-        result_base64, mime_type = await generate_with_gemini(image_data, prompt)
+        # Generate using Gemini (Blueprint Heavy+ consistency default)
+        result_base64, mime_type = await generate_with_gemini(image_data, prompt, temperature=0.0)
         
         if result_base64:
             # Resize stencil to match ORIGINAL input dimensions for proper overlay

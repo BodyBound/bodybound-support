@@ -15,8 +15,18 @@ h2{color:#c9a227;font-size:18px;margin:18px 0 10px}
 .heavy h3{color:#7CC98E}
 </style></head>
 <body>
-<h1>Blueprint Heavy — Fine-Line Refinements + Facial Dotted Guides</h1>
-<p class="note">Heavy now includes (a) <b>thinnest-possible line weight for facial features and interior hair texture</b>, (b) hollow-outline-only pupils + irises, (c) individual-stroke eyelashes, and (d) <b>dotted shading guides on facial contours only</b>. Everything else in the Blueprint Mode prompt is unchanged — zero fills, line-only output, three-tier hierarchy, no shading on hair/mane/body/clothing. All additions, no subtractions.</p>
+<h1>Blueprint Heavy+ — Production Standard</h1>
+<p class="note">This is now the default behaviour of <code>/api/ai-stencil</code> and <code>/api/process_stencil_job</code>. Every stencil the app generates follows this standard.</p>
+<div style="background:#111;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:14px 16px;margin-bottom:28px;font-size:13px;line-height:21px;color:#c9c4b4">
+  <b style="color:#c9a227">Locked-in rules:</b>
+  <ul style="margin:6px 0 0 0;padding-left:20px">
+    <li><b>Line-only.</b> No fills, no gray, no shading. 100% line-based.</li>
+    <li><b>Four-tier hierarchy:</b> Primary (bold outer contours, foreground) / Secondary (medium internal structure, facial features) / Tertiary (fine texture, hair flow) / Dotted (light facial guides & form transitions). Lines must NOT be uniform weight. Foreground reads stronger than background.</li>
+    <li><b>Heavy+ detail policy:</b> preserve detail, reduce visual noise ~10–20%. Hair follows directional flow (not random strands). Texture is selective, not full-surface coverage. Facial dotted guides retained. Avoid clutter.</li>
+    <li><b>Consistency:</b> <code>temperature=0.0</code> is now the default. Same reference → consistent structure → predictable line placement.</li>
+    <li><b>Removed entirely:</b> fill logic, shading generation, structure-altering "enhancement", random black region creation.</li>
+  </ul>
+</div>
 
 <section>
 <h2>Skull Makeup Woman — Heavy</h2>

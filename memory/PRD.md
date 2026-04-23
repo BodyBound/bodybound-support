@@ -67,6 +67,15 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **Blueprint Heavy+ — Production Standard (Apr 23 2026)** — locked in as the default generation behaviour for every stencil produced by `/api/ai-stencil` and `/api/process_stencil_job`. Replaces the previous Blueprint Mode pass.
+  - Four-tier line-weight hierarchy: **PRIMARY** (bold outer contours, foreground) / **SECONDARY** (medium internal structure, facial features) / **TERTIARY** (fine texture, hair flow) / **DOTTED** (light facial guides + form transitions). `DOTTED` is now a first-class tier, not a Heavy-only exception.
+  - `Lines MUST NOT be uniform weight` and `foreground reads stronger than background` are explicit rules.
+  - Heavy block renamed **Heavy+**: preserve detail, reduce visual noise ~10–20%, hair follows directional flow (not random strands), texture is selective (not full-surface coverage), dotted facial guides retained, avoid clutter.
+  - New `CONSISTENCY REQUIREMENT` section in the prompt — same reference → consistent structure → predictable line placement.
+  - **Consistency default**: `temperature=0.0` is now the default on `/api/ai-stencil` (was `None`/provider default) and hardcoded in the async `process_stencil_job` path. Near-deterministic sampling by default; overridable per request.
+  - All prior Fine-Line Refinements preserved (thinnest possible facial features, thinnest possible interior hair strands that don't merge, individual-stroke eyelashes, hollow pupils/irises).
+  - Live preview: `GET /api/blueprint-heavy` (skull + lion Heavy+).
+
 - **Blueprint Mode (Apr 23 2026)** — new default generation behaviour for every stencil produced by `/api/ai-stencil` and `/api/process_stencil_job`. Zero fills, line-only output, three-tier line-weight hierarchy (PRIMARY silhouette / SECONDARY features / TERTIARY texture), blueprint-purpose framing (guide for a human artist, no shading interpretation).
   - New single-source-of-truth helper `build_blueprint_prompt(line_color, detail_level)` in `backend/server.py`. Both generation endpoints now call it — no more duplicated 80-line prompt blocks drifting out of sync.
   - Removed from the base prompt: all fill logic, shadow interpretation, dotted-line shading guides, light-to-dark dotted transitions, lighting-density distribution rules, crosshatching.
