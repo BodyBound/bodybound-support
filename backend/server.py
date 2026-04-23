@@ -2052,7 +2052,22 @@ def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
     }
     detail_text = detail_blocks.get(detail_level, detail_blocks["moderate"])
 
-    return f"""BLUEPRINT HEAVY+ — Tattoo Stencil (production standard).
+    return f"""REFERENCE DOMINANCE — READ FIRST. This is an IMAGE-TO-IMAGE TRANSLATION task, not an image-generation task. The attached reference image is the ABSOLUTE SOURCE OF TRUTH. Your only job is to TRACE what is already in that reference as line work. You are a TRANSLATOR of the reference, not a GENERATOR of a new image.
+
+Do NOT generate a new subject. Do NOT invent a face. Do NOT replace the person/animal/object with a different one. Do NOT "clean up" or "complete" anatomy. Do NOT reinterpret facial features. Do NOT stylize beyond converting the reference to line work. If the output looks like a DIFFERENT subject from the reference, the output is INVALID and must be corrected.
+
+LIKENESS ENFORCEMENT (strict — applies before every other rule below):
+- The exact head angle, head tilt, and facing direction in the reference MUST be preserved. If the reference is 3/4 view, the output is 3/4 view. If the reference is profile, the output is profile. Never default to front-facing.
+- The exact gaze direction in the reference MUST be preserved.
+- The exact facial structure, feature placement, proportions, and identity of the reference MUST be preserved. If a viewer comparing the reference and the stencil would say "these look like different people", the output is INVALID.
+- The exact hair style, adornments, clothing, and visible markings of the reference MUST be preserved — as line work, in their exact reference positions. Do not swap a style for a generic alternative.
+- The exact face-paint / makeup / skull-paint pattern of the reference MUST be preserved as outlines at its exact reference position. If the reference has skull makeup covering half the face at an angle, the stencil shows the same pattern at the same angle.
+
+If you feel tempted to draw a "clean" or "better" version of the subject than what the reference shows — stop and trace the reference instead.
+
+BLUEPRINT HEAVY+ — Tattoo Stencil (production standard).
+Every rule below applies on top of REFERENCE DOMINANCE and LIKENESS ENFORCEMENT above. Those two always win.
+
 You are producing a line-only BLUEPRINT that a human tattoo artist will use as a guide. You are NOT rendering the final tattoo. You are NOT interpreting shading. You do NOT decide where shading goes — the artist decides that on skin.
 
 OUTPUT FORMAT:
@@ -2064,6 +2079,7 @@ ZERO-FILL RULE (hard constraint — if any fill appears, the output is incorrect
 - No solid black anywhere.
 - No gray shading anywhere.
 - No filled regions of any kind — not eyes, not pupils, not hair shadows, not face paint, not background, not anywhere.
+- EYES / PUPILS / IRISES: pupils are HOLLOW CIRCLE OUTLINES only — never filled black, never solid, never dark. Irises are hollow concentric outlines only. Even if the reference shows a very dark pupil, render it as an outline. Solid-black pupils are a FAILURE CONDITION.
 - The background is pure white even if the reference background is dark. Do not invert. Do not reproduce the reference background as a dark shape.
 - Face paint, makeup, scars, skull-paint patterns, tattoos are drawn as OUTLINES in their exact reference positions — never as filled shapes.
 - Do not use crosshatching, stippling, gradients, or any mark pattern intended to simulate tone.
