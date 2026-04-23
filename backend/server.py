@@ -5499,6 +5499,15 @@ async def prompt_preview_alt_page():
     raise HTTPException(status_code=404, detail="Preview page not found")
 
 
+@api_router.get("/prompt-preview-lion")
+async def prompt_preview_lion_page():
+    html_path = "/app/backend/static/prompt_preview_lion.html"
+    if os.path.exists(html_path):
+        with open(html_path, 'r') as f:
+            return HTMLResponse(content=f.read())
+    raise HTTPException(status_code=404, detail="Preview page not found")
+
+
 @api_router.get("/prompt-preview-skull")
 async def prompt_preview_skull_page():
     """Serve a third-reference preview (stylized skull-makeup photo)."""
@@ -5516,6 +5525,7 @@ async def prompt_preview_asset(filename: str):
         'portrait.jpg', 'stencil_medium.png', 'stencil_heavy.png',
         'portrait2.jpg', 'stencil_medium_alt.png', 'stencil_heavy_alt.png',
         'portrait3.jpg', 'stencil_light_skull.png', 'stencil_medium_skull.png', 'stencil_heavy_skull.png',
+        'portrait4.jpg', 'stencil_light_lion.png', 'stencil_medium_lion.png', 'stencil_heavy_lion.png',
     }
     if filename not in allowed:
         raise HTTPException(status_code=404, detail="Not found")

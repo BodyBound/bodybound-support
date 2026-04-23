@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Prompt Preview — Lion</title>
+<style>body{font-family:-apple-system,system-ui,sans-serif;background:#0a0a0a;color:#e7e2d4;margin:0;padding:24px}
+h1{color:#c9a227;margin:0 0 8px;letter-spacing:.4px}
+.note{color:#9ca3af;font-size:14px;margin-bottom:24px;line-height:22px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.panel{background:#151515;border:1px solid rgba(201,162,39,.25);border-radius:10px;padding:12px}
+.panel h3{margin:0 0 8px;color:#c9a227;font-size:14px;letter-spacing:.4px}
+.panel img{width:100%;background:white;border-radius:6px;display:block}
+.panel p{color:#9ca3af;font-size:11px;line-height:17px;margin:8px 0 0}
+@media(max-width:1100px){.grid{grid-template-columns:1fr 1fr}}</style></head>
+<body>
+<h1>Prompt Preview — Lion + Thorn Crown (texture stress test)</h1>
+<p class="note">Highly textured mane, crown of thorns, open-mouth roar with individual fangs, scar across eye. Stress-tests how the prompt handles dense fur texture and animal subjects.</p>
+<div class="grid">
+  <div class="panel"><h3>Reference</h3><img src="/api/prompt-preview-asset/portrait4.jpg"/><p>Roaring lion, thorn crown, heavy mane texture, fangs visible.</p></div>
+  <div class="panel"><h3>Low Fidelity</h3><img src="/api/prompt-preview-asset/stencil_light_lion.png"/><p>Clean outlines only. No fur strands, no shading dots.</p></div>
+  <div class="panel"><h3>Mid-Range</h3><img src="/api/prompt-preview-asset/stencil_medium_lion.png"/><p>Form &amp; shape. Key interior contours, no dense shading.</p></div>
+  <div class="panel"><h3>High Def</h3><img src="/api/prompt-preview-asset/stencil_heavy_lion.png"/><p>Full mane texture + dotted light-to-dark transitions.</p></div>
+</div></body></html>
