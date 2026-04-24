@@ -2150,7 +2150,7 @@ async def adjust_line_weight(request: LineWeightRequest):
 
 
 @api_router.post("/ai-stencil", response_model=AIStencilResponse)
-async def generate_ai_stencil(request: AIStencilRequest):
+async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
     """Generate a professional tattoo stencil using AI with fallback providers
     
     If regenerate_style is specified (light/medium/heavy), only that style is generated.
@@ -2173,6 +2173,35 @@ async def generate_ai_stencil(request: AIStencilRequest):
         if not EMERGENT_LLM_KEY and not AI_API_KEY:
             raise HTTPException(status_code=500, detail="AI API key not configured. Please check your internet connection and try again.")
         
+        # ---- Soft server-side credit gate (defence-in-depth) ----
+        # Frontend calls /api/credits/deduct before this endpoint. If the
+        # request also carries an auth token, we re-check credits here so an
+        # authenticated caller cannot bypass the credit system by skipping
+        # deduct. Unauthenticated legacy callers still work (we log them).
+        auth_header = http_request.headers.get('authorization')
+        if auth_header:
+            try:
+                current_user = await get_current_user(auth_header)
+                credits_state = await get_user_credits(current_user['user_id'])
+                available = int(credits_state.get('available_credits', 0))
+                is_emergency = bool(credits_state.get('emergency_available', False))
+                if available <= 0 and not is_emergency:
+                    logger.info(
+                        f"[CreditGate] Blocked generation for {current_user.get('email')} "
+                        f"— available_credits=0"
+                    )
+                    raise HTTPException(
+                        status_code=402,
+                        detail="No credits available. Please upgrade or wait for your next cycle.",
+                    )
+            except HTTPException:
+                raise
+            except Exception as gate_err:
+                # Never break the generation if the gate itself fails — it is
+                # a secondary safety net, not the primary enforcement.
+                logger.warning(f"[CreditGate] Soft check failed, allowing request: {gate_err}")
+        else:
+            logger.warning("[CreditGate] /api/ai-stencil called without auth token (legacy path) — credit gate skipped")
         # Determine the style for caching
         cache_style = request.regenerate_style or f"shading_{request.shading_detail}"
         

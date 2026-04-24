@@ -1565,6 +1565,7 @@ export default function Index() {
         apiUrl: API_URL,
         imageBase64,
         style: style as StencilStyle,
+        token: sessionToken || undefined,  // enables server-side credit gate
       });
       console.log(`[RegenerateSingle] ${style} version regenerated successfully`);
 

@@ -17,6 +17,7 @@ export interface RegenerateParams {
   apiUrl: string;
   imageBase64: string;        // data URL or raw base64
   style: StencilStyle;
+  token?: string;             // optional auth token — enables server-side credit gate
 }
 
 export interface RegenerateResult {
@@ -28,7 +29,7 @@ export interface RegenerateResult {
 export async function regenerateStencil(
   params: RegenerateParams,
 ): Promise<RegenerateResult> {
-  const { apiUrl, imageBase64, style } = params;
+  const { apiUrl, imageBase64, style, token } = params;
 
   // Normalise to data URL (the backend accepts both, but this keeps client code uniform)
   const normalised = imageBase64.startsWith('data:')
@@ -38,9 +39,12 @@ export async function regenerateStencil(
   const shadingDetail = style === 'light' ? 5 : style === 'medium' ? 30 : 50;
   const solidFill = style === 'heavy' ? 30 : 0;
 
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
   const resp = await fetch(`${apiUrl}/api/ai-stencil`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body: JSON.stringify({
       image_base64: normalised,
       style: 'tattoo',
