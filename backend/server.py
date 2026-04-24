@@ -1891,10 +1891,12 @@ def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
         "minimal": (
             "LIGHT — clean, sparse outline.\n"
             "- PRIMARY contours only: outer silhouette + the few major structural boundaries that define the subject's identity.\n"
-            "- NO internal texture. NO hair strands. NO fur detail. NO fabric weave. NO dotted guides. NO plane-change hints.\n"
+            "- NO internal texture. NO hair strands. NO fur detail. NO fabric weave.\n"
+            "- NO dotted marks anywhere — not on the face, not on the body, not anywhere. Zero dots.\n"
+            "- NO plane-change indication, NO under-eye contour, NO cheek contour, NO jaw shading hint, NO nose-to-cheek transition line. The face has only its primary feature outlines (eye outline, nose outline, lip outline, brow line) and nothing else.\n"
             "- Facial features present but drawn with the absolute minimum line count needed to recognize them.\n"
             "- The stencil must feel noticeably SPARSE. If you are debating whether to add a line, LEAVE IT OUT.\n"
-            "- Target visual impression: a confident outline drawing. Clean. Readable at a glance. Obviously less detail than Medium."
+            "- Target visual impression: a confident outline drawing. Clean. Readable at a glance. Obviously less detail than Medium. An artist looking at this should think 'just the bones, I'll add everything else myself.'"
         ),
         "moderate": (
             "MEDIUM — balanced form + shape.\n"
