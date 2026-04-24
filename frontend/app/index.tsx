@@ -2367,8 +2367,12 @@ export default function Index() {
 
   // Save both stencil (transparent PNG) and reference (JPEG) for Procreate import
   // Both images are saved at identical dimensions for perfect layer alignment
-  const saveStencilAndReference = async () => {
-    if (!stencilImage || !originalImage) {
+  const saveStencilAndReference = async (stencilOverrideUri?: string) => {
+    // Allow caller to pass in a captured edit-canvas uri directly so we don't
+    // have to mutate stencilImage state (which breaks the tinted main preview
+    // because a captured canvas has an opaque white background, not transparency).
+    const stencilUri = stencilOverrideUri || stencilImage;
+    if (!stencilUri || !originalImage) {
       Alert.alert('Error', 'Both original photo and stencil are required.');
       return;
     }
@@ -2418,7 +2422,7 @@ export default function Index() {
       // and let Procreate handle the layer sizing on import.
       console.log('[SaveBoth] Processing stencil with transparency...');
 
-      const stencilSize = await getImageSize(stencilImage);
+      const stencilSize = await getImageSize(stencilUri);
       const aspectRatioMatch =
         Math.abs(stencilSize.width / stencilSize.height - originalSize.width / originalSize.height) < 0.05;
 
@@ -2426,7 +2430,7 @@ export default function Index() {
       if (aspectRatioMatch && stencilSize.width !== originalSize.width) {
         // Same aspect ratio — safe to resize to match original (unedited AI stencil path)
         stencilResized = await ImageManipulator.manipulateAsync(
-          stencilImage,
+          stencilUri,
           [{ resize: { width: originalSize.width, height: originalSize.height } }],
           { format: ImageManipulator.SaveFormat.PNG, compress: 1 }
         );
@@ -2434,7 +2438,7 @@ export default function Index() {
         // Different aspect ratio (edited stencil captured from screen) — save at native size
         // to avoid distortion. Do NOT resize.
         stencilResized = await ImageManipulator.manipulateAsync(
-          stencilImage,
+          stencilUri,
           [],
           { format: ImageManipulator.SaveFormat.PNG, compress: 1 }
         );
@@ -4712,13 +4716,18 @@ export default function Index() {
                           await new Promise(resolve => setTimeout(resolve, 150));
                           const uri = await captureRef(editCanvasRef, { format: 'png', quality: 1, result: 'base64' });
                           setIsCapturingForExport(false);
+                          let capturedUri: string | undefined;
                           if (uri) {
                             const editedImage = `data:image/png;base64,${uri}`;
+                            // Record the edited capture for later use (e.g. Save to Photos),
+                            // but DO NOT overwrite stencilImage — the main preview applies a
+                            // black tint, and a capture has an opaque white background which
+                            // would render as a black square until the user taps a style button.
                             setEditedStencil(editedImage);
-                            setStencilImage(editedImage);
+                            capturedUri = editedImage;
                           }
                           setShowEditModal(false);
-                          setTimeout(() => saveStencilAndReference(), 300);
+                          setTimeout(() => saveStencilAndReference(capturedUri), 300);
                         } catch (e) {
                           setIsCapturingForExport(false);
                           Alert.alert('Error', 'Failed to capture edits.');

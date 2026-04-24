@@ -1889,113 +1889,29 @@ def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
     """
     detail_blocks = {
         "minimal": (
-            "LIGHT — 'The Bones': PRIMARY + SECONDARY lines only. No TERTIARY texture. "
-            "No DOTTED guides. Cleanest possible structural outline of the subject. "
-            "Include every structural feature the reference shows (face, facial features, "
-            "hair silhouette, braids, crown/antlers/adornments, outlines of any face "
-            "paint or skin markings). Omit individual hair strands, fur texture, fabric "
-            "weave, and any fine detail."
+            "LIGHT — clean, sparse outline.\n"
+            "- PRIMARY contours only: outer silhouette + the few major structural boundaries that define the subject's identity.\n"
+            "- NO internal texture. NO hair strands. NO fur detail. NO fabric weave. NO dotted guides. NO plane-change hints.\n"
+            "- Facial features present but drawn with the absolute minimum line count needed to recognize them.\n"
+            "- The stencil must feel noticeably SPARSE. If you are debating whether to add a line, LEAVE IT OUT.\n"
+            "- Target visual impression: a confident outline drawing. Clean. Readable at a glance. Obviously less detail than Medium."
         ),
         "moderate": (
-            "MEDIUM — 'Form & Shape': PRIMARY + SECONDARY + a reduced amount of TERTIARY. "
-            "No DOTTED guides. Include the key direction of hair/texture with a light "
-            "pass of fine lines — clearly present but not saturated. More detail than "
-            "Light, cleaner than Heavy."
+            "MEDIUM — balanced form + shape.\n"
+            "- PRIMARY contours + SECONDARY internal structure (facial features, major hair mass groupings, fold lines, feature boundaries).\n"
+            "- A MODERATE pass of TERTIARY directional lines: hair direction, fabric folds, major structural creases.\n"
+            "- NO DOTTED guides at this level.\n"
+            "- Texture is present but restrained. Clearly MORE detail than Light, clearly LESS than Heavy.\n"
+            "- Target visual impression: balanced — form and shape are readable, but the image is not crowded."
         ),
         "detailed": (
-            "HEAVY+ — 'Full Detail, Toned Down': all four tiers engaged (PRIMARY, "
-            "SECONDARY, TERTIARY, DOTTED).\n"
-            "\n"
-            "Detail policy for Heavy+ (this is the production default — readability "
-            "beats density):\n"
-            "- Preserve the reference's detail, but reduce visual noise by roughly "
-            "10–20% relative to a fully-saturated pass. The blueprint must feel "
-            "readable, not crowded.\n"
-            "- Hair and fur are rendered as DIRECTIONAL FLOW lines — follow the actual "
-            "direction of growth and major hair masses in the reference. Do NOT scatter "
-            "random individual strands across the whole form.\n"
-            "- Texture is SELECTIVE, not full-surface coverage. Place TERTIARY texture "
-            "where the reference shows distinct structural detail; leave calmer regions "
-            "with only PRIMARY + SECONDARY lines.\n"
-            "- Keep DOTTED facial guides (see LINE WEIGHT HIERARCHY → DOTTED tier).\n"
-            "- Avoid clutter, redundant micro-lines, and over-density. Every mark "
-            "describes something the reference actually shows.\n"
-            "- More detail never means more fill or more shading. More detail means "
-            "more directional, selective structural line work.\n"
-            "\n"
-            "REFINEMENT PASS (applies on top of the detail policy above — a targeted "
-            "clarity improvement, not a density increase):\n"
-            "\n"
-            "1) Hair / fur clarity (controlled, ~10–15% lift only):\n"
-            "   - Slightly increase strand break-up — introduce subtle splits in a few "
-            "     strands (not all of them, not uniformly).\n"
-            "   - Add a small number of directional micro-lines that follow the natural "
-            "     flow of the hair/mane.\n"
-            "   - Add LIGHT flow guide-lines that trace the highlight paths in hair/fur "
-            "     — these mark where the light travels along the strands, NOT where "
-            "     shading goes. They remain line work, never fills, never shading.\n"
-            "   - Do NOT add fuzz, random texture, or uniform strand-field coverage. "
-            "     Every new mark follows the direction of flow.\n"
-            "\n"
-            "2) Structural plane clarity (face & major forms):\n"
-            "   - Slightly widen the line separation at major plane changes so the "
-            "     artist can read the form: cheek → jaw transition, brow → eye socket, "
-            "     nose bridge → cheek plane, temple → cheekbone.\n"
-            "   - DOTTED guides in these plane-change zones may be slightly more "
-            "     defined (clearer dot spacing) — but they remain dotted guides, never "
-            "     continuous tonal shading.\n"
-            "   - Do NOT add line count elsewhere on the face. Clarify transitions "
-            "     only where the form actually changes.\n"
-            "\n"
-            "3) Detail priority (strict ordering):\n"
-            "   - STRUCTURE > FLOW > TEXTURE. Readability always wins.\n"
-            "   - If a new detail would hurt readability, drop it.\n"
-            "\n"
-            "4) Noise budget:\n"
-            "   - The 10–20% noise reduction from the detail policy above still holds.\n"
-            "   - Any new refinement mark REPLACES a weaker line — it does not stack "
-            "     on top. Net mark count stays within the same budget.\n"
-            "   - If a region is already readable, add nothing.\n"
-            "\n"
-            "DEPTH REFINEMENT (targeted, universal — applies to any subject. "
-            "~10–15% lift in secondary-material zones only, not global):\n"
-            "\n"
-            "Core rule — detail may only increase as STRUCTURAL PRIORITY decreases:\n"
-            "   FOREGROUND / FOCAL  >  PRIMARY CONTOURS  >  SECONDARY MATERIAL ZONES\n"
-            "The foreground and focal area stay clean. Detail is added only in the "
-            "lower-priority zone, as a controlled lift.\n"
-            "\n"
-            "Secondary material zones (universal definition — no object assumptions):\n"
-            "A zone qualifies if it is ANY of the following:\n"
-            "   - a layered structure sitting BEHIND the primary focal element;\n"
-            "   - a repeating form (strand fields, weave, grain, bark, scale, etc.);\n"
-            "   - a surface material with directional flow;\n"
-            "   - overlapping forms that sit behind focal features.\n"
-            "Do not name what the zone is — detect it by these properties in the "
-            "reference and treat it accordingly.\n"
-            "\n"
-            "Inside qualifying zones only:\n"
-            "   - Slightly increase line density (~10–15%).\n"
-            "   - Improve separation between layered elements so back layers read as "
-            "     a distinct plane from front layers.\n"
-            "   - Add directional flow lines where structure genuinely exists in the "
-            "     reference.\n"
-            "\n"
-            "Outside qualifying zones:\n"
-            "   - Focal area / face: unchanged.\n"
-            "   - Primary contours: unchanged.\n"
-            "   - Line-weight hierarchy: unchanged (added marks sit at Tertiary, or "
-            "     Dotted where appropriate — never at Primary or Secondary).\n"
-            "\n"
-            "Hard constraints on this refinement:\n"
-            "   - No global detail increase.\n"
-            "   - No uniform density across the image.\n"
-            "   - No random lines, no fuzz, no noise.\n"
-            "   - No object-specific assumptions — this refinement must behave the "
-            "     same way for any uploaded image.\n"
-            "   - Every added mark must improve layer SEPARATION, not density within "
-            "     a single layer, and must describe structure actually visible in "
-            "     the reference."
+            "HEAVY — full detail, maximum information density.\n"
+            "- ALL four line tiers engaged: PRIMARY + SECONDARY + FULL TERTIARY + DOTTED facial guides.\n"
+            "- Individual hair strands, fur texture, depth lines, micro-structure, every small surface mark visible in the reference.\n"
+            "- Dotted guides on facial plane changes (cheek to jaw, brow to socket, nose to cheek, under-eye, lip volumes).\n"
+            "- Hair follows directional flow — not random scatter — and at this level, every notable strand is shown.\n"
+            "- Target visual impression: VISIBLY DENSER than Medium at a glance. A tattoo artist should have every structural cue they need.\n"
+            "- Cap: density must not collapse into clutter. Every mark still describes a real structural feature in the reference — no invented texture, no shading fills, no crosshatching."
         ),
     }
     detail_text = detail_blocks.get(detail_level, detail_blocks["moderate"])
@@ -2332,30 +2248,52 @@ async def generate_ai_stencil(request: AIStencilRequest):
         last_error = None
         
         # Use Google Gemini (can see and trace reference images)
+        # Heavy mode is denser → needs longer wall-clock budget + one retry.
+        # Other modes keep the 120 s budget and no retry.
+        is_heavy = (detail_level == "detailed") or (
+            (request.regenerate_style or "").lower() == "heavy"
+        )
+        gen_timeout = 180.0 if is_heavy else 120.0
+        max_attempts = 2 if is_heavy else 1
+
         # OpenAI gpt-image-1 is text-to-image only and CANNOT trace reference photos
         if EMERGENT_LLM_KEY or AI_API_KEY:
-            try:
-                logger.info("Attempting stencil generation with Google Gemini...")
-                image_base64, mime_type = await asyncio.wait_for(
-                    generate_with_gemini(image_data, prompt, temperature=request.temperature),
-                    timeout=120.0  # 120 second timeout - image generation takes time
-                )
-                provider_used = "google"
-                logger.info("Successfully generated with Google Gemini")
-            except asyncio.TimeoutError:
-                last_error = "Google Gemini timed out after 120 seconds"
-                logger.error(f"Google Gemini timed out")
-                raise HTTPException(
-                    status_code=503, 
-                    detail="AI generation is taking longer than expected. Please try again - the servers may be busy."
-                )
-            except Exception as e:
-                last_error = str(e)
-                logger.error(f"Google Gemini failed: {e}")
-                raise HTTPException(
-                    status_code=503, 
-                    detail=f"AI service error: {str(e)}. Please try again."
-                )
+            last_gen_error: Optional[Exception] = None
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    logger.info(
+                        f"Attempting stencil generation with Google Gemini "
+                        f"(attempt {attempt}/{max_attempts}, timeout={gen_timeout}s, heavy={is_heavy})..."
+                    )
+                    image_base64, mime_type = await asyncio.wait_for(
+                        generate_with_gemini(image_data, prompt, temperature=request.temperature),
+                        timeout=gen_timeout,
+                    )
+                    provider_used = "google"
+                    logger.info("Successfully generated with Google Gemini")
+                    last_gen_error = None
+                    break
+                except asyncio.TimeoutError as e:
+                    last_gen_error = e
+                    logger.warning(
+                        f"Google Gemini timed out after {gen_timeout}s (attempt {attempt}/{max_attempts})"
+                    )
+                    if attempt < max_attempts:
+                        continue  # heavy mode: one retry
+                    last_error = f"Google Gemini timed out after {gen_timeout}s (heavy retry also exhausted)" if is_heavy else f"Google Gemini timed out after {gen_timeout}s"
+                    raise HTTPException(
+                        status_code=504,
+                        detail="AI generation is taking longer than expected. Please try again shortly.",
+                    )
+                except Exception as e:
+                    last_gen_error = e
+                    logger.error(f"Google Gemini failed: {e}")
+                    # Non-timeout errors: do NOT retry heavy — most are auth/quota/invalid key.
+                    last_error = str(e)
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"AI service error: {str(e)}. Please try again.",
+                    )
         
         if not image_base64:
             raise HTTPException(
