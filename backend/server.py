@@ -5946,6 +5946,10 @@ async def admin_action_reset_account(request: FastAPIRequest):
     await db.subscriptions.update_one({'user_id': user['user_id']}, {'$set': {
         'tier': None, 'available_credits': 0, 'is_trial': False, 'fallback_credits_granted': False,
         'last_event': 'ADMIN_RESET',
+        # Clear the RC identity link so stale anonymous/device entitlements
+        # cannot auto-restore after the reset. The user's NEXT sign-in will
+        # re-link via /api/subscription/link-rc using their authenticated email.
+        'revenuecat_customer_id': None,
     }}, upsert=True)
     await log_admin_action(admin['email'], 'reset_account', email, {'set_to': 'expired/0'})
     return {'status': 'ok', 'tier': None, 'credits': 0}

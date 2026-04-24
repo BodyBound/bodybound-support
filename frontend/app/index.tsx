@@ -803,16 +803,28 @@ export default function Index() {
             // Link this user to RevenueCat so purchases are tracked per-user
             if (Platform.OS === 'ios' || Platform.OS === 'android') {
               try {
-                const { customerInfo: rcInfo } = await Purchases.logIn(data.user.user_id);
-                console.log('[RevenueCat] Logged in as:', data.user.user_id, 'RC ID:', rcInfo?.originalAppUserId);
-                if (rcInfo?.originalAppUserId && token) {
-                  fetch(`${API_URL}/api/subscription/link-rc`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ revenuecat_customer_id: rcInfo.originalAppUserId }),
-                  }).catch(() => {});
+                // Use email as the stable RevenueCat appUserID — matches the
+                // identity the admin dashboard and webhooks key off of.
+                const rcAppUserId = (data.user.email || data.user.user_id || '').toLowerCase();
+                if (!rcAppUserId) {
+                  console.warn('[RevenueCat] No email/user_id on user — staying anonymous');
+                } else {
+                  const { customerInfo: rcInfo } = await Purchases.logIn(rcAppUserId);
+                  console.log('[RevenueCat] Logged in as:', rcAppUserId, 'RC ID:', rcInfo?.originalAppUserId);
+                  // originalAppUserId reflects whatever RC has stored — on first
+                  // login this matches rcAppUserId; on restore it may differ.
+                  // We send the identified appUserID so webhooks can match.
+                  if (token) {
+                    fetch(`${API_URL}/api/subscription/link-rc`, {
+                      method: 'POST',
+                      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ revenuecat_customer_id: rcAppUserId }),
+                    }).catch(() => {});
+                  }
                 }
-              } catch (_) {}
+              } catch (loginErr) {
+                console.warn('[RevenueCat] logIn failed:', loginErr);
+              }
             }
             // Check if user needs to subscribe (new paywall-first flow)
             if (data.credits?.needs_subscription) {
@@ -2702,6 +2714,17 @@ export default function Index() {
     try {
       await deleteToken();
     } catch (_) {}
+    // RevenueCat: detach the current user from their purchases cache so the
+    // next login starts clean. Without this, entitlements persist on the
+    // device-level anonymous appUserID and a fresh sign-in inherits them.
+    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+      try {
+        await Purchases.logOut();
+        console.log('[RevenueCat] logOut() OK on sign-out');
+      } catch (logoutErr) {
+        console.warn('[RevenueCat] logOut() failed (harmless if anonymous):', logoutErr);
+      }
+    }
     // Workspace first, then auth — order doesn't matter functionally but
     // this keeps the screen visually clean while the welcome screen mounts.
     resetWorkspaceState();
@@ -4958,15 +4981,20 @@ export default function Index() {
               setupNotifications();
               if (Platform.OS === 'ios' || Platform.OS === 'android') {
                 try {
-                  const { customerInfo } = await Purchases.logIn(user.user_id);
-                  console.log('[RevenueCat] Logged in as:', user.user_id, 'RC ID:', customerInfo?.originalAppUserId);
-                  // Store the RC anonymous ID on the backend so webhooks can match this user
-                  if (customerInfo?.originalAppUserId && token) {
-                    fetch(`${API_URL}/api/subscription/link-rc`, {
-                      method: 'POST',
-                      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ revenuecat_customer_id: customerInfo.originalAppUserId }),
-                    }).catch(() => {});
+                  const rcAppUserId = (user.email || user.user_id || '').toLowerCase();
+                  if (!rcAppUserId) {
+                    console.warn('[RevenueCat] No email/user_id on user — staying anonymous');
+                  } else {
+                    const { customerInfo } = await Purchases.logIn(rcAppUserId);
+                    console.log('[RevenueCat] Logged in as:', rcAppUserId, 'RC ID:', customerInfo?.originalAppUserId);
+                    // Store the identified appUserID on the backend so webhooks can match this user
+                    if (token) {
+                      fetch(`${API_URL}/api/subscription/link-rc`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ revenuecat_customer_id: rcAppUserId }),
+                      }).catch(() => {});
+                    }
                   }
                 } catch (loginErr) {
                   console.warn('[RevenueCat] logIn failed:', loginErr);
