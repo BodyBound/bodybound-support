@@ -14,7 +14,7 @@ import httpx
 import uuid
 
 API_URL = "https://stencil-ai-fallback.preview.emergentagent.com"
-REVENUECAT_WEBHOOK_AUTH = "bb-rc-webhook-2026-secure-x9k2m"
+REVENUECAT_WEBHOOK_AUTH = os.environ.get("REVENUECAT_WEBHOOK_AUTH", "")
 CRON_SECRET = "bb-cron-2026-refresh-c7f3a1"
 
 # Expected values

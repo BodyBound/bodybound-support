@@ -20,7 +20,7 @@ from datetime import datetime
 
 # Use the preview URL for testing
 BASE_URL = os.environ.get('EXPO_PUBLIC_BACKEND_URL', 'https://stencil-ai-fallback.preview.emergentagent.com')
-REVENUECAT_WEBHOOK_AUTH = 'bb-rc-webhook-2026-secure-x9k2m'
+REVENUECAT_WEBHOOK_AUTH = os.environ.get('REVENUECAT_WEBHOOK_AUTH', '')
 
 # Product credit mappings from server.py
 PRODUCT_CREDIT_MAP = {

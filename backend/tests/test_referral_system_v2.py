@@ -411,7 +411,7 @@ class TestReferralStatusFlow:
         """Webhook with auth should require proper body"""
         response = requests.post(
             f"{BASE_URL}/api/webhooks/revenuecat",
-            headers={'Authorization': 'Bearer bb-rc-webhook-2026-secure-x9k2m'},
+            headers={'Authorization': f'Bearer {os.environ.get("REVENUECAT_WEBHOOK_AUTH", "")}'},
             json={'event': {'type': 'TEST', 'app_user_id': 'test_user'}}
         )
         # Should process successfully

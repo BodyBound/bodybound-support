@@ -7,7 +7,7 @@
 
 ## RevenueCat
 - **SDK API Key (Live)**: appl_dVqjUPRJXPXNpLZThAjtsqApiVU
-- **Webhook Auth**: Bearer bb-rc-webhook-2026-secure-x9k2m (currently not enforced)
+- **Webhook Auth**: read from `REVENUECAT_WEBHOOK_AUTH` env var (rotated; not stored in this file)
 - **Webhook URL**: https://bodybound-subs.emergent.host/api/webhooks/revenuecat
 
 ## Admin Tool

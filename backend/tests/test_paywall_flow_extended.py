@@ -22,7 +22,7 @@ import os
 
 API_URL = "https://stencil-ai-fallback.preview.emergentagent.com"
 CRON_SECRET = "bb-cron-2026-refresh-c7f3a1"
-REVENUECAT_WEBHOOK_AUTH = "bb-rc-webhook-2026-secure-x9k2m"
+REVENUECAT_WEBHOOK_AUTH = os.environ.get("REVENUECAT_WEBHOOK_AUTH", "")
 
 
 @pytest.fixture

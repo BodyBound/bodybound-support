@@ -171,7 +171,7 @@ class TestReferralStatusFlow:
         # Simulate webhook call for INITIAL_PURCHASE
         response = requests.post(
             f"{BASE_URL}/api/webhooks/revenuecat",
-            headers={'Authorization': 'Bearer bb-rc-webhook-2026-secure-x9k2m'},
+            headers={'Authorization': f'Bearer {os.environ.get("REVENUECAT_WEBHOOK_AUTH", "")}'},
             json={
                 'event': {
                     'type': 'INITIAL_PURCHASE',
@@ -221,7 +221,7 @@ class TestReferralStatusFlow:
         # Simulate webhook call for CANCELLATION
         response = requests.post(
             f"{BASE_URL}/api/webhooks/revenuecat",
-            headers={'Authorization': 'Bearer bb-rc-webhook-2026-secure-x9k2m'},
+            headers={'Authorization': f'Bearer {os.environ.get("REVENUECAT_WEBHOOK_AUTH", "")}'},
             json={
                 'event': {
                     'type': 'CANCELLATION',

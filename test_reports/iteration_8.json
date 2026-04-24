@@ -99,7 +99,7 @@
   "test_credentials": {
     "demo_login": "POST /api/auth/demo-login (no auth needed)",
     "cron_secret": "bb-cron-2026-refresh-c7f3a1",
-    "revenuecat_webhook_auth": "bb-rc-webhook-2026-secure-x9k2m",
+    "revenuecat_webhook_auth": "REDACTED_ROTATED_APR_23_2026",
     "backend_url": "https://stencil-ai-fallback.preview.emergentagent.com"
   },
 
