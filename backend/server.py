@@ -2258,7 +2258,6 @@ async def generate_ai_stencil(request: AIStencilRequest):
 
         # OpenAI gpt-image-1 is text-to-image only and CANNOT trace reference photos
         if EMERGENT_LLM_KEY or AI_API_KEY:
-            last_gen_error: Optional[Exception] = None
             for attempt in range(1, max_attempts + 1):
                 try:
                     logger.info(
@@ -2271,25 +2270,20 @@ async def generate_ai_stencil(request: AIStencilRequest):
                     )
                     provider_used = "google"
                     logger.info("Successfully generated with Google Gemini")
-                    last_gen_error = None
                     break
-                except asyncio.TimeoutError as e:
-                    last_gen_error = e
+                except asyncio.TimeoutError:
                     logger.warning(
                         f"Google Gemini timed out after {gen_timeout}s (attempt {attempt}/{max_attempts})"
                     )
                     if attempt < max_attempts:
                         continue  # heavy mode: one retry
-                    last_error = f"Google Gemini timed out after {gen_timeout}s (heavy retry also exhausted)" if is_heavy else f"Google Gemini timed out after {gen_timeout}s"
                     raise HTTPException(
                         status_code=504,
                         detail="AI generation is taking longer than expected. Please try again shortly.",
                     )
                 except Exception as e:
-                    last_gen_error = e
                     logger.error(f"Google Gemini failed: {e}")
                     # Non-timeout errors: do NOT retry heavy — most are auth/quota/invalid key.
-                    last_error = str(e)
                     raise HTTPException(
                         status_code=503,
                         detail=f"AI service error: {str(e)}. Please try again.",
