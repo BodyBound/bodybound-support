@@ -88,6 +88,7 @@ export function LowCreditModal({
                 product_id: productId,
                 is_trial: isTrial,
                 revenuecat_customer_id: customerInfo.originalAppUserId || '',
+                manual_restore: true,  // user-initiated restore — overrides admin-reset block
               }),
             });
           } catch (syncErr) {

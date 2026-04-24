@@ -980,9 +980,14 @@ export default function Index() {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
+          // Passive auto-sync on launch — NO manual_restore flag.
+          // Backend rejects with 403 if user was admin-reset. Treat that as
+          // "paywall must show" rather than an error.
           body: JSON.stringify({ product_id: productId, is_trial: isTrial, revenuecat_customer_id: rcId }),
         });
-        if (resp.ok) {
+        if (resp.status === 403) {
+          console.log('[RC:Sync] Backend refused — account is admin-reset, paywall will show');
+        } else if (resp.ok) {
           const syncedCredits = await resp.json();
           setAvailableCredits(syncedCredits.available_credits ?? 0);
           setTotalMonthlyCredits(syncedCredits.total_monthly_credits ?? 0);

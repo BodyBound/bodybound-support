@@ -324,6 +324,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
                 product_id: activeProductId,
                 is_trial: isTrial,
                 revenuecat_customer_id: customerInfo.originalAppUserId || '',
+                manual_restore: true,  // fresh user-initiated purchase — overrides admin-reset block
               }),
             });
             if (!syncResp.ok) {
@@ -396,6 +397,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
                 product_id: productId,
                 is_trial: isTrial,
                 revenuecat_customer_id: customerInfo.originalAppUserId || '',
+                manual_restore: true,  // user-initiated restore — overrides admin-reset block
               }),
             });
             if (!syncResp.ok) {

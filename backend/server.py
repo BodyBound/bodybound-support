@@ -4661,6 +4661,9 @@ async def sync_subscription(request: FastAPIRequest):
     product_id = body.get('product_id')
     is_trial = bool(body.get('is_trial', False))
     rc_customer_id = body.get('revenuecat_customer_id', '') or None
+    # Manual restore (user tapped "Restore Purchases") is allowed to override
+    # the admin-reset block. Passive auto-sync on app launch is not.
+    manual_restore = bool(body.get('manual_restore', False))
 
     if not product_id:
         raise HTTPException(status_code=400, detail='Missing product_id')
@@ -4669,6 +4672,17 @@ async def sync_subscription(request: FastAPIRequest):
         raise HTTPException(
             status_code=400,
             detail=f'Unknown product_id: {product_id}. Valid: {list(PRODUCT_CREDIT_MAP.keys())}',
+        )
+
+    # Admin-reset guard: if this user was admin-reset and has not yet manually
+    # opted back in, reject passive auto-sync. Otherwise every app launch would
+    # silently re-apply the cached App Store entitlement and defeat the reset.
+    existing_sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0, 'last_event': 1}) or {}
+    if existing_sub.get('last_event') == 'ADMIN_RESET' and not manual_restore:
+        logger.info(f'[Sync] BLOCKED — user {user_id} is admin-reset; passive auto-sync rejected')
+        raise HTTPException(
+            status_code=403,
+            detail='Account was reset. Tap Restore Purchases on the paywall to restore your subscription.',
         )
 
     try:
