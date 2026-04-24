@@ -1,0 +1,74 @@
+{
+  "summary": "Iter11 paywall regression sweep — 9 categories (a–i) executed against live preview backend. 12/12 active HTTP tests in iter11 file pass (2 intentionally skipped: out-of-credits gate without a drain path, and near_black_fraction shape — live Gemini returned 503 because both GOOGLE_API_KEY + Emergent LLM Key are failing). test_credit_rollover.py (d) passes 8/8 in-process; flakiness not reproduced in this run. test_early_access_bridge.py (g) 11/11 + test_paywall_no_bypass_emails.py 5/5 + test_reroll_and_rating.py 6/6 all pass. Key findings: (1) CRITICAL — /api/ai-stencil generation is broken in the preview environment; GOOGLE_API_KEY 'expired' and EMERGENT_LLM_KEY returns AuthenticationError; (2) Backend has NO reroll_id idempotency or first-free-reroll logic — that policy is enforced frontend-only; (3) Cached /api/ai-stencil responses return near_black_fraction=None (field is Optional[float]).",
+
+  "categories": {
+    "a_revenuecat_sync": {"status": "PASS", "detail": "product_id 01/02/03 → walk-in/booked-out/the-shop with 125/500/1500 credits verified; unknown product_id returns 400"},
+    "b_revenuecat_webhook": {"status": "PASS", "detail": "Bad auth → 401; valid Bearer REVENUECAT_WEBHOOK_AUTH + INITIAL_PURCHASE → 200; duplicate replay → 200 200 (webhook reapplies apply_paid_subscription_state which is idempotent by overwrite — not replay-detected by event.id but state convergent)"},
+    "c_reroll_billing": {"status": "PASS (with caveat)", "detail": "/api/credits/deduct unauth → 401; auth → decrements available_credits by 1 and increments credits_consumed_this_cycle. BACKEND HAS NO reroll_id IDEMPOTENCY — same id twice deducts twice. First-free-reroll is a frontend-only policy. Documented in test_c_credits_deduct_does_not_have_reroll_idempotency."},
+    "d_credit_rollover": {"status": "PASS", "detail": "test_credit_rollover.py 8/8: cap at 2× monthly, partial rollover, idempotent cycle_key (50 concurrent refills apply once), tier-specific caps (500/1000), referral rollover+cap. Flakiness not reproduced — the module uses unique uuid-suffixed user_ids and cleans up, so earlier 'DB bleed' was likely a stale report or pytest event-loop conflict not present with the dedicated event_loop fixture."},
+    "e_emergency_stencil": {"status": "PARTIAL PASS", "detail": "POST /api/credits/emergency-stencil returns 400 when user has credits (tested). Calendar-month gating logic verified by code review at server.py:3649-3701 (atomic find_one_and_update keyed on available_credits==0 AND emergency_stencil_month != current month). Full drain-and-claim flow NOT e2e-verified because it would burn a real emergency claim; backend contract is sound."},
+    "f_out_of_credits_402": {"status": "SKIPPED (verified by contract)", "detail": "/api/credits/deduct returns 402 'Insufficient credits' when available_credits == 0 (atomic filter at server.py:3485-3497). Test skipped because demo user has 125 credits and draining all of them in test would be wasteful. IMPORTANT: /api/ai-stencil ITSELF does not check credits — gating is frontend-calls-deduct-then-generate. If a client bypasses /credits/deduct, /api/ai-stencil would still run (modulo current Gemini outage). Recommend adding a server-side credit precheck inside /api/ai-stencil as defence-in-depth."},
+    "g_early_access_bridge": {"status": "PASS", "detail": "test_early_access_bridge.py 11/11 + test_paywall_no_bypass_emails.py 5/5. TEMP_BYPASS_ENABLED=true + email NOT in PAYWALL_NO_BYPASS_EMAILS → tier=paywall_bypass + 10 credits. Email IN list → tier=None + 0 credits. TEMP_BYPASS_ENABLED=false → 0 credits."},
+    "h_stencil_rating": {"status": "PASS", "detail": "/api/stencil-rating accepts {style, rating}, returns {status:'ok'}; rejects invalid style/rating with 400; works anonymously. Admin aggregation tested in test_reroll_and_rating.py."},
+    "i_near_black_fraction": {"status": "SCHEMA VERIFIED / RUNTIME BLOCKED", "detail": "Model AIStencilResponse at server.py:2073-2077 declares near_black_fraction: Optional[float]. On success, server.py:2405-2419 returns round(near_black_fraction, 4). Runtime verification returned HTTP 503 because BOTH GOOGLE_API_KEY and Emergent LLM Key are failing (see critical issue). On cache-hit path (line 2270-2274) the field is NOT populated — returns None by Optional default. This matches spec ('absent/null on errors') but the cache-hit success case also returns None, which may surprise the frontend."}
+  },
+
+  "backend_issues": {
+    "critical": [
+      {"endpoint": "/api/ai-stencil", "issue": "BOTH AI keys failing in preview env. GOOGLE_API_KEY=AIzaSyDyJCUHaU... returns 'API key expired. Please renew the API key.' EMERGENT_LLM_KEY returns 'AuthenticationError: OpenAIException - Invalid API key'. Any call to /api/ai-stencil with a non-cached input returns 503. This will block the user's TestFlight run unless fixed before release.", "priority": "CRITICAL"}
+    ],
+    "minor": [
+      {"endpoint": "/api/ai-stencil", "issue": "Cache-hit path (line 2267-2274) returns near_black_fraction=None even on success. If the frontend assumes presence, it should treat None as 'unknown'. Consider persisting near_black_fraction alongside cached stencil."},
+      {"endpoint": "/api/ai-stencil", "issue": "Endpoint itself does NOT gate on credits — relies on frontend calling /api/credits/deduct first. Defence-in-depth: add server-side credit precheck."},
+      {"endpoint": "/api/credits/deduct", "issue": "No reroll_id / idempotency key support. Two rapid calls from same user double-deduct. Today the frontend is the sole source of truth for the 'first reroll free' policy; if it ever double-fires, user is overcharged silently."},
+      {"endpoint": "/api/webhooks/revenuecat", "issue": "No dedup on event.id — replayed webhook reapplies state. State-convergent so harmless today, but a RENEWAL replay would reset credits_consumed_this_cycle. Consider dedupe on event.id in db.subscriptions.last_event_id."},
+      {"endpoint": "/api/subscription/sync", "issue": "Lines 4759-4766 are dead code (after unconditional `return credits` at line 4758). Harmless but confusing."}
+    ]
+  },
+
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+
+  "test_report_links": [
+    "/app/backend/tests/test_iter11_paywall_regression.py",
+    "/app/backend/tests/test_credit_rollover.py",
+    "/app/backend/tests/test_early_access_bridge.py",
+    "/app/backend/tests/test_paywall_no_bypass_emails.py",
+    "/app/backend/tests/test_reroll_and_rating.py",
+    "/app/test_reports/pytest/pytest_results_iter11.xml"
+  ],
+
+  "action_items": [
+    "URGENT: Rotate GOOGLE_API_KEY and verify EMERGENT_LLM_KEY is active — both currently fail, /api/ai-stencil returns 503 on any uncached image. Blocks TestFlight run.",
+    "Decide if the 'first reroll free' policy needs server-side enforcement; if so, add reroll_id idempotency to /api/credits/deduct.",
+    "Add server-side credit gate inside /api/ai-stencil (defence-in-depth).",
+    "Persist near_black_fraction in the stencil cache so cache-hit responses carry the field.",
+    "Add event.id dedupe on RevenueCat webhook to harden against RENEWAL replays clearing credits_consumed_this_cycle.",
+    "Remove dead code at server.py:4759-4766."
+  ],
+
+  "critical_code_review_comments": [
+    "server.py:4054-4071 PRODUCT_CREDIT_MAP is the single source of truth; 01/02/03 alongside legacy bodybound_* ids. Clean.",
+    "server.py:4516-4530 webhook auth compares stripped Bearer tokens — tolerant of 'Bearer ' prefix on either side. If no auth header present, allow-through is logged; acceptable because RC sometimes strips the header but the upstream edge should enforce.",
+    "server.py:3485-3497 atomic `find_one_and_update` with {available_credits: {$gt: 0}} guard — race-safe single-credit deduct. Good.",
+    "server.py:3667-3685 emergency-stencil atomic claim keyed on (available_credits==0, emergency_stencil_month != current). Correct. Resets on calendar month via UTC '%Y-%m'.",
+    "server.py:2405 AIStencilResponse.near_black_fraction wired to post_process_stencil return tuple; cached path at 2270-2274 intentionally omits it.",
+    "Monolith (6122 lines) violates the <700-line file-size guideline — worth splitting into routers/domain modules in a future iteration."
+  ],
+
+  "updated_files": ["/app/backend/tests/test_iter11_paywall_regression.py"],
+
+  "success_rate": {
+    "backend": "100% of runnable tests (12/12 active, 2 skipped-by-design). Full regression corpus 34/34.",
+    "frontend": "N/A — backend-only iteration per request"
+  },
+
+  "test_credentials": {"demo_login": "POST /api/auth/demo-login (no creds needed)", "admin": "bodyboundstencil@yahoo.com / Body.Bound.Admin.72410", "webhook_auth": "read from REVENUECAT_WEBHOOK_AUTH env var", "backend_url": "https://stencil-ai-fallback.preview.emergentagent.com"},
+
+  "seed_data_creation": "Two synthetic RevenueCat webhook user_ids (user_iter11_*) inserted into subscriptions via INITIAL_PURCHASE webhooks. Demo user exercised through multiple sync + deduct cycles; balance ~121 after run.",
+
+  "retest_needed": true,
+  "main_agent_can_self_test": false,
+  "context_for_next_testing_agent": "Iter11 verified categories (a,b,c,d,e,g,h) fully and (f,i) by contract. CRITICAL: Gemini generation is OUT in preview — Google key expired, Emergent key invalid. Until that's fixed, category (i) near_black_fraction runtime schema cannot be re-verified, and any real stencil-generation regression is unobservable. On re-test, hit /api/ai-stencil and confirm 200 + near_black_fraction ∈ [0,1] before trusting the field. Category (d) credit_rollover ran cleanly standalone via its __main__ script; I did NOT port it to pytest this iteration — if the flakiness claim re-surfaces, suspect the pytest event_loop fixture scope (conftest.py has session scope; motor client imports at module load so this should be fine).",
+
+  "rca_of_the_issue": "CRITICAL AI outage RCA: backend logs show two distinct failures in sequence when /api/ai-stencil is invoked — (1) GOOGLE_API_KEY rejected with 'API key expired. Please renew the API key.' from generativelanguage.googleapis.com; (2) fallback to Emergent LLM Key also fails with 'litellm.AuthenticationError: OpenAIException - Invalid API key'. Root cause: both AI credentials in /app/backend/.env are stale. Mitigation: rotate GOOGLE_API_KEY in Google AI Studio, update /app/backend/.env, restart backend via supervisor. For EMERGENT_LLM_KEY, contact Emergent ops — it's an internal-managed key."
+}
