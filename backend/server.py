@@ -93,8 +93,9 @@ def get_cache_key(image_base64: str, style: str) -> str:
     content = f"{image_sample}_{style}"
     return hashlib.md5(content.encode()).hexdigest()
 
-def cache_stencil(cache_key: str, stencil_base64: str):
-    """Cache a generated stencil"""
+def cache_stencil(cache_key: str, stencil_base64: str, near_black_fraction: Optional[float] = None):
+    """Cache a generated stencil along with its near_black_fraction so a
+    cache hit returns the same shape of response a fresh generation does."""
     global stencil_cache
     # Evict oldest if cache is full
     if len(stencil_cache) >= CACHE_MAX_SIZE:
@@ -103,15 +104,18 @@ def cache_stencil(cache_key: str, stencil_base64: str):
         del stencil_cache[oldest_key]
     stencil_cache[cache_key] = {
         'stencil': stencil_base64,
+        'near_black_fraction': near_black_fraction,
         'timestamp': datetime.utcnow()
     }
     logger.info(f"[Cache] Cached stencil, total cached: {len(stencil_cache)}")
 
-def get_cached_stencil(cache_key: str) -> Optional[str]:
-    """Retrieve a cached stencil if available"""
+def get_cached_stencil(cache_key: str) -> Optional[dict]:
+    """Retrieve a cached stencil entry if available. Returns the full dict
+    (with 'stencil' and 'near_black_fraction') so callers can echo the
+    near_black_fraction on cache hits."""
     if cache_key in stencil_cache:
         logger.info(f"[Cache] Cache HIT - returning cached stencil")
-        return stencil_cache[cache_key]['stencil']
+        return stencil_cache[cache_key]
     return None
 
 class StencilJob:
@@ -2255,10 +2259,12 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
         cached_result = get_cached_stencil(cache_key) if not request.regenerate_style else None
         if cached_result:
             logger.info(f"[AI-Stencil] Cache HIT - returning cached result in {(time.time() - start_time) * 1000:.0f}ms")
+            cached_nbf = cached_result.get('near_black_fraction')
             return AIStencilResponse(
-                stencil_base64=cached_result,
+                stencil_base64=cached_result['stencil'],
                 processing_time_ms=round((time.time() - start_time) * 1000, 2),
-                regenerated_style=request.regenerate_style
+                regenerated_style=request.regenerate_style,
+                near_black_fraction=round(cached_nbf, 4) if cached_nbf is not None else None,
             )
         
         # === STEP 2: Fix EXIF orientation (phone photos often have wrong rotation) ===
@@ -2409,7 +2415,7 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
         stencil_base64, near_black_fraction = post_process_stencil(stencil_base64)
         
         # === STEP 8: CACHE THE RESULT for future instant retrieval ===
-        cache_stencil(cache_key, stencil_base64)
+        cache_stencil(cache_key, stencil_base64, near_black_fraction)
         
         processing_time = (time.time() - start_time) * 1000
         

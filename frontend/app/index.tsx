@@ -1602,7 +1602,15 @@ export default function Index() {
       }
     } catch (error: any) {
       console.error(`Error regenerating ${style} version:`, error);
-      Alert.alert('Regeneration Failed', `Could not regenerate ${style} version. Please try again.`);
+      Alert.alert(
+        'Regeneration Failed',
+        `Could not regenerate ${style} version.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Try Again', onPress: () => regenerateSingleStyle(style) },
+        ],
+        { cancelable: true }
+      );
     } finally {
       setRegeneratingStyle(null);
     }
@@ -1689,7 +1697,15 @@ export default function Index() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`[GenerateSingle] Failed to start job. Status: ${response.status}, Error:`, errorText);
-        Alert.alert('Generation Failed', `Could not start stencil generation. Status: ${response.status}`);
+        Alert.alert(
+          'Generation Failed',
+          `Could not start stencil generation (status ${response.status}).`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Try Again', onPress: () => generateSingleStyle(style) },
+          ],
+          { cancelable: true }
+        );
         return;
       }
       
@@ -1755,7 +1771,15 @@ export default function Index() {
             }
           } else {
             console.error(`[GenerateSingle] No stencil in result for style ${style}`);
-            Alert.alert('Generation Issue', 'Stencil was generated but not received properly.');
+            Alert.alert(
+              'Generation Issue',
+              'Stencil was generated but not received properly.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Try Again', onPress: () => generateSingleStyle(style) },
+              ],
+              { cancelable: true }
+            );
           }
           
           // Clean up job
@@ -1767,13 +1791,29 @@ export default function Index() {
         } else if (statusData.status === 'failed') {
           completed = true;
           console.error(`[GenerateSingle] Job failed:`, statusData.error);
-          Alert.alert('Generation Failed', statusData.error || 'Could not generate stencil.');
+          Alert.alert(
+            'Generation Failed',
+            statusData.error || 'Could not generate stencil.',
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Try Again', onPress: () => generateSingleStyle(style) },
+            ],
+            { cancelable: true }
+          );
         }
       }
       
     } catch (error: any) {
       console.error(`Error generating ${style} version:`, error);
-      Alert.alert('Connection Issue', 'Failed to generate. Please check your internet connection.');
+      Alert.alert(
+        'Connection Issue',
+        'Failed to generate. Please check your internet connection.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Try Again', onPress: () => generateSingleStyle(style) },
+        ],
+        { cancelable: true }
+      );
     } finally {
       setRegeneratingStyle(null);
       setIsGeneratingAI(false);
@@ -4063,6 +4103,18 @@ export default function Index() {
                       {showingOriginal ? "Showing Original" : "Compare"}
                     </Text>
                   </TouchableOpacity>
+                )}
+
+                {/* Edits applied badge — visible after Done in edit mode.
+                    Hidden when comparing against the original photo. */}
+                {stencilImage && isEditedStencil && !showingOriginal && (
+                  <View
+                    style={styles.editsAppliedBadge}
+                    pointerEvents="none"
+                    testID="edits-applied-badge"
+                  >
+                    <Text style={styles.editsAppliedBadgeText}>✏️  EDITS APPLIED</Text>
+                  </View>
                 )}
               </View>
             </View>

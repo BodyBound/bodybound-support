@@ -1788,6 +1788,28 @@ export const styles = StyleSheet.create({
   compareButtonTextActive: {
     color: '#fff',
   },
+  editsAppliedBadge: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(201, 162, 39, 0.92)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 4,
+  },
+  editsAppliedBadgeText: {
+    color: '#0A0A0A',
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
   // Crop modal styles
   cropPreviewArea: {
     flex: 1,
