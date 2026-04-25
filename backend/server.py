@@ -5663,6 +5663,17 @@ async def blueprint_heavy_page():
     raise HTTPException(status_code=404, detail="Preview page not found")
 
 
+@api_router.get("/tier-compare")
+async def tier_compare_page():
+    """Side-by-side: reference vs Light/Medium/Heavy stencils for visual QA
+    of the standalone Light prompt vs the Blueprint Heavy+ Medium/Heavy."""
+    html_path = "/app/backend/static/tier_compare.html"
+    if os.path.exists(html_path):
+        with open(html_path, 'r') as f:
+            return HTMLResponse(content=f.read())
+    raise HTTPException(status_code=404, detail="Preview page not found")
+
+
 @api_router.get("/raw-vs-processed")
 async def raw_vs_processed_page():
     """Side-by-side: raw AI output vs post-processed output."""
@@ -5742,6 +5753,7 @@ async def prompt_preview_asset(filename: str):
         'blueprint_lion_light.png', 'blueprint_lion_heavy.png',
         'rawvp_skull_raw.png', 'rawvp_skull_processed.png',
         'rawvp_lion_raw.png', 'rawvp_lion_processed.png',
+        'tier_compare_light.png', 'tier_compare_medium.png', 'tier_compare_heavy.png',
     }
     if filename not in allowed:
         raise HTTPException(status_code=404, detail="Not found")
