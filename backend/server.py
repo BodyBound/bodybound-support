@@ -1895,44 +1895,38 @@ def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
         line_color: rendered line color (e.g. "purple/violet", "black").
         detail_level: one of "minimal", "moderate", "detailed".
     """
-    # LIGHT: standalone "clean line drawing" prompt — does NOT inherit the
-    # Blueprint Heavy+ framing. Empirically required: appending negative
-    # constraints to the Heavy+ base prompt failed to suppress dotted/
-    # tertiary marks because the model anchors on "tattoo stencil" +
-    # four-tier hierarchy framing.
+    # LIGHT: Feb 16 2026 prompt — photo-to-line-art tracing brief.
+    # Standalone; does NOT inherit Blueprint Heavy+ framing. The user
+    # preferred this minimal style over later iterations.
     if detail_level == "minimal":
-        return f"""CLEAN LINE DRAWING — minimal outline.
+        return f"""IMPORTANT: Convert THIS EXACT input image to a line art stencil. DO NOT create a different image.
 
-You are producing a clean, minimal LINE DRAWING of the subject in the reference image.
+ABSOLUTE RULES - VIOLATION IS FAILURE:
+1. The output MUST show the EXACT SAME subject as the input
+2. The output MUST have the EXACT SAME composition as the input
+3. The output MUST have the EXACT SAME pose/position as the input
+4. If input shows a face, output must show THAT SAME face in SAME position
+5. If input shows an object, output must show THAT SAME object in SAME position
+6. DO NOT create your own version or interpretation
+7. DO NOT draw a "similar" subject - draw THIS subject
 
-This is a strict image-to-line translation. Match the reference exactly in pose, proportions, and structure. Do not reinterpret or redesign the subject.
+TASK: Photo-to-line-art conversion (NOT creative generation)
+- Input: The photo I'm providing
+- Output: A line drawing of EXACTLY what's in that photo
+- Think of this as TRACING, not drawing from imagination
 
-OUTPUT:
-- {line_color} lines on a pure white background
-- Pure linework only — clean, continuous strokes
-- Primarily consistent line weight, with slight variation for readability (outer contours may be slightly stronger than internal lines)
+TECHNICAL SPECS:
+- Use {line_color} colored lines on pure white background
+- NO gradients, NO soft shading, NO gray tones
+- All shading via line techniques only (cross-hatch, dots, parallel lines)
 
-DRAW:
-- Outer silhouette of the subject (head, hair mass, shoulders if visible)
-- Major structural boundaries (jawline, hairline, neckline)
-- Key facial features as simple outlines:
-  • Eyes — almond outline, iris circle, pupil circle (hollow)
-  • Eyebrows — single contour line
-  • Nose — bridge line, nostril outline, tip contour
-  • Lips — upper line, lower line, mouth opening
-  • Ears — outer outline if visible
-- Minimal facial contour lines only where necessary to define structure (cheek, under-eye)
-- Hair:
-  • One clean outer shape
-  • 2–4 directional flow lines only where needed
+SHADING AMOUNT: MINIMAL
+- Outlines only, minimal internal detail
 
-STYLE:
-- Clean, sparse, confident line drawing
-- High readability at a glance
-- Every line serves a purpose — no excess detail
+BLACK FILLS: NONE
+- None - lines only
 
-VISUAL TARGET:
-A minimal structural outline where the core form is clearly readable, but all rendering, shading, and texture are left for the artist to interpret."""
+VERIFY: Before outputting, check that your stencil matches the input image exactly."""
 
     detail_blocks = {
         "minimal": (

@@ -18,8 +18,10 @@ from server import build_blueprint_prompt
 def test_light_is_standalone_prompt():
     light = build_blueprint_prompt("black", "minimal")
 
-    # Light must use the clean-line-drawing framing
-    assert "CLEAN LINE DRAWING" in light
+    # Light uses the Feb-16-2026 photo-to-line-art tracing brief
+    assert "TRACING" in light
+    assert "SHADING AMOUNT: MINIMAL" in light
+    assert "BLACK FILLS: NONE" in light
 
     # Light must NOT inherit any Blueprint Heavy+ framing — this is
     # the entire point of branching it out.
@@ -29,7 +31,6 @@ def test_light_is_standalone_prompt():
     assert "PRIMARY" not in light
     assert "SECONDARY" not in light
     assert "TERTIARY" not in light
-    assert "Tattoo Stencil" not in light
     assert "thermofax" not in light
 
 
@@ -51,8 +52,8 @@ def test_heavy_uses_blueprint_heavy_plus_base_with_dotted():
 def test_line_color_is_interpolated_into_light():
     light_black = build_blueprint_prompt("black", "minimal")
     light_purple = build_blueprint_prompt("purple/violet", "minimal")
-    assert "black lines on a pure white background" in light_black
-    assert "purple/violet lines on a pure white background" in light_purple
+    assert "black colored lines on pure white background" in light_black
+    assert "purple/violet colored lines on pure white background" in light_purple
 
 
 def test_tier_lengths_signal_clear_separation():
