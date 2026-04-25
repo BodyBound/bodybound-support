@@ -405,6 +405,7 @@ export default function Index() {
       const newIdx = currentIdx - 1;
       setStencilHistoryIndex(prev => ({ ...prev, [style]: newIdx }));
       setStencilImage(history[newIdx]);
+      setIsEditedStencil(false);
       setStencilVersions(prev => ({ ...prev, [style]: history[newIdx] }));
       setSelectedVersion(style as 'light' | 'medium' | 'heavy');
       setShowingOriginal(false);
@@ -418,6 +419,7 @@ export default function Index() {
       const newIdx = currentIdx + 1;
       setStencilHistoryIndex(prev => ({ ...prev, [style]: newIdx }));
       setStencilImage(history[newIdx]);
+      setIsEditedStencil(false);
       setStencilVersions(prev => ({ ...prev, [style]: history[newIdx] }));
       setSelectedVersion(style as 'light' | 'medium' | 'heavy');
       setShowingOriginal(false);
@@ -527,6 +529,7 @@ export default function Index() {
   const [editedStencil, setEditedStencil] = useState<string | null>(null); // Saved edited version
   const [originalAIStencil, setOriginalAIStencil] = useState<string | null>(null); // Original AI stencil (for revert)
   const [isCapturingForExport, setIsCapturingForExport] = useState(false); // Hide original when saving
+  const [isEditedStencil, setIsEditedStencil] = useState(false); // True when stencilImage is a flat capture from edit mode (has opaque white BG, must skip tintColor on main screen to avoid the "black square" regression)
   const [showEditHint, setShowEditHint] = useState(true); // Show double-tap hint on first entry
   const [editModeStencilImage, setEditModeStencilImage] = useState<string | null>(null); // Frozen stencil for edit mode
   const [editModeOriginalImage, setEditModeOriginalImage] = useState<string | null>(null); // Frozen original for edit mode
@@ -1423,6 +1426,7 @@ export default function Index() {
 
       const data = await response.json();
       setStencilImage(data.stencil_base64);
+      setIsEditedStencil(false);
       setHasGeneratedOnce(true); // Enable live updates after first generation
     } catch (error) {
       console.error('Error processing image:', error);
@@ -1515,6 +1519,7 @@ export default function Index() {
     const selectedStencil = stencilVersions[version];
     if (selectedStencil) {
       setStencilImage(selectedStencil);
+      setIsEditedStencil(false);
     }
   };
 
@@ -1575,6 +1580,7 @@ export default function Index() {
       // Auto-select the regenerated style
       setSelectedVersion(style);
       setStencilImage(stencilBase64);
+      setIsEditedStencil(false);
       addToHistory(style, stencilBase64);
       // Clear any prior rating on this style — this is a fresh stencil
       setStencilRatings(prev => {
@@ -1716,6 +1722,7 @@ export default function Index() {
             }));
             setSelectedVersion(style);
             setStencilImage(generatedStencil);
+            setIsEditedStencil(false);
             setLineWeight(0); // Reset line weight for new stencil
             setHasGeneratedOnce(true);
             // Save the reference photo for edit mode layers
@@ -1792,6 +1799,7 @@ export default function Index() {
     if (newWeight === 0 && selectedVersion && stencilVersions[selectedVersion]) {
       const originalStencil = stencilVersions[selectedVersion];
       setStencilImage(originalStencil);
+      setIsEditedStencil(false);
       if (showEditModal) {
         setEditModeStencilImage(originalStencil);
       }
@@ -1823,6 +1831,7 @@ export default function Index() {
           const data = await response.json();
           console.log(`[LineWeight] Adjustment applied: ${data.adjustment_applied}`);
           setStencilImage(data.adjusted_image);
+          setIsEditedStencil(false);
           // Also update edit mode stencil if in edit mode
           if (showEditModal) {
             setEditModeStencilImage(data.adjusted_image);
@@ -2630,6 +2639,7 @@ export default function Index() {
           onPress: () => {
             if (originalAIStencil) {
               setStencilImage(originalAIStencil);
+              setIsEditedStencil(false);
               setDrawingPaths([]);
               setEditedStencil(null);
             }
@@ -3527,6 +3537,10 @@ export default function Index() {
         const editedImage = `data:image/png;base64,${uri}`;
         setEditedStencil(editedImage);
         setStencilImage(editedImage);
+        // Mark this as an edited (flat, opaque-bg) stencil so the main
+        // screen skips tintColor — otherwise the white background gets
+        // tinted black and the whole preview turns into a black square.
+        setIsEditedStencil(true);
         console.log('[SaveEdit] Stencil updated with edits');
       }
       
@@ -3636,6 +3650,7 @@ export default function Index() {
       const stencil = await response.json();
       setOriginalImage(stencil.original_image);
       setStencilImage(stencil.stencil_image);
+      setIsEditedStencil(false);
       setSettings(stencil.settings);
       setShowGallery(false);
     } catch (error) {
@@ -4031,7 +4046,7 @@ export default function Index() {
                   <Animated.View style={[{width: '100%', height: '100%'}, mainImageAnimatedStyle]}>
                     <Image
                       source={{ uri: stencilImage && !showingOriginal ? stencilImage : originalImage }}
-                      style={[styles.previewImage, stencilImage && !showingOriginal ? { tintColor: stencilTintColor || '#000000' } : {}]}
+                      style={[styles.previewImage, stencilImage && !showingOriginal && !isEditedStencil ? { tintColor: stencilTintColor || '#000000' } : {}]}
                       resizeMode="contain"
                     />
                   </Animated.View>

@@ -67,6 +67,11 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **Light Tier Standalone Prompt + Black Square Edit-Mode Fix (Apr 25 2026)** — two locked-in fixes:
+  - **Light prompt rebuilt as standalone Feb-16-2026 photo-to-line-art tracing brief.** No longer inherits the Blueprint Heavy+ four-tier hierarchy / DOTTED tier / "tattoo stencil" framing. `build_blueprint_prompt("...", "minimal")` now returns the original Feb-16 brief with hardcoded `SHADING AMOUNT: MINIMAL` + `BLACK FILLS: NONE`. Medium and Heavy+ unchanged. User-approved against `/api/tier-compare`. Regression suite: `tests/test_prompt_tier_differentiation.py` (5/5 pass).
+  - **Black-square-after-edit fix.** Root cause: edit canvas captures with an opaque white background; main screen applies `tintColor: '#000000'` to the new stencil and tints the entire white background black. Fix: track new state `isEditedStencil` (set true in `saveEditedStencil`, reset false at every fresh-stencil entry: `selectVersion`, history nav, `regenerateSingleStyle`, `generateSingleStyle`, line-weight adjust, `loadStencilFromGallery`, `revertToOriginal`, `processImage`). Main-screen `Image` now skips tintColor when `isEditedStencil` is true. Affects all 3 tiers (Light/Medium/Heavy) — bug was tier-agnostic.
+  - **Live preview:** `GET /api/tier-compare`.
+
 - **Blueprint Heavy+ — Production Standard (Apr 23 2026)** — locked in as the default generation behaviour for every stencil produced by `/api/ai-stencil` and `/api/process_stencil_job`. Replaces the previous Blueprint Mode pass.
   - Four-tier line-weight hierarchy: **PRIMARY** (bold outer contours, foreground) / **SECONDARY** (medium internal structure, facial features) / **TERTIARY** (fine texture, hair flow) / **DOTTED** (light facial guides + form transitions). `DOTTED` is now a first-class tier, not a Heavy-only exception.
   - `Lines MUST NOT be uniform weight` and `foreground reads stronger than background` are explicit rules.
