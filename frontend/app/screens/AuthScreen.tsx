@@ -144,14 +144,32 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
 
       const authUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUri)}`;
 
-      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
+      // iOS: opt OUT of ephemeral session so cookies (incl. OAuth state) persist
+      // across the auth provider redirect chain. Without this, ASWebAuthenticationSession
+      // drops state cookies and the provider returns invalid_state on the redirect.
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri, {
+        preferEphemeralSession: false,
+      });
 
       if (result.type === 'success' && result.url) {
-        // Extract session_id from URL fragment
         const url = result.url;
+
+        // Surface OAuth errors from either the query string or the fragment.
+        // (e.g. ?error=invalid_state, #error=access_denied)
+        const queryStr = url.includes('?') ? url.split('?')[1].split('#')[0] : '';
         const fragment = url.includes('#') ? url.split('#')[1] : '';
-        const params = new URLSearchParams(fragment);
-        const sessionId = params.get('session_id');
+        const queryParams = new URLSearchParams(queryStr);
+        const fragParams = new URLSearchParams(fragment);
+        const errCode = queryParams.get('error') || fragParams.get('error');
+        const errDesc = queryParams.get('error_description') || fragParams.get('error_description');
+        if (errCode) {
+          throw new Error(
+            `Google Sign-In was rejected (${errCode}). ${errDesc || 'Please try again.'}`
+          );
+        }
+
+        // Extract session_id from URL fragment (or query, just in case)
+        const sessionId = fragParams.get('session_id') || queryParams.get('session_id');
 
         if (!sessionId) throw new Error('No session ID received');
 
