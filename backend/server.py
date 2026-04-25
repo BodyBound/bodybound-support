@@ -1881,12 +1881,59 @@ async def enhance_image_endpoint(request: EnhanceImageRequest):
 # artist receives readable structure, not noise.
 # ---------------------------------------------------------------------------
 def build_blueprint_prompt(line_color: str, detail_level: str) -> str:
-    """Build the stencil-generation prompt (Blueprint Heavy+ standard).
+    """Build the stencil-generation prompt.
+
+    Light ("minimal") uses a completely separate, standalone "clean line
+    drawing" brief — it deliberately does NOT inherit the Blueprint Heavy+
+    framing, four-tier hierarchy, or DOTTED guides. This is the only way
+    to force a visibly cleaner output than Medium/Heavy.
+
+    Medium ("moderate") and Heavy ("detailed") share the Blueprint Heavy+
+    base prompt with their own detail blocks.
 
     Args:
         line_color: rendered line color (e.g. "purple/violet", "black").
         detail_level: one of "minimal", "moderate", "detailed".
     """
+    # LIGHT: standalone "clean line drawing" prompt — does NOT inherit the
+    # Blueprint Heavy+ framing. Empirically required: appending negative
+    # constraints to the Heavy+ base prompt failed to suppress dotted/
+    # tertiary marks because the model anchors on "tattoo stencil" +
+    # four-tier hierarchy framing.
+    if detail_level == "minimal":
+        return f"""CLEAN LINE DRAWING — minimal outline.
+
+You are producing a clean, minimal LINE DRAWING of the subject in the reference image.
+
+This is a strict image-to-line translation. Match the reference exactly in pose, proportions, and structure. Do not reinterpret or redesign the subject.
+
+OUTPUT:
+- {line_color} lines on a pure white background
+- Pure linework only — clean, continuous strokes
+- Primarily consistent line weight, with slight variation for readability (outer contours may be slightly stronger than internal lines)
+
+DRAW:
+- Outer silhouette of the subject (head, hair mass, shoulders if visible)
+- Major structural boundaries (jawline, hairline, neckline)
+- Key facial features as simple outlines:
+  • Eyes — almond outline, iris circle, pupil circle (hollow)
+  • Eyebrows — single contour line
+  • Nose — bridge line, nostril outline, tip contour
+  • Lips — upper line, lower line, mouth opening
+  • Ears — outer outline if visible
+- Minimal facial contour lines only where necessary to define structure (cheek, under-eye)
+- Hair:
+  • One clean outer shape
+  • 2–4 directional flow lines only where needed
+
+STYLE:
+- Clean, sparse, confident line drawing
+- High readability at a glance
+- Every line serves a purpose — no excess detail
+
+VISUAL TARGET:
+A minimal structural outline where the core form is clearly readable, but all rendering, shading, and texture are left for the artist to interpret."""
+
     detail_blocks = {
         "minimal": (
             "LIGHT — clean, sparse outline.\n"
