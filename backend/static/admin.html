@@ -326,7 +326,7 @@ async function doSearch(){
     const r=await fetch(API+'/admin-tool/search?q='+encodeURIComponent(q),{headers:authHeaders()});
     const d=await r.json();
     if(!d.results.length){el.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px">No users found</p>';return}
-    el.innerHTML=d.results.map(u=>`<div class="user-row" onclick="loadUser('${u.email}')"><div><div class="user-name">${u.name||u.display_name||'Unknown'}</div><div class="user-email">${u.email||'No email'}</div></div><div><span class="badge ${tierBadge(u.tier)}">${u.tier||'none'}</span></div></div>`).join('');
+    el.innerHTML=d.results.map(u=>{const ev=u.last_event||'';const evHtml=ev?`<div style="font-size:11px;color:var(--muted);margin-top:2px;letter-spacing:0.4px">${ev}</div>`:'';return `<div class="user-row" onclick="loadUser('${u.email}')"><div><div class="user-name">${u.name||u.display_name||'Unknown'}</div><div class="user-email">${u.email||'No email'}</div>${evHtml}</div><div><span class="badge ${tierBadge(u.tier)}">${u.tier||'none'}</span></div></div>`}).join('');
   }catch(e){el.innerHTML='<p style="color:var(--red);text-align:center">Error searching</p>'}
 }
 
@@ -384,7 +384,7 @@ function showModal(type){
       <button class="btn" style="width:100%;margin-top:12px;background:#1f2937;color:#fff" onclick="actionCreditsSet()">Set Exact (overwrite)</button>
     `;
   }else if(type==='tier'){
-    el.innerHTML=`<h3>Change Tier</h3><select class="input" id="modal-tier"><option value="walk-in">Walk-In (125 credits)</option><option value="booked-out">Booked-Out (500 credits)</option><option value="the-shop">The Shop (1500 credits)</option></select><button class="btn" onclick="actionTier()">Apply</button>`;
+    el.innerHTML=`<h3>Change Tier</h3><select class="input" id="modal-tier"><option value="walk-in">Walk-In (125 credits)</option><option value="booked-out">Booked-Out (500 credits)</option><option value="the-shop">The Shop (1500 credits)</option></select><p style="color:var(--muted);font-size:12px;margin:10px 0 12px;line-height:1.4">⚠️ Admin tier changes are <b>sticky</b> until the user taps Restore Purchases on the paywall. Passive app cold-starts will not overwrite this state.</p><button class="btn" onclick="actionTier()">Apply</button>`;
   }
   document.getElementById('modal-overlay').classList.remove('hidden');
 }
