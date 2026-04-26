@@ -3956,6 +3956,141 @@ async def admin_stencil_analytics(request: FastAPIRequest, days: int = 30):
     }
 
 
+@api_router.get("/admin/bypass-usage-report")
+async def admin_bypass_usage_report(request: FastAPIRequest):
+    """Read-only operational report for paywall_bypass users.
+
+    Used to decide whether TEMP_BYPASS_ENABLED can be safely turned off.
+    All counts are point-in-time. No state mutations.
+    """
+    await verify_admin(request.headers.get('authorization'))
+
+    # Pull all paywall_bypass subscriptions in one shot. Tens-of-thousands
+    # is fine in memory; if this ever grows past 100k we can switch to an
+    # aggregation pipeline.
+    subs = await db.subscriptions.find(
+        {'tier': 'paywall_bypass'},
+        {'_id': 0, 'user_id': 1, 'available_credits': 1,
+         'credits_consumed_this_cycle': 1, 'received_temp_credits': 1,
+         'received_temp_credits_at': 1},
+    ).to_list(length=200000)
+
+    user_ids = [s['user_id'] for s in subs]
+    users = await db.users.find(
+        {'user_id': {'$in': user_ids}},
+        {'_id': 0, 'user_id': 1, 'email': 1, 'created_at': 1, 'last_login': 1},
+    ).to_list(length=200000)
+    user_by_id = {u['user_id']: u for u in users}
+
+    now = datetime.now(timezone.utc)
+    seven_days_ago = (now - timedelta(days=7)).isoformat()
+    fortyeight_h_ago = (now - timedelta(hours=48)).isoformat()
+
+    # Buckets
+    bucket_zero = 0       # 0 credits remaining
+    bucket_1_3 = 0
+    bucket_4_9 = 0
+    bucket_10_plus = 0
+    received_bridge = 0
+    exhausted_all = 0     # got bridge AND now at 0
+    generated_at_least_1 = 0
+    generated_5_plus = 0
+    generated_10_plus = 0
+    new_last_7d = 0
+    active_last_48h = 0
+
+    total_credits_remaining = 0
+    total_credits_consumed = 0
+
+    # Total credits granted = (10 base for everyone on bypass) + (10 per
+    # bridge recipient). Anyone who received the bridge got 20 lifetime;
+    # anyone who didn't got 10 lifetime.
+    BASE_BYPASS_CREDITS = 10  # matches the grant in create_initial_subscription
+    BRIDGE_CREDITS = EARLY_ACCESS_BRIDGE_CREDITS  # 10
+    total_credits_granted = 0
+
+    for sub in subs:
+        avail = int(sub.get('available_credits') or 0)
+        consumed = int(sub.get('credits_consumed_this_cycle') or 0)
+        bridge = bool(sub.get('received_temp_credits'))
+
+        total_credits_remaining += avail
+        total_credits_consumed += consumed
+        total_credits_granted += BASE_BYPASS_CREDITS + (BRIDGE_CREDITS if bridge else 0)
+
+        if avail == 0:
+            bucket_zero += 1
+        elif avail <= 3:
+            bucket_1_3 += 1
+        elif avail <= 9:
+            bucket_4_9 += 1
+        else:
+            bucket_10_plus += 1
+
+        if bridge:
+            received_bridge += 1
+            if avail == 0:
+                exhausted_all += 1
+
+        # `credits_consumed_this_cycle` increments on each /api/credits/deduct
+        # call (i.e. each generation). Reasonable proxy for "stencils generated".
+        if consumed >= 1:
+            generated_at_least_1 += 1
+        if consumed >= 5:
+            generated_5_plus += 1
+        if consumed >= 10:
+            generated_10_plus += 1
+
+        u = user_by_id.get(sub['user_id'])
+        if u:
+            created = u.get('created_at') or ''
+            last_login = u.get('last_login') or ''
+            if created and created >= seven_days_ago:
+                new_last_7d += 1
+            if last_login and last_login >= fortyeight_h_ago:
+                active_last_48h += 1
+
+    total = len(subs)
+    avg_remaining = round(total_credits_remaining / total, 2) if total else 0.0
+
+    return {
+        'generated_at': now.isoformat(),
+        'temp_bypass_enabled': os.environ.get('TEMP_BYPASS_ENABLED', '').lower() == 'true',
+        'total_users_on_paywall_bypass': total,
+        'credit_remaining_buckets': {
+            'zero': bucket_zero,
+            '1_to_3': bucket_1_3,
+            '4_to_9': bucket_4_9,
+            '10_plus': bucket_10_plus,
+        },
+        'early_access_bridge': {
+            'received': received_bridge,
+            'exhausted_bypass_and_bridge': exhausted_all,
+        },
+        'generation_activity': {
+            'at_least_1_stencil': generated_at_least_1,
+            'five_plus_stencils': generated_5_plus,
+            'ten_plus_stencils': generated_10_plus,
+        },
+        'recency': {
+            'new_users_last_7_days': new_last_7d,
+            'active_last_48_hours': active_last_48h,
+        },
+        'credits': {
+            'total_granted_lifetime': total_credits_granted,
+            'total_consumed_lifetime': total_credits_consumed,
+            'total_remaining_now': total_credits_remaining,
+            'average_remaining_per_user': avg_remaining,
+        },
+        'notes': [
+            f'BASE_BYPASS_CREDITS={BASE_BYPASS_CREDITS}, BRIDGE_CREDITS={BRIDGE_CREDITS}',
+            'generation counts use credits_consumed_this_cycle as proxy (1 credit ≈ 1 generation)',
+            'active_last_48_hours = users.last_login within 48h',
+            'new_users_last_7_days = users.created_at within 7d',
+        ],
+    }
+
+
 @api_router.post("/credits/emergency-stencil")
 async def claim_emergency_stencil(request: FastAPIRequest):
     """One-time monthly Emergency Stencil fallback.
