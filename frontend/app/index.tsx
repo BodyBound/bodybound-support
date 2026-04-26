@@ -3542,8 +3542,26 @@ export default function Index() {
 
   // Save edited stencil - captures stencil + drawings and shows on main screen (no auto-save to gallery)
   const saveEditedStencil = async () => {
-    // If no drawings AND no dots, just close
+    // Empty canvas (no draw strokes, no dot marks) → user wants the
+    // un-edited AI base. This is the "I erased all my edits" path:
+    //   1. User had prior edits saved (isEditedStencil=true, main screen
+    //      shows the flat baked PNG).
+    //   2. User opens edit mode → drawingPaths still contains those vector
+    //      strokes, canvas shows AI base + overlaid strokes.
+    //   3. User erases all strokes (Clear / undo to zero / eraser tool).
+    //   4. User taps Done. drawingPaths is empty.
+    // The OLD behavior here was a no-op early-return — leaving the prior
+    // baked-in edits on the main screen. Correct behavior: revert the
+    // main screen to the original transparent AI base so "Done with empty
+    // canvas" means "no edits applied".
     if (drawingPaths.length === 0 && dotMarks.length === 0) {
+      const baseStencil = stencilVersions[selectedVersion] || originalAIStencil;
+      if (isEditedStencil && baseStencil) {
+        console.log('[SaveEdit] Empty canvas + isEditedStencil — reverting main screen to AI base');
+        setStencilImage(baseStencil);
+        setIsEditedStencil(false);
+        setEditedStencil(null);
+      }
       setShowEditModal(false);
       return;
     }

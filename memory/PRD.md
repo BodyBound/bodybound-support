@@ -67,6 +67,18 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **Hot Fix: Credit Reset Returned + Edit-Mode Erase Doesn't Save (Apr 26 2026 — late evening)** 🔴🔴
+  - **Credit reset bug RECURRED post-deploy.** Bryan reported credits refilling to 125 on TestFlight update again.
+  - **Root cause:** `PRODUCT_CREDIT_MAP` exposes multiple `product_id` aliases for each tier (`'01'` App Store short-code + `'bodybound_1499_1m_3d'` legacy RC package id, both → walk-in). The earlier idempotency check compared `existing_sub.last_product_id == incoming product_id` — when the iOS RC client sent one alias and the DB had the other, the check returned False and fell through to the full credit-reset path.
+  - **Fix:** Drop product_id from the idempotency comparison; compare TIER + trial state only. Same tier + same trial state = idempotent regardless of which product_id alias the client sends. Added a structured `[PaidState] Resync-check` log line so this kind of mismatch is debuggable from production logs.
+  - **Regression test:** `test_frontend_sync_idempotent_across_product_id_aliases` — seeds DB with `bodybound_1499_1m_3d`, sync arrives with `'01'`, asserts credits preserved.
+  - All 6 sync idempotency tests pass.
+
+  - **Edit-mode erase doesn't persist** (separate frontend bug):
+    - **Root cause:** `saveEditedStencil` had an early-return guard `if (drawingPaths.length === 0 && dotMarks.length === 0) return` — when a user opened edit mode with prior edits and erased all of them, drawingPaths was empty so the guard fired and the function did nothing. Main screen kept showing the old captured edits.
+    - **Fix:** Empty canvas + `isEditedStencil = true` now means "user erased all edits" — restore the original AI base stencil (`stencilVersions[selectedVersion]` or `originalAIStencil`) to the main screen, clear `isEditedStencil`. Empty canvas with no prior edits is still a no-op close.
+    - **Test:** Code-review verified; needs TestFlight build for end-to-end validation.
+
 - **P2 Reroll Idempotency + P3 RC Webhook Dedup (Apr 26 2026)** ✅
   - **P2 — Reroll Idempotency.** `/api/credits/deduct` now accepts an optional `reroll_id` body field. Duplicate calls with the same `(user_id, reroll_id)` within 24h return the cached response without re-deducting; concurrent in-flight duplicates get HTTP 409. Backed by `db.credit_deduct_idempotency` collection with TTL=24h. Frontend `regenerateSingleStyle` and `generateSingleStyle` each generate a per-intent UUID and pass it through `deductCredit(API_URL, token, rerollId)`. Protects against rapid double-tap on the regenerate button.
   - **P3 — RevenueCat Webhook event.id dedup.** Webhook handler now stores each unique `event.id` in `db.revenuecat_webhook_events` (TTL=30d). Replays return `{status: 'ok', duplicate: true, event_id: ...}` without re-applying paid state. This closes the same class of vulnerability as the FRONTEND_SYNC fix — webhook replays of `INITIAL_PURCHASE` / `RENEWAL` would otherwise reset `credits_consumed_this_cycle` to 0 mid-cycle.

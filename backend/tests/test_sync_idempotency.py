@@ -174,3 +174,35 @@ def test_frontend_sync_resets_credits_when_trial_state_flips(event_loop):
     assert sub['is_trial'] is False
     assert sub['available_credits'] == 125  # full paid credits granted
     assert sub['credits_consumed_this_cycle'] == 0
+
+
+def test_frontend_sync_idempotent_across_product_id_aliases(event_loop):
+    """REGRESSION: PRODUCT_CREDIT_MAP exposes multiple product_id aliases for
+    the same tier (App Store short code '01' + RC package
+    'bodybound_1499_1m_3d' both → walk-in). The iOS frontend may send any
+    alias depending on which path resolved the active entitlement; the
+    idempotency check MUST treat them all as the same tier and skip the
+    credit reset.
+
+    Without this fix, the user's bucket refilled to 125 on every cold-start
+    whenever the alias sent by the client differed from last_product_id."""
+    user_id = 'test_sync_alias_walkin'
+
+    async def run():
+        # Existing record stamped with the legacy RC package id…
+        await _seed(user_id, 'walk-in', 'bodybound_1499_1m_3d', available=70, consumed=55)
+        # …and a sync arrives from the new App Store short code path.
+        await apply_paid_subscription_state(
+            user_id=user_id, product_id='01', source='FRONTEND_SYNC',
+            is_apple_trial=False,
+        )
+        sub = await _read(user_id)
+        await _cleanup(user_id)
+        return sub
+
+    sub = event_loop.run_until_complete(run())
+    # Must be a no-op despite the product_id strings differing.
+    assert sub['available_credits'] == 70, \
+        f"Alias mismatch refilled credits! got {sub['available_credits']}"
+    assert sub['credits_consumed_this_cycle'] == 55
+    assert sub['tier'] == 'walk-in'

@@ -4173,19 +4173,32 @@ async def apply_paid_subscription_state(
 
     # ── Idempotent FRONTEND_SYNC guard ─────────────────────────────────
     # /api/subscription/sync fires on every app cold-start. If the user is
-    # already on the same tier + product + trial state, we MUST NOT reset
+    # already on the same tier + trial state, we MUST NOT reset
     # available_credits or credits_consumed_this_cycle — that would refill
     # the user's bucket on every app launch. Genuine paid-state transitions
     # (webhook INITIAL_PURCHASE / RENEWAL, ADMIN, or a tier change via
     # FRONTEND_SYNC) still take the full apply path below.
+    #
+    # NOTE: We compare TIER, not product_id. PRODUCT_CREDIT_MAP exposes
+    # multiple product_id aliases per tier (App Store short codes "01",
+    # "02", "03" + legacy RC package ids "bodybound_..._1m_3d"). The iOS
+    # frontend may send any of them depending on which path resolved the
+    # active entitlement. Comparing product_id strings would falsely
+    # invalidate the idempotency check and re-trigger the credit reset.
     existing_sub = await db.subscriptions.find_one(
         {'user_id': user_id}, {'_id': 0}
     ) or {}
     is_idempotent_resync = (
         source == 'FRONTEND_SYNC'
         and existing_sub.get('tier') == tier
-        and existing_sub.get('last_product_id') == product_id
         and bool(existing_sub.get('is_trial')) == bool(is_apple_trial)
+    )
+    logger.info(
+        f'[PaidState] Resync-check user={user_id} source={source} '
+        f'incoming_tier={tier} existing_tier={existing_sub.get("tier")} '
+        f'incoming_product={product_id} existing_product={existing_sub.get("last_product_id")} '
+        f'incoming_trial={bool(is_apple_trial)} existing_trial={bool(existing_sub.get("is_trial"))} '
+        f'→ idempotent={is_idempotent_resync}'
     )
     if is_idempotent_resync:
         light_set = {
