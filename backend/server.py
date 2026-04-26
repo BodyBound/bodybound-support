@@ -4880,15 +4880,26 @@ async def sync_subscription(request: FastAPIRequest):
             detail=f'Unknown product_id: {product_id}. Valid: {list(PRODUCT_CREDIT_MAP.keys())}',
         )
 
-    # Admin-reset guard: if this user was admin-reset and has not yet manually
-    # opted back in, reject passive auto-sync. Otherwise every app launch would
-    # silently re-apply the cached App Store entitlement and defeat the reset.
-    existing_sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0, 'last_event': 1}) or {}
-    if existing_sub.get('last_event') == 'ADMIN_RESET' and not manual_restore:
-        logger.info(f'[Sync] BLOCKED — user {user_id} is admin-reset; passive auto-sync rejected')
+    # Admin override guard: if this user was admin-reset OR had their tier
+    # admin-changed, reject passive auto-sync. Otherwise every app launch
+    # would silently re-apply the cached App Store entitlement and defeat
+    # the admin override (which is critical for QA testing tier behavior
+    # on devices whose Apple ID is locked to a different sub, and for
+    # customer-support tier grants in production).
+    # Manual Restore (`manual_restore=True`) bypasses this gate. Real RC
+    # webhooks (INITIAL_PURCHASE / RENEWAL / PRODUCT_CHANGE) take a
+    # different code path and are not gated here.
+    existing_sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0, 'last_event': 1, 'tier': 1}) or {}
+    sticky_admin_events = {'ADMIN_RESET', 'ADMIN_TIER_CHANGE'}
+    if existing_sub.get('last_event') in sticky_admin_events and not manual_restore:
+        logger.info(
+            f'[Sync] BLOCKED — user {user_id} has last_event='
+            f'{existing_sub.get("last_event")} (tier={existing_sub.get("tier")}); '
+            f'passive auto-sync rejected. incoming={product_id}'
+        )
         raise HTTPException(
             status_code=403,
-            detail='Account was reset. Tap Restore Purchases on the paywall to restore your subscription.',
+            detail='Account is in an admin-managed state. Tap Restore Purchases on the paywall to re-link your Apple subscription.',
         )
 
     try:
