@@ -67,6 +67,18 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **Critical Bug Fix: FRONTEND_SYNC Credit Reset on App Cold-Start (Apr 26 2026)** 🔴
+  - **Bug:** Every iOS app cold-start (and TestFlight update) reset users' `available_credits` to the tier base (Walk-In → 125, Booked-Out → 500, The Shop → 1500) and zeroed their `credits_consumed_this_cycle`. Users got their entire monthly allotment refilled on every app launch.
+  - **Root cause:** `/api/subscription/sync` calls `apply_paid_subscription_state(source='FRONTEND_SYNC')`, which unconditionally wrote `available_credits = tier_info['credits']` and `credits_consumed_this_cycle = 0`. Same writer is used by webhook events (`INITIAL_PURCHASE` / `RENEWAL`) where that reset IS correct.
+  - **Fix:** Added an idempotent-resync guard at the top of `apply_paid_subscription_state`. When `source == 'FRONTEND_SYNC'` AND existing sub already has the same `tier` + `last_product_id` + `is_trial`, only `last_event`, `last_applied_at`, and `revenuecat_customer_id` are updated — credits and consumed counter are preserved. Genuine state transitions (tier upgrade via FRONTEND_SYNC, all webhook events, ADMIN paths) take the full apply path unchanged.
+  - **Regression suite:** `tests/test_sync_idempotency.py` — 5/5 pass:
+    - `test_frontend_sync_preserves_credits_when_tier_unchanged` (the exact bug)
+    - `test_frontend_sync_resets_credits_on_tier_change` (genuine upgrade still works)
+    - `test_initial_purchase_still_resets_credits` (webhook unchanged)
+    - `test_renewal_still_resets_credits` (webhook unchanged)
+    - `test_frontend_sync_resets_credits_when_trial_state_flips` (trial→paid transition)
+  - **User impact:** Users who lost balance to this bug need a manual admin credit grant on production once they report a number. Fix prevents future occurrences.
+
 - **Pre-Deploy Polish Batch (Apr 25 2026)** — shipped together:
   - **Edits-applied badge** — gold "✏️ EDITS APPLIED" pill, top-right of main preview. Visible only when `isEditedStencil` is true and user isn't holding Compare. Auto-clears when a fresh AI stencil replaces the edited one.
   - **Auto-retry on generation failures** — 4 Alert dialogs (`Regeneration Failed`, `Generation Failed` (start), `Generation Issue`, `Connection Issue`, `Generation Failed` (poll)) replaced OK-only with `Cancel` + `Try Again`. Try Again reinvokes the correct generator (`generateSingleStyle(style)` or `regenerateSingleStyle(style)`). Credit deduct only happens on success, so retry is safe from double-charge.

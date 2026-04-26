@@ -4114,6 +4114,40 @@ async def apply_paid_subscription_state(
     # Trial period gets the symbolic TRIAL_CREDITS cap; paid gets full allowance.
     credits = TRIAL_CREDITS if is_apple_trial else tier_info['credits']
     now_iso = datetime.now(timezone.utc).isoformat()
+
+    # ── Idempotent FRONTEND_SYNC guard ─────────────────────────────────
+    # /api/subscription/sync fires on every app cold-start. If the user is
+    # already on the same tier + product + trial state, we MUST NOT reset
+    # available_credits or credits_consumed_this_cycle — that would refill
+    # the user's bucket on every app launch. Genuine paid-state transitions
+    # (webhook INITIAL_PURCHASE / RENEWAL, ADMIN, or a tier change via
+    # FRONTEND_SYNC) still take the full apply path below.
+    existing_sub = await db.subscriptions.find_one(
+        {'user_id': user_id}, {'_id': 0}
+    ) or {}
+    is_idempotent_resync = (
+        source == 'FRONTEND_SYNC'
+        and existing_sub.get('tier') == tier
+        and existing_sub.get('last_product_id') == product_id
+        and bool(existing_sub.get('is_trial')) == bool(is_apple_trial)
+    )
+    if is_idempotent_resync:
+        light_set = {
+            'last_event': source,
+            'last_applied_at': now_iso,
+        }
+        if rc_customer_id:
+            light_set['revenuecat_customer_id'] = rc_customer_id
+        await db.subscriptions.update_one(
+            {'user_id': user_id},
+            {'$set': light_set},
+        )
+        logger.info(
+            f'[PaidState] FRONTEND_SYNC no-op: user={user_id} product={product_id} '
+            f'tier={tier} — credits preserved (already on same tier+product)'
+        )
+        return await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+
     next_renewal = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
     set_doc = {
