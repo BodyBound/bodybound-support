@@ -42,7 +42,7 @@ import Purchases from 'react-native-purchases';
 import * as Device from 'expo-device';
 import { styles } from './styles/mainStyles';
 import { StencilSettings, SavedStencil, StencilListItem, User, UserCredits } from './types';
-import { regenerateStencil, deductCredit, submitStencilRating, regenCostLabel, isFreeRegen, type StencilStyle } from './lib/stencilApi';
+import { regenerateStencil, deductCredit, submitStencilRating, recordSessionEvent, regenCostLabel, isFreeRegen, type StencilStyle } from './lib/stencilApi';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { AuthScreen } from './screens/AuthScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -293,6 +293,17 @@ export default function Index() {
   const feedbackCompletedRef = useRef(false);
   
   const [originalImage, setOriginalImage] = useState<string | null>(null);
+  // Analytics session id — one per photo upload, refreshed on every new
+  // image. Anonymous-friendly. Used by recordSessionEvent to group all
+  // generations / rerolls / saves from one user flow.
+  const [analyticsSessionId, setAnalyticsSessionId] = useState<string>(
+    () => `s_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`,
+  );
+  const newAnalyticsSession = () => {
+    const sid = `s_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+    setAnalyticsSessionId(sid);
+    return sid;
+  };
   const [stencilImage, setStencilImage] = useState<string | null>(null);
   // Layer System: Store reference photo separately so it persists through edit sessions
   const [referencePhotoLayer, setReferencePhotoLayer] = useState<string | null>(null);
@@ -1532,6 +1543,17 @@ export default function Index() {
     // the regeneratingStyle guard) is treated as the same deduction.
     const rerollId = `rr_${Date.now()}_${style}_${Math.random().toString(36).slice(2, 11)}`;
 
+    // Analytics: behavioral signal — how many times do users reroll
+    // before they're satisfied with a tier?
+    recordSessionEvent({
+      apiUrl: API_URL,
+      sessionId: analyticsSessionId,
+      event: 'reroll',
+      style,
+      userTier: userTier || undefined,
+      sessionToken: sessionToken || undefined,
+    });
+
     // Check if this regenerate is free (first regen per style)
     const free = isFreeRegen(style, freeRegenUsed);
 
@@ -1627,6 +1649,16 @@ export default function Index() {
     
     // If this style already exists, just select it (no credit cost)
     if (stencilVersions[style]) {
+      // Analytics: tapping an already-generated style is a "switch" — the
+      // user changed their mind about which tier to keep. Fire-and-forget.
+      recordSessionEvent({
+        apiUrl: API_URL,
+        sessionId: analyticsSessionId,
+        event: 'style_switch',
+        style,
+        userTier: userTier || undefined,
+        sessionToken: sessionToken || undefined,
+      });
       selectVersion(style);
       return;
     }
@@ -1638,6 +1670,22 @@ export default function Index() {
     // Determine if this is a free style change or paid
     const isNewStyle = !stylesGenerated.has(style);
     const isFirstStyle = stylesGenerated.size === 0;
+
+    // Analytics: when this is the first style of a fresh photo flow, mint
+    // a new session id so each photo's behavior is grouped separately.
+    let sidForThisGen = analyticsSessionId;
+    if (isFirstStyle) {
+      sidForThisGen = newAnalyticsSession();
+    }
+    recordSessionEvent({
+      apiUrl: API_URL,
+      sessionId: sidForThisGen,
+      event: 'generate',
+      style,
+      userTier: userTier || undefined,
+      sessionToken: sessionToken || undefined,
+    });
+
     const isFreeStyleChange = isNewStyle && !isFirstStyle && !freeStyleChangeUsed;
     const shouldCharge = isFirstStyle || (!isFreeStyleChange && isNewStyle);
 
@@ -2176,6 +2224,16 @@ export default function Index() {
       Alert.alert('Success', 'Stencil saved successfully!');
       setShowSaveModal(false);
       setStencilName('');
+      // Analytics: behavioral signal — which tier did the user end up
+      // saving to gallery? Fire-and-forget.
+      recordSessionEvent({
+        apiUrl: API_URL,
+        sessionId: analyticsSessionId,
+        event: 'save',
+        style: (selectedVersion as StencilStyle | null) || undefined,
+        userTier: userTier || undefined,
+        sessionToken: sessionToken || undefined,
+      });
     } catch (error) {
       console.error('Error saving stencil:', error);
       Alert.alert('Error', 'Failed to save stencil. Please try again.');
@@ -2396,6 +2454,16 @@ export default function Index() {
         mimeType: 'image/png',
         dialogTitle: 'Share Stencil',
         UTI: 'public.png',
+      });
+      // Analytics: behavioral signal — user shared/exported the stencil.
+      // This is the "ended on this tier without saving to gallery" signal.
+      recordSessionEvent({
+        apiUrl: API_URL,
+        sessionId: analyticsSessionId,
+        event: 'export',
+        style: (selectedVersion as StencilStyle | null) || undefined,
+        userTier: userTier || undefined,
+        sessionToken: sessionToken || undefined,
       });
       // Cleanup temp file
       try { await FileSystem.deleteAsync(fileUri, { idempotent: true }); } catch (_) {}

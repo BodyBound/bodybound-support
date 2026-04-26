@@ -67,6 +67,14 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **Observability + Analytics Layer (Apr 26 2026 — late afternoon)** ✅
+  - **Unmatched RC webhook rolling buffer.** `db.unmatched_webhooks` now caps itself at 100 entries — after every insert, the oldest beyond the cap are pruned. Lightweight observability without admin-UI overhead.
+  - **Stencil usage analytics.** New collection `db.stencil_sessions`, one doc per photo-flow session with: `styles_generated`, `reroll_counts` per style, `style_switches`, `final_style`, `saved`, `exported`, `user_tier`.
+    - Public ingest: `POST /api/analytics/session-event` accepts `{session_id, event, style?, user_tier?}` where event ∈ `{generate, reroll, style_switch, save, export}`. Anonymous-friendly, fire-and-forget.
+    - Admin aggregation: `GET /api/admin/stencil-analytics?days=30` returns per-style metrics (generated, final_style_count, final_style_pct, avg_rerolls_when_final, switched_away_pct, save_rate_when_final_pct) + totals (saves, exports, save_rate_pct, avg_style_switches).
+  - **Frontend instrumentation** (`recordSessionEvent` helper in `lib/stencilApi.ts`): hooks at 5 sites in `index.tsx` — `generate` + `style_switch` in `generateSingleStyle`, `reroll` in `regenerateSingleStyle`, `save` in the gallery save handler, `export` in `shareStencil`. Session id refreshed on first style of each new photo flow. All non-blocking, never throws.
+  - **Verified live (4-session smoke test):** math correct on all dimensions — final-style %, switched-away %, avg rerolls, save/export rates, avg switches. Test script: `backend/tests/manual_analytics_aggregation_curl.py`.
+
 - **Hot Fix: Credit Reset Returned + Edit-Mode Erase Doesn't Save (Apr 26 2026 — late evening)** 🔴🔴
   - **Credit reset bug RECURRED post-deploy.** Bryan reported credits refilling to 125 on TestFlight update again.
   - **Root cause:** `PRODUCT_CREDIT_MAP` exposes multiple `product_id` aliases for each tier (`'01'` App Store short-code + `'bodybound_1499_1m_3d'` legacy RC package id, both → walk-in). The earlier idempotency check compared `existing_sub.last_product_id == incoming product_id` — when the iOS RC client sent one alias and the DB had the other, the check returned False and fell through to the full credit-reset path.

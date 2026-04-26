@@ -3712,6 +3712,224 @@ async def admin_stencil_ratings(request: FastAPIRequest):
 
 
 
+# ---- Stencil Usage Analytics (behavioral signal, complement to ratings) ----
+class SessionEventRequest(BaseModel):
+    session_id: str = Field(..., min_length=4, max_length=128)
+    event: str = Field(..., description="generate | reroll | style_switch | save | export")
+    style: Optional[str] = Field(None, description="light | medium | heavy")
+    user_tier: Optional[str] = None  # subscription tier at time of event
+
+
+@api_router.post("/analytics/session-event")
+async def record_session_event(payload: SessionEventRequest, request: FastAPIRequest):
+    """Record a behavioral event for a stencil generation session.
+
+    A "session" spans one input photo through final save/export. Multiple
+    style generations + rerolls happen inside a single session_id (the
+    client generates one UUID at the start and reuses it).
+
+    Anonymous-friendly. user_id is read from the auth header if present.
+    Failures are non-fatal — analytics must never break the user flow.
+    """
+    valid_events = {'generate', 'reroll', 'style_switch', 'save', 'export'}
+    if payload.event not in valid_events:
+        raise HTTPException(status_code=400, detail=f'event must be one of {sorted(valid_events)}')
+    if payload.style and payload.style not in {'light', 'medium', 'heavy'}:
+        raise HTTPException(status_code=400, detail='style must be light|medium|heavy')
+
+    user_id: Optional[str] = None
+    auth = request.headers.get('authorization', '')
+    token = auth.replace('Bearer ', '') if auth else ''
+    if token:
+        try:
+            decoded = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+            user_id = decoded.get('user_id')
+        except Exception:
+            user_id = None
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    # First event for this session_id creates the doc; subsequent events
+    # increment the appropriate counters.
+    base_set_on_insert = {
+        'session_id': payload.session_id,
+        'user_id': user_id,
+        'user_tier': payload.user_tier,
+        'started_at': now_iso,
+        'reroll_counts': {'light': 0, 'medium': 0, 'heavy': 0},
+        'styles_generated': [],
+        'style_switches': 0,
+        'saved': False,
+        'exported': False,
+        # NOTE: `final_style` is NOT set here; the per-event `$set` below
+        # owns that field. MongoDB rejects an update that touches the same
+        # field in both `$setOnInsert` and `$set`.
+    }
+    update: dict = {
+        '$setOnInsert': base_set_on_insert,
+        '$set': {'last_event_at': now_iso},
+    }
+
+    if payload.event == 'generate' and payload.style:
+        update.setdefault('$addToSet', {})['styles_generated'] = payload.style
+        update['$set']['final_style'] = payload.style
+    elif payload.event == 'reroll' and payload.style:
+        update.setdefault('$inc', {})[f'reroll_counts.{payload.style}'] = 1
+        update['$set']['final_style'] = payload.style
+    elif payload.event == 'style_switch' and payload.style:
+        update.setdefault('$inc', {})['style_switches'] = 1
+        update['$set']['final_style'] = payload.style
+    elif payload.event == 'save':
+        update['$set']['saved'] = True
+        if payload.style:
+            update['$set']['final_style'] = payload.style
+    elif payload.event == 'export':
+        update['$set']['exported'] = True
+        if payload.style:
+            update['$set']['final_style'] = payload.style
+
+    # MongoDB rejects updates that touch the same path in both
+    # `$setOnInsert` and `$set` / `$inc` / `$addToSet`. Strip any conflicts
+    # — the per-event $set/$inc/$addToSet wins; the $setOnInsert defaults
+    # only matter for fields that no event ever touches.
+    conflicts = set(update.get('$set', {}).keys())
+    conflicts.update(update.get('$inc', {}).keys())
+    conflicts.update(update.get('$addToSet', {}).keys())
+    # Also strip dot-paths' parent keys (e.g. $inc on 'reroll_counts.light'
+    # conflicts with $setOnInsert on 'reroll_counts').
+    parent_paths = {p.split('.', 1)[0] for p in conflicts if '.' in p}
+    conflicts.update(parent_paths)
+    update['$setOnInsert'] = {
+        k: v for k, v in base_set_on_insert.items() if k not in conflicts
+    }
+
+    try:
+        await db.stencil_sessions.update_one(
+            {'session_id': payload.session_id},
+            update,
+            upsert=True,
+        )
+    except Exception as e:
+        logger.warning(f'[Analytics] session-event upsert failed: {e}')
+        return {'status': 'ok', 'logged': False}
+
+    return {'status': 'ok'}
+
+
+@api_router.get("/admin/stencil-analytics")
+async def admin_stencil_analytics(request: FastAPIRequest, days: int = 30):
+    """Aggregated behavioral analytics for stencil sessions.
+
+    Window: last `days` days (default 30). All percentages are integers (0–100).
+    """
+    await verify_admin(request.headers.get('authorization'))
+    days = max(1, min(int(days), 365))
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
+    sessions = await db.stencil_sessions.find(
+        {'started_at': {'$gte': cutoff}},
+        {'_id': 0},
+    ).to_list(length=10000)
+
+    total_sessions = len(sessions)
+    if total_sessions == 0:
+        return {
+            'window_days': days,
+            'total_sessions': 0,
+            'per_style': {
+                s: {'generated': 0, 'final_style_count': 0, 'final_style_pct': 0,
+                    'avg_rerolls_when_final': 0.0, 'switched_away_pct': 0,
+                    'save_rate_when_final_pct': 0}
+                for s in ('light', 'medium', 'heavy')
+            },
+            'totals': {
+                'saved': 0, 'exported': 0, 'save_rate_pct': 0, 'export_rate_pct': 0,
+                'avg_style_switches': 0.0,
+            },
+        }
+
+    per_style = {
+        s: {
+            'generated': 0,
+            'final_style_count': 0,
+            'rerolls_when_final': [],
+            'saves_when_final': 0,
+            'sessions_that_generated': 0,
+            'sessions_that_switched_away': 0,
+        }
+        for s in ('light', 'medium', 'heavy')
+    }
+
+    saved_total = 0
+    exported_total = 0
+    style_switch_total = 0
+
+    for sess in sessions:
+        styles_gen = sess.get('styles_generated') or []
+        final = sess.get('final_style')
+        rerolls = sess.get('reroll_counts') or {}
+        saved = bool(sess.get('saved'))
+        exported = bool(sess.get('exported'))
+
+        if saved:
+            saved_total += 1
+        if exported:
+            exported_total += 1
+        style_switch_total += int(sess.get('style_switches') or 0)
+
+        for s in styles_gen:
+            if s in per_style:
+                per_style[s]['generated'] += 1
+                per_style[s]['sessions_that_generated'] += 1
+                # "Switched away from a tier" — the session GENERATED this
+                # style but ended up keeping a different one.
+                if final and final != s:
+                    per_style[s]['sessions_that_switched_away'] += 1
+
+        if final and final in per_style:
+            per_style[final]['final_style_count'] += 1
+            per_style[final]['rerolls_when_final'].append(
+                int(rerolls.get(final, 0) or 0)
+            )
+            if saved:
+                per_style[final]['saves_when_final'] += 1
+
+    out_per_style = {}
+    for s, agg in per_style.items():
+        rerolls_list = agg['rerolls_when_final']
+        avg_rr = round(sum(rerolls_list) / len(rerolls_list), 2) if rerolls_list else 0.0
+        final_pct = round(agg['final_style_count'] / total_sessions * 100) if total_sessions else 0
+        switch_pct = (
+            round(agg['sessions_that_switched_away'] / agg['sessions_that_generated'] * 100)
+            if agg['sessions_that_generated'] else 0
+        )
+        save_rate_pct = (
+            round(agg['saves_when_final'] / agg['final_style_count'] * 100)
+            if agg['final_style_count'] else 0
+        )
+        out_per_style[s] = {
+            'generated': agg['generated'],
+            'final_style_count': agg['final_style_count'],
+            'final_style_pct': final_pct,
+            'avg_rerolls_when_final': avg_rr,
+            'switched_away_pct': switch_pct,
+            'save_rate_when_final_pct': save_rate_pct,
+        }
+
+    return {
+        'window_days': days,
+        'total_sessions': total_sessions,
+        'per_style': out_per_style,
+        'totals': {
+            'saved': saved_total,
+            'exported': exported_total,
+            'save_rate_pct': round(saved_total / total_sessions * 100) if total_sessions else 0,
+            'export_rate_pct': round(exported_total / total_sessions * 100) if total_sessions else 0,
+            'avg_style_switches': round(style_switch_total / total_sessions, 2),
+        },
+    }
+
+
 @api_router.post("/credits/emergency-stencil")
 async def claim_emergency_stencil(request: FastAPIRequest):
     """One-time monthly Emergency Stencil fallback.
@@ -4709,7 +4927,9 @@ async def revenuecat_webhook(request: FastAPIRequest):
     if not user_id:
         user_id = raw_user_id
         logger.warning(f'[RevenueCat] Could not match user. raw_id={raw_user_id}, aliases={aliases}')
-        # Store the unmatched webhook for later reconciliation
+        # Rolling buffer (last 100): store this unmatched webhook, then prune
+        # the oldest if we're over the cap. Lightweight observability without
+        # an unbounded growing collection.
         await db.unmatched_webhooks.insert_one({
             'raw_user_id': raw_user_id,
             'aliases': aliases,
@@ -4719,6 +4939,17 @@ async def revenuecat_webhook(request: FastAPIRequest):
             'timestamp': datetime.now(timezone.utc).isoformat(),
             'reconciled': False
         })
+        try:
+            count = await db.unmatched_webhooks.count_documents({})
+            if count > 100:
+                # Drop the oldest (count - 100) entries.
+                excess = count - 100
+                async for old in db.unmatched_webhooks.find(
+                    {}, {'_id': 1}
+                ).sort('timestamp', 1).limit(excess):
+                    await db.unmatched_webhooks.delete_one({'_id': old['_id']})
+        except Exception as e:
+            logger.warning(f'[RevenueCat] Unmatched-buffer prune failed: {e}')
     
     logger.info(f'[RevenueCat] {event_type} | user_id={user_id} | raw_id={raw_user_id} | product={product_id}')
 

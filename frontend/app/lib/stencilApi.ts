@@ -150,3 +150,36 @@ export function regenCostLabel(
     ? 'Free reroll'
     : `${REGEN_COST_CREDITS} credit`;
 }
+
+
+/** Behavioral analytics — fire-and-forget. Never throws, never blocks the
+ * user flow. The backend keeps a per-session document and aggregates on
+ * the admin endpoint. */
+export type SessionEvent = 'generate' | 'reroll' | 'style_switch' | 'save' | 'export';
+
+export async function recordSessionEvent(args: {
+  apiUrl: string;
+  sessionId: string;
+  event: SessionEvent;
+  style?: StencilStyle;
+  userTier?: string;
+  sessionToken?: string;
+}): Promise<void> {
+  try {
+    await fetch(`${args.apiUrl}/api/analytics/session-event`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(args.sessionToken ? { Authorization: `Bearer ${args.sessionToken}` } : {}),
+      },
+      body: JSON.stringify({
+        session_id: args.sessionId,
+        event: args.event,
+        style: args.style,
+        user_tier: args.userTier,
+      }),
+    });
+  } catch {
+    // Analytics are non-blocking — never surface an error to the user.
+  }
+}
