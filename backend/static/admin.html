@@ -293,8 +293,11 @@ async function loadDashboard(){
     const hEl=document.getElementById('d-api-health');
     hEl.innerHTML=d.api_health==='healthy'?'<span class="badge badge-green">Healthy</span>':'<span class="badge badge-red">Degraded</span>';
     const fEl=document.getElementById('d-recent-failures');
-    if(!d.recent_key_failures.length){fEl.innerHTML='<span class="stat-label">No recent failures</span>';return}
-    fEl.innerHTML=d.recent_key_failures.map(f=>`<div class="error-item"><div class="error-type">${f.failed_key||'Unknown'} ${f.resolved?'<span class="badge badge-green">Resolved</span>':'<span class="badge badge-red">Active</span>'}</div><div class="error-detail">${(f.error||'').substring(0,120)}...</div><div class="error-time">${fmtTime(f.timestamp)}</div></div>`).join('');
+    if(!d.recent_key_failures.length){
+      fEl.innerHTML='<span class="stat-label">No recent failures</span>';
+    }else{
+      fEl.innerHTML=d.recent_key_failures.map(f=>`<div class="error-item"><div class="error-type">${f.failed_key||'Unknown'} ${f.resolved?'<span class="badge badge-green">Resolved</span>':'<span class="badge badge-red">Active</span>'}</div><div class="error-detail">${(f.error||'').substring(0,120)}...</div><div class="error-time">${fmtTime(f.timestamp)}</div></div>`).join('');
+    }
   }catch(e){console.error(e)}
   // Stencil ratings (thumbs up/down summary)
   try{
