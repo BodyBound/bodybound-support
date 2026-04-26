@@ -1527,6 +1527,11 @@ export default function Index() {
   const regenerateSingleStyle = async (style: 'light' | 'medium' | 'heavy') => {
     if (!originalImage || regeneratingStyle) return;
 
+    // Idempotency key — one per regenerate intent. Generated up front so a
+    // network retry of the deduct call (or a stray double-tap that races
+    // the regeneratingStyle guard) is treated as the same deduction.
+    const rerollId = `rr_${Date.now()}_${style}_${Math.random().toString(36).slice(2, 11)}`;
+
     // Check if this regenerate is free (first regen per style)
     const free = isFreeRegen(style, freeRegenUsed);
 
@@ -1595,7 +1600,7 @@ export default function Index() {
         setFreeRegenUsed(prev => new Set(prev).add(style));
       } else if (sessionToken && currentUser) {
         try {
-          const d = await deductCredit(API_URL, sessionToken);
+          const d = await deductCredit(API_URL, sessionToken, rerollId);
           handleCreditsUpdate(d.available_credits, d.total_monthly_credits || totalMonthlyCredits);
           checkCreditThreshold(d.available_credits, d.total_monthly_credits || totalMonthlyCredits);
         } catch (e) { console.error('[Credits] Regenerate deduction failed:', e); }
@@ -1625,6 +1630,10 @@ export default function Index() {
       selectVersion(style);
       return;
     }
+
+    // Idempotency key — one per generate intent. Survives network retries
+    // and rare double-tap races so we never deduct twice for the same gen.
+    const rerollId = `gen_${Date.now()}_${style}_${Math.random().toString(36).slice(2, 11)}`;
 
     // Determine if this is a free style change or paid
     const isNewStyle = !stylesGenerated.has(style);
@@ -1761,6 +1770,7 @@ export default function Index() {
                 const deductResp = await fetch(`${API_URL}/api/credits/deduct`, {
                   method: 'POST',
                   headers: { 'Authorization': `Bearer ${sessionToken}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ reroll_id: rerollId }),
                 });
                 if (deductResp.ok) {
                   const d = await deductResp.json();

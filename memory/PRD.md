@@ -67,6 +67,16 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **P2 Reroll Idempotency + P3 RC Webhook Dedup (Apr 26 2026)** ✅
+  - **P2 — Reroll Idempotency.** `/api/credits/deduct` now accepts an optional `reroll_id` body field. Duplicate calls with the same `(user_id, reroll_id)` within 24h return the cached response without re-deducting; concurrent in-flight duplicates get HTTP 409. Backed by `db.credit_deduct_idempotency` collection with TTL=24h. Frontend `regenerateSingleStyle` and `generateSingleStyle` each generate a per-intent UUID and pass it through `deductCredit(API_URL, token, rerollId)`. Protects against rapid double-tap on the regenerate button.
+  - **P3 — RevenueCat Webhook event.id dedup.** Webhook handler now stores each unique `event.id` in `db.revenuecat_webhook_events` (TTL=30d). Replays return `{status: 'ok', duplicate: true, event_id: ...}` without re-applying paid state. This closes the same class of vulnerability as the FRONTEND_SYNC fix — webhook replays of `INITIAL_PURCHASE` / `RENEWAL` would otherwise reset `credits_consumed_this_cycle` to 0 mid-cycle.
+  - **Verification:** 5/5 end-to-end curl tests pass against running backend (`/app/backend/tests/manual_idempotency_dedup_curl.py`):
+    - P2: same reroll_id → one deduction
+    - P2: distinct reroll_ids → each charges
+    - P2: no reroll_id → backwards-compat (charges every time)
+    - P3: CANCELLATION replay → returns duplicate=True
+    - P3: RENEWAL replay → does NOT reset credits
+
 - **Critical Bug Fix: FRONTEND_SYNC Credit Reset on App Cold-Start (Apr 26 2026)** 🔴
   - **Bug:** Every iOS app cold-start (and TestFlight update) reset users' `available_credits` to the tier base (Walk-In → 125, Booked-Out → 500, The Shop → 1500) and zeroed their `credits_consumed_this_cycle`. Users got their entire monthly allotment refilled on every app launch.
   - **Root cause:** `/api/subscription/sync` calls `apply_paid_subscription_state(source='FRONTEND_SYNC')`, which unconditionally wrote `available_credits = tier_info['credits']` and `credits_consumed_this_cycle = 0`. Same writer is used by webhook events (`INITIAL_PURCHASE` / `RENEWAL`) where that reset IS correct.

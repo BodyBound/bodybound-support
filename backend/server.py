@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ReturnDocument
+from pymongo.errors import DuplicateKeyError
 import os
 import logging
 from pathlib import Path
@@ -3464,11 +3465,49 @@ async def deduct_credit(request: FastAPIRequest):
     """Deduct 1 credit for stencil generation (atomic).
     
     For studio team members, deducts from the shared team pool instead of individual credits.
+
+    Idempotency: clients SHOULD pass a unique `reroll_id` (any client-generated
+    string — UUID v4 recommended) per intended deduction. Repeat requests with
+    the same (user_id, reroll_id) within IDEMPOTENCY_TTL_SECONDS return the
+    original response without a second deduction. This protects against rapid
+    double-taps on the regenerate button (a real frontend race condition).
     """
     auth_header = request.headers.get('authorization')
     user = await get_current_user(auth_header)
     user_id = user['user_id']
-    
+
+    # Optional idempotency key from body. Body is also OK to be empty.
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    reroll_id = (body or {}).get('reroll_id')
+
+    if reroll_id:
+        # Atomic insert — fails (DuplicateKey) if this (user_id, reroll_id)
+        # was already processed. We then return the cached response.
+        idem_key = f"{user_id}:{reroll_id}"
+        try:
+            await db.credit_deduct_idempotency.insert_one({
+                '_id': idem_key,
+                'user_id': user_id,
+                'reroll_id': reroll_id,
+                'created_at': datetime.now(timezone.utc),
+                'response': None,  # filled in below after successful deduct
+            })
+        except DuplicateKeyError:
+            existing = await db.credit_deduct_idempotency.find_one(
+                {'_id': idem_key}, {'_id': 0, 'response': 1}
+            )
+            if existing and existing.get('response'):
+                logger.info(f"[CreditsDeduct] Idempotent replay for {idem_key} — returning cached response, no deduction")
+                return existing['response']
+            # Sentinel exists but response not yet written → first call still
+            # in flight. Reject the duplicate so the client doesn't think it
+            # got a free deduction.
+            logger.warning(f"[CreditsDeduct] In-flight duplicate for {idem_key} — rejecting")
+            raise HTTPException(status_code=409, detail='Duplicate deduction in progress')
+
     # Check if user is part of a studio team
     sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
     studio_team_id = sub.get('studio_team_id') if sub else None
@@ -3482,12 +3521,21 @@ async def deduct_credit(request: FastAPIRequest):
             projection={'_id': 0}
         )
         if not team_result:
+            if reroll_id:
+                # Clear sentinel so a subsequent retry can proceed once credits are restored.
+                await db.credit_deduct_idempotency.delete_one({'_id': f"{user_id}:{reroll_id}"})
             raise HTTPException(status_code=402, detail='Studio team has no credits remaining')
-        return {
+        response_payload = {
             'available_credits': team_result['shared_credits'],
             'tier': 'the-shop',
             'is_studio_team': True,
         }
+        if reroll_id:
+            await db.credit_deduct_idempotency.update_one(
+                {'_id': f"{user_id}:{reroll_id}"},
+                {'$set': {'response': response_payload}},
+            )
+        return response_payload
 
     # Regular individual credit deduction
     # Also increments `credits_consumed_this_cycle` — used by the Walk-In upsell
@@ -3504,14 +3552,22 @@ async def deduct_credit(request: FastAPIRequest):
         projection={'_id': 0}
     )
     if not result:
+        if reroll_id:
+            await db.credit_deduct_idempotency.delete_one({'_id': f"{user_id}:{reroll_id}"})
         raise HTTPException(status_code=402, detail='Insufficient credits')
     tier = result.get('tier', '')
     TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500, 'referral_premium': 125}
-    return {
+    response_payload = {
         'available_credits': result['available_credits'],
         'total_monthly_credits': TIER_CREDITS_MAP.get(tier, 0),
         'tier': tier,
     }
+    if reroll_id:
+        await db.credit_deduct_idempotency.update_one(
+            {'_id': f"{user_id}:{reroll_id}"},
+            {'$set': {'response': response_payload}},
+        )
+    return response_payload
 
 # ---- Walk-In behavioral upsell tracking ----
 
@@ -4576,6 +4632,31 @@ async def revenuecat_webhook(request: FastAPIRequest):
     body = await request.json()
     event = body.get('event', {})
     event_type = event.get('type', '')
+
+    # ── Event-ID Deduplication ─────────────────────────────────────────
+    # RevenueCat retries webhooks on transient failures, and APIs can fan
+    # out duplicate POSTs in rare cases. Without dedup, a replayed
+    # INITIAL_PURCHASE / RENEWAL event re-runs apply_paid_subscription_state,
+    # which legitimately resets credits_consumed_this_cycle to 0 for the new
+    # cycle — same class of accidental "credit refill" we just patched on
+    # FRONTEND_SYNC. Track each unique event.id and skip on replay.
+    event_id = event.get('id', '') or body.get('id', '')
+    if event_id:
+        try:
+            await db.revenuecat_webhook_events.insert_one({
+                '_id': event_id,
+                'event_type': event_type,
+                'created_at': datetime.now(timezone.utc),
+            })
+        except DuplicateKeyError:
+            logger.info(
+                f'[RevenueCat] Duplicate webhook IGNORED — event_id={event_id} '
+                f'event_type={event_type}'
+            )
+            return {'status': 'ok', 'duplicate': True, 'event_id': event_id}
+    else:
+        logger.warning(f'[RevenueCat] Webhook arrived without event.id — cannot dedup. type={event_type}')
+
     # app_user_id might be a RevenueCat anonymous UUID instead of our backend user_id
     # Check aliases first for a backend user_id match (format: user_XXXXXXXXXXXX)
     raw_user_id = event.get('app_user_id', '')
@@ -6168,6 +6249,26 @@ async def startup_scheduler():
         logger.info('[Startup] Ensured unique index on subscriptions.user_id')
     except Exception as e:
         logger.warning(f'[Startup] Could not create unique index on subscriptions.user_id: {e}')
+
+    # Idempotency for /api/credits/deduct — TTL=24h auto-expires old keys.
+    # Doc shape: { _id: "<user_id>:<reroll_id>", created_at: <datetime>, response: <dict> }
+    try:
+        await db.credit_deduct_idempotency.create_index(
+            'created_at', expireAfterSeconds=86400, background=True
+        )
+        logger.info('[Startup] Ensured TTL index on credit_deduct_idempotency.created_at (24h)')
+    except Exception as e:
+        logger.warning(f'[Startup] Could not create TTL index on credit_deduct_idempotency: {e}')
+
+    # Idempotency for RevenueCat webhooks — TTL=30d. Prevents replays from
+    # triggering INITIAL_PURCHASE / RENEWAL writes more than once per event.
+    try:
+        await db.revenuecat_webhook_events.create_index(
+            'created_at', expireAfterSeconds=2592000, background=True
+        )
+        logger.info('[Startup] Ensured TTL index on revenuecat_webhook_events.created_at (30d)')
+    except Exception as e:
+        logger.warning(f'[Startup] Could not create TTL index on revenuecat_webhook_events: {e}')
 
     async def daily_referral_cron():
         """Runs every 24 hours: processes pending referral verifications."""

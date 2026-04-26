@@ -73,10 +73,17 @@ export interface DeductCreditResult {
   is_studio_team?: boolean;
 }
 
-/** Deduct 1 credit via `/api/credits/deduct`. Throws on non-200. */
+/** Deduct 1 credit via `/api/credits/deduct`. Throws on non-200.
+ *
+ * Pass a unique `rerollId` (UUID) for every intended deduction so the
+ * backend can deduplicate rapid double-taps. The same rerollId returned
+ * twice within 24h returns the original response without a second
+ * deduction. Concurrent in-flight duplicates get HTTP 409.
+ */
 export async function deductCredit(
   apiUrl: string,
   sessionToken: string,
+  rerollId?: string,
 ): Promise<DeductCreditResult> {
   const resp = await fetch(`${apiUrl}/api/credits/deduct`, {
     method: 'POST',
@@ -84,6 +91,7 @@ export async function deductCredit(
       'Authorization': `Bearer ${sessionToken}`,
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify(rerollId ? { reroll_id: rerollId } : {}),
   });
   if (!resp.ok) {
     const text = await resp.text();
