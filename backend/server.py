@@ -3816,25 +3816,15 @@ async def record_session_event(payload: SessionEventRequest, request: FastAPIReq
     return {'status': 'ok'}
 
 
-@api_router.get("/admin/stencil-analytics")
-async def admin_stencil_analytics(request: FastAPIRequest, days: int = 30):
-    """Aggregated behavioral analytics for stencil sessions.
+def _aggregate_stencil_sessions(sessions: list) -> dict:
+    """Compute per-style + totals aggregation from a list of session docs.
 
-    Window: last `days` days (default 30). All percentages are integers (0–100).
+    Pure function — no DB access, no auth. Used by the public aggregation
+    endpoint to compute both the overall view and per-user-tier slices.
     """
-    await verify_admin(request.headers.get('authorization'))
-    days = max(1, min(int(days), 365))
-    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-
-    sessions = await db.stencil_sessions.find(
-        {'started_at': {'$gte': cutoff}},
-        {'_id': 0},
-    ).to_list(length=10000)
-
     total_sessions = len(sessions)
     if total_sessions == 0:
         return {
-            'window_days': days,
             'total_sessions': 0,
             'per_style': {
                 s: {'generated': 0, 'final_style_count': 0, 'final_style_pct': 0,
@@ -3859,7 +3849,6 @@ async def admin_stencil_analytics(request: FastAPIRequest, days: int = 30):
         }
         for s in ('light', 'medium', 'heavy')
     }
-
     saved_total = 0
     exported_total = 0
     style_switch_total = 0
@@ -3870,22 +3859,17 @@ async def admin_stencil_analytics(request: FastAPIRequest, days: int = 30):
         rerolls = sess.get('reroll_counts') or {}
         saved = bool(sess.get('saved'))
         exported = bool(sess.get('exported'))
-
         if saved:
             saved_total += 1
         if exported:
             exported_total += 1
         style_switch_total += int(sess.get('style_switches') or 0)
-
         for s in styles_gen:
             if s in per_style:
                 per_style[s]['generated'] += 1
                 per_style[s]['sessions_that_generated'] += 1
-                # "Switched away from a tier" — the session GENERATED this
-                # style but ended up keeping a different one.
                 if final and final != s:
                     per_style[s]['sessions_that_switched_away'] += 1
-
         if final and final in per_style:
             per_style[final]['final_style_count'] += 1
             per_style[final]['rerolls_when_final'].append(
@@ -3917,7 +3901,6 @@ async def admin_stencil_analytics(request: FastAPIRequest, days: int = 30):
         }
 
     return {
-        'window_days': days,
         'total_sessions': total_sessions,
         'per_style': out_per_style,
         'totals': {
@@ -3927,6 +3910,49 @@ async def admin_stencil_analytics(request: FastAPIRequest, days: int = 30):
             'export_rate_pct': round(exported_total / total_sessions * 100) if total_sessions else 0,
             'avg_style_switches': round(style_switch_total / total_sessions, 2),
         },
+    }
+
+
+# Subscription-tier buckets used by the analytics endpoint. `the-shop-member`
+# is folded into `shop` so studio members are not double-counted as a separate
+# segment — they exhibit the same paid-tier behavior as `the-shop` owners.
+_TIER_BUCKETS: dict = {
+    'walk-in': {'walk-in'},
+    'booked-out': {'booked-out'},
+    'shop': {'the-shop', 'the-shop-member'},
+}
+
+
+@api_router.get("/admin/stencil-analytics")
+async def admin_stencil_analytics(request: FastAPIRequest, days: int = 30):
+    """Aggregated behavioral analytics for stencil sessions.
+
+    Window: last `days` days (default 30). All percentages are integers (0–100).
+    Returns the overall view at the top level plus a `by_tier` slice keyed by
+    user_tier bucket so paid-tier behavior can be compared against walk-in.
+    """
+    await verify_admin(request.headers.get('authorization'))
+    days = max(1, min(int(days), 365))
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
+    sessions = await db.stencil_sessions.find(
+        {'started_at': {'$gte': cutoff}},
+        {'_id': 0},
+    ).to_list(length=10000)
+
+    overall = _aggregate_stencil_sessions(sessions)
+
+    by_tier: dict = {}
+    for bucket_name, tier_set in _TIER_BUCKETS.items():
+        bucket_sessions = [s for s in sessions if (s.get('user_tier') in tier_set)]
+        by_tier[bucket_name] = _aggregate_stencil_sessions(bucket_sessions)
+
+    return {
+        'window_days': days,
+        'total_sessions': overall['total_sessions'],
+        'per_style': overall['per_style'],
+        'totals': overall['totals'],
+        'by_tier': by_tier,
     }
 
 

@@ -67,6 +67,11 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **Tier-Segmented Analytics (Apr 26 2026 — late evening)** ✅
+  - Extracted `_aggregate_stencil_sessions(sessions)` as a pure helper.
+  - `GET /api/admin/stencil-analytics` now returns a `by_tier` slice with three buckets: `walk-in`, `booked-out`, `shop`. The `shop` bucket folds `the-shop` + `the-shop-member` together (studio members exhibit the same paid-tier behavior as Shop owners). Each bucket has the same shape as the top-level (`total_sessions`, `per_style`, `totals`).
+  - Verified live with a 5-session multi-tier smoke test — bucketing, fold-in, and per-bucket math all correct. Test data even reveals the hypothesized pattern: Walk-In sticks with Light at 0 rerolls, Booked-Out switches to Heavy at 2 rerolls, Shop tolerates 5 rerolls on Heavy.
+
 - **Observability + Analytics Layer (Apr 26 2026 — late afternoon)** ✅
   - **Unmatched RC webhook rolling buffer.** `db.unmatched_webhooks` now caps itself at 100 entries — after every insert, the oldest beyond the cap are pruned. Lightweight observability without admin-UI overhead.
   - **Stencil usage analytics.** New collection `db.stencil_sessions`, one doc per photo-flow session with: `styles_generated`, `reroll_counts` per style, `style_switches`, `final_style`, `saved`, `exported`, `user_tier`.
