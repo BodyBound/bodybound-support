@@ -3556,6 +3556,17 @@ async def deduct_credit(request: FastAPIRequest):
             await db.credit_deduct_idempotency.delete_one({'_id': f"{user_id}:{reroll_id}"})
         raise HTTPException(status_code=402, detail='Insufficient credits')
     tier = result.get('tier', '')
+    # Bypass deduct audit log: paywall_bypass usage is the noisiest unknown
+    # in our telemetry. Emit a structured line on every successful deduct so
+    # we can grep production logs to validate the credits_consumed_this_cycle
+    # increment is actually firing for these users.
+    if tier == 'paywall_bypass':
+        logger.info(
+            f'[BypassDeduct] user={user_id} '
+            f'available={result.get("available_credits")} '
+            f'consumed={result.get("credits_consumed_this_cycle")} '
+            f'received_bridge={bool(result.get("received_temp_credits"))}'
+        )
     TIER_CREDITS_MAP = {'walk-in': 125, 'booked-out': 500, 'the-shop': 1500, 'the-shop-member': 1500, 'referral_premium': 125}
     response_payload = {
         'available_credits': result['available_credits'],
@@ -3953,6 +3964,84 @@ async def admin_stencil_analytics(request: FastAPIRequest, days: int = 30):
         'per_style': overall['per_style'],
         'totals': overall['totals'],
         'by_tier': by_tier,
+    }
+
+
+@api_router.get("/admin/bypass-user-spotcheck")
+async def admin_bypass_user_spotcheck(request: FastAPIRequest, email: str = ''):
+    """Read-only inspector for a single user's subscription state.
+
+    Surfaces the exact fields needed to verify whether bypass deduction is
+    correctly tracking credits_consumed_this_cycle. No mutations.
+    """
+    await verify_admin(request.headers.get('authorization'))
+    email_lc = (email or '').strip().lower()
+    if not email_lc:
+        raise HTTPException(status_code=400, detail='email query param required')
+
+    user = await db.users.find_one({'email': email_lc}, {'_id': 0})
+    if not user:
+        return {'found': False, 'email': email_lc}
+
+    sub = await db.subscriptions.find_one(
+        {'user_id': user['user_id']}, {'_id': 0}
+    ) or {}
+
+    # Compute total credits ever granted via the bypass path. base + bridge.
+    base_grant = 10 if sub.get('tier') == 'paywall_bypass' or sub.get('received_temp_credits_source') in ('temp_bypass', 'paywall_bypass') else 0
+    bridge_grant = EARLY_ACCESS_BRIDGE_CREDITS if sub.get('received_temp_credits') else 0
+
+    available = int(sub.get('available_credits') or 0)
+    consumed = int(sub.get('credits_consumed_this_cycle') or 0)
+    total_granted = base_grant + bridge_grant
+
+    # Sanity check: if the user has consumed credits, available + consumed
+    # should equal total_granted (give or take admin grants). If they don't
+    # match, something else is mutating the doc.
+    accounting_ok = None
+    if sub.get('tier') == 'paywall_bypass' and total_granted > 0:
+        accounting_ok = (available + consumed) == total_granted
+
+    # `last_active` proxy: most-recent of last_login, last_event_at, or sub.last_applied_at
+    last_active_candidates = [
+        user.get('last_login'),
+        sub.get('last_applied_at'),
+    ]
+    last_active = max(
+        (c for c in last_active_candidates if c),
+        default=None,
+    )
+
+    return {
+        'found': True,
+        'email': email_lc,
+        'user_id': user['user_id'],
+        'subscription': {
+            'tier': sub.get('tier'),
+            'available_credits': available,
+            'credits_consumed_this_cycle': consumed,
+            'total_credits_granted_estimate': total_granted,
+            'received_temp_credits': bool(sub.get('received_temp_credits')),
+            'received_temp_credits_at': sub.get('received_temp_credits_at'),
+            'received_temp_credits_source': sub.get('received_temp_credits_source'),
+            'last_event': sub.get('last_event'),
+            'last_applied_at': sub.get('last_applied_at'),
+            'last_product_id': sub.get('last_product_id'),
+        },
+        'user': {
+            'created_at': user.get('created_at'),
+            'last_login': user.get('last_login'),
+            'last_active_proxy': last_active,
+        },
+        'accounting_check': {
+            'expected': total_granted if accounting_ok is not None else None,
+            'observed': (available + consumed) if accounting_ok is not None else None,
+            'matches': accounting_ok,
+            'note': (
+                'available + consumed should equal total_granted for paywall_bypass users. '
+                'Mismatch implies something else is mutating the subscription doc.'
+            ) if accounting_ok is not None else 'not a bypass user — check skipped',
+        },
     }
 
 
