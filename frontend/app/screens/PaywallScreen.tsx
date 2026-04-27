@@ -174,6 +174,30 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
     }
   }, [revenueCatReady]);
 
+  // Frontend → backend telemetry beacon. Fire-and-forget. Never throws,
+  // never blocks the user flow. Lets us debug paywall RC failures from
+  // production server logs without device console access.
+  const beaconPaywallEvent = (
+    event: 'rc_success' | 'rc_failure' | 'rc_retry_attempt' | 'rc_retry_success' | 'rc_retry_failure',
+    extra: { reason?: string | null; source?: string; count?: number } = {},
+  ) => {
+    try {
+      fetch(`${API_URL}/api/admin/log-paywall-event`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event,
+          reason: extra.reason || null,
+          source: extra.source || null,
+          count: extra.count ?? null,
+          app_version: appVersion,
+        }),
+      }).catch(() => {});
+    } catch {
+      /* never throw from telemetry */
+    }
+  };
+
   // Single attempt at fetching offerings from RevenueCat. Pure: returns the
   // outcome, doesn't touch UI state. Used by the orchestrator below for
   // first try + auto-retry.
@@ -224,13 +248,17 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
     // visible, the user never sees a flash of error before the retry.
     if (!attempt.ok) {
       console.warn(`[RC:Paywall] FETCH_FAILED_FIRST reason=${attempt.reason} — retrying once in 2s`);
+      beaconPaywallEvent('rc_failure', { reason: attempt.reason });
       await new Promise(r => setTimeout(r, 2000));
       console.log('[RC:Paywall] RETRY_ATTEMPT');
+      beaconPaywallEvent('rc_retry_attempt', { reason: attempt.reason });
       attempt = await attemptFetchOfferings();
       if (attempt.ok) {
         console.log(`[RC:Paywall] RETRY_SUCCESS count=${attempt.packages.length}`);
+        beaconPaywallEvent('rc_retry_success', { count: attempt.packages.length });
       } else {
         console.error(`[RC:Paywall] RETRY_FAILED reason=${attempt.reason}`);
+        beaconPaywallEvent('rc_retry_failure', { reason: attempt.reason });
       }
     }
 
@@ -248,6 +276,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       setOfferingsError(false);
       setUsingFallback(false);
       console.log(`[RC:Paywall] SUCCESS source=live count=${attempt.packages.length}`);
+      beaconPaywallEvent('rc_success', { source: 'live', count: attempt.packages.length });
     } else if (cachedOfferingsRef.current.length > 0) {
       setOfferings(cachedOfferingsRef.current);
       setOfferingsError(false);

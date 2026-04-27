@@ -3967,6 +3967,70 @@ async def admin_stencil_analytics(request: FastAPIRequest, days: int = 30):
     }
 
 
+@api_router.post("/admin/log-paywall-event")
+async def log_paywall_event(payload: dict, request: FastAPIRequest):
+    """Anonymous telemetry sink for paywall RC offerings load events.
+
+    Frontend posts {event, reason?, source?, count?, app_version?} on every
+    success and every failure. Lets us debug persistent paywall issues from
+    production logs without needing device console access.
+
+    No auth required — write-only, low-volume, payload-validated.
+    """
+    valid_events = {'rc_success', 'rc_failure', 'rc_retry_attempt', 'rc_retry_success', 'rc_retry_failure'}
+    event = (payload.get('event') or '').strip()
+    if event not in valid_events:
+        raise HTTPException(status_code=400, detail=f'event must be one of {sorted(valid_events)}')
+
+    # Truncate untrusted strings.
+    reason = (payload.get('reason') or '')[:300]
+    source = (payload.get('source') or '')[:60]
+    app_version = (payload.get('app_version') or '')[:32]
+    count = payload.get('count')
+    try:
+        count = int(count) if count is not None else None
+    except (TypeError, ValueError):
+        count = None
+
+    user_agent = (request.headers.get('user-agent') or '')[:200]
+
+    logger.info(
+        f'[PaywallTelemetry] event={event} reason="{reason}" source={source} '
+        f'count={count} app_version={app_version} ua="{user_agent}"'
+    )
+    # Persist last 200 events for admin inspection — same rolling-buffer
+    # pattern as unmatched_webhooks. Lightweight, non-blocking.
+    try:
+        await db.paywall_telemetry.insert_one({
+            'event': event,
+            'reason': reason,
+            'source': source,
+            'count': count,
+            'app_version': app_version,
+            'user_agent': user_agent,
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+        })
+        total = await db.paywall_telemetry.count_documents({})
+        if total > 200:
+            excess = total - 200
+            async for old in db.paywall_telemetry.find(
+                {}, {'_id': 1}
+            ).sort('timestamp', 1).limit(excess):
+                await db.paywall_telemetry.delete_one({'_id': old['_id']})
+    except Exception as e:
+        logger.warning(f'[PaywallTelemetry] persist failed: {e}')
+    return {'status': 'ok'}
+
+
+@api_router.get("/admin/paywall-telemetry")
+async def admin_paywall_telemetry(request: FastAPIRequest, limit: int = 50):
+    """Read the last N paywall telemetry events. Admin-only."""
+    await verify_admin(request.headers.get('authorization'))
+    limit = max(1, min(int(limit), 200))
+    rows = await db.paywall_telemetry.find({}, {'_id': 0}).sort('timestamp', -1).to_list(length=limit)
+    return {'count': len(rows), 'events': rows}
+
+
 @api_router.get("/admin/bypass-user-spotcheck")
 async def admin_bypass_user_spotcheck(request: FastAPIRequest, email: str = ''):
     """Read-only inspector for a single user's subscription state.
