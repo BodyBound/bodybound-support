@@ -75,6 +75,10 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   const [referralApplied, setReferralApplied] = useState(false);
   const [applyingPromo, setApplyingPromo] = useState(false);
   const [offeringsError, setOfferingsError] = useState(false);
+  // True when live offerings + cache both failed but the static UI fallback
+  // tier cards are visible. Drives the SUBTLE "plans are available, tap retry
+  // if purchase fails" banner — not the loud red error banner.
+  const [usingFallback, setUsingFallback] = useState(false);
   const [grantingFallback, setGrantingFallback] = useState(false);
   // Subscriber state: if user already has an active entitlement, we hide the
   // purchase flow and show "You're subscribed" / Manage Subscription.
@@ -170,17 +174,14 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
     }
   }, [revenueCatReady]);
 
-  const loadOfferings = async () => {
-    if (Platform.OS === 'web') {
-      setLoading(false);
-      return;
-    }
-    console.log('[RC:Paywall] Loading offerings...');
-
-    let livePackages: PurchasesPackage[] = [];
-    let fetchOk = false;
-    let fetchErrorReason: string | null = null;
-
+  // Single attempt at fetching offerings from RevenueCat. Pure: returns the
+  // outcome, doesn't touch UI state. Used by the orchestrator below for
+  // first try + auto-retry.
+  const attemptFetchOfferings = async (): Promise<{
+    ok: boolean;
+    packages: PurchasesPackage[];
+    reason: string | null;
+  }> => {
     try {
       const allOfferings = await Purchases.getOfferings();
       const offering = allOfferings.current;
@@ -188,57 +189,82 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       console.log('[RC:Paywall] All offering keys:', JSON.stringify(Object.keys(allOfferings.all || {})));
 
       if (!offering) {
-        fetchErrorReason = 'no-current-offering';
-        console.error('[RC:Paywall] No current offering returned');
-      } else {
-        const available = offering.availablePackages || [];
-        console.log('[RC:Paywall] availablePackages count:', available.length);
-        for (const pkg of available) {
-          console.log('[RC:Paywall]   package:', pkg.identifier, '→ product:', pkg.product.identifier, '→ price:', pkg.product.priceString);
-        }
-        const walkIn = available.find(p => p.identifier === 'walk_in');
-        const bookedOut = available.find(p => p.identifier === 'booked_out');
-        const theShop = available.find(p => p.identifier === 'the_shop');
-        console.log('[RC:Paywall] walk_in:', walkIn ? walkIn.product.identifier : 'NOT FOUND');
-        console.log('[RC:Paywall] booked_out:', bookedOut ? bookedOut.product.identifier : 'NOT FOUND');
-        console.log('[RC:Paywall] the_shop:', theShop ? theShop.product.identifier : 'NOT FOUND');
-        livePackages = [walkIn, bookedOut, theShop].filter(Boolean) as PurchasesPackage[];
-
-        if (livePackages.length > 0) {
-          fetchOk = true;
-        } else {
-          fetchErrorReason = 'no-matching-packages';
-          console.error('[RC:Paywall] No matching packages found (expected: walk_in, booked_out, the_shop)');
-        }
+        return { ok: false, packages: [], reason: 'no-current-offering' };
       }
+      const available = offering.availablePackages || [];
+      console.log('[RC:Paywall] availablePackages count:', available.length);
+      for (const pkg of available) {
+        console.log('[RC:Paywall]   package:', pkg.identifier, '→ product:', pkg.product.identifier, '→ price:', pkg.product.priceString);
+      }
+      const walkIn = available.find(p => p.identifier === 'walk_in');
+      const bookedOut = available.find(p => p.identifier === 'booked_out');
+      const theShop = available.find(p => p.identifier === 'the_shop');
+      const packages = [walkIn, bookedOut, theShop].filter(Boolean) as PurchasesPackage[];
+      if (packages.length === 0) {
+        return { ok: false, packages: [], reason: 'no-matching-packages' };
+      }
+      return { ok: true, packages, reason: null };
     } catch (err: any) {
-      fetchErrorReason = `getOfferings-threw:${err?.message || 'unknown'}`;
-      console.error('[RC:Paywall] getOfferings() FAILED:', err?.message);
+      return { ok: false, packages: [], reason: `getOfferings-threw:${err?.message || 'unknown'}` };
+    }
+  };
+
+  const loadOfferings = async () => {
+    if (Platform.OS === 'web') {
+      setLoading(false);
+      return;
+    }
+    console.log('[RC:Paywall] Loading offerings...');
+
+    // First attempt
+    let attempt = await attemptFetchOfferings();
+
+    // Auto-retry once after a 2s delay if the first attempt failed.
+    // No UI state is touched between attempts — the loading spinner stays
+    // visible, the user never sees a flash of error before the retry.
+    if (!attempt.ok) {
+      console.warn(`[RC:Paywall] FETCH_FAILED_FIRST reason=${attempt.reason} — retrying once in 2s`);
+      await new Promise(r => setTimeout(r, 2000));
+      console.log('[RC:Paywall] RETRY_ATTEMPT');
+      attempt = await attemptFetchOfferings();
+      if (attempt.ok) {
+        console.log(`[RC:Paywall] RETRY_SUCCESS count=${attempt.packages.length}`);
+      } else {
+        console.error(`[RC:Paywall] RETRY_FAILED reason=${attempt.reason}`);
+      }
     }
 
-    // Decide what to render. Cached packages from a prior successful load
-    // are treated as a success state — never show the error banner when
-    // the user can see real, purchasable plans.
-    if (fetchOk && livePackages.length > 0) {
-      cachedOfferingsRef.current = livePackages;
-      setOfferings(livePackages);
+    // Decide UI state. Priority:
+    //   1. Live packages from this run → save to cache, show silently.
+    //   2. Previously-cached packages from a prior successful run → show silently.
+    //   3. Static UI fallback only → subtle "Plans are available" notice
+    //      with a Retry button. NEVER the loud red banner — fallback
+    //      cards are visible to the user, so showing a destructive banner
+    //      would make a working-looking paywall appear broken.
+    //   4. Truly nothing renderable (web platform / future) → loud banner.
+    if (attempt.ok && attempt.packages.length > 0) {
+      cachedOfferingsRef.current = attempt.packages;
+      setOfferings(attempt.packages);
       setOfferingsError(false);
-      console.log('[RC:Paywall] SUCCESS source=live count=' + livePackages.length);
+      setUsingFallback(false);
+      console.log(`[RC:Paywall] SUCCESS source=live count=${attempt.packages.length}`);
     } else if (cachedOfferingsRef.current.length > 0) {
-      // Fetch failed but we have a previous successful load. Render those
-      // and keep the error banner hidden — purchase flow stays functional.
       setOfferings(cachedOfferingsRef.current);
       setOfferingsError(false);
+      setUsingFallback(false);
       console.warn(
-        `[RC:Paywall] FETCH_FAILED reason=${fetchErrorReason}, source=cache count=${cachedOfferingsRef.current.length}`,
+        `[RC:Paywall] FALLBACK source=cache count=${cachedOfferingsRef.current.length} (RC fetch failed: ${attempt.reason})`,
       );
     } else {
-      // Genuinely no plans to show. This is the only case where the error
-      // banner is allowed.
+      // No live, no cache. Static tier cards still render (they're hardcoded
+      // in the UI), so prefer the subtle banner — the user CAN see plans
+      // and tap Retry. The loud red banner is reserved for environments
+      // where even the static cards aren't useful (e.g. web platform).
       setOfferings([]);
-      setOfferingsError(true);
-      console.error(
-        `[RC:Paywall] FETCH_FAILED reason=${fetchErrorReason}, source=none — showing error banner`,
+      setUsingFallback(true);
+      setOfferingsError(false);
+      console.warn(
+        `[RC:Paywall] FALLBACK source=static-ui-only (RC fetch failed: ${attempt.reason}) — subtle banner shown`,
       );
     }
 
@@ -250,7 +276,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       const active = !!customerInfo.entitlements.active[ENTITLEMENT_ID];
       setIsActiveSubscriber(active);
       if (!active) {
-        const pkgsForCheck = livePackages.length > 0 ? livePackages : cachedOfferingsRef.current;
+        const pkgsForCheck = attempt.packages.length > 0 ? attempt.packages : cachedOfferingsRef.current;
         if (pkgsForCheck.length > 0) {
           const productIds = pkgsForCheck.map(p => p.product.identifier);
           const eligibility = await Purchases.checkTrialOrIntroductoryPriceEligibility(productIds);
@@ -581,8 +607,45 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
             </View>
           )}
 
-          {/* Sandbox / Offerings error message */}
-          {offeringsError && !isWeb && (
+          {/* SUBTLE banner — shown when live + cached offerings both failed
+              but the static UI fallback tier cards are still visible. The
+              user can see plans and tap Retry; no need for an alarming red
+              banner that makes the paywall look broken. */}
+          {usingFallback && !isWeb && (
+            <View
+              testID="paywall-fallback-notice"
+              style={{
+                backgroundColor: 'rgba(201,162,39,0.08)',
+                borderRadius: 10,
+                paddingVertical: 12,
+                paddingHorizontal: 14,
+                marginBottom: 16,
+                borderWidth: 1,
+                borderColor: 'rgba(201,162,39,0.25)',
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+              <Text style={{ color: '#cfa937', fontSize: 12, lineHeight: 16, flex: 1, paddingRight: 10 }}>
+                Plans are available. If purchase fails, tap Retry.
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setUsingFallback(false);
+                  setLoading(true);
+                  loadOfferings();
+                }}
+                style={{ paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(201,162,39,0.5)' }}
+              >
+                <Text style={{ color: '#cfa937', fontSize: 12, fontWeight: '700' }}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* LOUD banner — only when nothing renderable at all (truly
+              unreachable on iOS today, since static tier cards always render).
+              Kept for web platform / future regressions. */}
+          {offeringsError && !usingFallback && !isWeb && (
             <View style={{ backgroundColor: 'rgba(239,68,68,0.1)', borderRadius: 12, padding: 16, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' }}>
               <Text style={{ color: '#ef4444', fontSize: 14, fontWeight: '700', marginBottom: 6 }}>Unable to load subscription plans</Text>
               <Text style={{ color: '#999', fontSize: 13, lineHeight: 18, marginBottom: 12 }}>
