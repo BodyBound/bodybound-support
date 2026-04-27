@@ -61,6 +61,12 @@ interface PaywallScreenProps {
 
 export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, required = false, revenueCatReady = true }: PaywallScreenProps) {
   const [offerings, setOfferings] = useState<PurchasesPackage[]>([]);
+  // In-memory cache of the last successful offerings load. We keep this so
+  // that a transient RC fetch failure (sandbox StoreKit blip, network hiccup,
+  // RC re-init race) doesn't drop the user back into a "no plans available"
+  // state when we already had valid plans a moment ago. The user should NEVER
+  // see plans + error simultaneously.
+  const cachedOfferingsRef = useRef<PurchasesPackage[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -169,67 +175,92 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       setLoading(false);
       return;
     }
-    setOfferingsError(false);
     console.log('[RC:Paywall] Loading offerings...');
+
+    let livePackages: PurchasesPackage[] = [];
+    let fetchOk = false;
+    let fetchErrorReason: string | null = null;
 
     try {
       const allOfferings = await Purchases.getOfferings();
       const offering = allOfferings.current;
-
       console.log('[RC:Paywall] Current offering:', offering?.identifier || 'NONE');
       console.log('[RC:Paywall] All offering keys:', JSON.stringify(Object.keys(allOfferings.all || {})));
 
       if (!offering) {
+        fetchErrorReason = 'no-current-offering';
         console.error('[RC:Paywall] No current offering returned');
-        setOfferingsError(true);
-        setLoading(false);
-        return;
-      }
-
-      const available = offering.availablePackages || [];
-      console.log('[RC:Paywall] availablePackages count:', available.length);
-      for (const pkg of available) {
-        console.log('[RC:Paywall]   package:', pkg.identifier, '→ product:', pkg.product.identifier, '→ price:', pkg.product.priceString);
-      }
-
-      // Map packages by identifier
-      const walkIn = available.find(p => p.identifier === 'walk_in');
-      const bookedOut = available.find(p => p.identifier === 'booked_out');
-      const theShop = available.find(p => p.identifier === 'the_shop');
-
-      console.log('[RC:Paywall] walk_in:', walkIn ? walkIn.product.identifier : 'NOT FOUND');
-      console.log('[RC:Paywall] booked_out:', bookedOut ? bookedOut.product.identifier : 'NOT FOUND');
-      console.log('[RC:Paywall] the_shop:', theShop ? theShop.product.identifier : 'NOT FOUND');
-
-      const packages = [walkIn, bookedOut, theShop].filter(Boolean) as PurchasesPackage[];
-
-      if (packages.length > 0) {
-        setOfferings(packages);
-        // Do NOT pre-select — spec requires explicit user selection to enable CTA.
-        console.log('[RC:Paywall] SUCCESS — Loaded', packages.length, 'packages');
-
-        // Check subscriber + trial eligibility from RevenueCat
-        try {
-          const customerInfo = await Purchases.getCustomerInfo();
-          const active = !!customerInfo.entitlements.active[ENTITLEMENT_ID];
-          setIsActiveSubscriber(active);
-          if (!active) {
-            const productIds = packages.map(p => p.product.identifier);
-            const eligibility = await Purchases.checkTrialOrIntroductoryPriceEligibility(productIds);
-            // Status: 0=unknown, 1=ineligible, 2=eligible, 3=no_intro_offer_exists
-            const anyEligible = Object.values(eligibility).some((e: any) => e.status === 2);
-            setTrialEligible(anyEligible);
-          }
-        } catch (e) {
-          console.warn('[RC:Paywall] Could not check subscription/trial state:', e);
-        }
       } else {
-        console.error('[RC:Paywall] No matching packages found (expected: walk_in, booked_out, the_shop)');
-        setOfferingsError(true);
+        const available = offering.availablePackages || [];
+        console.log('[RC:Paywall] availablePackages count:', available.length);
+        for (const pkg of available) {
+          console.log('[RC:Paywall]   package:', pkg.identifier, '→ product:', pkg.product.identifier, '→ price:', pkg.product.priceString);
+        }
+        const walkIn = available.find(p => p.identifier === 'walk_in');
+        const bookedOut = available.find(p => p.identifier === 'booked_out');
+        const theShop = available.find(p => p.identifier === 'the_shop');
+        console.log('[RC:Paywall] walk_in:', walkIn ? walkIn.product.identifier : 'NOT FOUND');
+        console.log('[RC:Paywall] booked_out:', bookedOut ? bookedOut.product.identifier : 'NOT FOUND');
+        console.log('[RC:Paywall] the_shop:', theShop ? theShop.product.identifier : 'NOT FOUND');
+        livePackages = [walkIn, bookedOut, theShop].filter(Boolean) as PurchasesPackage[];
+
+        if (livePackages.length > 0) {
+          fetchOk = true;
+        } else {
+          fetchErrorReason = 'no-matching-packages';
+          console.error('[RC:Paywall] No matching packages found (expected: walk_in, booked_out, the_shop)');
+        }
       }
     } catch (err: any) {
-      console.error('[RC:Paywall] getOfferings() FAILED:', err.message);
+      fetchErrorReason = `getOfferings-threw:${err?.message || 'unknown'}`;
+      console.error('[RC:Paywall] getOfferings() FAILED:', err?.message);
+    }
+
+    // Decide what to render. Cached packages from a prior successful load
+    // are treated as a success state — never show the error banner when
+    // the user can see real, purchasable plans.
+    if (fetchOk && livePackages.length > 0) {
+      cachedOfferingsRef.current = livePackages;
+      setOfferings(livePackages);
+      setOfferingsError(false);
+      console.log('[RC:Paywall] SUCCESS source=live count=' + livePackages.length);
+    } else if (cachedOfferingsRef.current.length > 0) {
+      // Fetch failed but we have a previous successful load. Render those
+      // and keep the error banner hidden — purchase flow stays functional.
+      setOfferings(cachedOfferingsRef.current);
+      setOfferingsError(false);
+      console.warn(
+        `[RC:Paywall] FETCH_FAILED reason=${fetchErrorReason}, source=cache count=${cachedOfferingsRef.current.length}`,
+      );
+    } else {
+      // Genuinely no plans to show. This is the only case where the error
+      // banner is allowed.
+      setOfferings([]);
       setOfferingsError(true);
+      console.error(
+        `[RC:Paywall] FETCH_FAILED reason=${fetchErrorReason}, source=none — showing error banner`,
+      );
+    }
+
+    // Trial / active-subscriber check is independent of offerings — try it
+    // regardless so the "you're already subscribed" message can render even
+    // when offerings are temporarily flaky.
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      const active = !!customerInfo.entitlements.active[ENTITLEMENT_ID];
+      setIsActiveSubscriber(active);
+      if (!active) {
+        const pkgsForCheck = livePackages.length > 0 ? livePackages : cachedOfferingsRef.current;
+        if (pkgsForCheck.length > 0) {
+          const productIds = pkgsForCheck.map(p => p.product.identifier);
+          const eligibility = await Purchases.checkTrialOrIntroductoryPriceEligibility(productIds);
+          // Status: 0=unknown, 1=ineligible, 2=eligible, 3=no_intro_offer_exists
+          const anyEligible = Object.values(eligibility).some((e: any) => e.status === 2);
+          setTrialEligible(anyEligible);
+        }
+      }
+    } catch (e) {
+      console.warn('[RC:Paywall] Could not check subscription/trial state:', e);
     }
 
     setLoading(false);
