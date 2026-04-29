@@ -67,6 +67,15 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **Critical Bug Fix: Subscription Upgrade (Walk-In → Booked-Out) Not Applying (Apr 27 2026)** 🔴
+  - **Bug:** Marilynn (real Apple ID purchase) upgraded Walk-In → Booked-Out via Apple Settings → Subscriptions. App stayed on Walk-In/125 credits even after sign-out/sign-in.
+  - **Root cause #1 — Webhook handler:** `/api/webhooks/revenuecat` only branched on `event_type in ('INITIAL_PURCHASE', 'RENEWAL')`. `PRODUCT_CHANGE` (upgrade/downgrade) and `UNCANCELLATION` events fell through to a no-op `return {'status':'ok'}` — no state update.
+  - **Root cause #2 — Frontend:** `syncRevenueCatWithBackend` was only called on cold-start. If the user upgraded in iOS Settings while app was backgrounded, foregrounding back didn't re-sync.
+  - **Fix #1 (backend):** `event_type in ('INITIAL_PURCHASE', 'RENEWAL', 'PRODUCT_CHANGE', 'UNCANCELLATION')` now all route through `apply_paid_subscription_state`. Logged `[RevenueCat:PRODUCT_CHANGE] APPLIED ...`. Unknown product_ids still refuse with `{'reason':'unknown_product'}` and preserve existing state.
+  - **Fix #2 (frontend):** Added `AppState.addEventListener('change')` in `index.tsx`. On `active` transition, calls `syncRevenueCatWithBackend(token)` if a session token exists. Throttled to once per 10s to protect against rapid bg/fg toggling.
+  - **Note on idempotency:** The earlier FRONTEND_SYNC idempotency fix (compare TIER not product_id) correctly allows tier changes through — confirmed in regression tests. Walk-in → booked-out fires the apply path even via FRONTEND_SYNC.
+  - **Verified live (3/3):** PRODUCT_CHANGE walk-in→booked-out → 500 credits / consumed=0 / last_event=PRODUCT_CHANGE; unknown product refused with state preserved; UNCANCELLATION fully restores.
+
 - **Tier-Segmented Analytics (Apr 26 2026 — late evening)** ✅
   - Extracted `_aggregate_stencil_sessions(sessions)` as a pure helper.
   - `GET /api/admin/stencil-analytics` now returns a `by_tier` slice with three buckets: `walk-in`, `booked-out`, `shop`. The `shop` bucket folds `the-shop` + `the-shop-member` together (studio members exhibit the same paid-tier behavior as Shop owners). Each bucket has the same shape as the top-level (`total_sessions`, `per_style`, `totals`).

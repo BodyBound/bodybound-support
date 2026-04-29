@@ -16,6 +16,7 @@ import {
   PanResponder,
   GestureResponderEvent,
   StyleSheet,
+  AppState,
 } from 'react-native';
 import { Image as ExpoImage } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -905,6 +906,36 @@ export default function Index() {
     });
 
     return () => subscription?.remove();
+  }, []);
+
+  // ── AppState foreground sync ────────────────────────────────────────
+  // When the user backgrounds the app, upgrades their subscription via
+  // iOS Settings → Subscriptions (e.g. Walk-In → Booked-Out), then
+  // foregrounds back, we must re-sync immediately. Without this they'd
+  // be stuck on the old tier until either the next webhook arrives OR
+  // they full force-quit + cold-start the app. With this listener the
+  // upgrade applies within seconds of returning to the app.
+  const sessionTokenRef = useRef(sessionToken);
+  useEffect(() => { sessionTokenRef.current = sessionToken; }, [sessionToken]);
+  useEffect(() => {
+    if (Platform.OS !== 'ios' && Platform.OS !== 'android') return;
+    let lastSyncAt = 0;
+    const subscription = AppState.addEventListener('change', (next) => {
+      if (next === 'active') {
+        const tok = sessionTokenRef.current;
+        if (!tok) return;
+        // Throttle to once every 10s — protects against rapid
+        // background/foreground toggling triggering a sync storm.
+        const now = Date.now();
+        if (now - lastSyncAt < 10000) return;
+        lastSyncAt = now;
+        console.log('[AppState] active — re-syncing RC entitlements');
+        syncRevenueCatWithBackend(tok).catch((e) =>
+          console.warn('[AppState] RC sync on foreground failed:', e?.message),
+        );
+      }
+    });
+    return () => subscription.remove();
   }, []);
 
   // Early-access credit bridge modal — one-time system-granted 10 credits

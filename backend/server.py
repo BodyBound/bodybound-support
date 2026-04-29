@@ -5333,7 +5333,7 @@ async def revenuecat_webhook(request: FastAPIRequest):
     # Route through apply_paid_subscription_state so behavior is identical
     # to the frontend /api/subscription/sync path.
     # -------------------------------------------------------------
-    if event_type in ('INITIAL_PURCHASE', 'RENEWAL') and user_id:
+    if event_type in ('INITIAL_PURCHASE', 'RENEWAL', 'PRODUCT_CHANGE', 'UNCANCELLATION') and user_id:
         if not product_id or product_id not in PRODUCT_CREDIT_MAP:
             logger.error(
                 f'[RevenueCat:{event_type}] REFUSED: unknown product_id={product_id!r} '
@@ -5342,6 +5342,12 @@ async def revenuecat_webhook(request: FastAPIRequest):
             return {'status': 'error', 'reason': 'unknown_product'}
         period_type = event.get('period_type', 'NORMAL')
         is_apple_trial = period_type == 'TRIAL'
+        # PRODUCT_CHANGE = upgrade/downgrade (e.g. Walk-in → Booked-out via
+        # Apple subscription management). MUST apply the new tier and grant
+        # the new tier's credit allowance — without this, users who upgrade
+        # remain stuck on their old tier until they manually tap Restore.
+        # UNCANCELLATION = user un-canceled before expiration; treat as a
+        # fresh apply so they regain full state.
         try:
             await apply_paid_subscription_state(
                 user_id=user_id,
@@ -5349,6 +5355,9 @@ async def revenuecat_webhook(request: FastAPIRequest):
                 source=event_type,
                 rc_customer_id=raw_user_id or None,
                 is_apple_trial=is_apple_trial,
+            )
+            logger.info(
+                f'[RevenueCat:{event_type}] APPLIED user={user_id} product={product_id}'
             )
         except ValueError as e:
             return {'status': 'error', 'reason': str(e)}
