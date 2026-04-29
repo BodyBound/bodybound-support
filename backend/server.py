@@ -80,19 +80,36 @@ logger = logging.getLogger(__name__)
 stencil_jobs = {}
 
 # Stencil cache for faster regeneration of same images
-# Key: hash of image + settings, Value: generated stencil results
+# Key: hash of FULL image content + style, Value: generated stencil results
 stencil_cache = {}
 CACHE_MAX_SIZE = 50  # Maximum number of cached stencils
 
 import hashlib
 
+def hash_image(image_base64: str) -> str:
+    """Cryptographic hash of the FULL image content. Used for both cache
+    keying and request/response correlation logging. SHA-256 makes
+    accidental collisions effectively impossible.
+
+    The base64 may include a `data:image/...;base64,` prefix; strip it so
+    the same bytes always hash identically regardless of how the client
+    serialized them.
+    """
+    payload = image_base64
+    if ',' in payload[:64]:
+        payload = payload.split(',', 1)[1]
+    return hashlib.sha256(payload.encode()).hexdigest()
+
 def get_cache_key(image_base64: str, style: str) -> str:
-    """Generate a cache key from image content and style"""
-    # Use first 1000 chars of base64 + style for faster hashing
-    # This is sufficient to uniquely identify most images
-    image_sample = image_base64[:1000] if len(image_base64) > 1000 else image_base64
-    content = f"{image_sample}_{style}"
-    return hashlib.md5(content.encode()).hexdigest()
+    """Generate a cache key from FULL image content + style.
+
+    HISTORY: an earlier version used only the first 1000 base64 chars of
+    the image. That allowed cache collisions between unrelated photos
+    that happened to share JPEG/PNG headers (same phone, similar EXIF,
+    same quantization tables). That collision returned user A's stencil
+    for user B's unrelated reference image — a launch-blocking bug.
+    """
+    return hashlib.sha256(f"{hash_image(image_base64)}_{style}".encode()).hexdigest()
 
 def cache_stencil(cache_key: str, stencil_base64: str, near_black_fraction: Optional[float] = None):
     """Cache a generated stencil along with its near_black_fraction so a
@@ -2225,9 +2242,13 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
         # authenticated caller cannot bypass the credit system by skipping
         # deduct. Unauthenticated legacy callers still work (we log them).
         auth_header = http_request.headers.get('authorization')
+        request_user_id = 'anonymous'
+        request_user_email = None
         if auth_header:
             try:
                 current_user = await get_current_user(auth_header)
+                request_user_id = current_user['user_id']
+                request_user_email = current_user.get('email')
                 credits_state = await get_user_credits(current_user['user_id'])
                 available = int(credits_state.get('available_credits', 0))
                 is_emergency = bool(credits_state.get('emergency_available', False))
@@ -2248,6 +2269,27 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
                 logger.warning(f"[CreditGate] Soft check failed, allowing request: {gate_err}")
         else:
             logger.warning("[CreditGate] /api/ai-stencil called without auth token (legacy path) — credit gate skipped")
+
+        # ── Per-request audit trace (image-correlation invariant) ────────
+        # Hash the FULL incoming image once. Used for: (1) the cache key,
+        # (2) the structured log line that anchors every step of this
+        # request to a single image hash, (3) post-generation validation
+        # (response image hash differs from request image hash by design,
+        # but at least both get logged so a bad result is forensically
+        # traceable to the right reference image).
+        request_image_hash = hash_image(request.image_base64)
+        request_correlation_id = str(uuid.uuid4())[:12]
+        logger.info(
+            f"[AI-Stencil:REQ id={request_correlation_id}] "
+            f"user={request_user_id} "
+            f"image_sha={request_image_hash[:16]} "
+            f"style={request.regenerate_style or 'auto'} "
+            f"shading_detail={request.shading_detail} "
+            f"line_color={request.line_color} "
+            f"regenerate={bool(request.regenerate_style)} "
+            f"image_bytes={len(request.image_base64)}"
+        )
+
         # Determine the style for caching
         cache_style = request.regenerate_style or f"shading_{request.shading_detail}"
         
@@ -2259,10 +2301,24 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
         cache_key = get_cache_key(request.image_base64, cache_style)
         cached_result = get_cached_stencil(cache_key) if not request.regenerate_style else None
         if cached_result:
-            logger.info(f"[AI-Stencil] Cache HIT - returning cached result in {(time.time() - start_time) * 1000:.0f}ms")
+            cached_stencil_b64 = cached_result['stencil']
+            cached_response_hash = hash_image(cached_stencil_b64)
+            # Image-correlation check: log the request image hash + the cached
+            # response hash + the cache_key. Any future "wrong image" report
+            # can be cross-referenced against these structured log lines to
+            # determine if the cache key was correct (correlation-safe) or
+            # whether two different images produced the same cache_key.
+            logger.info(
+                f"[AI-Stencil:CACHE_HIT id={request_correlation_id}] "
+                f"user={request_user_id} "
+                f"req_image_sha={request_image_hash[:16]} "
+                f"cache_key={cache_key[:16]} "
+                f"resp_image_sha={cached_response_hash[:16]} "
+                f"latency_ms={(time.time() - start_time) * 1000:.0f}"
+            )
             cached_nbf = cached_result.get('near_black_fraction')
             return AIStencilResponse(
-                stencil_base64=cached_result['stencil'],
+                stencil_base64=cached_stencil_b64,
                 processing_time_ms=round((time.time() - start_time) * 1000, 2),
                 regenerated_style=request.regenerate_style,
                 near_black_fraction=round(cached_nbf, 4) if cached_nbf is not None else None,
@@ -2417,6 +2473,17 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
         
         # === STEP 8: CACHE THE RESULT for future instant retrieval ===
         cache_stencil(cache_key, stencil_base64, near_black_fraction)
+        response_image_hash = hash_image(stencil_base64)
+        logger.info(
+            f"[AI-Stencil:RESP id={request_correlation_id}] "
+            f"user={request_user_id} "
+            f"req_image_sha={request_image_hash[:16]} "
+            f"cache_key={cache_key[:16]} "
+            f"resp_image_sha={response_image_hash[:16]} "
+            f"provider={provider_used} "
+            f"latency_ms={(time.time() - start_time) * 1000:.0f} "
+            f"near_black={near_black_fraction:.4f}"
+        )
         
         processing_time = (time.time() - start_time) * 1000
         

@@ -67,6 +67,18 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **CRITICAL: Cache-Key Collision Causing Cross-Reference Image Output (Apr 29 2026)** 🔴🔴🔴
+  - **Bug:** A user reported the AI returning a stencil from an UNRELATED reference photo. Two separate failures + a wrong-image return in one session.
+  - **Root cause:** `get_cache_key(image_base64, style)` hashed only the **first 1000 base64 characters** of the image with MD5. JPEG/PNG headers, EXIF, and quantization tables on phone photos are similar enough that two unrelated photos can collide on this prefix. When that happened, the cache returned user A's stencil for user B's unrelated reference photo. The async job path (UUID-keyed) was clean — collision was 100% in the cache.
+  - **Fix:** `hash_image()` now SHA-256s the FULL base64 payload (data-URL prefix stripped). `get_cache_key()` is `sha256(image_hash + "_" + style)`. Collision is mathematically impossible.
+  - **Audit logging added (3 structured log lines per request):** `[AI-Stencil:REQ id=...]` on receipt, `[AI-Stencil:CACHE_HIT id=...]` on cache return, `[AI-Stencil:RESP id=...]` on fresh generation. Each line includes correlation_id, user_id, request image_sha (16-char), cache_key, response image_sha, and provider/latency. Any future "wrong image" report can be cross-referenced against these to forensically prove the input/output correlation.
+  - **Tests:** `tests/test_cache_key_collision.py` — 4/4 pass:
+    - Two images with shared 1000-char prefix → distinct cache keys (the exact bug)
+    - Same image, same style → identical cache key (cache still works)
+    - Same image, different styles → 3 distinct keys (style isolation)
+    - `data:image/png;base64,` prefix stripped before hashing (client-format-tolerant)
+  - **Total regression suite:** 15/15 pass.
+
 - **Critical Bug Fix: Subscription Upgrade (Walk-In → Booked-Out) Not Applying (Apr 27 2026)** 🔴
   - **Bug:** Marilynn (real Apple ID purchase) upgraded Walk-In → Booked-Out via Apple Settings → Subscriptions. App stayed on Walk-In/125 credits even after sign-out/sign-in.
   - **Root cause #1 — Webhook handler:** `/api/webhooks/revenuecat` only branched on `event_type in ('INITIAL_PURCHASE', 'RENEWAL')`. `PRODUCT_CHANGE` (upgrade/downgrade) and `UNCANCELLATION` events fell through to a no-op `return {'status':'ok'}` — no state update.
