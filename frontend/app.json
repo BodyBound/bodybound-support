@@ -41,7 +41,7 @@
         "android.permission.READ_MEDIA_VIDEO",
         "android.permission.READ_MEDIA_AUDIO"
       ],
-      "package": "com.anonymous.bodyboundstencil"
+      "package": "com.bodybound.stencilgenerator"
     },
     "web": {
       "bundler": "metro",
