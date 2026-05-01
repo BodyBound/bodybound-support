@@ -11,6 +11,36 @@ jobs:
   refresh-credits:
     runs-on: ubuntu-latest
     steps:
+      - name: Sanity-check BACKEND_URL points at production FastAPI
+        run: |
+          if [ -z "${{ secrets.BACKEND_URL }}" ]; then
+            echo "ERROR: BACKEND_URL secret is empty."
+            exit 1
+          fi
+
+          HEALTH_RESPONSE=$(curl -s -w "\n%{http_code}" "${{ secrets.BACKEND_URL }}/api/health")
+          HEALTH_CODE=$(echo "$HEALTH_RESPONSE" | tail -1)
+          HEALTH_BODY=$(echo "$HEALTH_RESPONSE" | sed '$d')
+
+          echo "Health endpoint: ${{ secrets.BACKEND_URL }}/api/health"
+          echo "Health status:   $HEALTH_CODE"
+          echo "Health body:     $HEALTH_BODY"
+
+          if [ "$HEALTH_CODE" != "200" ]; then
+            echo "ERROR: BACKEND_URL is not pointing at the production FastAPI backend."
+            echo "Expected 200 from /api/health, got $HEALTH_CODE."
+            exit 1
+          fi
+
+          if ! echo "$HEALTH_BODY" | grep -q '"status":"healthy"'; then
+            echo "ERROR: BACKEND_URL is not pointing at the production FastAPI backend."
+            echo "Health endpoint returned 200 but body did not contain the expected 'healthy' status payload."
+            echo "This usually means BACKEND_URL is routed to a different host (frontend/static/edge) instead of the FastAPI API."
+            exit 1
+          fi
+
+          echo "OK: BACKEND_URL is healthy and pointing at the FastAPI backend."
+
       - name: Trigger monthly credit refresh
         run: |
           RESPONSE=$(curl -s -w "\n%{http_code}" \
