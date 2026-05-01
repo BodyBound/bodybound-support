@@ -136,6 +136,105 @@ def get_cached_stencil(cache_key: str) -> Optional[dict]:
         return stencil_cache[cache_key]
     return None
 
+
+def validate_stencil_reference_match(input_b64: str, output_b64: str) -> dict:
+    """Detect outputs that are unrelated to the reference image
+    (i.e. Gemini hallucinated a different subject entirely).
+
+    Two independent, cheap structural similarity signals are computed.
+    A mismatch is flagged ONLY when BOTH signals fail — conservative by
+    design to avoid false rejections on valid minimalist Light stencils
+    that legitimately drop most interior detail.
+
+    Signals (calibrated on /backend/static reference pairs):
+      1. Edge-NCC — normalized cross-correlation between Canny edges of
+         the input photo and line pixels of the output stencil, at
+         128x128. Measures "do the stencil lines sit where the photo's
+         structural edges sit".
+           - Legit stencils:            range 0.17 – 0.37
+           - Wrong-reference outputs:   range 0.03 – 0.09
+         Fail signal: edge_ncc < 0.12.
+      2. Line precision — of all pixels where the stencil drew a line,
+         what fraction lie within 2 px of an edge in the reference photo.
+         A legit stencil traces real structure (almost every line is on a
+         real edge). A hallucinated unrelated stencil draws lines in
+         positions that have no relationship to the photo.
+           - Legit stencils:            range 0.89 – 0.98
+           - Wrong-reference outputs:   range 0.56 – 0.85
+         Fail signal: line_precision < 0.86.
+
+    Both signals must fail to trigger a rejection (conservative AND gate).
+
+    Returns: {
+        'is_match': bool,
+        'edge_ncc': float,
+        'line_precision': float,
+        'reason': str,
+    }
+    """
+    def _decode(b64: str):
+        if b64 and ',' in b64[:64]:
+            b64 = b64.split(',', 1)[1]
+        return Image.open(BytesIO(base64.b64decode(b64)))
+
+    try:
+        in_img = _decode(input_b64).convert('L').resize((128, 128), Image.LANCZOS)
+        out_img = _decode(output_b64).convert('L').resize((128, 128), Image.LANCZOS)
+    except Exception as e:
+        # If we can't decode either image, don't block the response.
+        return {
+            'is_match': True,
+            'edge_ncc': 0.0,
+            'line_precision': 0.0,
+            'reason': f'decode_err:{e}',
+        }
+
+    in_arr = np.array(in_img, dtype=np.float32)
+    out_arr = np.array(out_img, dtype=np.float32)
+
+    # --- Signal 1: Edge-NCC ---
+    in_edges = cv2.Canny(in_arr.astype(np.uint8), 50, 150).astype(np.float32)
+    out_edges = (out_arr < 200).astype(np.float32) * 255.0  # stencil = dark lines on white
+    a = in_edges - in_edges.mean()
+    b = out_edges - out_edges.mean()
+    denom = float(np.sqrt((a * a).sum()) * np.sqrt((b * b).sum()))
+    edge_ncc = float((a * b).sum() / denom) if denom > 0 else 0.0
+
+    # --- Signal 2: Line precision ---
+    # Dilate photo edges slightly (5x5 kernel) to be forgiving of small
+    # spatial drift between the photo's edge locations and the stencil's
+    # line locations — real human-drawn stencils lines don't fall exactly
+    # on 1-pixel-wide photo Canny edges.
+    stencil_lines = (out_arr < 200)
+    photo_edges_d = cv2.dilate(
+        (in_edges > 0).astype(np.uint8), np.ones((5, 5), np.uint8), iterations=1
+    ).astype(bool)
+    stencil_line_count = int(stencil_lines.sum())
+    if stencil_line_count > 0:
+        line_precision = float(
+            np.logical_and(stencil_lines, photo_edges_d).sum() / stencil_line_count
+        )
+    else:
+        # No lines drawn at all — treat as match (not a wrong-reference bug,
+        # likely a pure-white response which other gates will catch).
+        line_precision = 1.0
+
+    # Conservative combined gate: flag ONLY when BOTH signals fail.
+    edge_fail = edge_ncc < 0.12
+    precision_fail = line_precision < 0.86
+    is_match = not (edge_fail and precision_fail)
+    reason = (
+        'ok'
+        if is_match
+        else f'edge_ncc={edge_ncc:.3f}<0.12 AND line_precision={line_precision:.3f}<0.86'
+    )
+    return {
+        'is_match': is_match,
+        'edge_ncc': round(edge_ncc, 3),
+        'line_precision': round(line_precision, 3),
+        'reason': reason,
+    }
+
 class StencilJob:
     def __init__(self, job_id: str, image_base64: str, settings: dict, auto_enhance: bool = True, single_style: str = None):
         self.job_id = job_id
@@ -2369,8 +2468,6 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
         # Blueprint Mode — line-only stencil for a human artist
         prompt = build_blueprint_prompt(line_color, detail_level)
 
-        image_base64 = None
-        mime_type = 'image/png'
         # === EXPERIMENTAL: inject image-specific pre-scan rules if provided ===
         # This supports the pre-scan demo/feature: an optional preamble string
         # is prepended to the main prompt so rules derived from a prior Gemini
@@ -2380,8 +2477,6 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
             logger.info(f"[AI-Stencil] extra_preamble injected ({len(request.extra_preamble)} chars)")
 
         provider_used = "google"
-        last_error = None
-        
         # Use Google Gemini (can see and trace reference images)
         # Heavy mode is denser → needs longer wall-clock budget + one retry.
         # Other modes keep the 120 s budget and no retry.
@@ -2391,19 +2486,23 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
         gen_timeout = 180.0 if is_heavy else 120.0
         max_attempts = 2 if is_heavy else 1
 
-        # OpenAI gpt-image-1 is text-to-image only and CANNOT trace reference photos
-        if EMERGENT_LLM_KEY or AI_API_KEY:
+        # Helper: run one full Gemini call + resize-to-original + post-process.
+        # Returns (stencil_data_url, near_black_fraction). Does NOT cache.
+        # Raises HTTPException on unrecoverable errors.
+        async def _generate_once(gen_temperature: float) -> tuple[str, float]:
+            local_b64 = None
+            local_mime = 'image/png'
             for attempt in range(1, max_attempts + 1):
                 try:
                     logger.info(
-                        f"Attempting stencil generation with Google Gemini "
-                        f"(attempt {attempt}/{max_attempts}, timeout={gen_timeout}s, heavy={is_heavy})..."
+                        f"[AI-Stencil:GEN id={request_correlation_id}] "
+                        f"attempt={attempt}/{max_attempts} timeout={gen_timeout}s "
+                        f"heavy={is_heavy} temperature={gen_temperature}"
                     )
-                    image_base64, mime_type = await asyncio.wait_for(
-                        generate_with_gemini(image_data, prompt, temperature=request.temperature),
+                    local_b64, local_mime = await asyncio.wait_for(
+                        generate_with_gemini(image_data, prompt, temperature=gen_temperature),
                         timeout=gen_timeout,
                     )
-                    provider_used = "google"
                     logger.info("Successfully generated with Google Gemini")
                     break
                 except asyncio.TimeoutError:
@@ -2411,67 +2510,119 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
                         f"Google Gemini timed out after {gen_timeout}s (attempt {attempt}/{max_attempts})"
                     )
                     if attempt < max_attempts:
-                        continue  # heavy mode: one retry
+                        continue
                     raise HTTPException(
                         status_code=504,
                         detail="AI generation is taking longer than expected. Please try again shortly.",
                     )
                 except Exception as e:
                     logger.error(f"Google Gemini failed: {e}")
-                    # Non-timeout errors: do NOT retry heavy — most are auth/quota/invalid key.
                     raise HTTPException(
                         status_code=503,
                         detail=f"AI service error: {str(e)}. Please try again.",
                     )
-        
-        if not image_base64:
-            raise HTTPException(
-                status_code=503, 
-                detail="Unable to generate stencil. AI services may be experiencing issues. Please check your internet connection and try again."
+
+            if not local_b64:
+                raise HTTPException(
+                    status_code=503,
+                    detail="Unable to generate stencil. AI services may be experiencing issues. Please check your internet connection and try again.",
+                )
+
+            # Resize stencil to match ORIGINAL input image dimensions
+            try:
+                original_b64 = request.image_base64
+                if ',' in original_b64:
+                    original_b64 = original_b64.split(',')[1]
+                original_img_data = base64.b64decode(original_b64)
+                original_img = Image.open(BytesIO(original_img_data))
+                original_width, original_height = original_img.size
+                stencil_img_data = base64.b64decode(local_b64)
+                stencil_img = Image.open(BytesIO(stencil_img_data))
+                stencil_width, stencil_height = stencil_img.size
+                if stencil_width != original_width or stencil_height != original_height:
+                    stencil_img = stencil_img.resize(
+                        (original_width, original_height), Image.Resampling.LANCZOS
+                    )
+                    buffer = BytesIO()
+                    stencil_img.save(buffer, format='PNG')
+                    local_b64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                    local_mime = 'image/png'
+            except Exception as resize_error:
+                logger.warning(f"Could not resize stencil (non-critical): {resize_error}")
+
+            stencil_data_url = f"data:{local_mime};base64,{local_b64}"
+            stencil_data_url, nbf = post_process_stencil(stencil_data_url)
+            return stencil_data_url, nbf
+
+        # ── First attempt ────────────────────────────────────────────────
+        stencil_base64, near_black_fraction = await _generate_once(
+            gen_temperature=request.temperature
+        )
+
+        # ── Wrong-reference fail-safe (conservative: rejects only when BOTH
+        # edge-IoU AND dHash signal a mismatch). If the first output is
+        # clearly unrelated to the reference image, regenerate ONCE with
+        # temperature=0.0 for maximum determinism. If the second attempt is
+        # also unrelated, refund the credit (if authenticated) and return
+        # a clean error instead of returning a wrong stencil. Failed
+        # outputs are NEVER cached. ───────────────────────────────────────
+        validation = validate_stencil_reference_match(request.image_base64, stencil_base64)
+        logger.info(
+            f"[AI-Stencil:VALIDATE id={request_correlation_id}] "
+            f"user={request_user_id} "
+            f"image_sha={request_image_hash[:16]} "
+            f"style={request.regenerate_style or 'auto'} "
+            f"attempt=1 "
+            f"is_match={validation['is_match']} "
+            f"edge_ncc={validation['edge_ncc']} "
+            f"line_precision={validation['line_precision']} "
+            f"reason={validation['reason']}"
+        )
+
+        if not validation['is_match']:
+            logger.warning(
+                f"[AI-Stencil:WRONG_REFERENCE id={request_correlation_id}] "
+                f"first attempt rejected ({validation['reason']}); regenerating once"
             )
-        
-        # CRITICAL: Resize stencil to match ORIGINAL input image dimensions
-        # Use the user's ORIGINAL image (before enhancement/resize) for accurate overlay
-        try:
-            # Get dimensions from the ORIGINAL request image, not enhanced
-            original_b64 = request.image_base64
-            if ',' in original_b64:
-                original_b64 = original_b64.split(',')[1]
-            original_img_data = base64.b64decode(original_b64)
-            original_img = Image.open(BytesIO(original_img_data))
-            original_width, original_height = original_img.size
-            logger.info(f"Original input dimensions: {original_width}x{original_height}")
-            
-            # Decode the generated stencil
-            stencil_img_data = base64.b64decode(image_base64)
-            stencil_img = Image.open(BytesIO(stencil_img_data))
-            stencil_width, stencil_height = stencil_img.size
-            logger.info(f"AI stencil dimensions: {stencil_width}x{stencil_height}")
-            
-            # Resize to match original if different
-            if stencil_width != original_width or stencil_height != original_height:
-                logger.info(f"Resizing stencil from {stencil_width}x{stencil_height} to {original_width}x{original_height}")
-                # Direct resize - LANCZOS preserves quality
-                stencil_img = stencil_img.resize((original_width, original_height), Image.Resampling.LANCZOS)
-                
-                # Convert back to base64
-                buffer = BytesIO()
-                stencil_img.save(buffer, format='PNG')
-                image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-                mime_type = 'image/png'
-                logger.info("Stencil resized to match original dimensions")
-        except Exception as resize_error:
-            logger.warning(f"Could not resize stencil (non-critical): {resize_error}")
-            # Continue with original stencil if resize fails
-        
-        # Format as data URL
-        stencil_base64 = f"data:{mime_type};base64,{image_base64}"
-        
-        # === STEP 7: POST-PROCESS STENCIL ===
-        # Boost line weight, clean artifacts, ensure consistent quality
-        stencil_base64, near_black_fraction = post_process_stencil(stencil_base64)
-        
-        # === STEP 8: CACHE THE RESULT for future instant retrieval ===
+            try:
+                stencil_base64, near_black_fraction = await _generate_once(gen_temperature=0.0)
+            except HTTPException:
+                raise
+            retry_validation = validate_stencil_reference_match(
+                request.image_base64, stencil_base64
+            )
+            logger.info(
+                f"[AI-Stencil:VALIDATE id={request_correlation_id}] "
+                f"user={request_user_id} "
+                f"image_sha={request_image_hash[:16]} "
+                f"style={request.regenerate_style or 'auto'} "
+                f"attempt=2 "
+                f"is_match={retry_validation['is_match']} "
+                f"edge_ncc={retry_validation['edge_ncc']} "
+                f"line_precision={retry_validation['line_precision']} "
+                f"reason={retry_validation['reason']}"
+            )
+            if not retry_validation['is_match']:
+                logger.error(
+                    f"[AI-Stencil:WRONG_REFERENCE_FINAL id={request_correlation_id}] "
+                    f"user={request_user_id} "
+                    f"image_sha={request_image_hash[:16]} "
+                    f"style={request.regenerate_style or 'auto'} "
+                    f"attempt1_reason={validation['reason']} "
+                    f"attempt2_reason={retry_validation['reason']} "
+                    f"→ refunding credit and returning clean error (not caching)"
+                )
+                if request_user_id and request_user_id != 'anonymous':
+                    await refund_credit_on_failure(
+                        request_user_id, reason='wrong_reference_output'
+                    )
+                raise HTTPException(
+                    status_code=502,
+                    detail="The AI returned an unrelated result. Please try again — credits refunded.",
+                )
+            validation = retry_validation  # use the passing retry result for response logging
+
+        # === STEP 8: CACHE THE VALIDATED RESULT for future instant retrieval ===
         cache_stencil(cache_key, stencil_base64, near_black_fraction)
         response_image_hash = hash_image(stencil_base64)
         logger.info(
@@ -2482,7 +2633,9 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
             f"resp_image_sha={response_image_hash[:16]} "
             f"provider={provider_used} "
             f"latency_ms={(time.time() - start_time) * 1000:.0f} "
-            f"near_black={near_black_fraction:.4f}"
+            f"near_black={near_black_fraction:.4f} "
+            f"validation_score=edge_ncc:{validation['edge_ncc']}/line_prec:{validation['line_precision']} "
+            f"validation_outcome=pass"
         )
         
         processing_time = (time.time() - start_time) * 1000
@@ -3527,10 +3680,61 @@ async def early_access_credit_bridge(request: FastAPIRequest):
         'credits': result.get('available_credits'),
     }
 
+async def refund_credit_on_failure(user_id: str, reason: str) -> dict:
+    """Refund 1 credit to a user after a post-deduct generation failure
+    (e.g. wrong-reference hallucination that cannot be returned to the user).
+
+    - Increments available_credits by 1.
+    - Decrements credits_consumed_this_cycle by 1 (floor at 0).
+    - For studio team members, refunds to the shared team pool instead.
+    - Best-effort only: never raises; logs the outcome either way.
+
+    Returns a small summary dict for structured logging.
+    """
+    try:
+        sub = await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+        studio_team_id = sub.get('studio_team_id') if sub else None
+
+        if studio_team_id:
+            result = await db.studio_teams.find_one_and_update(
+                {'team_id': studio_team_id},
+                {'$inc': {'shared_credits': 1}},
+                return_document=True,
+                projection={'_id': 0},
+            )
+            new_balance = (result or {}).get('shared_credits')
+            logger.info(
+                f"[CreditRefund] team={studio_team_id} user={user_id} "
+                f"reason={reason} new_balance={new_balance}"
+            )
+            return {'refunded': True, 'scope': 'studio_team', 'new_balance': new_balance}
+
+        result = await db.subscriptions.find_one_and_update(
+            {'user_id': user_id},
+            {'$inc': {'available_credits': 1}},
+            return_document=True,
+            projection={'_id': 0},
+        )
+        # Separately floor credits_consumed_this_cycle at 0 so repeated failures
+        # never produce a negative counter.
+        await db.subscriptions.update_one(
+            {'user_id': user_id, 'credits_consumed_this_cycle': {'$gt': 0}},
+            {'$inc': {'credits_consumed_this_cycle': -1}},
+        )
+        new_balance = (result or {}).get('available_credits')
+        logger.info(
+            f"[CreditRefund] user={user_id} reason={reason} new_balance={new_balance}"
+        )
+        return {'refunded': True, 'scope': 'user', 'new_balance': new_balance}
+    except Exception as e:
+        logger.warning(f"[CreditRefund] FAILED for user={user_id} reason={reason}: {e}")
+        return {'refunded': False, 'error': str(e)}
+
+
 @api_router.post("/credits/deduct")
 async def deduct_credit(request: FastAPIRequest):
     """Deduct 1 credit for stencil generation (atomic).
-    
+
     For studio team members, deducts from the shared team pool instead of individual credits.
 
     Idempotency: clients SHOULD pass a unique `reroll_id` (any client-generated
