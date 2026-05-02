@@ -347,10 +347,91 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
     divergenceShownRef.current = false;
     setDivergenceToast(null);
     try {
-      console.log('[RC:Purchase] Purchasing package:', selectedPackage.identifier, '→ product:', selectedPackage.product.identifier);
-      const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
+      const tappedProductId = selectedPackage.product.identifier;
 
-      logEntitlements(customerInfo, 'Purchase');
+      // ─── STEP 1: PRE-PURCHASE entitlement sync ────────────────────────
+      // Pull the latest entitlement state from the App Store BEFORE we
+      // attempt any purchase. This catches users who already have an
+      // active subscription that local RC cache hasn't picked up yet
+      // (e.g. just restored on another device, Family Sharing, sandbox
+      // residue) — without this, calling purchasePackage on a user who
+      // already has an active sub can result in TWO active subscriptions
+      // running in parallel.
+      console.log('[RC:Purchase:PRE] tapped=', tappedProductId, '— forcing entitlement sync before purchase...');
+      let preCustomerInfo: CustomerInfo;
+      try {
+        await Purchases.syncPurchases();
+        preCustomerInfo = await Purchases.getCustomerInfo();
+      } catch (preErr) {
+        console.warn('[RC:Purchase:PRE] syncPurchases failed, falling back to getCustomerInfo:', preErr);
+        preCustomerInfo = await Purchases.getCustomerInfo();
+      }
+      logEntitlements(preCustomerInfo, 'Purchase:PRE');
+
+      // ─── STEP 2: BLOCK duplicate purchases ────────────────────────────
+      // If the user already has an active entitlement, do NOT call
+      // purchasePackage — even when both products share the same Apple
+      // subscription group, edge cases (mismatched groups, prior failed
+      // upgrade, family-shared subs, restored-then-purchased) can cause
+      // Apple to bill a SECOND subscription instead of upgrading. Route
+      // the user to Apple's Manage Subscriptions UI, which is the
+      // canonical place to upgrade/downgrade safely.
+      const activeEntitlementPre = preCustomerInfo.entitlements.active[ENTITLEMENT_ID];
+      if (activeEntitlementPre) {
+        const activeProductId = activeEntitlementPre.productIdentifier || '';
+        const isSameTier = activeProductId === tappedProductId;
+        const activeTierLabel = tierLabelForProduct(activeProductId) || 'a paid plan';
+        console.warn(
+          '[RC:Purchase:PRE] BLOCKED — active subscription already present. active=',
+          activeProductId,
+          'tapped=', tappedProductId,
+          'sameTier=', isSameTier,
+        );
+        Alert.alert(
+          isSameTier ? 'Already Subscribed' : 'Manage Your Subscription',
+          isSameTier
+            ? `You're already on ${activeTierLabel}. To make changes to your plan, manage your subscription in the App Store.`
+            : `You're already subscribed to ${activeTierLabel}. To avoid being charged for two subscriptions at once, please switch plans through the App Store.`,
+          [
+            {
+              text: 'Open App Store',
+              onPress: () => {
+                Linking.openURL('https://apps.apple.com/account/subscriptions').catch((linkErr) => {
+                  console.error('[RC:Purchase:PRE] Failed to open Manage Subscriptions URL:', linkErr);
+                });
+              },
+            },
+            { text: 'Cancel', style: 'cancel' },
+          ],
+        );
+        setPurchasing(false);
+        return;
+      }
+
+      // ─── STEP 3: Run the purchase ─────────────────────────────────────
+      console.log('[RC:Purchase] Purchasing package:', selectedPackage.identifier, '→ product:', tappedProductId);
+      const { customerInfo: postPurchaseInfo } = await Purchases.purchasePackage(selectedPackage);
+
+      // ─── STEP 4: POST-PURCHASE entitlement sync ───────────────────────
+      // Force a fresh sync from Apple → RevenueCat → back to client so
+      // the customerInfo we use downstream (and that gets pushed to our
+      // backend) reflects the SETTLED post-purchase state, not just the
+      // local StoreKit response (which can be stale by ~1s in sandbox
+      // and occasionally in prod).
+      console.log('[RC:Purchase:POST] purchasePackage resolved — syncing entitlements again...');
+      let customerInfo: CustomerInfo = postPurchaseInfo;
+      try {
+        await Purchases.syncPurchases();
+        customerInfo = await Purchases.getCustomerInfo();
+        console.log('[RC:Purchase:POST] entitlement sync complete');
+      } catch (postSyncErr) {
+        console.warn(
+          '[RC:Purchase:POST] post-purchase syncPurchases failed, using purchase response as fallback:',
+          postSyncErr,
+        );
+      }
+
+      logEntitlements(customerInfo, 'Purchase:POST');
 
       if (typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
         if (referralCode.trim()) {
@@ -464,7 +545,17 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
     setRestoring(true);
     try {
       console.log('[RC:Restore] Starting restore...');
-      const customerInfo: CustomerInfo = await Purchases.restorePurchases();
+      // Restore implicitly fetches latest entitlements from Apple. We then
+      // also force a syncPurchases + getCustomerInfo so any inflight Apple
+      // → RC propagation lag is closed before we read state.
+      const restoredInfo: CustomerInfo = await Purchases.restorePurchases();
+      let customerInfo: CustomerInfo = restoredInfo;
+      try {
+        await Purchases.syncPurchases();
+        customerInfo = await Purchases.getCustomerInfo();
+      } catch (postRestoreSyncErr) {
+        console.warn('[RC:Restore] post-restore sync failed, using restorePurchases response:', postRestoreSyncErr);
+      }
       logEntitlements(customerInfo, 'Restore');
 
       if (typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
