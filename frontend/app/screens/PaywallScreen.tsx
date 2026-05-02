@@ -369,21 +369,24 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       logEntitlements(preCustomerInfo, 'Purchase:PRE');
 
       // ─── STEP 2: BLOCK duplicate purchases ────────────────────────────
-      // If the user already has an active entitlement, do NOT call
+      // If the user already has ANY active subscription, do NOT call
       // purchasePackage — even when both products share the same Apple
       // subscription group, edge cases (mismatched groups, prior failed
-      // upgrade, family-shared subs, restored-then-purchased) can cause
-      // Apple to bill a SECOND subscription instead of upgrading. Route
-      // the user to Apple's Manage Subscriptions UI, which is the
-      // canonical place to upgrade/downgrade safely.
-      const activeEntitlementPre = preCustomerInfo.entitlements.active[ENTITLEMENT_ID];
-      if (activeEntitlementPre) {
-        const activeProductId = activeEntitlementPre.productIdentifier || '';
+      // upgrade, family-shared subs, restored-then-purchased, RC
+      // entitlement mapping not yet propagated for a new product) can
+      // cause Apple to bill a SECOND subscription instead of upgrading.
+      // We use customerInfo.activeSubscriptions (raw Apple/RC product list)
+      // rather than entitlements.active so a sub that hasn't been mapped
+      // to our configured entitlement on RC still counts as "already
+      // subscribed" and gets routed to App Store Manage Subscriptions.
+      const activeProductIds = preCustomerInfo.activeSubscriptions || [];
+      if (activeProductIds.length > 0) {
+        const activeProductId = activeProductIds[0];
         const isSameTier = activeProductId === tappedProductId;
         const activeTierLabel = tierLabelForProduct(activeProductId) || 'a paid plan';
         console.warn(
-          '[RC:Purchase:PRE] BLOCKED — active subscription already present. active=',
-          activeProductId,
+          '[RC:Purchase:PRE] BLOCKED — active subscription(s) already present. activeSubscriptions=',
+          JSON.stringify(activeProductIds),
           'tapped=', tappedProductId,
           'sameTier=', isSameTier,
         );
