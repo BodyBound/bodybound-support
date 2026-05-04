@@ -178,8 +178,21 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
   // never blocks the user flow. Lets us debug paywall RC failures from
   // production server logs without device console access.
   const beaconPaywallEvent = (
-    event: 'rc_success' | 'rc_failure' | 'rc_retry_attempt' | 'rc_retry_success' | 'rc_retry_failure',
-    extra: { reason?: string | null; source?: string; count?: number } = {},
+    event:
+      | 'rc_success'
+      | 'rc_failure'
+      | 'rc_retry_attempt'
+      | 'rc_retry_success'
+      | 'rc_retry_failure'
+      | 'purchase_blocked'
+      | 'purchase_succeeded'
+      | 'sync_result',
+    extra: {
+      reason?: string | null;
+      source?: string;
+      count?: number;
+      data?: Record<string, unknown>;
+    } = {},
   ) => {
     try {
       fetch(`${API_URL}/api/admin/log-paywall-event`, {
@@ -190,6 +203,7 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
           reason: extra.reason || null,
           source: extra.source || null,
           count: extra.count ?? null,
+          data: extra.data ?? null,
           app_version: appVersion,
         }),
       }).catch(() => {});
@@ -357,7 +371,11 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       // residue) — without this, calling purchasePackage on a user who
       // already has an active sub can result in TWO active subscriptions
       // running in parallel.
-      console.log('[RC:Purchase:PRE] tapped=', tappedProductId, '— forcing entitlement sync before purchase...');
+      console.log(
+        '[RC:Purchase:PRE] activeSubscriptions=[…unknown until sync] tappedProductId=',
+        tappedProductId,
+        '— forcing entitlement sync before purchase...',
+      );
       let preCustomerInfo: CustomerInfo;
       try {
         await Purchases.syncPurchases();
@@ -366,7 +384,27 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
         console.warn('[RC:Purchase:PRE] syncPurchases failed, falling back to getCustomerInfo:', preErr);
         preCustomerInfo = await Purchases.getCustomerInfo();
       }
+      const preActiveSubs = preCustomerInfo.activeSubscriptions || [];
+      const preActiveEntitlements = Object.keys(preCustomerInfo.entitlements.active || {});
+      console.log(
+        '[RC:SYNC_RESULT] context=Purchase:PRE activeSubscriptions=',
+        JSON.stringify(preActiveSubs),
+        'entitlements=', JSON.stringify(preActiveEntitlements),
+      );
+      console.log(
+        '[RC:Purchase:PRE] activeSubscriptions=',
+        JSON.stringify(preActiveSubs),
+        'tappedProductId=', tappedProductId,
+      );
       logEntitlements(preCustomerInfo, 'Purchase:PRE');
+      beaconPaywallEvent('sync_result', {
+        source: 'purchase_pre',
+        data: {
+          active_subscriptions: preActiveSubs,
+          active_entitlements: preActiveEntitlements,
+          tapped_product_id: tappedProductId,
+        },
+      });
 
       // ─── STEP 2: BLOCK duplicate purchases ────────────────────────────
       // If the user already has ANY active subscription, do NOT call
@@ -379,28 +417,35 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       // rather than entitlements.active so a sub that hasn't been mapped
       // to our configured entitlement on RC still counts as "already
       // subscribed" and gets routed to App Store Manage Subscriptions.
-      const activeProductIds = preCustomerInfo.activeSubscriptions || [];
+      const activeProductIds = preActiveSubs;
       if (activeProductIds.length > 0) {
         const activeProductId = activeProductIds[0];
         const isSameTier = activeProductId === tappedProductId;
-        const activeTierLabel = tierLabelForProduct(activeProductId) || 'a paid plan';
         console.warn(
-          '[RC:Purchase:PRE] BLOCKED — active subscription(s) already present. activeSubscriptions=',
+          '[RC:BLOCK_PURCHASE] reason=active_subscription productIds=',
           JSON.stringify(activeProductIds),
-          'tapped=', tappedProductId,
+          'tappedProductId=', tappedProductId,
           'sameTier=', isSameTier,
         );
+        beaconPaywallEvent('purchase_blocked', {
+          reason: 'active_subscription',
+          source: isSameTier ? 'same_tier' : 'different_tier',
+          data: {
+            active_subscriptions: activeProductIds,
+            tapped_product_id: tappedProductId,
+            same_tier: isSameTier,
+            entitlements: preActiveEntitlements,
+          },
+        });
         Alert.alert(
-          isSameTier ? 'Already Subscribed' : 'Manage Your Subscription',
-          isSameTier
-            ? `You're already on ${activeTierLabel}. To make changes to your plan, manage your subscription in the App Store.`
-            : `You're already subscribed to ${activeTierLabel}. To avoid being charged for two subscriptions at once, please switch plans through the App Store.`,
+          'Active Subscription Detected',
+          'You already have an active subscription. Manage or upgrade your plan in Apple Settings.',
           [
             {
               text: 'Open App Store',
               onPress: () => {
                 Linking.openURL('https://apps.apple.com/account/subscriptions').catch((linkErr) => {
-                  console.error('[RC:Purchase:PRE] Failed to open Manage Subscriptions URL:', linkErr);
+                  console.error('[RC:BLOCK_PURCHASE] Failed to open Manage Subscriptions URL:', linkErr);
                 });
               },
             },
@@ -434,7 +479,32 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
         );
       }
 
+      const postActiveSubs = customerInfo.activeSubscriptions || [];
+      const postActiveEntitlements = Object.keys(customerInfo.entitlements.active || {});
+      console.log(
+        '[RC:SYNC_RESULT] context=Purchase:POST activeSubscriptions=',
+        JSON.stringify(postActiveSubs),
+        'entitlements=', JSON.stringify(postActiveEntitlements),
+      );
       logEntitlements(customerInfo, 'Purchase:POST');
+      beaconPaywallEvent('sync_result', {
+        source: 'purchase_post',
+        data: {
+          active_subscriptions: postActiveSubs,
+          active_entitlements: postActiveEntitlements,
+          tapped_product_id: tappedProductId,
+        },
+      });
+      if (postActiveEntitlements.length > 0) {
+        beaconPaywallEvent('purchase_succeeded', {
+          source: 'paywall_screen',
+          data: {
+            active_subscriptions: postActiveSubs,
+            active_entitlements: postActiveEntitlements,
+            tapped_product_id: tappedProductId,
+          },
+        });
+      }
 
       if (typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
         if (referralCode.trim()) {
@@ -559,7 +629,21 @@ export function PaywallScreen({ onPurchaseSuccess, onDismiss, onSignOut, require
       } catch (postRestoreSyncErr) {
         console.warn('[RC:Restore] post-restore sync failed, using restorePurchases response:', postRestoreSyncErr);
       }
+      const restoreActiveSubs = customerInfo.activeSubscriptions || [];
+      const restoreActiveEntitlements = Object.keys(customerInfo.entitlements.active || {});
+      console.log(
+        '[RC:SYNC_RESULT] context=Restore activeSubscriptions=',
+        JSON.stringify(restoreActiveSubs),
+        'entitlements=', JSON.stringify(restoreActiveEntitlements),
+      );
       logEntitlements(customerInfo, 'Restore');
+      beaconPaywallEvent('sync_result', {
+        source: 'restore',
+        data: {
+          active_subscriptions: restoreActiveSubs,
+          active_entitlements: restoreActiveEntitlements,
+        },
+      });
 
       if (typeof customerInfo.entitlements.active[ENTITLEMENT_ID] !== 'undefined') {
         // Sync restored entitlement to backend. Find the active product ID

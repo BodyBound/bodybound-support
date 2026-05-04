@@ -4248,7 +4248,15 @@ async def log_paywall_event(payload: dict, request: FastAPIRequest):
 
     No auth required — write-only, low-volume, payload-validated.
     """
-    valid_events = {'rc_success', 'rc_failure', 'rc_retry_attempt', 'rc_retry_success', 'rc_retry_failure'}
+    valid_events = {
+        'rc_success', 'rc_failure', 'rc_retry_attempt', 'rc_retry_success', 'rc_retry_failure',
+        # Duplicate-subscription guard telemetry (post-incident, May 2026).
+        # Lets us prove the frontend guard is firing in production and
+        # measure the volume of would-be double-charges that were prevented.
+        'purchase_blocked',     # frontend rejected before purchasePackage()
+        'purchase_succeeded',   # purchasePackage() resolved with active entitlement
+        'sync_result',          # post-purchase / post-restore syncPurchases+getCustomerInfo result
+    }
     event = (payload.get('event') or '').strip()
     if event not in valid_events:
         raise HTTPException(status_code=400, detail=f'event must be one of {sorted(valid_events)}')
@@ -4265,9 +4273,23 @@ async def log_paywall_event(payload: dict, request: FastAPIRequest):
 
     user_agent = (request.headers.get('user-agent') or '')[:200]
 
+    # Optional structured payload — currently used by purchase_blocked /
+    # purchase_succeeded / sync_result events to record activeSubscriptions
+    # and tappedProductId without bloating the top-level schema.
+    extra_data = payload.get('data')
+    if extra_data is not None:
+        try:
+            # Hard cap ~2 KB once serialized so a malicious payload can't blow
+            # up the rolling buffer.
+            import json as _json
+            if len(_json.dumps(extra_data)) > 2048:
+                extra_data = {'truncated': True}
+        except Exception:
+            extra_data = None
+
     logger.info(
         f'[PaywallTelemetry] event={event} reason="{reason}" source={source} '
-        f'count={count} app_version={app_version} ua="{user_agent}"'
+        f'count={count} app_version={app_version} ua="{user_agent}" data={extra_data}'
     )
     # Persist last 200 events for admin inspection — same rolling-buffer
     # pattern as unmatched_webhooks. Lightweight, non-blocking.
@@ -4279,6 +4301,7 @@ async def log_paywall_event(payload: dict, request: FastAPIRequest):
             'count': count,
             'app_version': app_version,
             'user_agent': user_agent,
+            'data': extra_data,
             'timestamp': datetime.now(timezone.utc).isoformat(),
         })
         total = await db.paywall_telemetry.count_documents({})
@@ -4300,6 +4323,205 @@ async def admin_paywall_telemetry(request: FastAPIRequest, limit: int = 50):
     limit = max(1, min(int(limit), 200))
     rows = await db.paywall_telemetry.find({}, {'_id': 0}).sort('timestamp', -1).to_list(length=limit)
     return {'count': len(rows), 'events': rows}
+
+
+@api_router.get("/admin/duplicate-sub-audit")
+async def admin_duplicate_sub_audit(request: FastAPIRequest, days: int = 90):
+    """Backend audit for double-billing root-cause confirmation (May 2026).
+
+    Surfaces any user with:
+      - Multiple INITIAL_PURCHASE events in the lookback window
+      - Mismatched subscriptions.tier vs subscriptions.last_product_id
+      - Duplicate subscription docs (should be impossible due to unique index,
+        but we double-check on demand)
+      - PRODUCT_CHANGE event count per user (to confirm upgrades route through
+        the expected webhook event type)
+
+    Read-only. Admin auth required.
+    """
+    await verify_admin(request.headers.get('authorization'))
+    days = max(1, min(int(days), 365))
+    since_iso = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
+    # ── Q1: multiple INITIAL_PURCHASE events for the same user ─────────
+    pipeline = [
+        {'$match': {'event_type': 'INITIAL_PURCHASE', 'created_at': {'$gte': since_iso}}},
+        {'$group': {
+            '_id': '$user_id',
+            'count': {'$sum': 1},
+            'product_ids': {'$addToSet': '$product_id'},
+            'event_ids': {'$push': '$event_id'},
+            'first_at': {'$min': '$created_at'},
+            'last_at': {'$max': '$created_at'},
+        }},
+        {'$match': {'count': {'$gt': 1}}},
+        {'$sort': {'count': -1}},
+        {'$limit': 50},
+    ]
+    multiple_initial = []
+    try:
+        async for doc in db.revenuecat_webhook_events.aggregate(pipeline):
+            multiple_initial.append({
+                'user_id': doc.get('_id'),
+                'initial_purchase_count': doc.get('count'),
+                'product_ids': doc.get('product_ids', []),
+                'first_at': doc.get('first_at'),
+                'last_at': doc.get('last_at'),
+            })
+    except Exception as e:
+        logger.warning(f'[DupSubAudit] aggregate failed: {e}')
+
+    # ── Q2: PRODUCT_CHANGE event coverage per user ─────────────────────
+    pc_pipeline = [
+        {'$match': {'event_type': 'PRODUCT_CHANGE', 'created_at': {'$gte': since_iso}}},
+        {'$group': {
+            '_id': '$user_id',
+            'count': {'$sum': 1},
+            'product_ids': {'$addToSet': '$product_id'},
+        }},
+        {'$sort': {'count': -1}},
+        {'$limit': 50},
+    ]
+    product_changes = []
+    async for doc in db.revenuecat_webhook_events.aggregate(pc_pipeline):
+        product_changes.append({
+            'user_id': doc.get('_id'),
+            'product_change_count': doc.get('count'),
+            'product_ids': doc.get('product_ids', []),
+        })
+
+    # ── Q3: subscriptions tier ↔ last_product_id mismatch ───────────────
+    mismatches = []
+    async for sub in db.subscriptions.find(
+        {'tier': {'$in': ['walk-in', 'booked-out', 'the-shop', 'the-shop-member']}},
+        {'_id': 0, 'user_id': 1, 'tier': 1, 'last_product_id': 1, 'available_credits': 1, 'last_event': 1, 'last_applied_at': 1},
+    ):
+        last_pid = sub.get('last_product_id')
+        if not last_pid:
+            continue
+        expected = PRODUCT_CREDIT_MAP.get(last_pid, {}).get('tier')
+        if expected and expected != sub.get('tier'):
+            mismatches.append({
+                'user_id': sub.get('user_id'),
+                'subscription_tier': sub.get('tier'),
+                'last_product_id': last_pid,
+                'product_id_implies_tier': expected,
+                'last_event': sub.get('last_event'),
+                'last_applied_at': sub.get('last_applied_at'),
+            })
+
+    # ── Q4: duplicate subscription docs (should be impossible) ─────────
+    dup_pipeline = [
+        {'$group': {'_id': '$user_id', 'count': {'$sum': 1}}},
+        {'$match': {'count': {'$gt': 1}}},
+        {'$limit': 20},
+    ]
+    duplicate_subs = []
+    async for doc in db.subscriptions.aggregate(dup_pipeline):
+        duplicate_subs.append({'user_id': doc.get('_id'), 'doc_count': doc.get('count')})
+
+    # ── Q5: subs with > 1 active subscription on RevenueCat (best-effort
+    # local read — we can only compare what's been synced via FRONTEND_SYNC) ─
+    multi_active = []
+    async for sub in db.subscriptions.find(
+        {'rc_active_subscriptions': {'$exists': True, '$ne': []}},
+        {'_id': 0, 'user_id': 1, 'tier': 1, 'rc_active_subscriptions': 1, 'last_applied_at': 1},
+    ):
+        rc_subs = sub.get('rc_active_subscriptions') or []
+        if len(rc_subs) > 1:
+            multi_active.append({
+                'user_id': sub.get('user_id'),
+                'subscription_tier': sub.get('tier'),
+                'rc_active_subscriptions': rc_subs,
+                'last_applied_at': sub.get('last_applied_at'),
+            })
+
+    return {
+        'generated_at': datetime.now(timezone.utc).isoformat(),
+        'lookback_days': days,
+        'multiple_initial_purchase_users': {
+            'count': len(multiple_initial),
+            'sample': multiple_initial[:25],
+        },
+        'product_change_events': {
+            'distinct_users': len(product_changes),
+            'sample': product_changes[:25],
+        },
+        'tier_vs_product_id_mismatches': {
+            'count': len(mismatches),
+            'sample': mismatches[:25],
+        },
+        'duplicate_subscription_docs': {
+            'count': len(duplicate_subs),
+            'sample': duplicate_subs,
+        },
+        'users_with_multiple_active_rc_subs': {
+            'count': len(multi_active),
+            'sample': multi_active[:25],
+        },
+        'notes': [
+            'multiple_initial_purchase = same user_id seeing INITIAL_PURCHASE more than once',
+            'PRODUCT_CHANGE = how RC notifies us of an upgrade/downgrade (must be > 0 for any user who has changed tiers)',
+            'tier_vs_product_id_mismatch = subscription doc states tier X but last applied product implies tier Y',
+            'duplicate_subscription_docs SHOULD be 0 due to unique index on subscriptions.user_id',
+            'users_with_multiple_active_rc_subs = users where the last reported activeSubscriptions array contained more than one product_id (the exact double-billing signature)',
+        ],
+    }
+
+
+@api_router.get("/admin/purchase-guard-metrics")
+async def admin_purchase_guard_metrics(request: FastAPIRequest):
+    """Counters for the duplicate-subscription guard (post-incident, May 2026).
+
+    Reports how many purchase attempts the frontend guard has BLOCKED vs
+    how many purchases SUCCEEDED across the rolling 200-event telemetry
+    buffer + last 7 / 30 day windows. Use this to confirm the guard is
+    actively preventing duplicate purchases in production.
+    """
+    await verify_admin(request.headers.get('authorization'))
+    now = datetime.now(timezone.utc)
+    seven_days_ago = (now - timedelta(days=7)).isoformat()
+    thirty_days_ago = (now - timedelta(days=30)).isoformat()
+
+    async def _count(event_name: str, since_iso: Optional[str] = None) -> int:
+        q: dict = {'event': event_name}
+        if since_iso:
+            q['timestamp'] = {'$gte': since_iso}
+        return await db.paywall_telemetry.count_documents(q)
+
+    blocked_total = await _count('purchase_blocked')
+    blocked_7d = await _count('purchase_blocked', seven_days_ago)
+    blocked_30d = await _count('purchase_blocked', thirty_days_ago)
+    succeeded_total = await _count('purchase_succeeded')
+    succeeded_7d = await _count('purchase_succeeded', seven_days_ago)
+    succeeded_30d = await _count('purchase_succeeded', thirty_days_ago)
+    sync_total = await _count('sync_result')
+
+    # Last 10 blocked events with their data for incident triage.
+    recent_blocks = await db.paywall_telemetry.find(
+        {'event': 'purchase_blocked'}, {'_id': 0}
+    ).sort('timestamp', -1).to_list(length=10)
+
+    return {
+        'generated_at': now.isoformat(),
+        'window': 'rolling 200-event buffer',
+        'counts': {
+            'purchase_blocked_total': blocked_total,
+            'purchase_blocked_7d': blocked_7d,
+            'purchase_blocked_30d': blocked_30d,
+            'purchase_succeeded_total': succeeded_total,
+            'purchase_succeeded_7d': succeeded_7d,
+            'purchase_succeeded_30d': succeeded_30d,
+            'sync_result_total': sync_total,
+        },
+        'recent_blocked_purchases': recent_blocks,
+        'notes': [
+            'purchase_blocked = frontend guard rejected before purchasePackage()',
+            'purchase_succeeded = purchasePackage() resolved with active entitlement',
+            'sync_result = post-purchase / post-restore syncPurchases+getCustomerInfo',
+            'Telemetry buffer is rolling — older events drop after 200 entries',
+        ],
+    }
 
 
 @api_router.get("/admin/bypass-user-spotcheck")
@@ -5457,11 +5679,25 @@ async def revenuecat_webhook(request: FastAPIRequest):
     # cycle — same class of accidental "credit refill" we just patched on
     # FRONTEND_SYNC. Track each unique event.id and skip on replay.
     event_id = event.get('id', '') or body.get('id', '')
+    # Pre-extract identifiers so we can persist them to the dedup/audit log
+    # below — this lets /api/admin/duplicate-sub-audit surface multiple
+    # INITIAL_PURCHASE events and PRODUCT_CHANGE coverage per user.
+    raw_user_id_for_log = event.get('app_user_id', '')
+    aliases_for_log = event.get('aliases', [])
+    product_id_for_log = event.get('product_id', '')
+    user_id_for_log = ''
+    for alias in (aliases_for_log + [raw_user_id_for_log]):
+        if isinstance(alias, str) and alias.startswith('user_'):
+            user_id_for_log = alias
+            break
     if event_id:
         try:
             await db.revenuecat_webhook_events.insert_one({
                 '_id': event_id,
                 'event_type': event_type,
+                'user_id': user_id_for_log or None,
+                'app_user_id': raw_user_id_for_log or None,
+                'product_id': product_id_for_log or None,
                 'created_at': datetime.now(timezone.utc),
             })
         except DuplicateKeyError:
