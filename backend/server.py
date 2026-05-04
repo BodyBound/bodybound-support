@@ -6749,6 +6749,112 @@ async def brand_asset(filename: str):
 
 FALLBACK_CREDITS = 15
 
+@api_router.get("/admin-tool/bypass-dormancy")
+async def admin_bypass_dormancy(request: FastAPIRequest):
+    """Per-bucket dormancy breakdown for paywall_bypass users.
+    Returns counts grouped by days-since-last-login and account creation age,
+    plus a 'truly_dormant' count = (>= 60 days since login OR never logged in)
+    AND zero generations this cycle.
+    """
+    # Reuse existing admin auth
+    auth = request.headers.get('authorization', '')
+    token = auth.replace('Bearer ', '') if auth else ''
+    if not token:
+        raise HTTPException(status_code=401, detail='Missing authorization')
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=['HS256'])
+        if payload.get('role') != 'admin':
+            raise HTTPException(status_code=403, detail='Admin only')
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=401, detail='Invalid token')
+
+    now = datetime.now(timezone.utc)
+    bypass_subs = await db.subscriptions.find(
+        {'tier': 'paywall_bypass'},
+        {'_id': 0, 'user_id': 1, 'available_credits': 1, 'credits_consumed_this_cycle': 1},
+    ).to_list(None)
+    user_ids = [s['user_id'] for s in bypass_subs]
+    users = await db.users.find(
+        {'user_id': {'$in': user_ids}},
+        {'_id': 0, 'user_id': 1, 'email': 1, 'created_at': 1, 'last_login': 1},
+    ).to_list(None)
+    by_id = {u['user_id']: u for u in users}
+
+    def _days_ago(iso_str: Optional[str]) -> Optional[int]:
+        if not iso_str:
+            return None
+        try:
+            if isinstance(iso_str, datetime):
+                dt = iso_str if iso_str.tzinfo else iso_str.replace(tzinfo=timezone.utc)
+            else:
+                dt = datetime.fromisoformat(str(iso_str).replace('Z', '+00:00'))
+            return (now - dt).days
+        except Exception:
+            return None
+
+    login_buckets = {'0-7d': 0, '8-30d': 0, '31-60d': 0, '61-90d': 0, '91-180d': 0, '180d+': 0, 'never_logged_in': 0}
+    create_buckets = {'0-7d': 0, '8-30d': 0, '31-60d': 0, '61-90d': 0, '91d+': 0, 'unknown': 0}
+    consumed_any = 0
+    no_consumption = 0
+    truly_dormant = 0
+
+    for s in bypass_subs:
+        consumed = s.get('credits_consumed_this_cycle', 0) or 0
+        if consumed > 0:
+            consumed_any += 1
+        else:
+            no_consumption += 1
+        u = by_id.get(s['user_id']) or {}
+        d_login = _days_ago(u.get('last_login'))
+        d_create = _days_ago(u.get('created_at'))
+
+        if d_login is None:
+            login_buckets['never_logged_in'] += 1
+        elif d_login <= 7:
+            login_buckets['0-7d'] += 1
+        elif d_login <= 30:
+            login_buckets['8-30d'] += 1
+        elif d_login <= 60:
+            login_buckets['31-60d'] += 1
+        elif d_login <= 90:
+            login_buckets['61-90d'] += 1
+        elif d_login <= 180:
+            login_buckets['91-180d'] += 1
+        else:
+            login_buckets['180d+'] += 1
+
+        if d_create is None:
+            create_buckets['unknown'] += 1
+        elif d_create <= 7:
+            create_buckets['0-7d'] += 1
+        elif d_create <= 30:
+            create_buckets['8-30d'] += 1
+        elif d_create <= 60:
+            create_buckets['31-60d'] += 1
+        elif d_create <= 90:
+            create_buckets['61-90d'] += 1
+        else:
+            create_buckets['91d+'] += 1
+
+        if consumed == 0 and (d_login is None or d_login > 60):
+            truly_dormant += 1
+
+    return {
+        'generated_at': now.isoformat(),
+        'total_bypass_users': len(bypass_subs),
+        'last_login_buckets': login_buckets,
+        'account_age_buckets': create_buckets,
+        'generation_history': {
+            'ever_generated': consumed_any,
+            'never_generated': no_consumption,
+        },
+        'truly_dormant_count': truly_dormant,
+        'truly_dormant_definition': '60+ days since login (or never logged in) AND zero generations this cycle',
+    }
+
+
 @api_router.post("/auth/fallback-credits")
 async def grant_fallback_credits(request: FastAPIRequest):
     """One-time fallback credits when paywall offerings fail to load."""
