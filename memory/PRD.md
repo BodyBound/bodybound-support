@@ -217,8 +217,24 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 - **Send Reminder button** on ReferralDashboard — native share sheet with prewritten "14-day reminder" copy, shown only when `pending_referrals > 0`.
 - Per-style stencil history navigation arrows moved from below the stencil image to inline beneath each style button (Light / Medium / Heavy). Each button owns its own `◀ n/N ▶` row; tapping arrows switches `selectedVersion`.
 - New styles added in `mainStyles.ts`: `styleButtonColumn`, `styleHistoryRow`, `styleHistoryArrow`, `styleHistoryArrowText`, `styleHistoryCounter`.
+- **Wrong-Reference AI Failsafe (Apr 29, 2026 — shipped & Apple-approved May 2)** — `/api/ai-stencil` now validates every Gemini output against the input photo before returning.
+  - New helper `validate_stencil_reference_match(input_b64, output_b64)` in `backend/server.py`. Two-signal AND gate (conservative, no false rejections): edge-NCC < 0.12 AND line_precision < 0.86. Calibrated on 19 known-good/known-mismatch reference pairs (19/19 expectations met).
+  - Generation flow: generate → validate → on fail regenerate once at temperature=0 → validate again → on second fail call `refund_credit_on_failure` and return HTTP 502 "The AI returned an unrelated result. Please try again — credits refunded."
+  - **Failed outputs are never cached.** Cache key already = SHA256(full base64 + style); confirmed correct.
+  - New helper `refund_credit_on_failure(user_id, reason)` — atomic refund, handles studio-team pool too, never raises.
+  - Structured logging: every REQ / VALIDATE / RESP / WRONG_REFERENCE / WRONG_REFERENCE_FINAL / CreditRefund line includes correlation `id`, `user`, `image_sha`, `style`, `edge_ncc`, `line_precision`, outcome.
+  - Test suite: `backend/tests/test_wrong_reference_validator.py` (19/19 pass).
+- **Duplicate Subscription Failsafe (May 2, 2026 — shipped & Apple-approved)** — `app/screens/PaywallScreen.tsx` now blocks any in-app purchase when an active subscription exists.
+  - Pre-purchase: `Purchases.syncPurchases()` → `Purchases.getCustomerInfo()` → if `customerInfo.activeSubscriptions.length > 0`, BLOCK and route to App Store "Manage Subscriptions" deep-link (`https://apps.apple.com/account/subscriptions`). Distinguishes same-tier ("Already Subscribed") vs different-tier ("Manage Your Subscription") messaging.
+  - Post-purchase: `Purchases.syncPurchases()` → `Purchases.getCustomerInfo()` re-fetched as authoritative source for backend `/api/subscription/sync`. Fallback to `purchasePackage` response if explicit sync throws.
+  - Same post-restore sync added to `handleRestore`.
+  - Logging: `[RC:Purchase:PRE]`, `[RC:Purchase:POST]`, `[RC:Restore]` lines include tapped product, active product list, sameTier flag.
+  - Sweep audit: `purchasePackage` is the single purchase entry point; `restorePurchases` (3 sites: PaywallScreen, LowCreditModal, SettingsScreen) are inherently safe (re-apply, never charge).
+- **GitHub Actions cron pre-flight health check (May 1, 2026 — Apple-approved)** — `.github/workflows/monthly_refresh.yml` now performs `GET ${BACKEND_URL}/api/health` and validates `"status":"healthy"` body before calling `/api/tasks/refresh-credits`. Catches any future BACKEND_URL drift at the edge with a clear "BACKEND_URL is not pointing at the production FastAPI backend" error. Verified green on Run #2.
+- **Play Store asset set generated (Apr 29, 2026)** — `/app/frontend/assets/playstore/` contains 512×512 hi-res icon, 1024×1024 adaptive foreground, 1024×500 feature graphic, 1280×720 TV banner. Served via `/api/brand/{filename}` whitelist.
 
 ## Known Issues
 - TestFlight sandbox can't load RevenueCat offerings (expected, production works)
 - Admin endpoints unauthenticated (P2)
 - EAS Deployment Pipeline overwriting Expo project ID (Blocked on Emergent Support)
+- Heavy stencil prompt occasionally produces less detail than Medium (P2 — deferred per user; tackled only after wrong-reference failsafe stabilizes via 30-gen stress test)
