@@ -4352,6 +4352,179 @@ async def admin_paywall_telemetry(request: FastAPIRequest, limit: int = 50):
     return {'count': len(rows), 'events': rows}
 
 
+@api_router.post("/admin/comp-credits")
+async def admin_comp_credits(request: FastAPIRequest):
+    """Grant credits to a single user by email or user_id (admin-only).
+
+    Use cases: comp credits after an outage, support gestures, manual
+    refunds outside the automatic refund_credit_on_failure path.
+
+    Body: {
+        "user_query": "user@example.com" | "user_abcdef123",
+        "amount": 25,                        # positive integer
+        "reason": "ai_outage_2026_05_06",    # short slug
+        "admin_note": "Comped after Ringo's stencil outage video"
+    }
+
+    Behavior:
+      - Increments available_credits by `amount` (atomic).
+      - Does NOT touch tier, max_balance_cap, monthly_allowance, or any
+        subscription state.
+      - Does NOT reset credits_consumed_this_cycle.
+      - Studio team members: increments shared team pool instead, same
+        contract as refund_credit_on_failure.
+      - Persists a full audit row to `admin_credit_grants` (never expires).
+
+    Returns: {
+        "user_id", "email", "scope" ("user"|"studio_team"),
+        "before_credits", "granted", "after_credits",
+        "audit_id", "timestamp"
+    }
+    """
+    await verify_admin(request.headers.get('authorization'))
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    user_query = (body.get('user_query') or '').strip()
+    amount_raw = body.get('amount')
+    reason = (body.get('reason') or '').strip()
+    admin_note = (body.get('admin_note') or '').strip()
+
+    if not user_query:
+        raise HTTPException(status_code=400, detail='user_query required (email or user_id)')
+    try:
+        amount = int(amount_raw)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail='amount must be an integer')
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail='amount must be positive (use admin/deduct for removals)')
+    if amount > 1000:
+        raise HTTPException(status_code=400, detail='amount > 1000 — refusing as a safety guard. Issue multiple grants if intentional.')
+    if not reason:
+        raise HTTPException(status_code=400, detail='reason required')
+    if not admin_note:
+        raise HTTPException(status_code=400, detail='admin_note required')
+
+    # Resolve user — email OR user_id
+    user_doc = None
+    if '@' in user_query:
+        user_doc = await db.users.find_one(
+            {'email': user_query.lower()}, {'_id': 0, 'user_id': 1, 'email': 1}
+        )
+    else:
+        user_doc = await db.users.find_one(
+            {'user_id': user_query}, {'_id': 0, 'user_id': 1, 'email': 1}
+        )
+    if not user_doc:
+        raise HTTPException(status_code=404, detail=f'No user found matching {user_query}')
+
+    user_id = user_doc['user_id']
+    email = user_doc.get('email')
+
+    # Resolve sub doc to detect studio-team membership and capture before/after
+    sub = await db.subscriptions.find_one(
+        {'user_id': user_id},
+        {'_id': 0, 'tier': 1, 'available_credits': 1, 'studio_team_id': 1},
+    )
+    if not sub:
+        raise HTTPException(
+            status_code=404,
+            detail=f'No subscription doc for user {user_id} — comp would have nowhere to land',
+        )
+
+    studio_team_id = sub.get('studio_team_id')
+    audit_id = str(uuid.uuid4())
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    if studio_team_id:
+        # Comp into the shared studio pool
+        team_before = await db.studio_teams.find_one(
+            {'team_id': studio_team_id}, {'_id': 0, 'shared_credits': 1}
+        )
+        before_credits = (team_before or {}).get('shared_credits', 0)
+        result = await db.studio_teams.find_one_and_update(
+            {'team_id': studio_team_id},
+            {'$inc': {'shared_credits': amount}},
+            return_document=True,
+            projection={'_id': 0, 'shared_credits': 1},
+        )
+        after_credits = (result or {}).get('shared_credits', before_credits + amount)
+        scope = 'studio_team'
+    else:
+        before_credits = sub.get('available_credits', 0)
+        result = await db.subscriptions.find_one_and_update(
+            {'user_id': user_id},
+            {'$inc': {'available_credits': amount}},
+            return_document=True,
+            projection={'_id': 0, 'available_credits': 1},
+        )
+        after_credits = (result or {}).get('available_credits', before_credits + amount)
+        scope = 'user'
+
+    audit_row = {
+        'audit_id': audit_id,
+        'user_id': user_id,
+        'email': email,
+        'scope': scope,
+        'studio_team_id': studio_team_id,
+        'amount': amount,
+        'reason': reason,
+        'admin_note': admin_note,
+        'before_credits': before_credits,
+        'after_credits': after_credits,
+        'timestamp': now_iso,
+    }
+    try:
+        await db.admin_credit_grants.insert_one(audit_row)
+    except Exception as audit_err:
+        # If audit fails, the credit grant already happened — log loudly.
+        # We do not roll back the grant since that would create a worse
+        # inconsistency.
+        logger.error(
+            f'[CompCredits] AUDIT INSERT FAILED for user={user_id} amount={amount} '
+            f'audit_id={audit_id} err={audit_err}'
+        )
+
+    logger.info(
+        f'[CompCredits] GRANT user={user_id} email={email} scope={scope} '
+        f'amount={amount} before={before_credits} after={after_credits} '
+        f'reason={reason} audit_id={audit_id}'
+    )
+    return {
+        'audit_id': audit_id,
+        'user_id': user_id,
+        'email': email,
+        'scope': scope,
+        'studio_team_id': studio_team_id,
+        'amount': amount,
+        'reason': reason,
+        'admin_note': admin_note,
+        'before_credits': before_credits,
+        'after_credits': after_credits,
+        'timestamp': now_iso,
+    }
+
+
+@api_router.get("/admin/comp-credits-history")
+async def admin_comp_credits_history(request: FastAPIRequest, limit: int = 50, user_id: Optional[str] = None):
+    """Read recent comp-credit grants for audit. Optionally filter by user_id."""
+    await verify_admin(request.headers.get('authorization'))
+    limit = max(1, min(int(limit), 500))
+    q: dict = {}
+    if user_id:
+        q['user_id'] = user_id
+    rows = await db.admin_credit_grants.find(q, {'_id': 0}).sort('timestamp', -1).to_list(length=limit)
+    total_amount = sum(int(r.get('amount', 0)) for r in rows)
+    return {
+        'count': len(rows),
+        'total_amount_in_window': total_amount,
+        'grants': rows,
+    }
+
+
 @api_router.get("/admin/validator-softlog")
 async def admin_validator_softlog(request: FastAPIRequest, limit: int = 100):
     """Read the rolling buffer of would-have-failed validator events.
