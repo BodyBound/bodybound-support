@@ -2492,22 +2492,32 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
         async def _generate_once(gen_temperature: float) -> tuple[str, float]:
             local_b64 = None
             local_mime = 'image/png'
+            phase_t = {'gemini_ms': 0.0, 'resize_ms': 0.0, 'postproc_ms': 0.0, 'attempts': 0}
             for attempt in range(1, max_attempts + 1):
+                phase_t['attempts'] = attempt
                 try:
                     logger.info(
                         f"[AI-Stencil:GEN id={request_correlation_id}] "
                         f"attempt={attempt}/{max_attempts} timeout={gen_timeout}s "
                         f"heavy={is_heavy} temperature={gen_temperature}"
                     )
+                    t_gemini_start = time.time()
                     local_b64, local_mime = await asyncio.wait_for(
                         generate_with_gemini(image_data, prompt, temperature=gen_temperature),
                         timeout=gen_timeout,
                     )
-                    logger.info("Successfully generated with Google Gemini")
+                    phase_t['gemini_ms'] = (time.time() - t_gemini_start) * 1000
+                    logger.info(
+                        f"[AI-Stencil:TIMING id={request_correlation_id}] "
+                        f"phase=gemini_ok ms={phase_t['gemini_ms']:.0f} attempt={attempt}"
+                    )
                     break
                 except asyncio.TimeoutError:
+                    phase_t['gemini_ms'] = (time.time() - t_gemini_start) * 1000
                     logger.warning(
-                        f"Google Gemini timed out after {gen_timeout}s (attempt {attempt}/{max_attempts})"
+                        f"[AI-Stencil:TIMING id={request_correlation_id}] "
+                        f"phase=gemini_timeout ms={phase_t['gemini_ms']:.0f} "
+                        f"limit={gen_timeout * 1000:.0f}ms attempt={attempt}/{max_attempts}"
                     )
                     if attempt < max_attempts:
                         continue
@@ -2516,7 +2526,11 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
                         detail="AI generation is taking longer than expected. Please try again shortly.",
                     )
                 except Exception as e:
-                    logger.error(f"Google Gemini failed: {e}")
+                    phase_t['gemini_ms'] = (time.time() - t_gemini_start) * 1000
+                    logger.error(
+                        f"[AI-Stencil:TIMING id={request_correlation_id}] "
+                        f"phase=gemini_error ms={phase_t['gemini_ms']:.0f} err={str(e)[:160]}"
+                    )
                     raise HTTPException(
                         status_code=503,
                         detail=f"AI service error: {str(e)}. Please try again.",
@@ -2529,6 +2543,7 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
                 )
 
             # Resize stencil to match ORIGINAL input image dimensions
+            t_resize_start = time.time()
             try:
                 original_b64 = request.image_base64
                 if ',' in original_b64:
@@ -2549,9 +2564,17 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
                     local_mime = 'image/png'
             except Exception as resize_error:
                 logger.warning(f"Could not resize stencil (non-critical): {resize_error}")
+            phase_t['resize_ms'] = (time.time() - t_resize_start) * 1000
 
             stencil_data_url = f"data:{local_mime};base64,{local_b64}"
+            t_postproc_start = time.time()
             stencil_data_url, nbf = post_process_stencil(stencil_data_url)
+            phase_t['postproc_ms'] = (time.time() - t_postproc_start) * 1000
+            logger.info(
+                f"[AI-Stencil:TIMING id={request_correlation_id}] "
+                f"phase=resize+postproc ms={phase_t['resize_ms'] + phase_t['postproc_ms']:.0f} "
+                f"(resize={phase_t['resize_ms']:.0f} postproc={phase_t['postproc_ms']:.0f})"
+            )
             return stencil_data_url, nbf
 
         # ── First attempt ────────────────────────────────────────────────
