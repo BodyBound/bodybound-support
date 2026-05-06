@@ -7475,10 +7475,97 @@ async def admin_me(request: FastAPIRequest):
     admin = await verify_admin(request.headers.get('authorization'))
     return {'email': admin['email'], 'role': admin['role']}
 
+@api_router.get("/admin-tool/conversion-funnel")
+async def admin_conversion_funnel(request: FastAPIRequest, days: int = 7):
+    """Bypass-removal monetization funnel (May 2026).
+
+    Counts NEW signups, free trials started, paid conversions, and failed
+    purchase attempts in a configurable window. Use this to measure the
+    impact of disabling TEMP_BYPASS_ENABLED on new-account creation.
+    """
+    await verify_admin(request.headers.get('authorization'))
+    days = max(1, min(int(days), 365))
+    now = datetime.now(timezone.utc)
+    since_iso = (now - timedelta(days=days)).isoformat()
+
+    paid_tiers = ['walk-in', 'booked-out', 'the-shop', 'the-shop-member']
+
+    # New users created in window
+    new_signups = await db.users.count_documents({'created_at': {'$gte': since_iso}})
+
+    # Of those new users, find their subscription tiers
+    new_user_ids = [u['user_id'] async for u in db.users.find(
+        {'created_at': {'$gte': since_iso}}, {'_id': 0, 'user_id': 1}
+    )]
+    new_signups_with_bypass = await db.subscriptions.count_documents(
+        {'user_id': {'$in': new_user_ids}, 'tier': 'paywall_bypass'}
+    ) if new_user_ids else 0
+    new_signups_no_tier = await db.subscriptions.count_documents(
+        {'user_id': {'$in': new_user_ids}, 'tier': {'$in': [None, '', 'expired']}}
+    ) if new_user_ids else 0
+    new_signups_paid = await db.subscriptions.count_documents(
+        {'user_id': {'$in': new_user_ids}, 'tier': {'$in': paid_tiers}}
+    ) if new_user_ids else 0
+
+    # Free trials started in window (subscriptions.is_trial=true with last_applied_at in window)
+    trials_started = await db.subscriptions.count_documents({
+        'is_trial': True,
+        'tier': {'$in': paid_tiers},
+        'last_applied_at': {'$gte': since_iso},
+    })
+    # Paid conversions (INITIAL_PURCHASE webhook events in window)
+    paid_conversions = await db.revenuecat_webhook_events.count_documents({
+        'event_type': 'INITIAL_PURCHASE',
+        'created_at': {'$gte': since_iso},
+    })
+    # Purchase attempts blocked by frontend guard
+    purchases_blocked = await db.paywall_telemetry.count_documents({
+        'event': 'purchase_blocked',
+        'timestamp': {'$gte': since_iso},
+    })
+    # Successful purchase telemetry events
+    purchases_succeeded = await db.paywall_telemetry.count_documents({
+        'event': 'purchase_succeeded',
+        'timestamp': {'$gte': since_iso},
+    })
+    # Failed RC events surfaced by paywall telemetry (rc_failure beacons)
+    purchases_failed = await db.paywall_telemetry.count_documents({
+        'event': 'rc_failure',
+        'timestamp': {'$gte': since_iso},
+    })
+
+    return {
+        'generated_at': now.isoformat(),
+        'window_days': days,
+        'window_start': since_iso,
+        'temp_bypass_enabled_now': os.environ.get('TEMP_BYPASS_ENABLED', '').lower() == 'true',
+        'paywall_no_bypass_emails': bool(os.environ.get('PAYWALL_NO_BYPASS_EMAILS', '').strip()),
+        'new_signups': {
+            'total': new_signups,
+            'landed_on_bypass_tier': new_signups_with_bypass,
+            'landed_on_no_tier_must_subscribe': new_signups_no_tier,
+            'already_paid': new_signups_paid,
+        },
+        'trials_started_in_window': trials_started,
+        'paid_conversions_in_window': paid_conversions,
+        'purchase_attempts': {
+            'succeeded': purchases_succeeded,
+            'blocked_by_active_sub_guard': purchases_blocked,
+            'rc_failures': purchases_failed,
+        },
+        'notes': [
+            'temp_bypass_enabled_now reflects the live env var value on this backend.',
+            'landed_on_bypass_tier should drop to 0 after TEMP_BYPASS_ENABLED is set to false.',
+            'landed_on_no_tier_must_subscribe should rise correspondingly — these are the users who will see the paywall.',
+            'paid_conversions counts every INITIAL_PURCHASE webhook in the window, regardless of which user signup window they came from.',
+        ],
+    }
+
+
 @api_router.get("/admin-tool/dashboard")
 async def admin_dashboard(request: FastAPIRequest):
     await verify_admin(request.headers.get('authorization'))
-    
+
     total_users = await db.users.count_documents({})
     total_subs = await db.subscriptions.count_documents({})
     
