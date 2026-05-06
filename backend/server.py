@@ -79,10 +79,16 @@ logger = logging.getLogger(__name__)
 # In production, this could be Redis or MongoDB for persistence across restarts
 stencil_jobs = {}
 
-# Stencil cache for faster regeneration of same images
-# Key: hash of FULL image content + style, Value: generated stencil results
-stencil_cache = {}
-CACHE_MAX_SIZE = 50  # Maximum number of cached stencils
+# Stencil cache for faster regeneration of same images.
+# Key: hash of FULL image content + style, Value: generated stencil results.
+# Implemented as an OrderedDict so we can do true LRU semantics: a cache HIT
+# bumps the entry to MRU position, and overflow evicts the least-recently-used
+# entry. Critical for memory stability — each entry holds a ~700 KB stencil
+# base64, so unbounded growth was a likely contributor to the May 2026 OOM.
+from collections import OrderedDict
+stencil_cache: 'OrderedDict[str, dict]' = OrderedDict()
+CACHE_MAX_SIZE = 30  # Hard cap. ~30 × 700 KB ≈ 21 MB worst case.
+stencil_cache_lock = asyncio.Lock()
 
 import hashlib
 
@@ -113,28 +119,52 @@ def get_cache_key(image_base64: str, style: str) -> str:
 
 def cache_stencil(cache_key: str, stencil_base64: str, near_black_fraction: Optional[float] = None):
     """Cache a generated stencil along with its near_black_fraction so a
-    cache hit returns the same shape of response a fresh generation does."""
+    cache hit returns the same shape of response a fresh generation does.
+
+    True LRU eviction: when at capacity, removes the least-recently-used
+    entry (the head of the OrderedDict). New writes go to the tail (MRU).
+    """
     global stencil_cache
-    # Evict oldest if cache is full
-    if len(stencil_cache) >= CACHE_MAX_SIZE:
-        # Remove oldest entry (first key)
-        oldest_key = next(iter(stencil_cache))
-        del stencil_cache[oldest_key]
+    if cache_key in stencil_cache:
+        # Already present — refresh recency by removing first.
+        stencil_cache.pop(cache_key, None)
     stencil_cache[cache_key] = {
         'stencil': stencil_base64,
         'near_black_fraction': near_black_fraction,
-        'timestamp': datetime.utcnow()
+        'timestamp': datetime.utcnow(),
     }
+    # Evict oldest until under cap (handles edge cases where MAX was lowered).
+    while len(stencil_cache) > CACHE_MAX_SIZE:
+        stencil_cache.popitem(last=False)
     logger.info(f"[Cache] Cached stencil, total cached: {len(stencil_cache)}")
 
+
 def get_cached_stencil(cache_key: str) -> Optional[dict]:
-    """Retrieve a cached stencil entry if available. Returns the full dict
-    (with 'stencil' and 'near_black_fraction') so callers can echo the
-    near_black_fraction on cache hits."""
+    """Retrieve a cached stencil. On hit, bumps the entry to MRU position."""
     if cache_key in stencil_cache:
-        logger.info(f"[Cache] Cache HIT - returning cached stencil")
+        # move_to_end implements the LRU "touch on access" semantic.
+        stencil_cache.move_to_end(cache_key, last=True)
+        logger.info("[Cache] Cache HIT - returning cached stencil")
         return stencil_cache[cache_key]
     return None
+
+
+async def validate_stencil_reference_match_async(input_b64: str, output_b64: str) -> dict:
+    """Async wrapper for validate_stencil_reference_match.
+
+    cv2 + numpy work is CPU-bound and runs synchronously. Calling it
+    directly from an async handler blocks the asyncio event loop, which
+    means concurrent requests starve and Cloudflare gives up with 520.
+    Offload to the default thread pool executor so other requests
+    continue to be served while validation runs.
+    """
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        None,
+        validate_stencil_reference_match,
+        input_b64,
+        output_b64,
+    )
 
 
 def validate_stencil_reference_match(input_b64: str, output_b64: str) -> dict:
@@ -2592,7 +2622,7 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
         # once thresholds have been re-calibrated against real production
         # output.
         # ────────────────────────────────────────────────────────────────
-        validation = validate_stencil_reference_match(request.image_base64, stencil_base64)
+        validation = await validate_stencil_reference_match_async(request.image_base64, stencil_base64)
         validation_outcome = 'pass' if validation['is_match'] else 'softlog_would_block'
         logger.info(
             f"[AI-Stencil:VALIDATE id={request_correlation_id}] "
@@ -2634,13 +2664,17 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
                     'reason': validation['reason'],
                     'timestamp': datetime.now(timezone.utc).isoformat(),
                 })
-                total = await db.validator_softlog.count_documents({})
-                if total > 200:
-                    excess = total - 200
-                    async for old in db.validator_softlog.find(
-                        {}, {'_id': 1}
-                    ).sort('timestamp', 1).limit(excess):
-                        await db.validator_softlog.delete_one({'_id': old['_id']})
+                # Single-query rolling-buffer trim. Find the cutoff timestamp
+                # at position 200 (sorted DESC), then delete everything older
+                # than it in one round-trip. Avoids the prior count_documents
+                # + per-row delete_one storm under load.
+                cutoff_doc = await db.validator_softlog.find(
+                    {}, {'_id': 0, 'timestamp': 1}
+                ).sort('timestamp', -1).skip(200).limit(1).to_list(length=1)
+                if cutoff_doc:
+                    await db.validator_softlog.delete_many(
+                        {'timestamp': {'$lte': cutoff_doc[0]['timestamp']}}
+                    )
             except Exception as softlog_err:
                 logger.warning(
                     f"[AI-Stencil:WRONG_REFERENCE_SOFTLOG] persist failed: {softlog_err}"
@@ -4331,13 +4365,15 @@ async def log_paywall_event(payload: dict, request: FastAPIRequest):
             'data': extra_data,
             'timestamp': datetime.now(timezone.utc).isoformat(),
         })
-        total = await db.paywall_telemetry.count_documents({})
-        if total > 200:
-            excess = total - 200
-            async for old in db.paywall_telemetry.find(
-                {}, {'_id': 1}
-            ).sort('timestamp', 1).limit(excess):
-                await db.paywall_telemetry.delete_one({'_id': old['_id']})
+        # Single-query rolling-buffer trim. See same pattern in
+        # validator_softlog above.
+        cutoff_doc = await db.paywall_telemetry.find(
+            {}, {'_id': 0, 'timestamp': 1}
+        ).sort('timestamp', -1).skip(200).limit(1).to_list(length=1)
+        if cutoff_doc:
+            await db.paywall_telemetry.delete_many(
+                {'timestamp': {'$lte': cutoff_doc[0]['timestamp']}}
+            )
     except Exception as e:
         logger.warning(f'[PaywallTelemetry] persist failed: {e}')
     return {'status': 'ok'}
