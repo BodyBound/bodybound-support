@@ -2559,70 +2559,74 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
             gen_temperature=request.temperature
         )
 
-        # ── Wrong-reference fail-safe (conservative: rejects only when BOTH
-        # edge-IoU AND dHash signal a mismatch). If the first output is
-        # clearly unrelated to the reference image, regenerate ONCE with
-        # temperature=0.0 for maximum determinism. If the second attempt is
-        # also unrelated, refund the credit (if authenticated) and return
-        # a clean error instead of returning a wrong stencil. Failed
-        # outputs are NEVER cached. ───────────────────────────────────────
+        # ── Wrong-reference SOFT-LOG MODE ────────────────────────────────
+        # As of May 6 2026: production validator is in soft-log mode.
+        # We run validation purely for telemetry — we LOG would-have-failed
+        # cases and persist them to the `validator_softlog` collection for
+        # offline recalibration, but we ALWAYS return Gemini's output.
+        # No 502 rejection, no auto-regenerate, no credit refund.
+        # The hard-block path is preserved in git history for re-enablement
+        # once thresholds have been re-calibrated against real production
+        # output.
+        # ────────────────────────────────────────────────────────────────
         validation = validate_stencil_reference_match(request.image_base64, stencil_base64)
+        validation_outcome = 'pass' if validation['is_match'] else 'softlog_would_block'
         logger.info(
             f"[AI-Stencil:VALIDATE id={request_correlation_id}] "
             f"user={request_user_id} "
             f"image_sha={request_image_hash[:16]} "
             f"style={request.regenerate_style or 'auto'} "
             f"attempt=1 "
+            f"mode=soft_log "
             f"is_match={validation['is_match']} "
             f"edge_ncc={validation['edge_ncc']} "
             f"line_precision={validation['line_precision']} "
-            f"reason={validation['reason']}"
+            f"reason={validation['reason']} "
+            f"outcome={validation_outcome}"
         )
 
         if not validation['is_match']:
+            # In soft-log mode we still emit a clearly-tagged warning so it
+            # surfaces in `grep WRONG_REFERENCE` for triage, and we persist
+            # a full record to `validator_softlog` for later analysis.
             logger.warning(
-                f"[AI-Stencil:WRONG_REFERENCE id={request_correlation_id}] "
-                f"first attempt rejected ({validation['reason']}); regenerating once"
-            )
-            try:
-                stencil_base64, near_black_fraction = await _generate_once(gen_temperature=0.0)
-            except HTTPException:
-                raise
-            retry_validation = validate_stencil_reference_match(
-                request.image_base64, stencil_base64
-            )
-            logger.info(
-                f"[AI-Stencil:VALIDATE id={request_correlation_id}] "
+                f"[AI-Stencil:WRONG_REFERENCE_SOFTLOG id={request_correlation_id}] "
                 f"user={request_user_id} "
                 f"image_sha={request_image_hash[:16]} "
                 f"style={request.regenerate_style or 'auto'} "
-                f"attempt=2 "
-                f"is_match={retry_validation['is_match']} "
-                f"edge_ncc={retry_validation['edge_ncc']} "
-                f"line_precision={retry_validation['line_precision']} "
-                f"reason={retry_validation['reason']}"
+                f"reason={validation['reason']} "
+                f"→ soft-log mode: returning Gemini output anyway, no refund, no retry"
             )
-            if not retry_validation['is_match']:
-                logger.error(
-                    f"[AI-Stencil:WRONG_REFERENCE_FINAL id={request_correlation_id}] "
-                    f"user={request_user_id} "
-                    f"image_sha={request_image_hash[:16]} "
-                    f"style={request.regenerate_style or 'auto'} "
-                    f"attempt1_reason={validation['reason']} "
-                    f"attempt2_reason={retry_validation['reason']} "
-                    f"→ refunding credit and returning clean error (not caching)"
+            try:
+                # Persist into a small rolling buffer (last 200 events) so
+                # we can recalibrate thresholds against real production data
+                # without bloating the DB.
+                await db.validator_softlog.insert_one({
+                    'correlation_id': request_correlation_id,
+                    'user_id': request_user_id,
+                    'image_sha': request_image_hash,
+                    'style': request.regenerate_style or 'auto',
+                    'edge_ncc': validation['edge_ncc'],
+                    'line_precision': validation['line_precision'],
+                    'reason': validation['reason'],
+                    'timestamp': datetime.now(timezone.utc).isoformat(),
+                })
+                total = await db.validator_softlog.count_documents({})
+                if total > 200:
+                    excess = total - 200
+                    async for old in db.validator_softlog.find(
+                        {}, {'_id': 1}
+                    ).sort('timestamp', 1).limit(excess):
+                        await db.validator_softlog.delete_one({'_id': old['_id']})
+            except Exception as softlog_err:
+                logger.warning(
+                    f"[AI-Stencil:WRONG_REFERENCE_SOFTLOG] persist failed: {softlog_err}"
                 )
-                if request_user_id and request_user_id != 'anonymous':
-                    await refund_credit_on_failure(
-                        request_user_id, reason='wrong_reference_output'
-                    )
-                raise HTTPException(
-                    status_code=502,
-                    detail="The AI returned an unrelated result. Please try again — credits refunded.",
-                )
-            validation = retry_validation  # use the passing retry result for response logging
 
-        # === STEP 8: CACHE THE VALIDATED RESULT for future instant retrieval ===
+        # === STEP 8: CACHE THE RESULT for future instant retrieval ===
+        # In soft-log mode we ALWAYS cache the result — only an actual
+        # generation failure (already raised as HTTPException above)
+        # bypasses caching. This matches pre-failsafe behavior.
         cache_stencil(cache_key, stencil_base64, near_black_fraction)
         response_image_hash = hash_image(stencil_base64)
         logger.info(
@@ -4323,6 +4327,44 @@ async def admin_paywall_telemetry(request: FastAPIRequest, limit: int = 50):
     limit = max(1, min(int(limit), 200))
     rows = await db.paywall_telemetry.find({}, {'_id': 0}).sort('timestamp', -1).to_list(length=limit)
     return {'count': len(rows), 'events': rows}
+
+
+@api_router.get("/admin/validator-softlog")
+async def admin_validator_softlog(request: FastAPIRequest, limit: int = 100):
+    """Read the rolling buffer of would-have-failed validator events.
+
+    During soft-log mode (May 2026 incident response) the wrong-reference
+    validator runs but does NOT block — every potential rejection is
+    recorded here for offline threshold recalibration.
+    """
+    await verify_admin(request.headers.get('authorization'))
+    limit = max(1, min(int(limit), 200))
+    rows = await db.validator_softlog.find({}, {'_id': 0}).sort('timestamp', -1).to_list(length=limit)
+
+    # Quick aggregates so the screen renders something useful
+    edge_ncc_values = [r.get('edge_ncc') for r in rows if isinstance(r.get('edge_ncc'), (int, float))]
+    line_prec_values = [r.get('line_precision') for r in rows if isinstance(r.get('line_precision'), (int, float))]
+    by_style: dict = {}
+    for r in rows:
+        s = r.get('style') or 'auto'
+        by_style[s] = by_style.get(s, 0) + 1
+
+    summary = {
+        'total_events': len(rows),
+        'by_style': by_style,
+        'edge_ncc_min': min(edge_ncc_values) if edge_ncc_values else None,
+        'edge_ncc_max': max(edge_ncc_values) if edge_ncc_values else None,
+        'edge_ncc_avg': round(sum(edge_ncc_values) / len(edge_ncc_values), 3) if edge_ncc_values else None,
+        'line_precision_min': min(line_prec_values) if line_prec_values else None,
+        'line_precision_max': max(line_prec_values) if line_prec_values else None,
+        'line_precision_avg': round(sum(line_prec_values) / len(line_prec_values), 3) if line_prec_values else None,
+    }
+    return {
+        'mode': 'soft_log',
+        'note': 'Validator runs but never blocks. Each event = one Gemini output that current thresholds (edge_ncc<0.12 AND line_precision<0.86) would have rejected.',
+        'summary': summary,
+        'events': rows,
+    }
 
 
 @api_router.get("/admin/duplicate-sub-audit")
