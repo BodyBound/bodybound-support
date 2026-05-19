@@ -67,6 +67,14 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **P0 BUG FIX: Credit Rollover on Renewal (May 19 2026)** 🔴 ✅
+  - **Bug:** Paid subscribers were losing unused credits on every Apple renewal — `apply_paid_subscription_state(source='RENEWAL')` hard-set `available_credits = monthly_allowance`, blowing away whatever balance the user had banked from the previous month. Violates PRD rollover policy (2× monthly allowance cap).
+  - **Fix:** Split `apply_paid_subscription_state` into two paths. `RENEWAL` (paid only) now routes credits through `apply_monthly_refill(cycle_key='rc:renewal:{event_id}')` — the same atomic, idempotent helper already used by the cron path. INITIAL_PURCHASE, PRODUCT_CHANGE, UNCANCELLATION, FRONTEND_SYNC (tier-change), and trial-RENEWAL retain hard-reset behavior. Cycle key derived from webhook `event.id`; falls back to date-bucketed key if event_id missing.
+  - **Tests added:** `backend/tests/test_renewal_rollover.py` — 12/12 pass. Covers: walk-in rollover under cap, walk-in rollover at cap (truncated to 250), at-cap stays at cap, idempotent replay (same event_id), distinct event_ids each refill across two cycles, booked-out tier (400 → 900, cap 1000), INITIAL_PURCHASE still hard-resets, PRODUCT_CHANGE upgrade hard-resets to new tier allowance, UNCANCELLATION preserves hard-reset behavior, Apple trial RENEWAL bypasses rollover, missing event_id falls back to date-key, and audit fields stamped correctly.
+  - **Regression suite:** test_credit_rollover.py 8/8 ✅, test_sync_idempotency.py 6/6 ✅, test_deploy_sanity_subscription_fields.py 7/7 ✅, test_paywall_product_mismatch_bug.py 2/2 ✅. The previously-broken `test_renewal_still_resets_credits` and `test_renewal_webhook_writes_rewrite_fields` were updated to reflect the new policy (rollover instead of hard-reset, asserting ≥ allowance and ≤ 2× cap).
+  - **Live smoke test on preview backend:** Demo user seeded with 100 credits → RENEWAL → 225 credits (rollover under cap, consumed=0, cap=250) → replay with same event_id → duplicate=true, balance unchanged. Verified.
+  - **Customer impact:** Live paid subscribers will see their unused credits carry into the next month on next Apple renewal (capped at 2× their tier allowance). No retroactive backfill required — going forward only.
+
 - **Soft-Log Recalibration Window Officially Opened (May 19 2026)** ✅
   - **Preview backend cleared:** `DELETE /api/admin/validator-softlog` wiped 13 entries (5 pre-fix `edge_ncc=0.0` rows + 8 pre-fix test rows). `total_events=0` confirmed. Fresh 7-day window starts now (target review: May 26 2026).
   - **Production status:** still holds 5 stale pre-fix entries — DELETE endpoint returns 405 on prod because the next deploy hasn't shipped yet. Will auto-clear on the next prod push.

@@ -124,7 +124,12 @@ def test_initial_purchase_still_resets_credits(event_loop):
 
 
 def test_renewal_still_resets_credits(event_loop):
-    """Webhook RENEWAL signals a new billing cycle — must reset."""
+    """Webhook RENEWAL — new policy: ROLLOVER (was hard-reset).
+
+    Booked-Out user with 10 unused credits + RENEWAL → 10 + 500 = 510,
+    capped at 1000 (booked-out 500 × 2). credits_consumed_this_cycle still
+    resets. See `tests/test_renewal_rollover.py` for the full suite.
+    """
     user_id = 'test_renewal_resets'
     product = 'bodybound_2999_1m_3d'
 
@@ -132,15 +137,18 @@ def test_renewal_still_resets_credits(event_loop):
         await _seed(user_id, 'booked-out', product, available=10, consumed=490)
         await apply_paid_subscription_state(
             user_id=user_id, product_id=product, source='RENEWAL',
-            is_apple_trial=False,
+            is_apple_trial=False, event_id='test_renewal_resets_evt',
         )
         sub = await _read(user_id)
         await _cleanup(user_id)
         return sub
 
     sub = event_loop.run_until_complete(run())
-    assert sub['available_credits'] == 500
+    assert sub['available_credits'] == 510, (
+        f'Rollover: 10 + 500 = 510, got {sub["available_credits"]}'
+    )
     assert sub['credits_consumed_this_cycle'] == 0
+    assert sub['last_event'] == 'RENEWAL'
 
 
 def test_frontend_sync_resets_credits_when_trial_state_flips(event_loop):

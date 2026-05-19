@@ -5558,6 +5558,7 @@ async def apply_paid_subscription_state(
     source: str,
     rc_customer_id: Optional[str] = None,
     is_apple_trial: bool = False,
+    event_id: Optional[str] = None,
 ) -> dict:
     """Single authoritative writer for paid subscription state.
 
@@ -5566,10 +5567,22 @@ async def apply_paid_subscription_state(
     - No fallback to walk-in, no default 10 credits, no silent trial.
     - If product_id is unknown, DO NOT overwrite user state — log and raise.
     - Always sets is_trial = (is_apple_trial only). Never flips to trial silently.
-    - Resets credits_consumed_this_cycle on every paid-state application.
+    - Resets credits_consumed_this_cycle on every paid-state application EXCEPT
+      when source == 'RENEWAL' — see Rollover Policy below.
+
+    Rollover Policy (RENEWAL only):
+    - On RENEWAL we DO NOT hard-reset available_credits. Unused credits roll
+      over month-to-month, capped at monthly_allowance × BALANCE_CAP_MULTIPLIER
+      (2× by default). Handled by `apply_monthly_refill`, which is atomic and
+      idempotent per `cycle_key`.
+    - INITIAL_PURCHASE, PRODUCT_CHANGE, UNCANCELLATION, FRONTEND_SYNC (with
+      tier change), and ADMIN paths all retain the hard-reset behavior.
+    - `event_id` is required for RENEWAL to build a stable cycle_key. If
+      missing, falls back to a date-bucketed key.
 
     The `source` string is stamped into last_event for auditability:
-    one of: 'INITIAL_PURCHASE' | 'RENEWAL' | 'FRONTEND_SYNC' | 'ADMIN' etc.
+    one of: 'INITIAL_PURCHASE' | 'RENEWAL' | 'PRODUCT_CHANGE'
+          | 'UNCANCELLATION' | 'FRONTEND_SYNC' | 'ADMIN' etc.
 
     Returns the updated subscription doc.
     """
@@ -5634,6 +5647,55 @@ async def apply_paid_subscription_state(
 
     next_renewal = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
 
+    # ── RENEWAL path: rollover-aware (does NOT hard-reset credits) ─────
+    # On a paid renewal, unused credits roll over up to the 2× balance cap.
+    # We update tier/audit fields first (excluding credits-related fields),
+    # then let `apply_monthly_refill` atomically add the monthly allowance
+    # to the existing balance with idempotency keyed on the RC event.
+    if source == 'RENEWAL' and not is_apple_trial:
+        cycle_key = (
+            f'rc:renewal:{event_id}' if event_id
+            else f'rc:renewal:{user_id}:{now_iso[:10]}'
+        )
+        renewal_set_doc = {
+            'user_id': user_id,
+            'tier': tier,
+            'is_trial': False,
+            'period_type': 'NORMAL',
+            # NOTE: monthly_allowance, max_balance_cap, available_credits,
+            # credits_consumed_this_cycle, last_refill_at, and per-cycle
+            # upsell flags are all owned by apply_monthly_refill below — do
+            # NOT set them here or we'd race the refill's atomic claim.
+            'trial_expires_at': None,
+            'renewal_date': next_renewal,
+            'last_event': source,
+            'last_product_id': product_id,
+            'last_applied_at': now_iso,
+        }
+        if rc_customer_id:
+            renewal_set_doc['revenuecat_customer_id'] = rc_customer_id
+
+        await db.subscriptions.update_one(
+            {'user_id': user_id},
+            {'$set': renewal_set_doc},
+            upsert=True,
+        )
+        refill_result = await apply_monthly_refill(
+            user_id=user_id,
+            monthly_allowance=tier_info['credits'],
+            cycle_key=cycle_key,
+            tier=tier,
+        )
+        logger.info(
+            f'[PaidState] Applied RENEWAL (rollover): user={user_id} product={product_id} '
+            f'cycle_key={cycle_key} prev_balance={refill_result.get("previous_balance")} '
+            f'new_balance={refill_result.get("new_balance")} cap={refill_result.get("max_balance_cap")} '
+            f'applied={refill_result.get("applied")}'
+        )
+        return await db.subscriptions.find_one({'user_id': user_id}, {'_id': 0})
+
+    # ── All other paths: hard-reset (INITIAL_PURCHASE, PRODUCT_CHANGE, ─
+    # UNCANCELLATION, FRONTEND_SYNC tier-change, ADMIN, trial RENEWAL) ──
     set_doc = {
         'user_id': user_id,
         'tier': tier,
@@ -6252,6 +6314,7 @@ async def revenuecat_webhook(request: FastAPIRequest):
                 source=event_type,
                 rc_customer_id=raw_user_id or None,
                 is_apple_trial=is_apple_trial,
+                event_id=event_id or None,
             )
             logger.info(
                 f'[RevenueCat:{event_type}] APPLIED user={user_id} product={product_id}'

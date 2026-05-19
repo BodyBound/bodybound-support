@@ -164,9 +164,17 @@ def test_initial_purchase_webhook_writes_rewrite_fields(api):
 # ---------------------------------------------------------------------------
 def test_renewal_webhook_writes_rewrite_fields(api):
     """RENEWAL must also flow through apply_paid_subscription_state and
-    refresh all rewrite audit fields (last_applied_at in particular)."""
+    refresh all rewrite audit fields (last_applied_at in particular).
+
+    NOTE (May 2026 rollover policy): RENEWAL is now rollover-aware. Demo user
+    seeded with full allowance (125) + RENEWAL adds another 125, capped at
+    250 (2× walk-in allowance). Audit fields must still be stamped.
+    """
+    import uuid as _uuid
     user_id, _ = _demo_session(api)
     product_id, expected_credits = PRODUCTS['walk-in']
+    rollover_cap = expected_credits * 2  # 250 for walk-in
+    evt_id = f'sanity_renewal_evt_{_uuid.uuid4().hex[:12]}'
 
     r = api.post(
         '/api/webhooks/revenuecat',
@@ -176,6 +184,7 @@ def test_renewal_webhook_writes_rewrite_fields(api):
                 'app_user_id': user_id,
                 'product_id': product_id,
                 'period_type': 'NORMAL',
+                'id': evt_id,
             },
         },
     )
@@ -183,7 +192,10 @@ def test_renewal_webhook_writes_rewrite_fields(api):
 
     sub = _get_subscription(api, user_id)
     assert sub.get('tier') == 'walk-in', sub
-    assert sub.get('available_credits') == expected_credits, sub
+    # Either rolled over to cap (250) or partial rollover, but NEVER below
+    # the monthly allowance (125) — that would be a regression.
+    assert sub.get('available_credits') >= expected_credits, sub
+    assert sub.get('available_credits') <= rollover_cap, sub
     assert sub.get('last_event') == 'RENEWAL', sub
 
     _assert_paid_state_fields(
