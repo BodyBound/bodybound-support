@@ -586,6 +586,19 @@ def fix_exif_orientation(base64_string: str) -> str:
 # STENCIL POST-PROCESSING
 # ============================================
 
+async def post_process_stencil_async(base64_string: str) -> tuple[str, float]:
+    """Async wrapper for post_process_stencil.
+
+    PIL operations (convert, threshold, composite) are CPU-bound and run
+    synchronously. Calling them directly from an async handler freezes the
+    asyncio event loop, which means concurrent requests (including auth)
+    queue behind. Offload to the default thread pool executor so other
+    coroutines continue to be served while post-processing runs.
+    """
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, post_process_stencil, base64_string)
+
+
 def post_process_stencil(base64_string: str) -> tuple[str, float]:
     """Post-process AI-generated stencil to create a TRANSPARENT PNG.
 
@@ -942,9 +955,21 @@ def picsart_style_preprocess(base64_string: str) -> str:
         return base64_string  # Return original if preprocessing fails
 
 
+async def enhance_photo_basic_async(base64_string: str) -> str:
+    """Async wrapper for enhance_photo_basic.
+
+    PIL ImageEnhance / NumPy / cv2 operations are CPU-bound and run
+    synchronously. Calling them directly from an async handler freezes
+    the asyncio event loop. Offload to the default thread pool executor
+    so other coroutines (auth, status polls, etc) keep being served.
+    """
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, enhance_photo_basic, base64_string)
+
+
 def enhance_photo_basic(base64_string: str) -> str:
     """Basic photo enhancement using OpenCV (no AI, fast).
-    
+
     This preprocessing step helps capture finer details by:
     1. Boosting contrast to make edges more defined
     2. Applying sharpening to bring out fine details
@@ -1069,7 +1094,7 @@ async def enhance_photo_with_ai(base64_string: str) -> str:
         
         if not keys_to_try:
             logger.warning("[AIEnhance] No API keys available, falling back to basic enhancement")
-            return enhance_photo_basic(base64_string)
+            return await enhance_photo_basic_async(base64_string)
         
         # Create enhancement prompt based on image issues
         needs_upscale = width < 1500 or height < 1500
@@ -1141,7 +1166,7 @@ Output the enhanced photo now."""
                 continue
         
         logger.warning("[AIEnhance] Gemini did not return enhanced image, falling back to basic enhancement")
-        return enhance_photo_basic(base64_string)
+        return await enhance_photo_basic_async(base64_string)
         
     except Exception as e:
         logger.error(f"[AIEnhance] Error in AI enhancement: {str(e)}")
@@ -1149,7 +1174,7 @@ Output the enhanced photo now."""
         traceback.print_exc()
         # Fall back to basic enhancement
         logger.info("[AIEnhance] Falling back to basic enhancement")
-        return enhance_photo_basic(base64_string)
+        return await enhance_photo_basic_async(base64_string)
 
 
 def enhance_photo_for_ai(base64_string: str) -> str:
@@ -2017,7 +2042,7 @@ async def enhance_image_endpoint(request: EnhanceImageRequest):
         else:
             # Use basic enhancement (fast, no upscaling)
             logger.info("[EnhanceImage] Using basic enhancement...")
-            enhanced_base64 = enhance_photo_basic(request.image_base64)
+            enhanced_base64 = await enhance_photo_basic_async(request.image_base64)
             enhancement_type = "basic"
         
         # Get enhanced resolution
@@ -2623,7 +2648,7 @@ async def generate_ai_stencil(request: AIStencilRequest, http_request: Request):
 
             stencil_data_url = f"data:{local_mime};base64,{local_b64}"
             t_postproc_start = time.time()
-            stencil_data_url, nbf = post_process_stencil(stencil_data_url)
+            stencil_data_url, nbf = await post_process_stencil_async(stencil_data_url)
             phase_t['postproc_ms'] = (time.time() - t_postproc_start) * 1000
             logger.info(
                 f"[AI-Stencil:TIMING id={request_correlation_id}] "
@@ -2784,7 +2809,7 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
             logger.info(f"[AsyncJob {job.job_id}] Using AI-enhanced image")
         else:
             raw_image = job.image_base64
-            image_data = enhance_photo_basic(raw_image)  # Use basic enhancement as fallback
+            image_data = await enhance_photo_basic_async(raw_image)  # Use basic enhancement as fallback
         
         if ',' in image_data:
             image_data = image_data.split(',')[1]
@@ -2833,7 +2858,7 @@ async def generate_single_stencil_for_job(job: StencilJob, style: str, shading_d
             
             # Apply post-processing to ensure clean B&W output
             stencil_with_prefix = f"data:{mime_type};base64,{result_base64}"
-            processed_stencil, _fill_frac = post_process_stencil(stencil_with_prefix)
+            processed_stencil, _fill_frac = await post_process_stencil_async(stencil_with_prefix)
             
             job.result[style] = processed_stencil
             logger.info(f"[AsyncJob {job.job_id}] {style} version completed")
@@ -2874,10 +2899,10 @@ async def process_stencil_job(job_id: str):
             except Exception as e:
                 logger.warning(f"[AsyncJob {job_id}] Enhancement pipeline failed, using basic: {str(e)}")
                 # Fallback to basic enhancement without preprocessing
-                job.enhanced_image = enhance_photo_basic(job.image_base64)
+                job.enhanced_image = await enhance_photo_basic_async(job.image_base64)
         else:
             # Use basic enhancement only
-            job.enhanced_image = enhance_photo_basic(job.image_base64)
+            job.enhanced_image = await enhance_photo_basic_async(job.image_base64)
         
         job.status = "processing"
         logger.info(f"[AsyncJob {job_id}] Starting stencil generation...")
@@ -3150,9 +3175,9 @@ async def _run_stencil_job_v2(job_id: str):
                 enhanced = await enhance_photo_with_ai(image_b64)
             except Exception as e:
                 logger.warning(f'[AsyncJob-v2 {job_id}] Enhancement failed, using basic: {e}')
-                enhanced = enhance_photo_basic(image_b64)
+                enhanced = await enhance_photo_basic_async(image_b64)
         else:
-            enhanced = enhance_photo_basic(image_b64)
+            enhanced = await enhance_photo_basic_async(image_b64)
 
         # Strip data-URL prefix for Gemini
         gemini_input = enhanced.split(',', 1)[1] if ',' in enhanced else enhanced
@@ -3204,7 +3229,7 @@ async def _run_stencil_job_v2(job_id: str):
 
         # Step 5: post-process for clean B&W
         stencil_with_prefix = f'data:{mime_type};base64,{result_base64}'
-        processed_stencil, _fill_frac = post_process_stencil(stencil_with_prefix)
+        processed_stencil, _fill_frac = await post_process_stencil_async(stencil_with_prefix)
 
         # Step 6: validator soft-log (parity with sync /api/ai-stencil).
         # Hard-block remains DISABLED — soft-log mode only. Failures here
@@ -7724,7 +7749,7 @@ async def ai_stencil_debug(request: AIStencilDebugRequest):
     raw_b64, mime = await generate_with_gemini(image_data, prompt, temperature=request.temperature)
 
     raw_data_url = f"data:{mime};base64,{raw_b64}"
-    processed_data_url, near_black_fraction = post_process_stencil(raw_data_url)
+    processed_data_url, near_black_fraction = await post_process_stencil_async(raw_data_url)
 
     return {
         "raw_base64": raw_data_url,
