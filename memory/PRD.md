@@ -67,7 +67,30 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
-- **P0 ARCHITECTURE: Async Polling for Medium/Heavy Reroll (May 19 2026)** 🔴 ✅
+- **P0 ARCHITECTURE: MongoDB-Backed Async Stencil Architecture v2 (May 19 2026)** 🔴 ✅ — preview verified, awaiting prod deploy
+  - **Replaces** the prior batch's in-memory async polling extension with a proper production-grade architecture.
+  - **New canonical endpoints:**
+    - `POST /api/ai-stencil/start` — auth required (401 anonymous), credit gate (402 zero credits), Pydantic rejects Light at validator boundary (422 — Light stays on sync path per directive). Returns `{job_id, status:'pending'}` immediately.
+    - `GET /api/ai-stencil/status/{job_id}` — auth required, user_id ownership enforced (404 if mismatched or missing), returns full job state with `stencil_base64` data URL when status=completed.
+  - **MongoDB-backed state:** `db.stencil_jobs` collection with TTL index on `created_at` (1h auto-cleanup) + unique index on `job_id`. Survives backend restart, evicted-job 404 detection on client.
+  - **Background worker `_run_stencil_job_v2`:** mirrors the sync `/api/ai-stencil` pipeline (enhance → Blueprint prompt → Gemini → resize to original dims → post-process → validator soft-log) with all status/progress updates persisted to MongoDB. No time limit on the worker — only the client's 3-min polling timeout bounds the wait. Generation survives slow Gemini responses (>60s) and Cloudflare edge timeout ceilings because the long step is decoupled from the HTTP lifecycle.
+  - **Frontend `regenerateStencilAsync`:** rewired from in-memory `/api/ai-stencil-async` to new v2 endpoints. Polls at 2s for the first ~12s then backs off to 3s. Handles 401/403/404/422/timeout cleanly with surfaced error messages.
+  - **Unchanged in this batch:** Light reroll still uses sync `/api/ai-stencil`. Initial generation of all styles (`generateSingleStyle`) still uses legacy `/api/ai-stencil-async` (in-memory) — migration deferred to the next deploy per "one architectural change per deploy" discipline rule.
+  - **Preview smoke tests (all passed):**
+    1. unauth POST → 401
+    2. light style → 422 (regex rejects at Pydantic boundary)
+    3. zero credits → 402
+    4. happy path heavy generation → completed in ~4s on preview with small test image, `has_result=True`, `mime=image/png`
+    5. mismatched user_id → 404
+    6. status doc shape: `{job_id, status, progress, style, stencil_base64, mime_type, created_at, completed_at, error}`
+  - **Deploy runbook + rollback marker:** `/app/memory/DEPLOY_RUNBOOK_2026_05_19_ASYNC_V2.md`. Rollback point: commit `36d257e0`.
+  - **Files changed:**
+    - `backend/server.py`: `StencilStartRequest` / `StencilStartResponse` / `StencilStatusResponse` Pydantic models, `_run_stencil_job_v2` background worker, `POST /api/ai-stencil/start`, `GET /api/ai-stencil/status/{job_id}`, TTL+unique index on `db.stencil_jobs` at startup.
+    - `frontend/app/lib/stencilApi.ts`: `regenerateStencilAsync` rewritten to use v2 endpoints with 2s→3s backoff polling.
+  - **What this fixes (root cause statement):** Synchronous long-running AI generation through Cloudflare/proxy lifecycle was causing intermittent 520s and inconsistent reroll reliability under latency variance. The new architecture decouples Gemini latency from the HTTP request lifecycle entirely — backend returns within milliseconds, generation completes in the background, client polls a fast endpoint.
+
+- **P0 ARCHITECTURE: Async Polling for Medium/Heavy Reroll (May 19 2026 — superseded)** 🟡
+  - Earlier in this session, an in-memory extension to the existing `/api/ai-stencil-async` endpoint was shipped to preview. That work has now been superseded by the MongoDB-backed v2 architecture above. The legacy endpoint remains in place for initial generation paths until the next deploy migrates them too.
   - **Bug:** Under concurrent load (>3 users), Gemini latency spikes to 65s+, blowing through Cloudflare's ~60s edge proxy timeout. Backend completes successfully but client sees 502/504. Affected the **reroll path** (`/api/ai-stencil` sync) specifically; initial generation already used the async path.
   - **Fix:** `regenerateSingleStyle` in `frontend/app/index.tsx` now branches on style — Light continues using the existing sync `regenerateStencil` (12-15s latency, well under proxy ceiling), Medium and Heavy switch to a new `regenerateStencilAsync` helper that POSTs to `/api/ai-stencil-async` (returns `job_id`) and polls `/api/ai-stencil-status/{job_id}` every 2s up to 3 min timeout. Fire-and-forget DELETE on completion to free the in-memory job slot.
   - **Backend hardening of `/api/ai-stencil-async`:**

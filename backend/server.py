@@ -3076,6 +3076,310 @@ async def delete_stencil_job(job_id: str):
         return {"status": "deleted"}
     raise HTTPException(status_code=404, detail="Job not found")
 
+
+# ═══════════════════════════════════════════════════════════════════════
+# MongoDB-backed async stencil generation (v2)
+# ───────────────────────────────────────────────────────────────────────
+# Replaces the in-memory `stencil_jobs` dict path for Medium/Heavy
+# generation. Survives backend restarts (state in db.stencil_jobs with
+# 1h TTL). Light stays on the synchronous `/api/ai-stencil` path.
+#
+# Endpoints:
+#   POST   /api/ai-stencil/start         → returns {job_id, status}
+#   GET    /api/ai-stencil/status/{id}   → returns full job state
+#
+# Job lifecycle:
+#   pending → processing → completed | failed
+#
+# Auth: required. user_id stamped on job; status endpoint enforces
+# user_id match unless caller is admin.
+# ═══════════════════════════════════════════════════════════════════════
+
+class StencilStartRequest(BaseModel):
+    image_base64: str
+    style: str = Field(..., pattern="^(medium|heavy)$",
+                       description="Async path supports medium/heavy only. Light uses sync /api/ai-stencil.")
+    line_color: str = "black"
+    auto_enhance: bool = True
+
+
+class StencilStartResponse(BaseModel):
+    job_id: str
+    status: str  # always 'pending' on create
+
+
+class StencilStatusResponse(BaseModel):
+    job_id: str
+    status: str  # pending | processing | completed | failed
+    progress: int
+    style: str
+    stencil_base64: Optional[str] = None  # data URL (only when completed)
+    mime_type: Optional[str] = None
+    error: Optional[str] = None
+    created_at: str
+    completed_at: Optional[str] = None
+
+
+async def _run_stencil_job_v2(job_id: str):
+    """Background worker for the MongoDB-backed async stencil path.
+
+    Reads job state from db.stencil_jobs, runs the same Gemini pipeline as
+    the in-memory async path, and persists status/result back to Mongo.
+    Designed to be safe against: container restarts (state in DB), Gemini
+    latency spikes (no time limit on this worker — only the frontend's
+    polling timeout bounds the wait), and concurrent jobs (each one is
+    independent because state is keyed by job_id).
+    """
+    job = await db.stencil_jobs.find_one({'job_id': job_id})
+    if not job:
+        logger.error(f'[AsyncJob-v2 {job_id}] Job not found in DB')
+        return
+
+    correlation_id = job.get('correlation_id', job_id[:12])
+    style = job.get('style', 'medium')
+
+    async def _patch(update: dict):
+        await db.stencil_jobs.update_one({'job_id': job_id}, {'$set': update})
+
+    try:
+        # Step 1: status=processing, enhance image
+        await _patch({'status': 'processing', 'progress': 10})
+        image_b64 = job['image_base64']
+        if job.get('auto_enhance', True):
+            try:
+                enhanced = await enhance_photo_with_ai(image_b64)
+            except Exception as e:
+                logger.warning(f'[AsyncJob-v2 {job_id}] Enhancement failed, using basic: {e}')
+                enhanced = enhance_photo_basic(image_b64)
+        else:
+            enhanced = enhance_photo_basic(image_b64)
+
+        # Strip data-URL prefix for Gemini
+        gemini_input = enhanced.split(',', 1)[1] if ',' in enhanced else enhanced
+
+        await _patch({'progress': 25})
+
+        # Step 2: detail level + Blueprint prompt
+        detail_level = 'moderate' if style == 'medium' else 'detailed'
+        prompt = build_blueprint_prompt(job.get('line_color', 'black'), detail_level)
+
+        # Step 3: Gemini call (the long step, 22-65s under concurrency)
+        logger.info(
+            f'[AsyncJob-v2:GEN id={correlation_id}] user={job.get("user_id")} '
+            f'style={style} image_sha={job.get("request_image_sha", "")[:16]} '
+            f'— Starting Gemini call'
+        )
+        result_base64, mime_type = await generate_with_gemini(
+            gemini_input, prompt, temperature=0.0
+        )
+
+        if not result_base64:
+            await _patch({
+                'status': 'failed',
+                'progress': 100,
+                'error': 'Gemini returned no result',
+                'completed_at': datetime.now(timezone.utc).isoformat(),
+            })
+            logger.error(f'[AsyncJob-v2 {job_id}] Gemini returned no result')
+            return
+
+        await _patch({'progress': 70})
+
+        # Step 4: resize to original input dimensions for overlay alignment
+        try:
+            original_b64 = image_b64.split(',', 1)[1] if ',' in image_b64 else image_b64
+            original_img = Image.open(BytesIO(base64.b64decode(original_b64)))
+            ow, oh = original_img.size
+            stencil_img = Image.open(BytesIO(base64.b64decode(result_base64)))
+            if stencil_img.size != (ow, oh):
+                stencil_img = stencil_img.resize((ow, oh), Image.Resampling.LANCZOS)
+                buf = BytesIO()
+                stencil_img.save(buf, format='PNG')
+                result_base64 = base64.b64encode(buf.getvalue()).decode('utf-8')
+                mime_type = 'image/png'
+        except Exception as resize_err:
+            logger.warning(f'[AsyncJob-v2 {job_id}] Resize warning: {resize_err}')
+
+        await _patch({'progress': 85})
+
+        # Step 5: post-process for clean B&W
+        stencil_with_prefix = f'data:{mime_type};base64,{result_base64}'
+        processed_stencil, _fill_frac = post_process_stencil(stencil_with_prefix)
+
+        # Step 6: validator soft-log (parity with sync /api/ai-stencil).
+        # Hard-block remains DISABLED — soft-log mode only. Failures here
+        # never affect the user; they go to db.validator_softlog.
+        try:
+            _validation = await validate_stencil_reference_match_async(
+                image_b64, processed_stencil
+            )
+            # validate_stencil_reference_match_async already writes to
+            # validator_softlog when in soft-log mode; no action needed.
+        except Exception as val_err:
+            logger.warning(f'[AsyncJob-v2 {job_id}] Validator failed (non-fatal): {val_err}')
+
+        # Step 7: persist completion
+        await _patch({
+            'status': 'completed',
+            'progress': 100,
+            'stencil_base64': processed_stencil,
+            'mime_type': mime_type,
+            'completed_at': datetime.now(timezone.utc).isoformat(),
+        })
+        logger.info(
+            f'[AsyncJob-v2:DONE id={correlation_id}] user={job.get("user_id")} '
+            f'style={style} — Job completed successfully'
+        )
+
+    except Exception as e:
+        logger.error(f'[AsyncJob-v2 {job_id}] Failed: {e}', exc_info=True)
+        try:
+            await db.stencil_jobs.update_one(
+                {'job_id': job_id},
+                {'$set': {
+                    'status': 'failed',
+                    'progress': 100,
+                    'error': str(e)[:500],
+                    'completed_at': datetime.now(timezone.utc).isoformat(),
+                }},
+            )
+        except Exception as persist_err:
+            logger.error(f'[AsyncJob-v2 {job_id}] Failed to persist error: {persist_err}')
+
+
+@api_router.post('/ai-stencil/start', response_model=StencilStartResponse)
+async def start_stencil_job_v2(request: StencilStartRequest, http_request: Request):
+    """Start a MongoDB-backed async stencil generation job (Medium/Heavy).
+
+    Returns immediately with a job_id. Poll GET /api/ai-stencil/status/{job_id}
+    for the result. Designed to survive long Gemini latencies that would
+    blow through Cloudflare's edge-proxy timeout on the sync path.
+
+    Auth: REQUIRED. Anonymous calls return 401 (use sync /api/ai-stencil
+    for unauthenticated callers).
+    """
+    # ── Auth ────────────────────────────────────────────────────────
+    auth_header = http_request.headers.get('authorization')
+    if not auth_header:
+        raise HTTPException(status_code=401, detail='Authorization required')
+    try:
+        current_user = await get_current_user(auth_header)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(f'[AsyncJob-v2:start] Auth failed: {e}')
+        raise HTTPException(status_code=401, detail='Invalid session')
+
+    user_id = current_user['user_id']
+
+    # ── Credit gate (parity with sync /api/ai-stencil) ──────────────
+    try:
+        credits_state = await get_user_credits(user_id)
+        available = int(credits_state.get('available_credits', 0))
+        is_emergency = bool(credits_state.get('emergency_available', False))
+        if available <= 0 and not is_emergency:
+            logger.info(
+                f'[CreditGate:v2] Blocked generation for {current_user.get("email")} '
+                f'— available_credits=0'
+            )
+            raise HTTPException(
+                status_code=402,
+                detail='No credits available. Please upgrade or wait for your next cycle.',
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.warning(f'[CreditGate:v2] Soft check failed, allowing: {e}')
+
+    # ── Create job doc ──────────────────────────────────────────────
+    job_id = str(uuid.uuid4())
+    correlation_id = job_id[:12]
+    try:
+        req_image_hash = hash_image(request.image_base64)
+    except Exception:
+        req_image_hash = 'unhashable'
+
+    job_doc = {
+        'job_id': job_id,
+        'user_id': user_id,
+        'correlation_id': correlation_id,
+        'style': request.style,
+        'line_color': request.line_color,
+        'auto_enhance': request.auto_enhance,
+        'image_base64': request.image_base64,
+        'request_image_sha': req_image_hash,
+        'status': 'pending',
+        'progress': 0,
+        'stencil_base64': None,
+        'mime_type': None,
+        'error': None,
+        'created_at': datetime.now(timezone.utc),
+        'completed_at': None,
+    }
+    await db.stencil_jobs.insert_one(job_doc)
+
+    logger.info(
+        f'[AsyncJob-v2:REQ id={correlation_id}] user={user_id} '
+        f'style={request.style} image_sha={req_image_hash[:16]} '
+        f'auto_enhance={request.auto_enhance} image_bytes={len(request.image_base64)} '
+        f'— Job created, starting background processing...'
+    )
+
+    # Fire-and-forget background worker. State is in Mongo so a container
+    # restart loses only the in-flight worker (the job stays at status=pending
+    # and the TTL eventually evicts it). The frontend polling will see a stale
+    # pending and timeout cleanly — same UX as a failed reroll today.
+    asyncio.create_task(_run_stencil_job_v2(job_id))
+
+    return StencilStartResponse(job_id=job_id, status='pending')
+
+
+@api_router.get('/ai-stencil/status/{job_id}', response_model=StencilStatusResponse)
+async def get_stencil_job_status_v2(job_id: str, http_request: Request):
+    """Poll for the status of an async stencil generation job.
+
+    Auth required. Caller must be the job's owner OR an admin.
+    """
+    auth_header = http_request.headers.get('authorization')
+    if not auth_header:
+        raise HTTPException(status_code=401, detail='Authorization required')
+
+    # Try user auth first; fall back to admin if that fails (admin auth
+    # is a separate token).
+    requester_user_id: Optional[str] = None
+    is_admin = False
+    try:
+        current_user = await get_current_user(auth_header)
+        requester_user_id = current_user['user_id']
+    except Exception:
+        try:
+            await verify_admin(auth_header)
+            is_admin = True
+        except Exception:
+            raise HTTPException(status_code=401, detail='Invalid session')
+
+    job = await db.stencil_jobs.find_one({'job_id': job_id}, {'_id': 0, 'image_base64': 0})
+    if not job:
+        raise HTTPException(status_code=404, detail='Job not found or expired')
+
+    if not is_admin and job.get('user_id') != requester_user_id:
+        raise HTTPException(status_code=403, detail='Not your job')
+
+    created_at = job.get('created_at')
+    completed_at = job.get('completed_at')
+    return StencilStatusResponse(
+        job_id=job['job_id'],
+        status=job.get('status', 'pending'),
+        progress=int(job.get('progress', 0)),
+        style=job.get('style', ''),
+        stencil_base64=job.get('stencil_base64'),
+        mime_type=job.get('mime_type'),
+        error=job.get('error'),
+        created_at=created_at.isoformat() if hasattr(created_at, 'isoformat') else str(created_at or ''),
+        completed_at=completed_at.isoformat() if hasattr(completed_at, 'isoformat') else (completed_at or None),
+    )
+
+
 @api_router.post("/stencils", response_model=SavedStencil)
 async def save_stencil(request: SaveStencilRequest):
     """Save a stencil to the database with auto-generated thumbnail"""
@@ -8069,6 +8373,20 @@ async def startup_scheduler():
         logger.info('[Startup] Ensured TTL index on revenuecat_webhook_events.created_at (30d)')
     except Exception as e:
         logger.warning(f'[Startup] Could not create TTL index on revenuecat_webhook_events: {e}')
+
+    # Async stencil generation jobs — TTL=1h. Job docs auto-expire so the
+    # collection stays bounded even if the frontend never explicitly deletes.
+    # Doc shape: { job_id, user_id, style, status, progress, image_base64,
+    #              result_base64, mime_type, error, correlation_id,
+    #              request_image_sha, created_at, completed_at }
+    try:
+        await db.stencil_jobs.create_index(
+            'created_at', expireAfterSeconds=3600, background=True
+        )
+        await db.stencil_jobs.create_index('job_id', unique=True, background=True)
+        logger.info('[Startup] Ensured TTL index on stencil_jobs.created_at (1h) + unique job_id')
+    except Exception as e:
+        logger.warning(f'[Startup] Could not create indexes on stencil_jobs: {e}')
 
     async def daily_referral_cron():
         """Runs every 24 hours: processes pending referral verifications."""

@@ -73,16 +73,23 @@ export async function regenerateStencil(
  * latency is well under the proxy ceiling and the simpler round-trip is more
  * reliable for short jobs.
  *
- * Flow: POST /api/ai-stencil-async → returns job_id immediately → poll
- * GET /api/ai-stencil-status/{job_id} every `pollIntervalMs` until status is
- * `completed` (returns stencil) or `failed` (throws). On completion, fires a
- * fire-and-forget DELETE to free the in-memory job slot on the backend.
+ * Architecture (MongoDB-backed v2, May 2026):
+ *   POST /api/ai-stencil/start           → returns { job_id, status:'pending' }
+ *   GET  /api/ai-stencil/status/{job_id} → returns full job state
+ * Job state lives in db.stencil_jobs (TTL 1h). Survives backend restart.
  *
- * Throws if the job doesn't complete within `timeoutMs` (default 3 min).
+ * Polling: starts at 2s, backs off to 3s after the first 6 polls (~12s).
+ * Returns when status=completed; throws on status=failed, 404 (expired),
+ * 401/403 (auth), or after `timeoutMs` (default 3 min).
+ *
+ * Auth: REQUIRED. The backend's /api/ai-stencil/start rejects anonymous
+ * callers with 401. Pass a valid session token.
  */
 export async function regenerateStencilAsync(
   params: RegenerateParams & {
-    pollIntervalMs?: number;
+    initialPollMs?: number;
+    backoffPollMs?: number;
+    backoffAfterAttempts?: number;
     timeoutMs?: number;
   },
 ): Promise<RegenerateResult> {
@@ -91,61 +98,77 @@ export async function regenerateStencilAsync(
     imageBase64,
     style,
     token,
-    pollIntervalMs = 2000,
+    initialPollMs = 2000,
+    backoffPollMs = 3000,
+    backoffAfterAttempts = 6,
     timeoutMs = 180_000,
   } = params;
+
+  if (!token) {
+    throw new Error('regenerateStencilAsync: session token required');
+  }
 
   const normalised = imageBase64.startsWith('data:')
     ? imageBase64
     : `data:image/jpeg;base64,${imageBase64}`;
 
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const authHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
 
-  // ── Step 1: start the job ──────────────────────────────────────────
+  // ── Step 1: start the job ─────────────────────────────────────────
   const startedAt = Date.now();
-  const startResp = await fetch(`${apiUrl}/api/ai-stencil-async`, {
+  const startResp = await fetch(`${apiUrl}/api/ai-stencil/start`, {
     method: 'POST',
-    headers,
+    headers: authHeaders,
     body: JSON.stringify({
       image_base64: normalised,
-      single_style: style,
+      style,
       auto_enhance: true,
       line_color: 'black',
     }),
   });
   if (!startResp.ok) {
     const text = await startResp.text();
+    // Surface specific status codes so the UI can react (402=no credits,
+    // 401=session expired, 422=Light routed by mistake, etc).
     throw new Error(`regenerateStencilAsync start ${startResp.status}: ${text}`);
   }
   const { job_id: jobId } = await startResp.json();
   if (!jobId) throw new Error('regenerateStencilAsync: backend returned no job_id');
 
-  // ── Step 2: poll until terminal status ─────────────────────────────
+  // ── Step 2: poll with backoff until terminal status ───────────────
+  let attempt = 0;
   while (Date.now() - startedAt < timeoutMs) {
-    await new Promise((r) => setTimeout(r, pollIntervalMs));
+    const pollMs = attempt < backoffAfterAttempts ? initialPollMs : backoffPollMs;
+    await new Promise((r) => setTimeout(r, pollMs));
+    attempt += 1;
 
     let statResp: Response;
     try {
-      statResp = await fetch(`${apiUrl}/api/ai-stencil-status/${jobId}`);
+      statResp = await fetch(`${apiUrl}/api/ai-stencil/status/${jobId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
     } catch (netErr) {
       // Transient network blip — keep polling until timeout.
       continue;
     }
     if (statResp.status === 404) {
-      // Job evicted (e.g. backend restart). Bail with a clear error.
-      throw new Error('regenerateStencilAsync: job no longer exists (was the backend restarted?)');
+      throw new Error('regenerateStencilAsync: job no longer exists (TTL expired or backend evicted)');
     }
-    if (!statResp.ok) continue;
+    if (statResp.status === 401 || statResp.status === 403) {
+      const text = await statResp.text();
+      throw new Error(`regenerateStencilAsync auth ${statResp.status}: ${text}`);
+    }
+    if (!statResp.ok) continue; // 5xx — transient, keep polling
 
     const data = await statResp.json();
     if (data.status === 'completed') {
-      const stencilBase64 = data.result?.[style];
+      const stencilBase64 = data.stencil_base64;
       if (!stencilBase64) {
         throw new Error('regenerateStencilAsync: completed but no result payload');
       }
-      // Fire-and-forget cleanup; don't block the caller on it.
-      fetch(`${apiUrl}/api/ai-stencil-job/${jobId}`, { method: 'DELETE' }).catch(() => undefined);
       return {
         stencilBase64,
         processingTimeMs: Date.now() - startedAt,
@@ -154,7 +177,7 @@ export async function regenerateStencilAsync(
     if (data.status === 'failed') {
       throw new Error(`regenerateStencilAsync failed: ${data.error || 'unknown error'}`);
     }
-    // status is 'pending', 'enhancing', or 'processing' — keep polling.
+    // status is 'pending' or 'processing' — keep polling.
   }
 
   throw new Error('regenerateStencilAsync timed out after 3 min');
