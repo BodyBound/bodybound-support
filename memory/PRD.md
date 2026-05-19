@@ -67,6 +67,18 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **Soft-Log Recalibration Window Officially Opened (May 19 2026)** ✅
+  - **Preview backend cleared:** `DELETE /api/admin/validator-softlog` wiped 13 entries (5 pre-fix `edge_ncc=0.0` rows + 8 pre-fix test rows). `total_events=0` confirmed. Fresh 7-day window starts now (target review: May 26 2026).
+  - **Production status:** still holds 5 stale pre-fix entries — DELETE endpoint returns 405 on prod because the next deploy hasn't shipped yet. Will auto-clear on the next prod push.
+  - Hard-block stays disabled — soft-log mode only until thresholds are recalibrated against post-fix distribution.
+  - Post-mortem doc updated with operational record of the clear.
+- **`/api/admin/top-power-users` admin endpoint added (May 19 2026)** ✅
+  - Ranks paid users (walk-in / booked-out / the-shop / the-shop-member) by stencil-generation session activity over a configurable window (default 30 days).
+  - Returns email, name, tier, available credits, session count, saved/exported counts, reroll total, last active timestamp.
+  - Used to identify post-outage retention outreach candidates. Admin auth required.
+- **Outreach templates drafted** — `/app/memory/OUTREACH_RINGO_AND_POWER_USERS.md` contains Ringo confirmation message + generic power-user message + comp-credits shell script.
+
+## Recent Changes (Feb-Apr 2026 — Earlier)
 - **CRITICAL: Cache-Key Collision Causing Cross-Reference Image Output (Apr 29 2026)** 🔴🔴🔴
   - **Bug:** A user reported the AI returning a stencil from an UNRELATED reference photo. Two separate failures + a wrong-image return in one session.
   - **Root cause:** `get_cache_key(image_base64, style)` hashed only the **first 1000 base64 characters** of the image with MD5. JPEG/PNG headers, EXIF, and quantization tables on phone photos are similar enough that two unrelated photos can collide on this prefix. When that happened, the cache returned user A's stencil for user B's unrelated reference photo. The async job path (UUID-keyed) was clean — collision was 100% in the cache.

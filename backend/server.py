@@ -4640,6 +4640,81 @@ async def admin_validator_softlog(request: FastAPIRequest, limit: int = 100):
     }
 
 
+@api_router.get("/admin/top-power-users")
+async def admin_top_power_users(request: FastAPIRequest, days: int = 30, limit: int = 10):
+    """Rank paid users by stencil-generation activity over the last N days.
+
+    Used to identify "power users" for proactive outreach after incidents.
+    Joins `stencil_sessions` (with non-null user_id) against `subscriptions`
+    (paid tiers only) and `users` (for email/name). Read-only. Admin auth.
+    """
+    await verify_admin(request.headers.get('authorization'))
+    days = max(1, min(int(days), 365))
+    limit = max(1, min(int(limit), 50))
+    since_iso = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
+    pipeline = [
+        {'$match': {'user_id': {'$ne': None}, 'started_at': {'$gte': since_iso}}},
+        {'$group': {
+            '_id': '$user_id',
+            'session_count': {'$sum': 1},
+            'saved_count': {'$sum': {'$cond': [{'$eq': ['$saved', True]}, 1, 0]}},
+            'exported_count': {'$sum': {'$cond': [{'$eq': ['$exported', True]}, 1, 0]}},
+            'reroll_total': {'$sum': {'$add': [
+                {'$ifNull': ['$reroll_counts.light', 0]},
+                {'$ifNull': ['$reroll_counts.medium', 0]},
+                {'$ifNull': ['$reroll_counts.heavy', 0]},
+            ]}},
+            'last_active': {'$max': '$started_at'},
+            'tier_at_event': {'$last': '$user_tier'},
+        }},
+        {'$sort': {'session_count': -1}},
+        {'$limit': 100},
+    ]
+
+    paid_tiers = {'walk-in', 'booked-out', 'the-shop', 'the-shop-member'}
+    results = []
+    try:
+        async for doc in db.stencil_sessions.aggregate(pipeline):
+            user_id = doc.get('_id')
+            sub = await db.subscriptions.find_one(
+                {'user_id': user_id},
+                {'_id': 0, 'tier': 1, 'available_credits': 1, 'credits_consumed_this_cycle': 1, 'last_event': 1, 'last_applied_at': 1},
+            )
+            if not sub or sub.get('tier') not in paid_tiers:
+                continue
+            user = await db.users.find_one(
+                {'user_id': user_id},
+                {'_id': 0, 'email': 1, 'name': 1},
+            ) or {}
+            results.append({
+                'user_id': user_id,
+                'email': user.get('email'),
+                'name': user.get('name'),
+                'tier': sub.get('tier'),
+                'available_credits': sub.get('available_credits'),
+                'credits_consumed_this_cycle': sub.get('credits_consumed_this_cycle'),
+                'session_count': doc.get('session_count'),
+                'saved_count': doc.get('saved_count'),
+                'exported_count': doc.get('exported_count'),
+                'reroll_total': doc.get('reroll_total'),
+                'last_active': doc.get('last_active'),
+                'last_sub_event': sub.get('last_event'),
+            })
+            if len(results) >= limit:
+                break
+    except Exception as e:
+        logger.warning(f'[TopPowerUsers] aggregate failed: {e}')
+        raise HTTPException(status_code=500, detail=str(e))
+
+    return {
+        'window_days': days,
+        'paid_tiers_only': True,
+        'count': len(results),
+        'power_users': results,
+    }
+
+
 @api_router.get("/admin/duplicate-sub-audit")
 async def admin_duplicate_sub_audit(request: FastAPIRequest, days: int = 90):
     """Backend audit for double-billing root-cause confirmation (May 2026).

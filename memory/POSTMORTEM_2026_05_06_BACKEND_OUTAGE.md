@@ -120,6 +120,10 @@ The validator was running `cv2.Canny` + numpy ops directly in the async handler 
 
 **Soft-log buffer cleared (`cleared_at`):** May 19, 2026 (post-alpha-fix deploy)
 
+**Operational record of clear:**
+- **Preview backend** (`stencil-ai-fallback.preview.emergentagent.com`): cleared at `2026-05-19T04:11:08Z` via `DELETE /api/admin/validator-softlog` — **13 entries wiped** (5 pre-fix `edge_ncc=0.0` rows + 8 additional pre-fix test/staging rows). Post-clear verify: `total_events=0`, `events=[]`. ✅
+- **Production backend** (`bodybound-subs.emergent.host`): clear pending deploy. Production currently returns `405 Method Not Allowed` on the DELETE — endpoint code is in repo but the production container hasn't been redeployed since it was added. 5 stale entries still present (`edge_ncc=0.0`, line_precision 0.594–0.711, styles: 3 medium / 2 heavy, ranging 2026-05-18 03:41Z → 2026-05-19 03:32Z). **Will clear automatically the moment the next production deploy lands; until then, prod soft-log readings are pre-fix garbage and should be ignored for recalibration purposes.**
+
 **Why cleared:** The 10 entries in the buffer before this date were produced by
 the buggy pre-fix validator that always returned `edge_ncc=0.0` due to PIL
 discarding the alpha channel during RGBA→L conversion on real Gemini PNG
