@@ -67,7 +67,19 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
-- **P0 ARCHITECTURE: MongoDB-Backed Async Stencil Architecture v2 (May 19 2026)** 🔴 ✅ — preview verified, awaiting prod deploy
+- **P0 ARCHITECTURE: MongoDB-Backed Async Stencil Architecture v2 — VERIFIED LIVE IN PRODUCTION (May 19 2026)** 🔴 ✅
+  - All 6 production smoke assertions passed: health=200, unauth=401, light-rejected=422, zero-credit=402, heavy happy-path=completed in ~2s on prod (small test image), mismatched job=404.
+  - Additional verifications passed: Light sync `/api/ai-stencil` still works (200 in 14.3s with stencil), Medium reroll via v2 completed in ~8s, no double-deduct (balance unchanged after 2 generations, start endpoint only gates, doesn't deduct), failed jobs don't consume credits (frontend gates `deductCredit` in success branch only), no 520/timeout regression.
+  - Production is now serving Medium/Heavy rerolls via the MongoDB-backed v2 path. Generation is decoupled from Cloudflare's HTTP request lifecycle.
+
+- **Build #2 — Auth Lifecycle Audit (READ-ONLY, May 19 2026) 🟡 ✅ — Deliverable: written report**
+  - **Report:** `/app/memory/AUTH_LIFECYCLE_AUDIT_2026_05_19.md`
+  - **Top finding:** Motor pool is healthy (default 100, no saturation). Real bottleneck is **synchronous PIL functions called from request handlers without `run_in_executor`** — `post_process_stencil` (5 call sites, ~80–200ms each) and `enhance_photo_basic` (8 call sites, ~50–150ms each) freeze the entire asyncio event loop during execution. This is why auth requests queue behind stencil generation despite both endpoints being "async" by signature.
+  - **Other findings:** `bcrypt.checkpw` for admin login not in executor (low frequency); Apple JWKS not cached (refetched every Apple login); per-request `httpx.AsyncClient` instantiation in auth handlers (minor); Motor `waitQueueTimeoutMS` unset (silent queue if pool ever saturates).
+  - **Prioritized fix list provided** for separate isolated deploys (P0: wrap PIL in run_in_executor; P1: bcrypt + JWKS cache; P2: shared httpx, Motor timeouts, explicit threadpool sizing).
+  - **No code changes made** per directive — investigation only.
+
+## Recent Changes (Feb-Apr 2026 — earlier)
   - **Replaces** the prior batch's in-memory async polling extension with a proper production-grade architecture.
   - **New canonical endpoints:**
     - `POST /api/ai-stencil/start` — auth required (401 anonymous), credit gate (402 zero credits), Pydantic rejects Light at validator boundary (422 — Light stays on sync path per directive). Returns `{job_id, status:'pending'}` immediately.
