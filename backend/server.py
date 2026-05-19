@@ -202,14 +202,37 @@ def validate_stencil_reference_match(input_b64: str, output_b64: str) -> dict:
         'reason': str,
     }
     """
-    def _decode(b64: str):
+    def _decode_for_validation(b64: str) -> Image.Image:
+        """Decode a base64 image AND composite any alpha channel onto white.
+
+        Production Gemini stencil outputs are PNG with alpha — the stencil
+        lines live as opaque dark pixels on a transparent (alpha=0)
+        background. Default PIL behavior of `.convert('L')` on RGBA
+        discards alpha and uses RGB channels only, which for these
+        stencils produces a pure-black grayscale array (the RGB channels
+        of "transparent background" are typically 0,0,0). That collapses
+        the validator's variance to zero and forces edge_ncc to 0.0.
+
+        Composite over white first so the resulting grayscale faithfully
+        represents what the user actually sees: dark lines on a white
+        background.
+        """
         if b64 and ',' in b64[:64]:
             b64 = b64.split(',', 1)[1]
-        return Image.open(BytesIO(base64.b64decode(b64)))
+        img = Image.open(BytesIO(base64.b64decode(b64)))
+        if img.mode == 'RGBA':
+            bg = Image.new('RGB', img.size, (255, 255, 255))
+            bg.paste(img, mask=img.split()[3])
+            img = bg
+        elif img.mode == 'LA':
+            bg = Image.new('L', img.size, 255)
+            bg.paste(img, mask=img.split()[1])
+            img = bg
+        return img
 
     try:
-        in_img = _decode(input_b64).convert('L').resize((128, 128), Image.LANCZOS)
-        out_img = _decode(output_b64).convert('L').resize((128, 128), Image.LANCZOS)
+        in_img = _decode_for_validation(input_b64).convert('L').resize((128, 128), Image.LANCZOS)
+        out_img = _decode_for_validation(output_b64).convert('L').resize((128, 128), Image.LANCZOS)
     except Exception as e:
         # If we can't decode either image, don't block the response.
         return {
