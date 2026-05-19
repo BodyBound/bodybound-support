@@ -4584,6 +4584,24 @@ async def admin_comp_credits_history(request: FastAPIRequest, limit: int = 50, u
     }
 
 
+@api_router.delete("/admin/validator-softlog")
+async def admin_validator_softlog_clear(request: FastAPIRequest):
+    """Wipe the validator soft-log rolling buffer.
+
+    Used to start a fresh telemetry collection window after a validator
+    fix (e.g. the May 2026 alpha-channel decode bug that produced
+    edge_ncc=0.0 on every real Gemini stencil). Admin-only.
+    """
+    await verify_admin(request.headers.get('authorization'))
+    result = await db.validator_softlog.delete_many({})
+    logger.info(f'[Admin] validator_softlog wiped — deleted {result.deleted_count} entries')
+    return {
+        'deleted_count': result.deleted_count,
+        'cleared_at': datetime.now(timezone.utc).isoformat(),
+        'note': 'Fresh recalibration window begins now.',
+    }
+
+
 @api_router.get("/admin/validator-softlog")
 async def admin_validator_softlog(request: FastAPIRequest, limit: int = 100):
     """Read the rolling buffer of would-have-failed validator events.

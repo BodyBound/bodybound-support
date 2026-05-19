@@ -116,6 +116,37 @@ The validator was running `cv2.Canny` + numpy ops directly in the async handler 
 
 ---
 
+## Validator Recalibration Window
+
+**Soft-log buffer cleared (`cleared_at`):** May 19, 2026 (post-alpha-fix deploy)
+
+**Why cleared:** The 10 entries in the buffer before this date were produced by
+the buggy pre-fix validator that always returned `edge_ncc=0.0` due to PIL
+discarding the alpha channel during RGBA→L conversion on real Gemini PNG
+stencils. The numbers were mathematically meaningless and would have skewed any
+threshold recalibration.
+
+**Fix shipped:** `_decode_for_validation` helper added — composites RGBA over
+white before grayscale conversion. Verified live: legit Gemini Medium stencils
+now produce `edge_ncc` in the **0.22–0.37** range and `line_precision` in the
+**0.93–0.97** range, matching offline calibration. Wrong-reference pairs land
+at `edge_ncc < 0.05` and `line_precision < 0.80`.
+
+**Recalibration window:** 7 days from clear (target Tue May 26, 2026). During
+this window the validator runs in soft-log mode only — no user-facing block,
+no refund, no retry. After 7 days of real production data we re-examine the
+distribution and decide whether to re-enable hard-block with calibrated
+thresholds, or stay in soft-log indefinitely.
+
+**Do NOT re-enable hard-block before:**
+1. ≥ 100 fresh soft-log events accumulated post-fix
+2. The edge_ncc / line_precision distributions are reviewed against actual
+   user-reported quality complaints (do flagged stencils correlate with
+   complaints?)
+3. Thresholds are re-tuned against the new distribution
+
+---
+
 ## Customer Communication
 
 - **Ringo (`ringopiniontattoo@gmail.com`)** — primary affected user with video evidence. **Comp 25 credits** via `POST /api/admin/comp-credits` after this deploy lands. Suggested message: "Confirmed your account, found the bug — fixed. Comping 25 credits as apology. Try again now."
