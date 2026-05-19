@@ -1135,14 +1135,22 @@ Output the enhanced photo now."""
                 logger.info(f"[AIEnhance] Trying {key_name}...")
                 client = genai.Client(api_key=api_key)
                 
-                response = client.models.generate_content(
-                    model='gemini-2.5-flash-image',
-                    contents=[
-                        enhancement_prompt,
-                        types.Part.from_bytes(data=image_bytes, mime_type="image/png")
-                    ],
-                    config=types.GenerateContentConfig(
-                        response_modalities=['IMAGE', 'TEXT']
+                # NOTE: genai.Client.models.generate_content is a SYNCHRONOUS
+                # API. Calling it directly from this async handler blocks the
+                # event loop for the entire LLM round-trip (~10-15s), starving
+                # auth/status endpoints. Push it onto a worker thread.
+                loop = asyncio.get_running_loop()
+                response = await loop.run_in_executor(
+                    None,
+                    lambda: client.models.generate_content(
+                        model='gemini-2.5-flash-image',
+                        contents=[
+                            enhancement_prompt,
+                            types.Part.from_bytes(data=image_bytes, mime_type="image/png")
+                        ],
+                        config=types.GenerateContentConfig(
+                            response_modalities=['IMAGE', 'TEXT']
+                        )
                     )
                 )
                 
@@ -2236,6 +2244,31 @@ class AIStencilResponse(BaseModel):
     regenerated_style: Optional[str] = None  # Which style was regenerated (if single style request)
     near_black_fraction: Optional[float] = None  # 0..1 — fraction of raw-output pixels darker than 40/255. >0.05 indicates possible zero-fill violation.
     
+async def _run_llm_coro_in_thread(coro_factory):
+    """Push a blocking LLM coroutine onto a worker thread with its own event loop.
+
+    `emergentintegrations.LlmChat.send_message_multimodal_response` is declared
+    `async def` but its underlying `_execute_completion` calls the SYNCHRONOUS
+    `litellm.completion(...)` — that 15s call freezes our event loop and
+    starves every other coroutine (auth/me, status polls, health checks).
+
+    Workaround: run the entire coroutine inside a thread that has its own
+    private asyncio loop. Caller still uses a clean `await`. Returns whatever
+    the wrapped coroutine returns.
+
+    `coro_factory` is a zero-arg callable that returns the coroutine (we pass
+    a factory rather than the coroutine itself so the inner loop owns it).
+    """
+    def _runner():
+        loop = asyncio.new_event_loop()
+        try:
+            return loop.run_until_complete(coro_factory())
+        finally:
+            loop.close()
+
+    return await asyncio.get_running_loop().run_in_executor(None, _runner)
+
+
 async def generate_with_gemini(image_data: str, prompt: str, temperature: Optional[float] = None) -> tuple[str, str]:
     """Generate stencil with Gemini using emergentintegrations LlmChat
     
@@ -2276,7 +2309,14 @@ async def generate_with_gemini(image_data: str, prompt: str, temperature: Option
                 file_contents=[ImageContent(image_data)]
             )
             
-            text_response, images = await chat.send_message_multimodal_response(msg)
+            # NOTE: chat.send_message_multimodal_response is declared `async`
+            # but its underlying `_execute_completion` calls the SYNCHRONOUS
+            # `litellm.completion(...)`, which blocks our event loop for the
+            # entire LLM round-trip (~15s for Gemini). That starves auth and
+            # status endpoints. Push it onto a worker thread instead.
+            text_response, images = await _run_llm_coro_in_thread(
+                lambda: chat.send_message_multimodal_response(msg)
+            )
             
             if not images or len(images) == 0:
                 raise Exception("Gemini did not return any images")
