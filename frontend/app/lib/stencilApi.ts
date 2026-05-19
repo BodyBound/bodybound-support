@@ -66,6 +66,100 @@ export async function regenerateStencil(
   };
 }
 
+/**
+ * Async reroll for Medium/Heavy — avoids Cloudflare's 60s edge proxy timeout.
+ *
+ * Light should keep using `regenerateStencil` (sync) because its 12-15s
+ * latency is well under the proxy ceiling and the simpler round-trip is more
+ * reliable for short jobs.
+ *
+ * Flow: POST /api/ai-stencil-async → returns job_id immediately → poll
+ * GET /api/ai-stencil-status/{job_id} every `pollIntervalMs` until status is
+ * `completed` (returns stencil) or `failed` (throws). On completion, fires a
+ * fire-and-forget DELETE to free the in-memory job slot on the backend.
+ *
+ * Throws if the job doesn't complete within `timeoutMs` (default 3 min).
+ */
+export async function regenerateStencilAsync(
+  params: RegenerateParams & {
+    pollIntervalMs?: number;
+    timeoutMs?: number;
+  },
+): Promise<RegenerateResult> {
+  const {
+    apiUrl,
+    imageBase64,
+    style,
+    token,
+    pollIntervalMs = 2000,
+    timeoutMs = 180_000,
+  } = params;
+
+  const normalised = imageBase64.startsWith('data:')
+    ? imageBase64
+    : `data:image/jpeg;base64,${imageBase64}`;
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  // ── Step 1: start the job ──────────────────────────────────────────
+  const startedAt = Date.now();
+  const startResp = await fetch(`${apiUrl}/api/ai-stencil-async`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      image_base64: normalised,
+      single_style: style,
+      auto_enhance: true,
+      line_color: 'black',
+    }),
+  });
+  if (!startResp.ok) {
+    const text = await startResp.text();
+    throw new Error(`regenerateStencilAsync start ${startResp.status}: ${text}`);
+  }
+  const { job_id: jobId } = await startResp.json();
+  if (!jobId) throw new Error('regenerateStencilAsync: backend returned no job_id');
+
+  // ── Step 2: poll until terminal status ─────────────────────────────
+  while (Date.now() - startedAt < timeoutMs) {
+    await new Promise((r) => setTimeout(r, pollIntervalMs));
+
+    let statResp: Response;
+    try {
+      statResp = await fetch(`${apiUrl}/api/ai-stencil-status/${jobId}`);
+    } catch (netErr) {
+      // Transient network blip — keep polling until timeout.
+      continue;
+    }
+    if (statResp.status === 404) {
+      // Job evicted (e.g. backend restart). Bail with a clear error.
+      throw new Error('regenerateStencilAsync: job no longer exists (was the backend restarted?)');
+    }
+    if (!statResp.ok) continue;
+
+    const data = await statResp.json();
+    if (data.status === 'completed') {
+      const stencilBase64 = data.result?.[style];
+      if (!stencilBase64) {
+        throw new Error('regenerateStencilAsync: completed but no result payload');
+      }
+      // Fire-and-forget cleanup; don't block the caller on it.
+      fetch(`${apiUrl}/api/ai-stencil-job/${jobId}`, { method: 'DELETE' }).catch(() => undefined);
+      return {
+        stencilBase64,
+        processingTimeMs: Date.now() - startedAt,
+      };
+    }
+    if (data.status === 'failed') {
+      throw new Error(`regenerateStencilAsync failed: ${data.error || 'unknown error'}`);
+    }
+    // status is 'pending', 'enhancing', or 'processing' — keep polling.
+  }
+
+  throw new Error('regenerateStencilAsync timed out after 3 min');
+}
+
 export interface DeductCreditResult {
   available_credits: number;
   total_monthly_credits?: number;

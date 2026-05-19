@@ -43,7 +43,7 @@ import Purchases from 'react-native-purchases';
 import * as Device from 'expo-device';
 import { styles } from './styles/mainStyles';
 import { StencilSettings, SavedStencil, StencilListItem, User, UserCredits } from './types';
-import { regenerateStencil, deductCredit, submitStencilRating, recordSessionEvent, regenCostLabel, isFreeRegen, type StencilStyle } from './lib/stencilApi';
+import { regenerateStencil, regenerateStencilAsync, deductCredit, submitStencilRating, recordSessionEvent, regenCostLabel, isFreeRegen, type StencilStyle } from './lib/stencilApi';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { AuthScreen } from './screens/AuthScreen';
 import { SettingsScreen } from './screens/SettingsScreen';
@@ -1624,13 +1624,24 @@ export default function Index() {
 
       console.log(`[RegenerateSingle] Regenerating ${style} version (${free ? 'FREE' : 'PAID'})...`);
 
-      const { stencilBase64 } = await regenerateStencil({
-        apiUrl: API_URL,
-        imageBase64,
-        style: style as StencilStyle,
-        token: sessionToken || undefined,  // enables server-side credit gate
-      });
-      console.log(`[RegenerateSingle] ${style} version regenerated successfully`);
+      // Async polling for Medium/Heavy (Gemini latency >60s under concurrency
+      // blows through Cloudflare's edge proxy timeout on the sync path).
+      // Light stays sync because its 12-15s latency is well under the ceiling.
+      const useAsync = style === 'medium' || style === 'heavy';
+      const { stencilBase64 } = useAsync
+        ? await regenerateStencilAsync({
+            apiUrl: API_URL,
+            imageBase64,
+            style: style as StencilStyle,
+            token: sessionToken || undefined,
+          })
+        : await regenerateStencil({
+            apiUrl: API_URL,
+            imageBase64,
+            style: style as StencilStyle,
+            token: sessionToken || undefined,  // enables server-side credit gate
+          });
+      console.log(`[RegenerateSingle] ${style} version regenerated successfully (${useAsync ? 'async' : 'sync'})`);
 
       // Update only this style in stencilVersions
       setStencilVersions(prev => ({ ...prev, [style]: stencilBase64 }));

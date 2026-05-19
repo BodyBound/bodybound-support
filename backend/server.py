@@ -289,12 +289,14 @@ def validate_stencil_reference_match(input_b64: str, output_b64: str) -> dict:
     }
 
 class StencilJob:
-    def __init__(self, job_id: str, image_base64: str, settings: dict, auto_enhance: bool = True, single_style: str = None):
+    def __init__(self, job_id: str, image_base64: str, settings: dict, auto_enhance: bool = True, single_style: str = None, user_id: str = "anonymous", correlation_id: str = ""):
         self.job_id = job_id
         self.image_base64 = image_base64
         self.settings = settings
         self.auto_enhance = auto_enhance  # Whether to use AI enhancement
         self.single_style = single_style  # If set, only generate this style
+        self.user_id = user_id  # For audit + log correlation
+        self.correlation_id = correlation_id or job_id[:12]
         self.status = "pending"  # pending, enhancing, processing, completed, failed
         self.progress = 0  # 0-100
         self.current_style = None  # light, medium, heavy
@@ -2949,7 +2951,7 @@ async def process_stencil_job(job_id: str):
         logger.error(f"[AsyncJob {job_id}] Job failed with error: {str(e)}")
 
 @api_router.post("/ai-stencil-async", response_model=AsyncStencilStartResponse)
-async def start_async_stencil(request: AsyncStencilRequest):
+async def start_async_stencil(request: AsyncStencilRequest, http_request: Request):
     """Start async stencil generation - returns immediately with job ID.
     
     Use GET /api/ai-stencil-status/{job_id} to poll for results.
@@ -2957,22 +2959,79 @@ async def start_async_stencil(request: AsyncStencilRequest):
     
     Set auto_enhance=true (default) to use AI upscaling/enhancement before stencil generation.
     Set single_style to 'light', 'medium', or 'heavy' to only generate that style.
+
+    Auth: optional. When a session token is provided, a soft credit gate
+    blocks the start if the user has 0 credits (mirrors /api/ai-stencil).
+    Unauthenticated callers still work for legacy frontends.
     """
     try:
+        # ── Soft credit gate (defence-in-depth, parity with sync) ──────────
+        auth_header = http_request.headers.get('authorization')
+        request_user_id = 'anonymous'
+        if auth_header:
+            try:
+                current_user = await get_current_user(auth_header)
+                request_user_id = current_user['user_id']
+                credits_state = await get_user_credits(current_user['user_id'])
+                available = int(credits_state.get('available_credits', 0))
+                is_emergency = bool(credits_state.get('emergency_available', False))
+                if available <= 0 and not is_emergency:
+                    logger.info(
+                        f"[CreditGate:Async] Blocked generation for {current_user.get('email')} "
+                        f"— available_credits=0"
+                    )
+                    raise HTTPException(
+                        status_code=402,
+                        detail="No credits available. Please upgrade or wait for your next cycle.",
+                    )
+            except HTTPException:
+                raise
+            except Exception as gate_err:
+                # Never break the generation if the gate itself fails.
+                logger.warning(f"[CreditGate:Async] Soft check failed, allowing request: {gate_err}")
+
+        # ── Lazy prune: drop in-memory jobs older than 1 hour ──────────────
+        # Frontend normally DELETEs jobs on completion, but if it crashes or
+        # loses network mid-poll, the orphan would linger forever. Prune
+        # opportunistically on every new start request.
+        try:
+            cutoff = datetime.utcnow() - timedelta(hours=1)
+            stale = [jid for jid, j in stencil_jobs.items() if j.created_at < cutoff]
+            for jid in stale:
+                stencil_jobs.pop(jid, None)
+            if stale:
+                logger.info(f"[AsyncJob] Pruned {len(stale)} stale jobs (>1h old)")
+        except Exception as prune_err:
+            logger.warning(f"[AsyncJob] Prune failed (non-fatal): {prune_err}")
+
         # Create job
         job_id = str(uuid.uuid4())
+        correlation_id = job_id[:12]
         job = StencilJob(
             job_id=job_id,
             image_base64=request.image_base64,
             settings={"line_color": request.line_color},
             auto_enhance=request.auto_enhance,
-            single_style=request.single_style
+            single_style=request.single_style,
+            user_id=request_user_id,
+            correlation_id=correlation_id,
         )
         stencil_jobs[job_id] = job
         
         enhance_msg = "with AI enhancement" if request.auto_enhance else "without AI enhancement"
         style_msg = f" (single style: {request.single_style})" if request.single_style else " (all styles)"
-        logger.info(f"[AsyncJob {job_id}] Job created {enhance_msg}{style_msg}, starting background processing...")
+        # Forensic-grade log line (parity with [AI-Stencil:REQ] from sync path).
+        try:
+            req_image_hash = hash_image(request.image_base64)
+        except Exception:
+            req_image_hash = "unhashable"
+        logger.info(
+            f"[AsyncJob:REQ id={correlation_id}] user={request_user_id} "
+            f"style={request.single_style or 'auto'} "
+            f"image_sha={req_image_hash[:16]} "
+            f"auto_enhance={request.auto_enhance} image_bytes={len(request.image_base64)} "
+            f"— Job created {enhance_msg}{style_msg}, starting background processing..."
+        )
         
         # Start background task (don't await it)
         asyncio.create_task(process_stencil_job(job_id))
@@ -2983,6 +3042,8 @@ async def start_async_stencil(request: AsyncStencilRequest):
             message="Stencil generation started. Poll /api/ai-stencil-status/{job_id} for results."
         )
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error starting async stencil job: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error starting generation: {str(e)}")

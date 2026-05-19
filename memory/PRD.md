@@ -67,7 +67,30 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
-- **P0 BUG FIX: Credit Rollover on Renewal (May 19 2026)** 🔴 ✅
+- **P0 ARCHITECTURE: Async Polling for Medium/Heavy Reroll (May 19 2026)** 🔴 ✅
+  - **Bug:** Under concurrent load (>3 users), Gemini latency spikes to 65s+, blowing through Cloudflare's ~60s edge proxy timeout. Backend completes successfully but client sees 502/504. Affected the **reroll path** (`/api/ai-stencil` sync) specifically; initial generation already used the async path.
+  - **Fix:** `regenerateSingleStyle` in `frontend/app/index.tsx` now branches on style — Light continues using the existing sync `regenerateStencil` (12-15s latency, well under proxy ceiling), Medium and Heavy switch to a new `regenerateStencilAsync` helper that POSTs to `/api/ai-stencil-async` (returns `job_id`) and polls `/api/ai-stencil-status/{job_id}` every 2s up to 3 min timeout. Fire-and-forget DELETE on completion to free the in-memory job slot.
+  - **Backend hardening of `/api/ai-stencil-async`:**
+    - Added optional auth + soft credit gate (parity with sync `/api/ai-stencil`). 402 if `available_credits<=0`. Unauthenticated callers still work for legacy paths.
+    - Added forensic `[AsyncJob:REQ id=... user=... image_sha=... style=...]` log line (mirrors `[AI-Stencil:REQ]` from sync path).
+    - Added `user_id` and `correlation_id` to `StencilJob` for audit + log correlation.
+    - Added lazy prune of in-memory `stencil_jobs` older than 1 hour on every new start request — prevents orphan job leak if frontend ever fails to DELETE.
+  - **Verified on preview backend:**
+    - Unauthenticated start → 200, returns job_id, completes, DELETE cleanup works ✅
+    - Authenticated start with credits → 200, polling shows `status=completed`, `result.heavy` populated ✅
+    - Authenticated start with 0 credits → **402** "No credits available." ✅
+    - Heavy stencil completes in <30s end-to-end on preview (within Cloudflare timeout, but the async path makes it irrelevant under concurrency) ✅
+  - **No behavior change on Light reroll** — preserves the simpler sync round-trip for short jobs.
+  - **No backend rewrite, no MongoDB schema change** — surgically extended existing async infrastructure rather than introducing a parallel architecture. In-memory job storage is acceptable: if the backend restarts mid-job, the user retries (same UX as a sync-path failure).
+  - **Files changed:**
+    - `backend/server.py`: StencilJob class, start_async_stencil endpoint (auth + gate + prune + structured log).
+    - `frontend/app/lib/stencilApi.ts`: new `regenerateStencilAsync` helper (start + poll + cleanup, 3-min timeout, 2s poll interval).
+    - `frontend/app/index.tsx`: import added; `regenerateSingleStyle` branches by style (Light=sync, Medium/Heavy=async).
+
+- **P0 BUG FIX: Credit Rollover on Renewal (May 19 2026)** 🔴 ✅ — VERIFIED IN PRODUCTION
+  - Production smoke test on 2026-05-19: walk-in 100 credits + RENEWAL → 225 (rollover under cap), replay deduped, second RENEWAL → 250 (capped), INITIAL_PURCHASE hard-resets, PRODUCT_CHANGE hard-resets to new tier. All 7 assertions passed live.
+  - Soft-log buffer cleared on production (39 stale pre-fix entries wiped, fresh window started).
+  - `/api/admin/top-power-users` live and returning real data — 10 power users surfaced for outreach.
   - **Bug:** Paid subscribers were losing unused credits on every Apple renewal — `apply_paid_subscription_state(source='RENEWAL')` hard-set `available_credits = monthly_allowance`, blowing away whatever balance the user had banked from the previous month. Violates PRD rollover policy (2× monthly allowance cap).
   - **Fix:** Split `apply_paid_subscription_state` into two paths. `RENEWAL` (paid only) now routes credits through `apply_monthly_refill(cycle_key='rc:renewal:{event_id}')` — the same atomic, idempotent helper already used by the cron path. INITIAL_PURCHASE, PRODUCT_CHANGE, UNCANCELLATION, FRONTEND_SYNC (tier-change), and trial-RENEWAL retain hard-reset behavior. Cycle key derived from webhook `event.id`; falls back to date-bucketed key if event_id missing.
   - **Tests added:** `backend/tests/test_renewal_rollover.py` — 12/12 pass. Covers: walk-in rollover under cap, walk-in rollover at cap (truncated to 250), at-cap stays at cap, idempotent replay (same event_id), distinct event_ids each refill across two cycles, booked-out tier (400 → 900, cap 1000), INITIAL_PURCHASE still hard-resets, PRODUCT_CHANGE upgrade hard-resets to new tier allowance, UNCANCELLATION preserves hard-reset behavior, Apple trial RENEWAL bypasses rollover, missing event_id falls back to date-key, and audit fields stamped correctly.
