@@ -67,6 +67,22 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **P0 STABILITY: Event-Loop Unblocking Batch — VERIFIED LIVE IN PRODUCTION (May 19 2026)** 🔴 ✅
+  - **Root cause confirmed via concurrency test:** Auth endpoints were freezing for ~15s during heavy generation because both `litellm.completion` (inside `emergentintegrations.LlmChat`) and `client.models.generate_content` (genai SDK) are SYNCHRONOUS calls inside `async def` functions — they blocked the entire event loop during every Gemini round-trip. The audit had only identified PIL freezes; the concurrency test exposed this deeper issue.
+  - **Fix #1 — PIL executor wrapping (audit P0):** Added `post_process_stencil_async` + `enhance_photo_basic_async` helpers. 13 sync call sites converted to `await ..._async(...)`. Only the one inside sync helper `enhance_photo_for_ai` (line 1185) intentionally untouched.
+  - **Fix #2 — LiteLLM/genai executor wrapping:** Added `_run_llm_coro_in_thread(coro_factory)` helper that runs blocking LLM coroutines on a worker thread with their own private event loop. 2 call sites wrapped: `chat.send_message_multimodal_response` in `generate_with_gemini`, and `client.models.generate_content` in `enhance_photo_with_ai`.
+  - **Production smoke test results (5/5 PASS):**
+    - `/api/health` → 200, 0.19s
+    - `/api/auth/me` cold → 200, 0.26s
+    - Light sync gen → 200, 15.3s, stencil returned
+    - **12 parallel `/api/auth/me` probes during 2 simultaneous heavy+medium async generations → median 509ms, p90 583ms, max 583ms.** Before deploy: 15.8s. **27× faster.**
+    - Medium + Heavy both completed with `has_result=True`.
+    - Zero AsyncJob failures, zero 520s, zero new exceptions.
+  - **Strict scope compliance:** no frontend changes, no auth logic changes, no validator behavior changes, no purchase/subscription changes, no bcrypt/JWKS/httpx/Motor changes.
+  - **Rollback marker for this deploy:** commit `2b909d6c`.
+  - **Deploy doc:** `/app/memory/DEPLOY_RUNBOOK_2026_05_19_EVENT_LOOP_UNBLOCK.md`
+  - **Status:** baking for 24-48h before next deploy per discipline rule.
+
 - **P0 ARCHITECTURE: MongoDB-Backed Async Stencil Architecture v2 — VERIFIED LIVE IN PRODUCTION (May 19 2026)** 🔴 ✅
   - All 6 production smoke assertions passed: health=200, unauth=401, light-rejected=422, zero-credit=402, heavy happy-path=completed in ~2s on prod (small test image), mismatched job=404.
   - Additional verifications passed: Light sync `/api/ai-stencil` still works (200 in 14.3s with stencil), Medium reroll via v2 completed in ~8s, no double-deduct (balance unchanged after 2 generations, start endpoint only gates, doesn't deduct), failed jobs don't consume credits (frontend gates `deductCredit` in success branch only), no 520/timeout regression.
