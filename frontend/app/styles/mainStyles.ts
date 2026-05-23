@@ -76,6 +76,129 @@ export const styles = StyleSheet.create({
     borderBottomColor: '#C9A227',
     backgroundColor: '#0D0D0D',
   },
+  // ── Workspace mode (Phase 1) — additive style overrides ──────────────
+  // Applied to the existing header when an image is loaded. Shrinks chrome
+  // so the canvas dominates the screen. Pure visual override — no markup
+  // changes, no behavior changes.
+  headerCompact: {
+    paddingVertical: 8,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(201, 162, 39, 0.35)',
+  },
+  imageAreaWorkspace: {
+    backgroundColor: '#000',
+  },
+  previewSectionWorkspace: {
+    marginHorizontal: 0,
+  },
+  imageWrapperWorkspace: {
+    padding: 0,
+    borderRadius: 0,
+    backgroundColor: '#000',
+    position: 'relative', // anchor floating chips
+  },
+  // Floating chip buttons that overlay the canvas at top-left (menu) and
+  // top-right (crop) when in workspace mode. Replace the heavy
+  // imageLabelRow + "Crop Image" bar from the legacy layout.
+  workspaceMenuChip: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(13, 13, 13, 0.75)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(201, 162, 39, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  workspaceCropChip: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(13, 13, 13, 0.75)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(201, 162, 39, 0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 20,
+  },
+  workspaceChipIcon: {
+    color: '#F5F5F5',
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 20,
+  },
+  // Top pull-down sheet hosting the source actions (Gallery / Camera /
+  // Edit / Start Over) that used to live in the bottom bar.
+  workspaceMenuBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    justifyContent: 'flex-start',
+  },
+  workspaceMenuSheet: {
+    backgroundColor: '#0D0D0D',
+    paddingTop: 8,
+    paddingHorizontal: 18,
+    paddingBottom: 22,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(201, 162, 39, 0.35)',
+    shadowColor: '#000',
+    shadowOpacity: 0.45,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  workspaceMenuHandle: {
+    alignSelf: 'center',
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    marginBottom: 12,
+  },
+  workspaceMenuTitle: {
+    color: '#C9A227',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.4,
+    marginBottom: 12,
+  },
+  workspaceMenuGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  workspaceMenuItem: {
+    flexGrow: 1,
+    flexBasis: '47%',
+    backgroundColor: '#1A1510',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#3D3428',
+    gap: 6,
+  },
+  workspaceMenuItemDanger: {
+    borderColor: 'rgba(220, 38, 38, 0.45)',
+  },
+  workspaceMenuItemIcon: {
+    fontSize: 22,
+  },
+  workspaceMenuItemLabel: {
+    color: '#F5F5F5',
+    fontSize: 13,
+    fontWeight: '600',
+  },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',

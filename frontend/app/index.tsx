@@ -398,6 +398,19 @@ export default function Index() {
   const [stencilHistory, setStencilHistory] = useState<{ [key: string]: string[] }>({ light: [], medium: [], heavy: [] });
   const [stencilHistoryIndex, setStencilHistoryIndex] = useState<{ [key: string]: number }>({ light: 0, medium: 0, heavy: 0 });
 
+  // ── Workspace Shell (Phase 1, May 2026) ─────────────────────────────────
+  // Purely cosmetic layout mode: when an image is loaded, switch the screen
+  // into a canvas-first fullscreen workspace. Existing generation, history,
+  // compare, edit, crop, ratings — ALL behavior is unchanged. The workspace
+  // mode only hides chrome and rearranges existing controls into a top
+  // pull-down sheet and a compact bottom dock.
+  //
+  // `workspaceMenuOpen` controls the top pull-down sheet that exposes the
+  // Gallery / Camera / Edit / Start Over source actions that used to live
+  // in the visible bottom bar. The bottom bar is reserved for the Light /
+  // Medium / Heavy generation dock when in workspace mode.
+  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
+
   const addToHistory = (style: string, base64: string) => {
     setStencilHistory(prev => {
       const current = [...(prev[style] || [])];
@@ -4021,8 +4034,16 @@ export default function Index() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* ── Workspace mode (Phase 1 May 2026) ─────────────────────────────
+       *  When `originalImage` is loaded, the layout shifts into a canvas-
+       *  first fullscreen workspace: header compacts, image area becomes
+       *  edge-to-edge, source buttons (Gallery/Camera/Edit/Start Over) move
+       *  into a top pull-down sheet, and the bottom dock is reserved for
+       *  the Light/Medium/Heavy generation buttons. All existing handlers
+       *  — generation, history, compare, brush, eraser, crop, ratings —
+       *  are untouched. */}
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, !!originalImage && styles.headerCompact]}>
         <View style={styles.headerLeft}>
           <Image 
             source={require('../assets/images/logo.png')} 
@@ -4031,7 +4052,9 @@ export default function Index() {
           />
           <View style={styles.headerTitleContainer}>
             <Text style={styles.headerTitle}>BODY BOUND</Text>
-            <Text style={styles.headerSubtitle}>Stencil Generator</Text>
+            {!originalImage && (
+              <Text style={styles.headerSubtitle}>Stencil Generator</Text>
+            )}
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -4138,9 +4161,9 @@ export default function Index() {
       )}
 
       {/* Main Image Area - fills all available vertical space */}
-      <View style={styles.imageArea}>
+      <View style={[styles.imageArea, !!originalImage && styles.imageAreaWorkspace]}>
         {/* Image Preview Area */}
-        <View style={styles.previewSection}>
+        <View style={[styles.previewSection, !!originalImage && styles.previewSectionWorkspace]}>
           {!originalImage ? (
             <>
               {/* Photo Library Grid - Instagram style */}
@@ -4204,7 +4227,31 @@ export default function Index() {
           ) : (
             <View style={styles.imagesContainer}>
               {/* Main Image Display - Shows Stencil, hold to see Original */}
-              <View style={styles.imageWrapper}>
+              <View style={[styles.imageWrapper, !!originalImage && styles.imageWrapperWorkspace]}>
+                {/* Workspace-mode floating chips: top-left = menu (Gallery/Camera/Edit/Start Over),
+                    top-right = Crop. Only shown when an image is loaded. Sit absolutely over the
+                    canvas so they don't add chrome to the layout. */}
+                {originalImage && (
+                  <>
+                    <TouchableOpacity
+                      testID="workspace-menu-btn"
+                      style={styles.workspaceMenuChip}
+                      onPress={() => setWorkspaceMenuOpen(true)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Text style={styles.workspaceChipIcon}>≡</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      testID="workspace-crop-chip"
+                      style={styles.workspaceCropChip}
+                      onPress={openCropModal}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Text style={styles.workspaceChipIcon}>✂</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+                {!originalImage && (
                 <View style={styles.imageLabelRow}>
                   <Text style={styles.imageLabel}>
                     {stencilImage ? (showingOriginal ? 'Original' : 'Stencil') : 'Original'}
@@ -4218,6 +4265,7 @@ export default function Index() {
                     <Text style={styles.cropTopText}>Crop Image</Text>
                   </TouchableOpacity>
                 </View>
+                )}
                 
                 {/* Image display — pinch to zoom, two-finger pan, double-tap to reset */}
                 <GestureDetector gesture={mainImageGesture}>
@@ -4263,7 +4311,10 @@ export default function Index() {
       {/* Bottom Control Bar - all buttons here, image area gets maximum space */}
       <View style={styles.bottomBar}>
 
-        {/* Image Source Buttons */}
+        {/* Image Source Buttons — hidden in workspace mode; they live in the
+            top pull-down sheet (opened via the ≡ chip) so the bottom dock is
+            reserved for the Light/Medium/Heavy generation buttons. */}
+        {!originalImage && (
         <View style={styles.sourceButtons}>
           <TouchableOpacity style={styles.sourceButton} onPress={pickImage}>
             <Text style={styles.buttonIcon}>🖼️</Text>
@@ -4295,6 +4346,7 @@ export default function Index() {
             </TouchableOpacity>
           )}
         </View>
+        )}
 
         {/* Image Quality Warning Banner */}
         {showQualityWarning && imageQualityWarnings.length > 0 && (
@@ -5459,6 +5511,80 @@ export default function Index() {
             </TouchableOpacity>
           </View>
         </View>
+      </Modal>
+
+      {/* ═══════════════════════════════════════════════════════════════════
+       *  Workspace Menu — top pull-down sheet (Phase 1 May 2026)
+       *  ─────────────────────────────────────────────────────────────────
+       *  Hosts the Gallery / Camera / Edit / Start Over actions that used to
+       *  live as a permanent row in the bottom bar. Opened by the ≡ chip in
+       *  the top-left of the canvas when an image is loaded. Tapping any
+       *  action closes the sheet and invokes the existing handler — no
+       *  behavior changes.
+       *  ═══════════════════════════════════════════════════════════════════ */}
+      <Modal
+        visible={workspaceMenuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setWorkspaceMenuOpen(false)}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          style={styles.workspaceMenuBackdrop}
+          onPress={() => setWorkspaceMenuOpen(false)}
+          testID="workspace-menu-backdrop"
+        >
+          <View style={styles.workspaceMenuSheet} onStartShouldSetResponder={() => true}>
+            <View style={styles.workspaceMenuHandle} />
+            <Text style={styles.workspaceMenuTitle}>Reference</Text>
+            <View style={styles.workspaceMenuGrid}>
+              <TouchableOpacity
+                style={styles.workspaceMenuItem}
+                onPress={() => { setWorkspaceMenuOpen(false); pickImage(); }}
+                testID="workspace-menu-gallery"
+              >
+                <Text style={styles.workspaceMenuItemIcon}>🖼️</Text>
+                <Text style={styles.workspaceMenuItemLabel}>Gallery</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.workspaceMenuItem}
+                onPress={() => { setWorkspaceMenuOpen(false); takePhoto(); }}
+                testID="workspace-menu-camera"
+              >
+                <Text style={styles.workspaceMenuItemIcon}>📷</Text>
+                <Text style={styles.workspaceMenuItemLabel}>Camera</Text>
+              </TouchableOpacity>
+              {stencilImage && (
+                <TouchableOpacity
+                  style={styles.workspaceMenuItem}
+                  onPress={() => { setWorkspaceMenuOpen(false); openEditMode(); }}
+                  testID="workspace-menu-edit"
+                >
+                  <Text style={styles.workspaceMenuItemIcon}>✏️</Text>
+                  <Text style={styles.workspaceMenuItemLabel}>Edit</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.workspaceMenuItem, styles.workspaceMenuItemDanger]}
+                onPress={() => {
+                  setWorkspaceMenuOpen(false);
+                  Alert.alert(
+                    'Start a new stencil?',
+                    'Your current stencil will be lost if not saved.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Start New', style: 'destructive', onPress: resetAll },
+                    ]
+                  );
+                }}
+                testID="workspace-menu-reset"
+              >
+                <Text style={styles.workspaceMenuItemIcon}>🆕</Text>
+                <Text style={styles.workspaceMenuItemLabel}>Start Over</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
       </Modal>
 
     </SafeAreaView>
