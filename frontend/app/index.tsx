@@ -4180,8 +4180,10 @@ export default function Index() {
         </View>
       </View>
 
-      {/* Growth Messaging: Referral Banner */}
-      {showReferralBanner && isPaidUser && !showLowCreditModal && !showMilestoneModal && (
+      {/* Growth Messaging: Referral Banner — workspace mode hides it
+          because the canvas should dominate. Banner still appears on the
+          landing screen (no image loaded). */}
+      {showReferralBanner && isPaidUser && !originalImage && !showLowCreditModal && !showMilestoneModal && (
         <ReferralBanner
           onPress={() => { setShowReferralBanner(false); setShowReferralDashboard(true); }}
           onDismiss={handleBannerDismiss}
@@ -4729,10 +4731,14 @@ export default function Index() {
               )}
               </View>
             </View>
-            {/* Regeneration hint text in golden */}
-            <Text style={styles.regenHintText}>
-              If the generated stencil is not to your liking, press the regeneration button in the top corner of your desired option.
-            </Text>
+            {/* Regeneration hint text in golden — only show once at least
+                one stencil has been generated, so the workspace stays clean
+                before the user has anything to regenerate. */}
+            {(stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
+              <Text style={styles.regenHintText}>
+                If the generated stencil is not to your liking, press the regeneration button in the top corner of your desired option.
+              </Text>
+            )}
           </View>
         )}
 
