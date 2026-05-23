@@ -199,6 +199,49 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  // First-time workspace tooltip (Phase 1 polish, May 2026).
+  // Container is pointerEvents="box-none" so canvas gestures pass through
+  // freely; only the bubble itself is tappable to dismiss.
+  workspaceTooltipContainer: {
+    position: 'absolute',
+    top: 54, // sits just below the ≡ chip (10 + 36 + 8 gap)
+    left: 10,
+    right: 60, // leaves room for the crop chip area
+    zIndex: 25,
+  },
+  workspaceTooltipBubble: {
+    backgroundColor: 'rgba(13, 13, 13, 0.92)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(201, 162, 39, 0.55)',
+    shadowColor: '#000',
+    shadowOpacity: 0.45,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+    elevation: 8,
+    maxWidth: 280,
+    alignSelf: 'flex-start',
+  },
+  workspaceTooltipArrow: {
+    position: 'absolute',
+    top: -6,
+    left: 12,
+    width: 12,
+    height: 12,
+    backgroundColor: 'rgba(13, 13, 13, 0.92)',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(201, 162, 39, 0.55)',
+    transform: [{ rotate: '45deg' }],
+  },
+  workspaceTooltipText: {
+    color: '#F5F5F5',
+    fontSize: 13,
+    fontWeight: '500',
+    lineHeight: 18,
+  },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',

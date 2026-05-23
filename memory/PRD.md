@@ -67,7 +67,18 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
-- **P0 FRONTEND: Workspace Shell — Phase 1 of Editor Redesign (May 22 2026)** 🎨 ✅ — preview built, awaiting prod deploy
+- **P0 FRONTEND: Workspace Shell — Phase 1 + first-time tooltip polish (May 22 2026)** 🎨 ✅ — preview built, ready to deploy as one frontend-only release
+  - **Phase 1 Shell** (committed earlier in this session): canvas-first fullscreen workspace, floating `≡` menu chip + `✂` crop chip overlay the canvas, top pull-down sheet hosts Gallery / Camera / Edit / Start Over, header subtitle hidden when image loaded, image area edge-to-edge, bottom dock reserved for Light/Medium/Heavy generation buttons.
+  - **Polish add-on (just landed):** First-time workspace tooltip pointing at the `≡` chip. Copy: *"Tap here for Camera, Gallery, Edit, and Start Over"*. Dark translucent bubble with gold-tint border + arrow pointer. Appears once per install (gated by AsyncStorage key `bb_workspace_tooltip_seen`). Auto-dismisses in 4s. Also dismisses on: tap the bubble, tap the `≡` chip, tap the `✂` chip, menu opens, component unmount. Wrapped in `pointerEvents="box-none"` so canvas gestures (pinch/pan/rotate) pass through untouched.
+  - **Combined diff:** `frontend/app/index.tsx` +80 lines (state + effects + tooltip JSX + dismiss-on-chip-tap wiring), `frontend/app/styles/mainStyles.ts` +43 lines (4 new tooltip styles). Phase 1 shell additions snapshotted at commit `053a37ac` before this polish.
+  - **TypeScript:** 25 errors before this entire batch → 25 errors after. **Zero new TS errors introduced.**
+  - **Backend untouched:** `git diff --stat HEAD -- backend/` is empty. Backend regression suite: `test_renewal_rollover` 12/12, `test_credit_rollover` 8/8.
+  - **Strict scope honored:** no backend, no API contracts, no auth/session, no subscription/credit/paywall, no async architecture, no polling, no validator, no generation prompts, no background workers, no telemetry. Pure visual enhancement.
+  - **Behavior preserved:** Light sync gen, Medium/Heavy v2 async gen, stencil history per style, thumbs up/down ratings, hold-to-compare, brush+eraser, crop modal, edit mode, opacity slider, EDITS APPLIED badge, image quality warnings, reroll cost labels — all functional via the same handlers.
+  - **Rollback safety:** every shell change gated by `!!originalImage` or `{!originalImage && (...)}`. Tooltip gated by `showWorkspaceTooltip` boolean. Reverts cleanly. No state shape changes, no removed code paths.
+  - **Status:** ready for prod deploy. Phase 2 (Generation Preview State — Accept/Retry/Compare) deferred to its own isolated deploy.
+
+- **P0 STABILITY: Event-Loop Unblocking Batch — VERIFIED LIVE IN PRODUCTION (May 19 2026)** 🔴 ✅
   - **Goal:** Reposition the app as a "professional tattoo workflow station" (not "AI stencil generator") in screenshots/promo videos, without destabilizing the freshly-baked backend.
   - **Strict scope discipline:** purely cosmetic. ZERO backend changes (255 frontend lines added, 6 removed, 0 backend lines touched). All generation/credit/auth/paywall/RevenueCat/validator/async/polling/subscription logic untouched.
   - **What changed (frontend only):**

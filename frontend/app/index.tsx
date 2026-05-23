@@ -411,6 +411,61 @@ export default function Index() {
   // Medium / Heavy generation dock when in workspace mode.
   const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
 
+  // First-time workspace tooltip: shown ONCE per install when the user
+  // first enters workspace mode (an image becomes loaded). Points the
+  // user at the `≡` menu chip. Persisted via AsyncStorage so it never
+  // shows twice. Dismisses on: any tap, menu open, gesture, 4s timeout.
+  const [showWorkspaceTooltip, setShowWorkspaceTooltip] = useState(false);
+  const workspaceTooltipShownRef = useRef(false);
+  const workspaceTooltipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dismissWorkspaceTooltip = useCallback(() => {
+    if (workspaceTooltipTimerRef.current) {
+      clearTimeout(workspaceTooltipTimerRef.current);
+      workspaceTooltipTimerRef.current = null;
+    }
+    setShowWorkspaceTooltip(false);
+  }, []);
+
+  // Trigger the tooltip the first time `originalImage` becomes truthy
+  // for this install. Check AsyncStorage so re-entry on a 2nd image of
+  // the same session (or app relaunch) does NOT re-show.
+  useEffect(() => {
+    if (!originalImage) return;
+    if (workspaceTooltipShownRef.current) return;
+    workspaceTooltipShownRef.current = true;
+    (async () => {
+      try {
+        const seen = await AsyncStorage.getItem('bb_workspace_tooltip_seen');
+        if (seen === '1') return;
+        setShowWorkspaceTooltip(true);
+        // Persist as seen the moment we show — even if the auto-dismiss
+        // timer never fires (e.g. app force-quit), it must not re-appear.
+        AsyncStorage.setItem('bb_workspace_tooltip_seen', '1').catch(() => undefined);
+        workspaceTooltipTimerRef.current = setTimeout(() => {
+          setShowWorkspaceTooltip(false);
+          workspaceTooltipTimerRef.current = null;
+        }, 4000);
+      } catch {
+        // Storage unavailable — fail silent, don't show tooltip on flaky devices.
+      }
+    })();
+  }, [originalImage]);
+
+  // Force-dismiss when the menu opens (the tooltip points at the chip
+  // they just used) or on unmount.
+  useEffect(() => {
+    if (workspaceMenuOpen && showWorkspaceTooltip) {
+      dismissWorkspaceTooltip();
+    }
+  }, [workspaceMenuOpen, showWorkspaceTooltip, dismissWorkspaceTooltip]);
+
+  useEffect(() => {
+    return () => {
+      if (workspaceTooltipTimerRef.current) clearTimeout(workspaceTooltipTimerRef.current);
+    };
+  }, []);
+
   const addToHistory = (style: string, base64: string) => {
     setStencilHistory(prev => {
       const current = [...(prev[style] || [])];
@@ -4236,7 +4291,7 @@ export default function Index() {
                     <TouchableOpacity
                       testID="workspace-menu-btn"
                       style={styles.workspaceMenuChip}
-                      onPress={() => setWorkspaceMenuOpen(true)}
+                      onPress={() => { dismissWorkspaceTooltip(); setWorkspaceMenuOpen(true); }}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       <Text style={styles.workspaceChipIcon}>≡</Text>
@@ -4244,11 +4299,32 @@ export default function Index() {
                     <TouchableOpacity
                       testID="workspace-crop-chip"
                       style={styles.workspaceCropChip}
-                      onPress={openCropModal}
+                      onPress={() => { dismissWorkspaceTooltip(); openCropModal(); }}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       <Text style={styles.workspaceChipIcon}>✂</Text>
                     </TouchableOpacity>
+                    {/* First-time workspace tooltip — points at the ≡ chip.
+                        Wrapped in a pointerEvents="box-none" View so it never
+                        intercepts pinch/pan/rotate gestures on the canvas. */}
+                    {showWorkspaceTooltip && (
+                      <View
+                        pointerEvents="box-none"
+                        style={styles.workspaceTooltipContainer}
+                        testID="workspace-tooltip"
+                      >
+                        <TouchableOpacity
+                          activeOpacity={0.85}
+                          onPress={dismissWorkspaceTooltip}
+                          style={styles.workspaceTooltipBubble}
+                        >
+                          <View style={styles.workspaceTooltipArrow} />
+                          <Text style={styles.workspaceTooltipText}>
+                            Tap here for Camera, Gallery, Edit, and Start Over
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </>
                 )}
                 {!originalImage && (
