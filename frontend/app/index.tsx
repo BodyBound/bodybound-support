@@ -398,74 +398,6 @@ export default function Index() {
   const [stencilHistory, setStencilHistory] = useState<{ [key: string]: string[] }>({ light: [], medium: [], heavy: [] });
   const [stencilHistoryIndex, setStencilHistoryIndex] = useState<{ [key: string]: number }>({ light: 0, medium: 0, heavy: 0 });
 
-  // ── Workspace Shell (Phase 1, May 2026) ─────────────────────────────────
-  // Purely cosmetic layout mode: when an image is loaded, switch the screen
-  // into a canvas-first fullscreen workspace. Existing generation, history,
-  // compare, edit, crop, ratings — ALL behavior is unchanged. The workspace
-  // mode only hides chrome and rearranges existing controls into a top
-  // pull-down sheet and a compact bottom dock.
-  //
-  // `workspaceMenuOpen` controls the top pull-down sheet that exposes the
-  // Gallery / Camera / Edit / Start Over source actions that used to live
-  // in the visible bottom bar. The bottom bar is reserved for the Light /
-  // Medium / Heavy generation dock when in workspace mode.
-  const [workspaceMenuOpen, setWorkspaceMenuOpen] = useState(false);
-
-  // First-time workspace tooltip: shown ONCE per install when the user
-  // first enters workspace mode (an image becomes loaded). Points the
-  // user at the `≡` menu chip. Persisted via AsyncStorage so it never
-  // shows twice. Dismisses on: any tap, menu open, gesture, 4s timeout.
-  const [showWorkspaceTooltip, setShowWorkspaceTooltip] = useState(false);
-  const workspaceTooltipShownRef = useRef(false);
-  const workspaceTooltipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const dismissWorkspaceTooltip = useCallback(() => {
-    if (workspaceTooltipTimerRef.current) {
-      clearTimeout(workspaceTooltipTimerRef.current);
-      workspaceTooltipTimerRef.current = null;
-    }
-    setShowWorkspaceTooltip(false);
-  }, []);
-
-  // Trigger the tooltip the first time `originalImage` becomes truthy
-  // for this install. Check AsyncStorage so re-entry on a 2nd image of
-  // the same session (or app relaunch) does NOT re-show.
-  useEffect(() => {
-    if (!originalImage) return;
-    if (workspaceTooltipShownRef.current) return;
-    workspaceTooltipShownRef.current = true;
-    (async () => {
-      try {
-        const seen = await AsyncStorage.getItem('bb_workspace_tooltip_seen');
-        if (seen === '1') return;
-        setShowWorkspaceTooltip(true);
-        // Persist as seen the moment we show — even if the auto-dismiss
-        // timer never fires (e.g. app force-quit), it must not re-appear.
-        AsyncStorage.setItem('bb_workspace_tooltip_seen', '1').catch(() => undefined);
-        workspaceTooltipTimerRef.current = setTimeout(() => {
-          setShowWorkspaceTooltip(false);
-          workspaceTooltipTimerRef.current = null;
-        }, 4000);
-      } catch {
-        // Storage unavailable — fail silent, don't show tooltip on flaky devices.
-      }
-    })();
-  }, [originalImage]);
-
-  // Force-dismiss when the menu opens (the tooltip points at the chip
-  // they just used) or on unmount.
-  useEffect(() => {
-    if (workspaceMenuOpen && showWorkspaceTooltip) {
-      dismissWorkspaceTooltip();
-    }
-  }, [workspaceMenuOpen, showWorkspaceTooltip, dismissWorkspaceTooltip]);
-
-  useEffect(() => {
-    return () => {
-      if (workspaceTooltipTimerRef.current) clearTimeout(workspaceTooltipTimerRef.current);
-    };
-  }, []);
-
   const addToHistory = (style: string, base64: string) => {
     setStencilHistory(prev => {
       const current = [...(prev[style] || [])];
@@ -4089,16 +4021,8 @@ export default function Index() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ── Workspace mode (Phase 1 May 2026) ─────────────────────────────
-       *  When `originalImage` is loaded, the layout shifts into a canvas-
-       *  first fullscreen workspace: header compacts, image area becomes
-       *  edge-to-edge, source buttons (Gallery/Camera/Edit/Start Over) move
-       *  into a top pull-down sheet, and the bottom dock is reserved for
-       *  the Light/Medium/Heavy generation buttons. All existing handlers
-       *  — generation, history, compare, brush, eraser, crop, ratings —
-       *  are untouched. */}
       {/* Header */}
-      <View style={[styles.header, !!originalImage && styles.headerCompact]}>
+      <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image 
             source={require('../assets/images/logo.png')} 
@@ -4107,9 +4031,7 @@ export default function Index() {
           />
           <View style={styles.headerTitleContainer}>
             <Text style={styles.headerTitle}>BODY BOUND</Text>
-            {!originalImage && (
-              <Text style={styles.headerSubtitle}>Stencil Generator</Text>
-            )}
+            <Text style={styles.headerSubtitle}>Stencil Generator</Text>
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -4180,10 +4102,8 @@ export default function Index() {
         </View>
       </View>
 
-      {/* Growth Messaging: Referral Banner — workspace mode hides it
-          because the canvas should dominate. Banner still appears on the
-          landing screen (no image loaded). */}
-      {showReferralBanner && isPaidUser && !originalImage && !showLowCreditModal && !showMilestoneModal && (
+      {/* Growth Messaging: Referral Banner */}
+      {showReferralBanner && isPaidUser && !showLowCreditModal && !showMilestoneModal && (
         <ReferralBanner
           onPress={() => { setShowReferralBanner(false); setShowReferralDashboard(true); }}
           onDismiss={handleBannerDismiss}
@@ -4218,9 +4138,9 @@ export default function Index() {
       )}
 
       {/* Main Image Area - fills all available vertical space */}
-      <View style={[styles.imageArea, !!originalImage && styles.imageAreaWorkspace]}>
+      <View style={styles.imageArea}>
         {/* Image Preview Area */}
-        <View style={[styles.previewSection, !!originalImage && styles.previewSectionWorkspace]}>
+        <View style={styles.previewSection}>
           {!originalImage ? (
             <>
               {/* Photo Library Grid - Instagram style */}
@@ -4284,52 +4204,7 @@ export default function Index() {
           ) : (
             <View style={styles.imagesContainer}>
               {/* Main Image Display - Shows Stencil, hold to see Original */}
-              <View style={[styles.imageWrapper, !!originalImage && styles.imageWrapperWorkspace]}>
-                {/* Workspace-mode floating chips: top-left = menu (Gallery/Camera/Edit/Start Over),
-                    top-right = Crop. Only shown when an image is loaded. Sit absolutely over the
-                    canvas so they don't add chrome to the layout. */}
-                {originalImage && (
-                  <>
-                    <TouchableOpacity
-                      testID="workspace-menu-btn"
-                      style={styles.workspaceMenuChip}
-                      onPress={() => { dismissWorkspaceTooltip(); setWorkspaceMenuOpen(true); }}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Text style={styles.workspaceChipIcon}>≡</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      testID="workspace-crop-chip"
-                      style={styles.workspaceCropChip}
-                      onPress={() => { dismissWorkspaceTooltip(); openCropModal(); }}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Text style={styles.workspaceChipIcon}>✂</Text>
-                    </TouchableOpacity>
-                    {/* First-time workspace tooltip — points at the ≡ chip.
-                        Wrapped in a pointerEvents="box-none" View so it never
-                        intercepts pinch/pan/rotate gestures on the canvas. */}
-                    {showWorkspaceTooltip && (
-                      <View
-                        pointerEvents="box-none"
-                        style={styles.workspaceTooltipContainer}
-                        testID="workspace-tooltip"
-                      >
-                        <TouchableOpacity
-                          activeOpacity={0.85}
-                          onPress={dismissWorkspaceTooltip}
-                          style={styles.workspaceTooltipBubble}
-                        >
-                          <View style={styles.workspaceTooltipArrow} />
-                          <Text style={styles.workspaceTooltipText}>
-                            Tap here for Camera, Gallery, Edit, and Start Over
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-                    )}
-                  </>
-                )}
-                {!originalImage && (
+              <View style={styles.imageWrapper}>
                 <View style={styles.imageLabelRow}>
                   <Text style={styles.imageLabel}>
                     {stencilImage ? (showingOriginal ? 'Original' : 'Stencil') : 'Original'}
@@ -4343,7 +4218,6 @@ export default function Index() {
                     <Text style={styles.cropTopText}>Crop Image</Text>
                   </TouchableOpacity>
                 </View>
-                )}
                 
                 {/* Image display — pinch to zoom, two-finger pan, double-tap to reset */}
                 <GestureDetector gesture={mainImageGesture}>
@@ -4389,10 +4263,7 @@ export default function Index() {
       {/* Bottom Control Bar - all buttons here, image area gets maximum space */}
       <View style={styles.bottomBar}>
 
-        {/* Image Source Buttons — hidden in workspace mode; they live in the
-            top pull-down sheet (opened via the ≡ chip) so the bottom dock is
-            reserved for the Light/Medium/Heavy generation buttons. */}
-        {!originalImage && (
+        {/* Image Source Buttons */}
         <View style={styles.sourceButtons}>
           <TouchableOpacity style={styles.sourceButton} onPress={pickImage}>
             <Text style={styles.buttonIcon}>🖼️</Text>
@@ -4424,7 +4295,6 @@ export default function Index() {
             </TouchableOpacity>
           )}
         </View>
-        )}
 
         {/* Image Quality Warning Banner */}
         {showQualityWarning && imageQualityWarnings.length > 0 && (
@@ -4731,14 +4601,10 @@ export default function Index() {
               )}
               </View>
             </View>
-            {/* Regeneration hint text in golden — only show once at least
-                one stencil has been generated, so the workspace stays clean
-                before the user has anything to regenerate. */}
-            {(stencilVersions.light || stencilVersions.medium || stencilVersions.heavy) && (
-              <Text style={styles.regenHintText}>
-                If the generated stencil is not to your liking, press the regeneration button in the top corner of your desired option.
-              </Text>
-            )}
+            {/* Regeneration hint text in golden */}
+            <Text style={styles.regenHintText}>
+              If the generated stencil is not to your liking, press the regeneration button in the top corner of your desired option.
+            </Text>
           </View>
         )}
 
@@ -5593,80 +5459,6 @@ export default function Index() {
             </TouchableOpacity>
           </View>
         </View>
-      </Modal>
-
-      {/* ═══════════════════════════════════════════════════════════════════
-       *  Workspace Menu — top pull-down sheet (Phase 1 May 2026)
-       *  ─────────────────────────────────────────────────────────────────
-       *  Hosts the Gallery / Camera / Edit / Start Over actions that used to
-       *  live as a permanent row in the bottom bar. Opened by the ≡ chip in
-       *  the top-left of the canvas when an image is loaded. Tapping any
-       *  action closes the sheet and invokes the existing handler — no
-       *  behavior changes.
-       *  ═══════════════════════════════════════════════════════════════════ */}
-      <Modal
-        visible={workspaceMenuOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setWorkspaceMenuOpen(false)}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          style={styles.workspaceMenuBackdrop}
-          onPress={() => setWorkspaceMenuOpen(false)}
-          testID="workspace-menu-backdrop"
-        >
-          <View style={styles.workspaceMenuSheet} onStartShouldSetResponder={() => true}>
-            <View style={styles.workspaceMenuHandle} />
-            <Text style={styles.workspaceMenuTitle}>Reference</Text>
-            <View style={styles.workspaceMenuGrid}>
-              <TouchableOpacity
-                style={styles.workspaceMenuItem}
-                onPress={() => { setWorkspaceMenuOpen(false); pickImage(); }}
-                testID="workspace-menu-gallery"
-              >
-                <Text style={styles.workspaceMenuItemIcon}>🖼️</Text>
-                <Text style={styles.workspaceMenuItemLabel}>Gallery</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.workspaceMenuItem}
-                onPress={() => { setWorkspaceMenuOpen(false); takePhoto(); }}
-                testID="workspace-menu-camera"
-              >
-                <Text style={styles.workspaceMenuItemIcon}>📷</Text>
-                <Text style={styles.workspaceMenuItemLabel}>Camera</Text>
-              </TouchableOpacity>
-              {stencilImage && (
-                <TouchableOpacity
-                  style={styles.workspaceMenuItem}
-                  onPress={() => { setWorkspaceMenuOpen(false); openEditMode(); }}
-                  testID="workspace-menu-edit"
-                >
-                  <Text style={styles.workspaceMenuItemIcon}>✏️</Text>
-                  <Text style={styles.workspaceMenuItemLabel}>Edit</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                style={[styles.workspaceMenuItem, styles.workspaceMenuItemDanger]}
-                onPress={() => {
-                  setWorkspaceMenuOpen(false);
-                  Alert.alert(
-                    'Start a new stencil?',
-                    'Your current stencil will be lost if not saved.',
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Start New', style: 'destructive', onPress: resetAll },
-                    ]
-                  );
-                }}
-                testID="workspace-menu-reset"
-              >
-                <Text style={styles.workspaceMenuItemIcon}>🆕</Text>
-                <Text style={styles.workspaceMenuItemLabel}>Start Over</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </TouchableOpacity>
       </Modal>
 
     </SafeAreaView>

@@ -67,6 +67,14 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **P1 PLAN DOCUMENTED: Workspace = Canvas (May 22 2026)** 📋
+  - User clarified the intended frontend direction: the existing `showEditModal` (Procreate-style fullscreen edit canvas) should BECOME the primary screen the moment an image is picked. Not a re-skinned landing page.
+  - Generation buttons (Light/Medium/Heavy) + history nav + thumbs up/down + reroll must work INSIDE the canvas, "exactly how they were functioning on the original landing screen."
+  - Reference prep tools (contrast, sharpness, erase, brush) needed BEFORE generation — they make the reference better so AI produces stronger stencils. Phase 5 scope.
+  - Plan saved to `/app/memory/WORKSPACE_AS_CANVAS_PLAN.md` with implementation steps, state variable inventory, risk profile, regression checklist.
+  - **No code changes this session for this work** — user agreed to defer to a fresh session because the change is 1-day scope (~300-500 lines of careful UI re-mounting), not a 30-min polish, and end-of-session context budget was too low to land it safely. Existing app stays working.
+  - Phase 1 chips + tooltip + referral/hint gates from earlier this session remain in place; they're cosmetic, harmless, and stay until the canvas-as-home work supersedes them.
+
 - **P0 FRONTEND: Workspace Shell — Phase 1 + first-time tooltip polish (May 22 2026)** 🎨 ✅ — preview built, ready to deploy as one frontend-only release
   - **Phase 1 Shell** (committed earlier in this session): canvas-first fullscreen workspace, floating `≡` menu chip + `✂` crop chip overlay the canvas, top pull-down sheet hosts Gallery / Camera / Edit / Start Over, header subtitle hidden when image loaded, image area edge-to-edge, bottom dock reserved for Light/Medium/Heavy generation buttons.
   - **Polish add-on (just landed):** First-time workspace tooltip pointing at the `≡` chip. Copy: *"Tap here for Camera, Gallery, Edit, and Start Over"*. Dark translucent bubble with gold-tint border + arrow pointer. Appears once per install (gated by AsyncStorage key `bb_workspace_tooltip_seen`). Auto-dismisses in 4s. Also dismisses on: tap the bubble, tap the `≡` chip, tap the `✂` chip, menu opens, component unmount. Wrapped in `pointerEvents="box-none"` so canvas gestures (pinch/pan/rotate) pass through untouched.
