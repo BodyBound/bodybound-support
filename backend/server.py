@@ -8588,6 +8588,235 @@ async def admin_action_cleanup_entitlement(request: FastAPIRequest):
     }
 
 
+# ---- Narrow admin action: normalize an expired trial ----
+#
+# Purpose-built for Batch D (BB-CLEANUP-2026-09-04-D) and any future account
+# in the same shape: `tier='trial'` on a subscription whose trial expired
+# months ago but was never reached by the natural `get_user_credits()`
+# expiration path (because the user never called the endpoint again).
+#
+# This action mirrors, byte-for-byte, the mutation performed by
+# `get_user_credits()` at server.py:3779-3782:
+#
+#   db.subscriptions.update_one(
+#       {'user_id': user_id},
+#       {'$set': {'available_credits': 0, 'tier': 'trial_expired'}}
+#   )
+#
+# Design invariants (do NOT relax without a new named batch type + review):
+#   • No arbitrary tier / credit / field overrides — hard-coded outputs.
+#   • Every precondition is compare-and-set enforced in the write filter,
+#     including the exact `trial_expires_at` string supplied by the caller.
+#   • The endpoint refuses to touch RC-linked, paid, or paywall_bypass
+#     users at both the precondition-check layer AND the update filter.
+#   • dry_run=true is the safe default and performs zero writes.
+#   • Post-write drift check confirms no non-target field mutated.
+
+_NORMALIZE_TRIAL_TARGET = {
+    'tier': 'trial_expired',
+    'available_credits': 0,
+}
+_NORMALIZE_TRIAL_PROTECTED_FIELDS = (
+    'is_trial', 'trial_start_date', 'trial_expires_at',
+    'revenuecat_customer_id', 'last_event', 'last_product_id',
+    'renewal_date', 'anti_abuse_email', 'anti_abuse_device_id',
+    'anti_abuse_provider', 'studio_team_id', 'created_at',
+    'admin_cleanup_reason', 'admin_cleanup_batch_id',
+    'pre_cleanup_tier', 'pre_cleanup_is_trial',
+    'user_id',
+)
+
+
+class NormalizeExpiredTrialRequest(BaseModel):
+    """Compare-and-set request for a single expired-trial normalisation.
+    `extra='forbid'` so an accidental `target_tier` / `credits` param 400s
+    rather than being silently ignored."""
+    model_config = ConfigDict(extra='forbid')
+
+    user_id: str
+    expected_trial_expires_at: str      # exact ISO string comparison
+    cleanup_batch_id: str
+    dry_run: bool = True                # SAFE DEFAULT
+
+
+@api_router.post("/admin-tool/action/normalize-expired-trial")
+async def admin_action_normalize_expired_trial(request: FastAPIRequest):
+    """Compare-and-set: only mutates when the record is EXACTLY an
+    expired-in-past `trial` account with the caller-supplied expiry."""
+    admin = await verify_admin(request.headers.get('authorization'))
+    raw = await request.json()
+    try:
+        body = NormalizeExpiredTrialRequest(**raw)
+    except ValidationError as e:
+        raise HTTPException(status_code=422, detail=e.errors())
+
+    if not body.user_id.strip():
+        raise HTTPException(status_code=400, detail='user_id required')
+    if not body.cleanup_batch_id.strip():
+        raise HTTPException(status_code=400, detail='cleanup_batch_id required')
+    if not body.expected_trial_expires_at.strip():
+        raise HTTPException(status_code=400, detail='expected_trial_expires_at required')
+
+    now = datetime.now(timezone.utc)
+
+    # Parse the caller-supplied expected timestamp. If unparseable, refuse.
+    try:
+        expected_dt = datetime.fromisoformat(
+            body.expected_trial_expires_at.replace('Z', '+00:00'))
+        if expected_dt.tzinfo is None:
+            expected_dt = expected_dt.replace(tzinfo=timezone.utc)
+    except Exception:
+        raise HTTPException(
+            status_code=400,
+            detail='expected_trial_expires_at is not a valid ISO-8601 timestamp',
+        )
+    # Reject futures at request-parse time so a badly-supplied caller
+    # cannot try to normalise an in-window trial.
+    if expected_dt > now:
+        raise HTTPException(
+            status_code=400,
+            detail='expected_trial_expires_at is in the future; refusing to normalise an in-window trial',
+        )
+
+    sub = await db.subscriptions.find_one({'user_id': body.user_id}, {'_id': 0})
+
+    def _snapshot(s):
+        if not s:
+            return None
+        return {k: s.get(k) for k in (
+            'user_id', 'tier', 'is_trial', 'available_credits',
+            'revenuecat_customer_id', 'trial_expires_at',
+            'trial_start_date', 'last_event', 'anti_abuse_provider',
+            'created_at',
+        )}
+
+    if not sub:
+        return {
+            'status': 'skipped',
+            'user_id': body.user_id,
+            'cleanup_batch_id': body.cleanup_batch_id,
+            'reason': 'subscription_not_found',
+            'pre_state': None,
+        }
+
+    # Precondition checks — one skip reason per failure (all read-only).
+    reasons: list[str] = []
+    pre_tier = sub.get('tier')
+    pre_is_trial = bool(sub.get('is_trial'))
+    pre_credits = sub.get('available_credits')
+    pre_rc = sub.get('revenuecat_customer_id')
+    pre_exp_raw = sub.get('trial_expires_at')
+
+    if pre_tier != 'trial':
+        reasons.append(f'precondition_failed:tier_is_{pre_tier!r}_expected_trial')
+    if not pre_is_trial:
+        reasons.append('precondition_failed:is_trial_is_false')
+    if pre_credits != 10:
+        reasons.append(f'precondition_failed:available_credits_is_{pre_credits!r}_expected_10')
+    if pre_rc not in (None, ''):
+        reasons.append('precondition_failed:revenuecat_customer_id_present')
+
+    pre_exp_dt = None
+    if pre_exp_raw is None:
+        reasons.append('precondition_failed:trial_expires_at_missing')
+    else:
+        try:
+            pre_exp_dt = datetime.fromisoformat(
+                str(pre_exp_raw).replace('Z', '+00:00'))
+            if pre_exp_dt.tzinfo is None:
+                pre_exp_dt = pre_exp_dt.replace(tzinfo=timezone.utc)
+        except Exception:
+            reasons.append('precondition_failed:trial_expires_at_unparseable')
+
+    if pre_exp_dt is not None and pre_exp_dt > now:
+        reasons.append('precondition_failed:trial_expires_at_in_future')
+
+    # Compare-and-set on the exact expiry string — refuses drift.
+    if pre_exp_raw != body.expected_trial_expires_at:
+        reasons.append('precondition_failed:trial_expires_at_drift')
+
+    if reasons:
+        return {
+            'status': 'skipped',
+            'user_id': body.user_id,
+            'cleanup_batch_id': body.cleanup_batch_id,
+            'reasons': reasons,
+            'pre_state': _snapshot(sub),
+        }
+
+    if body.dry_run:
+        return {
+            'status': 'dry_run',
+            'user_id': body.user_id,
+            'cleanup_batch_id': body.cleanup_batch_id,
+            'would_set': _NORMALIZE_TRIAL_TARGET,
+            'pre_state': _snapshot(sub),
+        }
+
+    # Compare-and-set write. Every predicate that passed the read-side
+    # check is enforced again in the update filter to close the TOCTOU
+    # window. If the record drifted between fetch and write, modified_count
+    # will be 0 and no mutation occurs.
+    write_filter = {
+        'user_id': body.user_id,
+        'tier': 'trial',
+        'is_trial': True,
+        'available_credits': 10,
+        'revenuecat_customer_id': None,
+        'trial_expires_at': body.expected_trial_expires_at,
+    }
+    result = await db.subscriptions.update_one(
+        write_filter,
+        {'$set': dict(_NORMALIZE_TRIAL_TARGET)},
+    )
+
+    if result.modified_count != 1:
+        return {
+            'status': 'skipped',
+            'user_id': body.user_id,
+            'cleanup_batch_id': body.cleanup_batch_id,
+            'reason': f'compare_and_set_failed:matched={result.matched_count}_modified={result.modified_count}',
+            'pre_state': _snapshot(sub),
+        }
+
+    after = await db.subscriptions.find_one({'user_id': body.user_id}, {'_id': 0}) or {}
+
+    # Drift check on all non-target fields — proves the write touched
+    # exactly the two authorised fields and nothing else.
+    drift = {
+        k: {'before': sub.get(k), 'after': after.get(k)}
+        for k in _NORMALIZE_TRIAL_PROTECTED_FIELDS
+        if sub.get(k) != after.get(k)
+    }
+
+    await log_admin_action(
+        admin.get('email', 'unknown_admin'),
+        'normalize_expired_trial',
+        body.user_id,
+        {
+            'cleanup_batch_id': body.cleanup_batch_id,
+            'pre_tier': pre_tier,
+            'post_tier': after.get('tier'),
+            'pre_credits': pre_credits,
+            'post_credits': after.get('available_credits'),
+            'matched_count': result.matched_count,
+            'modified_count': result.modified_count,
+            'drift_detected': bool(drift),
+        },
+    )
+
+    return {
+        'status': 'changed' if not drift else 'changed_with_drift',
+        'user_id': body.user_id,
+        'cleanup_batch_id': body.cleanup_batch_id,
+        'matched_count': result.matched_count,
+        'modified_count': result.modified_count,
+        'pre_state': _snapshot(sub),
+        'post_state': _snapshot(after),
+        'drift': drift,
+    }
+
+
 @api_router.get("/admin-tool/audit-log")
 async def admin_audit_log(request: FastAPIRequest):
     await verify_admin(request.headers.get('authorization'))
