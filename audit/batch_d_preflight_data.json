@@ -1,0 +1,540 @@
+{
+  "generated_at": "2026-09-04T03:14:46.758577+00:00",
+  "target": "https://bodybound-subs.emergent.host",
+  "target_user_ids": [
+    "user_a413c2ff83f9",
+    "user_5a08baad0eb6",
+    "user_853c847c8f91",
+    "user_714df781c4f8",
+    "user_2c877c5ff51f"
+  ],
+  "excluded_user_ids": [
+    "user_673ab0d5552a"
+  ],
+  "natural_expiration_reference": {
+    "tier": "trial_expired",
+    "available_credits": 0
+  },
+  "accounts": [
+    {
+      "user_id": "user_a413c2ff83f9",
+      "email": null,
+      "email_redacted": "(anonymous)",
+      "fetch_status": "OK",
+      "user_doc": {
+        "user_id": "user_a413c2ff83f9",
+        "email": null,
+        "created_at": "2026-03-01T19:08:04.518487+00:00",
+        "last_login": "2026-03-01T19:08:04.518498+00:00"
+      },
+      "sub_doc": {
+        "user_id": "user_a413c2ff83f9",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-01T19:08:04.519584+00:00",
+        "trial_expires_at": "2026-03-04T19:08:04.519584+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": null,
+        "anti_abuse_device_id": null,
+        "anti_abuse_provider": "apple:test",
+        "created_at": "2026-03-01T19:08:04.519584+00:00"
+      },
+      "checks": {
+        "1_sub_tier_is_trial": {
+          "expected": "tier == 'trial'",
+          "actual": "trial",
+          "pass": true
+        },
+        "2_trial_expires_exists": {
+          "expected": "trial_expires_at is present",
+          "actual": "2026-03-04T19:08:04.519584+00:00",
+          "pass": true
+        },
+        "3_trial_expires_in_past": {
+          "expected": "trial_expires_at <= now",
+          "actual": "2026-03-04T19:08:04.519584+00:00 vs now=2026-09-04T03:14:46.758577+00:00",
+          "pass": true
+        },
+        "4_no_rc_id": {
+          "expected": "revenuecat_customer_id is None/empty",
+          "actual": null,
+          "pass": true
+        },
+        "5_not_paid_tier": {
+          "expected": "tier NOT IN ['booked-out', 'the-shop', 'the-shop-member', 'walk-in']",
+          "actual": "trial",
+          "pass": true
+        },
+        "6_not_paywall_bypass": {
+          "expected": "tier != 'paywall_bypass'",
+          "actual": "trial",
+          "pass": true
+        },
+        "7_no_other_entitlement_evidence": {
+          "expected": "no active entitlement markers",
+          "actual": {
+            "last_event": null,
+            "last_product_id": null,
+            "studio_team_id": null,
+            "renewal_date": null,
+            "received_temp_credits": null,
+            "admin_cleanup_reason": null
+          },
+          "pass": true
+        },
+        "8_paywall_bypass_bug_present": {
+          "expected": "raw tier check returns needs_subscription=False purely because tier='trial'",
+          "actual": {
+            "raw_tier_check_needs_sub": false,
+            "coerced_tier_by_natural_path": "trial_expired",
+            "post_side_effect_first_call_needs_sub": true,
+            "is_trial_flag": true
+          },
+          "pass": true,
+          "note": "If is_trial=True on the record, the FIRST /api/credits call by this user would auto-run the natural expiration path and coerce the tier to 'trial_expired' before returning needs_subscription=True. Batch D performs exactly that mutation proactively so the account cannot grant free access on its next server call OR to any adjacent code path that reads sub.tier without running through get_user_credits()."
+        }
+      },
+      "all_pass": true,
+      "current_tier": "trial",
+      "trial_expires_at": "2026-03-04T19:08:04.519584+00:00",
+      "rc_id": null,
+      "needs_sub_raw": false,
+      "proposed_changes": {
+        "tier": {
+          "before": "trial",
+          "after": "trial_expired"
+        },
+        "available_credits": {
+          "before": 10,
+          "after": 0
+        }
+      },
+      "write_filter": {
+        "user_id": "user_a413c2ff83f9",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-04T19:08:04.519584+00:00"
+      }
+    },
+    {
+      "user_id": "user_5a08baad0eb6",
+      "email": "test@example.com",
+      "email_redacted": "te***@example.com",
+      "fetch_status": "OK",
+      "user_doc": {
+        "user_id": "user_5a08baad0eb6",
+        "email": "test@example.com",
+        "created_at": "2026-03-01T19:10:41.447549+00:00",
+        "last_login": "2026-03-01T19:10:41.447559+00:00"
+      },
+      "sub_doc": {
+        "user_id": "user_5a08baad0eb6",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-01T19:10:41.448946+00:00",
+        "trial_expires_at": "2026-03-04T19:10:41.448946+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "test@example.com",
+        "anti_abuse_device_id": "test-device-123",
+        "anti_abuse_provider": "apple:001234.abcdef",
+        "created_at": "2026-03-01T19:10:41.448946+00:00"
+      },
+      "checks": {
+        "1_sub_tier_is_trial": {
+          "expected": "tier == 'trial'",
+          "actual": "trial",
+          "pass": true
+        },
+        "2_trial_expires_exists": {
+          "expected": "trial_expires_at is present",
+          "actual": "2026-03-04T19:10:41.448946+00:00",
+          "pass": true
+        },
+        "3_trial_expires_in_past": {
+          "expected": "trial_expires_at <= now",
+          "actual": "2026-03-04T19:10:41.448946+00:00 vs now=2026-09-04T03:14:46.758577+00:00",
+          "pass": true
+        },
+        "4_no_rc_id": {
+          "expected": "revenuecat_customer_id is None/empty",
+          "actual": null,
+          "pass": true
+        },
+        "5_not_paid_tier": {
+          "expected": "tier NOT IN ['booked-out', 'the-shop', 'the-shop-member', 'walk-in']",
+          "actual": "trial",
+          "pass": true
+        },
+        "6_not_paywall_bypass": {
+          "expected": "tier != 'paywall_bypass'",
+          "actual": "trial",
+          "pass": true
+        },
+        "7_no_other_entitlement_evidence": {
+          "expected": "no active entitlement markers",
+          "actual": {
+            "last_event": null,
+            "last_product_id": null,
+            "studio_team_id": null,
+            "renewal_date": null,
+            "received_temp_credits": null,
+            "admin_cleanup_reason": null
+          },
+          "pass": true
+        },
+        "8_paywall_bypass_bug_present": {
+          "expected": "raw tier check returns needs_subscription=False purely because tier='trial'",
+          "actual": {
+            "raw_tier_check_needs_sub": false,
+            "coerced_tier_by_natural_path": "trial_expired",
+            "post_side_effect_first_call_needs_sub": true,
+            "is_trial_flag": true
+          },
+          "pass": true,
+          "note": "If is_trial=True on the record, the FIRST /api/credits call by this user would auto-run the natural expiration path and coerce the tier to 'trial_expired' before returning needs_subscription=True. Batch D performs exactly that mutation proactively so the account cannot grant free access on its next server call OR to any adjacent code path that reads sub.tier without running through get_user_credits()."
+        }
+      },
+      "all_pass": true,
+      "current_tier": "trial",
+      "trial_expires_at": "2026-03-04T19:10:41.448946+00:00",
+      "rc_id": null,
+      "needs_sub_raw": false,
+      "proposed_changes": {
+        "tier": {
+          "before": "trial",
+          "after": "trial_expired"
+        },
+        "available_credits": {
+          "before": 10,
+          "after": 0
+        }
+      },
+      "write_filter": {
+        "user_id": "user_5a08baad0eb6",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-04T19:10:41.448946+00:00"
+      }
+    },
+    {
+      "user_id": "user_853c847c8f91",
+      "email": null,
+      "email_redacted": "(anonymous)",
+      "fetch_status": "OK",
+      "user_doc": {
+        "user_id": "user_853c847c8f91",
+        "email": null,
+        "created_at": "2026-03-05T01:34:48.526646+00:00",
+        "last_login": "2026-03-05T01:34:48.526674+00:00"
+      },
+      "sub_doc": {
+        "user_id": "user_853c847c8f91",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-05T01:34:48.596477+00:00",
+        "trial_expires_at": "2026-03-08T01:34:48.596477+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": null,
+        "anti_abuse_device_id": "5C71690A-7612-4E99-AB8D-1DD34E872E1A",
+        "anti_abuse_provider": "apple:000499.3741b694ebe340ef931503a98be58c02.1425",
+        "created_at": "2026-03-05T01:34:48.596477+00:00"
+      },
+      "checks": {
+        "1_sub_tier_is_trial": {
+          "expected": "tier == 'trial'",
+          "actual": "trial",
+          "pass": true
+        },
+        "2_trial_expires_exists": {
+          "expected": "trial_expires_at is present",
+          "actual": "2026-03-08T01:34:48.596477+00:00",
+          "pass": true
+        },
+        "3_trial_expires_in_past": {
+          "expected": "trial_expires_at <= now",
+          "actual": "2026-03-08T01:34:48.596477+00:00 vs now=2026-09-04T03:14:46.758577+00:00",
+          "pass": true
+        },
+        "4_no_rc_id": {
+          "expected": "revenuecat_customer_id is None/empty",
+          "actual": null,
+          "pass": true
+        },
+        "5_not_paid_tier": {
+          "expected": "tier NOT IN ['booked-out', 'the-shop', 'the-shop-member', 'walk-in']",
+          "actual": "trial",
+          "pass": true
+        },
+        "6_not_paywall_bypass": {
+          "expected": "tier != 'paywall_bypass'",
+          "actual": "trial",
+          "pass": true
+        },
+        "7_no_other_entitlement_evidence": {
+          "expected": "no active entitlement markers",
+          "actual": {
+            "last_event": null,
+            "last_product_id": null,
+            "studio_team_id": null,
+            "renewal_date": null,
+            "received_temp_credits": null,
+            "admin_cleanup_reason": null
+          },
+          "pass": true
+        },
+        "8_paywall_bypass_bug_present": {
+          "expected": "raw tier check returns needs_subscription=False purely because tier='trial'",
+          "actual": {
+            "raw_tier_check_needs_sub": false,
+            "coerced_tier_by_natural_path": "trial_expired",
+            "post_side_effect_first_call_needs_sub": true,
+            "is_trial_flag": true
+          },
+          "pass": true,
+          "note": "If is_trial=True on the record, the FIRST /api/credits call by this user would auto-run the natural expiration path and coerce the tier to 'trial_expired' before returning needs_subscription=True. Batch D performs exactly that mutation proactively so the account cannot grant free access on its next server call OR to any adjacent code path that reads sub.tier without running through get_user_credits()."
+        }
+      },
+      "all_pass": true,
+      "current_tier": "trial",
+      "trial_expires_at": "2026-03-08T01:34:48.596477+00:00",
+      "rc_id": null,
+      "needs_sub_raw": false,
+      "proposed_changes": {
+        "tier": {
+          "before": "trial",
+          "after": "trial_expired"
+        },
+        "available_credits": {
+          "before": 10,
+          "after": 0
+        }
+      },
+      "write_filter": {
+        "user_id": "user_853c847c8f91",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-08T01:34:48.596477+00:00"
+      }
+    },
+    {
+      "user_id": "user_714df781c4f8",
+      "email": null,
+      "email_redacted": "(anonymous)",
+      "fetch_status": "OK",
+      "user_doc": {
+        "user_id": "user_714df781c4f8",
+        "email": null,
+        "created_at": "2026-03-17T15:29:43.111993+00:00",
+        "last_login": "2026-03-17T15:29:43.112066+00:00"
+      },
+      "sub_doc": {
+        "user_id": "user_714df781c4f8",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-17T15:29:43.161934+00:00",
+        "trial_expires_at": "2026-03-20T15:29:43.161934+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": null,
+        "anti_abuse_device_id": "45A079C8-8AFC-4383-BDAB-58159786B708",
+        "anti_abuse_provider": "apple:001524.a1997ec6cd0e438e9b868b706cba79f1.1519",
+        "created_at": "2026-03-17T15:29:43.161934+00:00"
+      },
+      "checks": {
+        "1_sub_tier_is_trial": {
+          "expected": "tier == 'trial'",
+          "actual": "trial",
+          "pass": true
+        },
+        "2_trial_expires_exists": {
+          "expected": "trial_expires_at is present",
+          "actual": "2026-03-20T15:29:43.161934+00:00",
+          "pass": true
+        },
+        "3_trial_expires_in_past": {
+          "expected": "trial_expires_at <= now",
+          "actual": "2026-03-20T15:29:43.161934+00:00 vs now=2026-09-04T03:14:46.758577+00:00",
+          "pass": true
+        },
+        "4_no_rc_id": {
+          "expected": "revenuecat_customer_id is None/empty",
+          "actual": null,
+          "pass": true
+        },
+        "5_not_paid_tier": {
+          "expected": "tier NOT IN ['booked-out', 'the-shop', 'the-shop-member', 'walk-in']",
+          "actual": "trial",
+          "pass": true
+        },
+        "6_not_paywall_bypass": {
+          "expected": "tier != 'paywall_bypass'",
+          "actual": "trial",
+          "pass": true
+        },
+        "7_no_other_entitlement_evidence": {
+          "expected": "no active entitlement markers",
+          "actual": {
+            "last_event": null,
+            "last_product_id": null,
+            "studio_team_id": null,
+            "renewal_date": null,
+            "received_temp_credits": null,
+            "admin_cleanup_reason": null
+          },
+          "pass": true
+        },
+        "8_paywall_bypass_bug_present": {
+          "expected": "raw tier check returns needs_subscription=False purely because tier='trial'",
+          "actual": {
+            "raw_tier_check_needs_sub": false,
+            "coerced_tier_by_natural_path": "trial_expired",
+            "post_side_effect_first_call_needs_sub": true,
+            "is_trial_flag": true
+          },
+          "pass": true,
+          "note": "If is_trial=True on the record, the FIRST /api/credits call by this user would auto-run the natural expiration path and coerce the tier to 'trial_expired' before returning needs_subscription=True. Batch D performs exactly that mutation proactively so the account cannot grant free access on its next server call OR to any adjacent code path that reads sub.tier without running through get_user_credits()."
+        }
+      },
+      "all_pass": true,
+      "current_tier": "trial",
+      "trial_expires_at": "2026-03-20T15:29:43.161934+00:00",
+      "rc_id": null,
+      "needs_sub_raw": false,
+      "proposed_changes": {
+        "tier": {
+          "before": "trial",
+          "after": "trial_expired"
+        },
+        "available_credits": {
+          "before": 10,
+          "after": 0
+        }
+      },
+      "write_filter": {
+        "user_id": "user_714df781c4f8",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-20T15:29:43.161934+00:00"
+      }
+    },
+    {
+      "user_id": "user_2c877c5ff51f",
+      "email": null,
+      "email_redacted": "(anonymous)",
+      "fetch_status": "OK",
+      "user_doc": {
+        "user_id": "user_2c877c5ff51f",
+        "email": null,
+        "created_at": "2026-03-20T02:19:43.518289+00:00",
+        "last_login": "2026-03-20T02:19:43.518316+00:00"
+      },
+      "sub_doc": {
+        "user_id": "user_2c877c5ff51f",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-20T02:19:43.576524+00:00",
+        "trial_expires_at": "2026-03-23T02:19:43.576524+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": null,
+        "anti_abuse_device_id": "FD248BBE-0890-4D15-A03D-15BE1A0A8202",
+        "anti_abuse_provider": "apple:001071.d87dfd06ac4b4096a3b5c70fb44d09e5.1650",
+        "created_at": "2026-03-20T02:19:43.576524+00:00"
+      },
+      "checks": {
+        "1_sub_tier_is_trial": {
+          "expected": "tier == 'trial'",
+          "actual": "trial",
+          "pass": true
+        },
+        "2_trial_expires_exists": {
+          "expected": "trial_expires_at is present",
+          "actual": "2026-03-23T02:19:43.576524+00:00",
+          "pass": true
+        },
+        "3_trial_expires_in_past": {
+          "expected": "trial_expires_at <= now",
+          "actual": "2026-03-23T02:19:43.576524+00:00 vs now=2026-09-04T03:14:46.758577+00:00",
+          "pass": true
+        },
+        "4_no_rc_id": {
+          "expected": "revenuecat_customer_id is None/empty",
+          "actual": null,
+          "pass": true
+        },
+        "5_not_paid_tier": {
+          "expected": "tier NOT IN ['booked-out', 'the-shop', 'the-shop-member', 'walk-in']",
+          "actual": "trial",
+          "pass": true
+        },
+        "6_not_paywall_bypass": {
+          "expected": "tier != 'paywall_bypass'",
+          "actual": "trial",
+          "pass": true
+        },
+        "7_no_other_entitlement_evidence": {
+          "expected": "no active entitlement markers",
+          "actual": {
+            "last_event": null,
+            "last_product_id": null,
+            "studio_team_id": null,
+            "renewal_date": null,
+            "received_temp_credits": null,
+            "admin_cleanup_reason": null
+          },
+          "pass": true
+        },
+        "8_paywall_bypass_bug_present": {
+          "expected": "raw tier check returns needs_subscription=False purely because tier='trial'",
+          "actual": {
+            "raw_tier_check_needs_sub": false,
+            "coerced_tier_by_natural_path": "trial_expired",
+            "post_side_effect_first_call_needs_sub": true,
+            "is_trial_flag": true
+          },
+          "pass": true,
+          "note": "If is_trial=True on the record, the FIRST /api/credits call by this user would auto-run the natural expiration path and coerce the tier to 'trial_expired' before returning needs_subscription=True. Batch D performs exactly that mutation proactively so the account cannot grant free access on its next server call OR to any adjacent code path that reads sub.tier without running through get_user_credits()."
+        }
+      },
+      "all_pass": true,
+      "current_tier": "trial",
+      "trial_expires_at": "2026-03-23T02:19:43.576524+00:00",
+      "rc_id": null,
+      "needs_sub_raw": false,
+      "proposed_changes": {
+        "tier": {
+          "before": "trial",
+          "after": "trial_expired"
+        },
+        "available_credits": {
+          "before": 10,
+          "after": 0
+        }
+      },
+      "write_filter": {
+        "user_id": "user_2c877c5ff51f",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-23T02:19:43.576524+00:00"
+      }
+    }
+  ]
+}
