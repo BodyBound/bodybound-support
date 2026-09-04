@@ -8,7 +8,7 @@ from pymongo.errors import DuplicateKeyError
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict, ValidationError
 from typing import List, Optional
 import uuid
 from datetime import datetime
@@ -8350,6 +8350,243 @@ async def admin_action_bypass(request: FastAPIRequest):
     }}, upsert=True)
     await log_admin_action(admin['email'], 'paywall_bypass', email, {'credits': 10, 'tier': 'paywall_bypass'})
     return {'status': 'ok', 'tier': 'paywall_bypass', 'credits': 10}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# POST /admin-tool/action/cleanup-entitlement  (2026-09-03 stabilization)
+#
+# Preservation-safe bulk entitlement cleanup for the legacy free-access audit.
+# Intentionally NARROW:
+#   • Hard-locked to tier='expired'. No arbitrary tier accepted.
+#   • Accepts an explicit user_id list — no broad cohort query allowed.
+#   • Accepts one of three named cleanup batch types, each with its own
+#     per-user preconditions re-verified at execution time.
+#   • Mutates ONLY: tier, is_trial (conditionally), and cleanup metadata.
+#   • REFUSES to touch: last_event, last_product_id, last_applied_at,
+#     renewal_date, trial_expires_at, revenuecat_customer_id,
+#     available_credits, credits_consumed_this_cycle, or anything on the
+#     user / stencil_sessions / saved_stencils / ratings collections.
+#   • REJECTS unknown/extra request fields (extra='forbid') — a request
+#     containing target_tier or any other unlisted field fails 422 rather
+#     than silently succeeding.
+# ─────────────────────────────────────────────────────────────────────────────
+
+CLEANUP_BATCH_TYPES = {
+    'legacy_trial_no_rc_entitlement',
+    'stale_is_trial_rc_expired',
+    'legacy_bypass_no_rc_entitlement',
+}
+_RC_PURCHASE_FAMILY = {
+    'INITIAL_PURCHASE', 'RENEWAL', 'PRODUCT_CHANGE',
+    'UNCANCELLATION', 'SUBSCRIPTION_EXTENDED',
+}
+_RC_DEAD_FAMILY = {'EXPIRATION', 'CANCELLATION_EXPIRED'}
+_CLEANUP_ALLOWED_WRITE_FIELDS = {
+    'tier', 'is_trial',
+    'admin_cleanup_reason', 'admin_cleanup_at', 'admin_cleanup_by',
+    'cleanup_batch_id', 'pre_cleanup_tier', 'pre_cleanup_is_trial',
+}
+_CLEANUP_PROTECTED_FIELDS = {
+    'last_event', 'last_product_id', 'last_applied_at',
+    'renewal_date', 'trial_expires_at', 'revenuecat_customer_id',
+    'available_credits', 'credits_consumed_this_cycle',
+    'user_id', 'created_at', 'bypass_granted_at',
+    'anti_abuse_email', 'anti_abuse_device_id', 'anti_abuse_provider',
+    'studio_team_id', 'trial_start_date',
+}
+
+
+class CleanupEntitlementRequest(BaseModel):
+    """Strict request schema: extra fields (e.g. an attempted target_tier
+    override) cause a 422 rather than being silently ignored. The endpoint
+    is hard-locked internally to tier='expired' regardless."""
+    model_config = ConfigDict(extra='forbid')
+
+    batch_type: str
+    cleanup_batch_id: str
+    user_ids: list[str]
+    clear_is_trial: bool = False
+    dry_run: bool = True                    # SAFE DEFAULT
+
+    def validate_shape(self):
+        if self.batch_type not in CLEANUP_BATCH_TYPES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"batch_type must be one of {sorted(CLEANUP_BATCH_TYPES)}",
+            )
+        if not self.cleanup_batch_id.strip():
+            raise HTTPException(status_code=400, detail='cleanup_batch_id required')
+        if not self.user_ids:
+            raise HTTPException(status_code=400, detail='user_ids must be a non-empty list')
+        if len(self.user_ids) > 500:
+            raise HTTPException(status_code=400, detail='user_ids capped at 500 per request')
+        if any(not isinstance(u, str) or not u.strip() for u in self.user_ids):
+            raise HTTPException(status_code=400, detail='every user_id must be a non-empty string')
+
+
+def _validate_cleanup_precondition(batch_type: str, sub: dict) -> tuple[bool, str]:
+    """Return (eligible, reason). Read-only against `sub`."""
+    if not sub:
+        return False, 'subscription_not_found'
+    tier = sub.get('tier')
+    is_trial = bool(sub.get('is_trial'))
+    rc_id = sub.get('revenuecat_customer_id')
+    last_evt = sub.get('last_event') or ''
+
+    if batch_type == 'legacy_trial_no_rc_entitlement':
+        if tier != 'trial':
+            return False, f"precondition_failed:tier_is_{tier!r}_expected_trial"
+        if not is_trial:
+            return False, 'precondition_failed:is_trial_is_false'
+        if rc_id not in (None, ''):
+            return False, 'precondition_failed:revenuecat_customer_id_present'
+        if last_evt in _RC_PURCHASE_FAMILY:
+            return False, f'precondition_failed:active_rc_event_{last_evt}'
+        return True, 'eligible'
+
+    if batch_type == 'stale_is_trial_rc_expired':
+        if not is_trial:
+            return False, 'precondition_failed:is_trial_is_false'
+        if tier == 'trial':
+            return False, 'precondition_failed:tier_is_trial_use_batch_A'
+        if last_evt not in _RC_DEAD_FAMILY:
+            return False, f'precondition_failed:last_event_{last_evt!r}_not_rc_expired'
+        return True, 'eligible'
+
+    if batch_type == 'legacy_bypass_no_rc_entitlement':
+        if tier != 'paywall_bypass':
+            return False, f"precondition_failed:tier_is_{tier!r}_expected_paywall_bypass"
+        if rc_id not in (None, ''):
+            return False, 'precondition_failed:revenuecat_customer_id_present'
+        if last_evt in _RC_PURCHASE_FAMILY:
+            return False, f'precondition_failed:active_rc_event_{last_evt}'
+        if last_evt == 'FRONTEND_SYNC':
+            return False, 'precondition_failed:frontend_sync_present'
+        return True, 'eligible'
+
+    return False, 'unknown_batch_type'
+
+
+@api_router.post("/admin-tool/action/cleanup-entitlement")
+async def admin_action_cleanup_entitlement(request: FastAPIRequest):
+    admin = await verify_admin(request.headers.get('authorization'))
+    raw = await request.json()
+    try:
+        body = CleanupEntitlementRequest(**raw)
+    except ValidationError as e:
+        # Explicitly surface pydantic's "extra field" rejection as a 422.
+        raise HTTPException(status_code=422, detail=e.errors())
+    body.validate_shape()
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    attempted = len(body.user_ids)
+    eligible = 0
+    changed = 0
+    skipped = 0
+    errors: list[dict] = []
+    per_user: list[dict] = []
+
+    for uid in body.user_ids:
+        try:
+            sub = await db.subscriptions.find_one({'user_id': uid}, {'_id': 0})
+            ok, reason = _validate_cleanup_precondition(body.batch_type, sub or {})
+            if not ok:
+                skipped += 1
+                per_user.append({'user_id': uid, 'status': 'skipped', 'reason': reason})
+                continue
+
+            eligible += 1
+            pre_tier = sub.get('tier')
+            pre_is_trial = bool(sub.get('is_trial'))
+
+            update_set = {
+                'tier': 'expired',                          # hard-locked
+                'admin_cleanup_reason': body.batch_type,
+                'admin_cleanup_at': now_iso,
+                'admin_cleanup_by': admin.get('email', 'unknown_admin'),
+                'cleanup_batch_id': body.cleanup_batch_id,
+                'pre_cleanup_tier': pre_tier,
+                'pre_cleanup_is_trial': pre_is_trial,
+            }
+            if body.clear_is_trial and pre_is_trial:
+                update_set['is_trial'] = False
+
+            stray = set(update_set.keys()) - _CLEANUP_ALLOWED_WRITE_FIELDS
+            if stray:
+                raise RuntimeError(f'cleanup endpoint bug: unauthorised write fields {stray}')
+
+            if body.dry_run:
+                per_user.append({
+                    'user_id': uid,
+                    'status': 'would_change',
+                    'pre_tier': pre_tier,
+                    'pre_is_trial': pre_is_trial,
+                    'would_set': update_set,
+                })
+                continue
+
+            pre_protected = {k: sub.get(k) for k in _CLEANUP_PROTECTED_FIELDS}
+
+            result = await db.subscriptions.update_one(
+                {'user_id': uid},
+                {'$set': update_set},
+            )
+            if result.modified_count != 1:
+                skipped += 1
+                eligible -= 1
+                per_user.append({
+                    'user_id': uid, 'status': 'skipped',
+                    'reason': f'update_one_modified_count={result.modified_count}',
+                })
+                continue
+
+            after = await db.subscriptions.find_one({'user_id': uid}, {'_id': 0}) or {}
+            drift = {
+                k: {'before': pre_protected[k], 'after': after.get(k)}
+                for k in _CLEANUP_PROTECTED_FIELDS
+                if pre_protected[k] != after.get(k)
+            }
+            if drift:
+                errors.append({'user_id': uid, 'protected_field_drift': drift})
+                per_user.append({'user_id': uid, 'status': 'changed_with_drift', 'drift': drift})
+            else:
+                per_user.append({
+                    'user_id': uid, 'status': 'changed',
+                    'pre_tier': pre_tier, 'pre_is_trial': pre_is_trial,
+                    'post_tier': after.get('tier'),
+                    'post_is_trial': after.get('is_trial'),
+                })
+            changed += 1
+        except HTTPException:
+            raise
+        except Exception as e:
+            errors.append({'user_id': uid, 'error': str(e)})
+            per_user.append({'user_id': uid, 'status': 'error', 'error': str(e)})
+
+    if not body.dry_run:
+        await log_admin_action(
+            admin.get('email', 'unknown_admin'),
+            'cleanup_entitlement',
+            f"batch={body.batch_type}",
+            {
+                'cleanup_batch_id': body.cleanup_batch_id,
+                'attempted': attempted, 'changed': changed,
+                'skipped': skipped, 'errors': len(errors),
+            },
+        )
+
+    return {
+        'status': 'dry_run' if body.dry_run else 'executed',
+        'batch_type': body.batch_type,
+        'cleanup_batch_id': body.cleanup_batch_id,
+        'attempted': attempted,
+        'eligible': eligible,
+        'changed': changed,
+        'skipped': skipped,
+        'errors': errors,
+        'protected_fields_confirmed_preserved': True if not errors else False,
+        'per_user': per_user,
+    }
+
 
 @api_router.get("/admin-tool/audit-log")
 async def admin_audit_log(request: FastAPIRequest):
