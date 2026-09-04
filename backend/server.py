@@ -3780,6 +3780,13 @@ async def get_user_credits(user_id: str) -> dict:
                     {'user_id': user_id},
                     {'$set': {'available_credits': 0, 'tier': 'trial_expired'}}
                 )
+                # Sync the in-memory dict so the remainder of THIS request
+                # (tier read at L3792, needs_subscription at L3849) sees the
+                # post-update state. Without this, the first call after
+                # expiration returns tier='trial' / needs_subscription=false
+                # while the DB already holds tier='trial_expired'.
+                sub['tier'] = 'trial_expired'
+                sub['available_credits'] = 0
                 logger.info(f'[Trial] User {user_id} trial expired')
             else:
                 delta = expires_dt - now
