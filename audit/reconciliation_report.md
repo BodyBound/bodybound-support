@@ -1,6 +1,6 @@
 # Post-Cleanup Reconciliation Audit (READ-ONLY, Part 2)
 
-- **Generated at (UTC):** 2026-09-04T01:33:18.361249+00:00
+- **Generated at (UTC):** 2026-09-04T13:28:58.150610+00:00
 - **Target:** `https://bodybound-subs.emergent.host`
 - **Writes performed:** NONE
 - **RevenueCat REST/dashboard access available:** False — Only REVENUECAT_WEBHOOK_AUTH is set; no v1 REST secret. Live RC state cannot be queried from this env.
@@ -61,7 +61,7 @@ Audit cutoff used to bucket "existing vs new" = 2026-09-03T00:00:00+00:00 (based
 | 42 | od***@gmail.com | `user_d8d894b397c9` | walk-in | walk-in | `01` | FRONTEND_SYNC | ✅ | — | — | 2026-07-03 | **EXISTING** |
 | 43 | (anonymous) | `user_2b28d360eb02` | walk-in | walk-in | `01` | FRONTEND_SYNC | ✅ | — | — | 2026-07-09 | **EXISTING** |
 | 44 | ju***@gmail.com | `user_d126265f6e2c` | walk-in | walk-in | `01` | RENEWAL | ✅ | — | — | 2026-07-11 | **EXISTING** |
-| 45 | 5h***@privaterelay.appleid.com | `user_2f0a52ef24a1` | walk-in | walk-in | `01` | RENEWAL | ✅ | — | — | 2026-07-20 | **EXISTING** |
+| 45 | 5h***@privaterelay.appleid.com | `user_2f0a52ef24a1` | walk-in | walk-in | `01` | FRONTEND_SYNC | ✅ | — | — | 2026-07-20 | **EXISTING** |
 | 46 | 7f***@privaterelay.appleid.com | `user_dfdec8331c18` | walk-in | walk-in | `01` | RENEWAL | ✅ | — | — | 2026-07-21 | **EXISTING** |
 | 47 | ht***@gmail.com | `user_dd68dcc37908` | walk-in | walk-in | `01` | FRONTEND_SYNC | ✅ | — | — | 2026-08-21 | **EXISTING** |
 | 48 | al***@icloud.com | `user_8e250567c3b1` | walk-in | walk-in | `01` | FRONTEND_SYNC | ✅ | — | — | 2026-08-24 | **EXISTING** |
@@ -135,11 +135,6 @@ The `/admin/all-users` endpoint also derives its `tier` column from `subscriptio
 | user_id | email (redacted) | agg.tier | sub.tier | sub.is_trial | trial_expires | days_since_exp | RC | sub_cleanup_reason | needs_sub | classification |
 |---|---|---|---|:---:|---|---:|:---:|---|:---:|---|
 | `user_673ab0d5552a` | (anonymous) | `trial` | `trial` | True | — | — | — | — | False | **telemetry-limited** |
-| `user_a413c2ff83f9` | (anonymous) | `trial` | `trial` | True | 2026-03-04 | 183.3 | — | — | False | **already expired / stale display only** |
-| `user_5a08baad0eb6` | te***@example.com | `trial` | `trial` | True | 2026-03-04 | 183.3 | — | — | False | **already expired / stale display only** |
-| `user_853c847c8f91` | (anonymous) | `trial` | `trial` | True | 2026-03-08 | 180.0 | — | — | False | **already expired / stale display only** |
-| `user_714df781c4f8` | (anonymous) | `trial` | `trial` | True | 2026-03-20 | 167.4 | — | — | False | **already expired / stale display only** |
-| `user_2c877c5ff51f` | (anonymous) | `trial` | `trial` | True | 2026-03-23 | 165.0 | — | — | False | **already expired / stale display only** |
 
 ## §5 — Re-evaluate the four `is_trial=true` users
 
@@ -159,7 +154,12 @@ The `/admin/all-users` endpoint also derives its `tier` column from `subscriptio
 
 | user_id | email (redacted) | agg.is_trial | sub.is_trial | sub.tier | trial_expires | RC | needs_sub? | classification |
 |---|---|:---:|:---:|---|---|:---:|:---:|---|
+| `user_a413c2ff83f9` | (anonymous) | True | True | `trial_expired` | 2026-03-04 | — | True | **harmless stale metadata (needs_subscription=true regardless of is_trial)** |
+| `user_5a08baad0eb6` | te***@example.com | True | True | `trial_expired` | 2026-03-04 | — | True | **harmless stale metadata (needs_subscription=true regardless of is_trial)** |
+| `user_853c847c8f91` | (anonymous) | True | True | `trial_expired` | 2026-03-08 | — | True | **harmless stale metadata (needs_subscription=true regardless of is_trial)** |
 | `user_043c1203bbf7` | yo***@icloud.com | True | True | `trial_expired` | 2026-03-20 | — | True | **harmless stale metadata (needs_subscription=true regardless of is_trial)** |
+| `user_714df781c4f8` | (anonymous) | True | True | `trial_expired` | 2026-03-20 | — | True | **harmless stale metadata (needs_subscription=true regardless of is_trial)** |
+| `user_2c877c5ff51f` | (anonymous) | True | True | `trial_expired` | 2026-03-23 | — | True | **harmless stale metadata (needs_subscription=true regardless of is_trial)** |
 | `user_6bc049c92733` | ta***@gmail.com | True | True | `trial_expired` | 2026-03-23 | ✅ | True | **harmless stale metadata (needs_subscription=true regardless of is_trial)** |
 | `user_bb51f47bab8a` | (anonymous) | True | True | `trial_expired` | 2026-03-30 | — | True | **harmless stale metadata (needs_subscription=true regardless of is_trial)** |
 | `user_046f6e48e8ce` | ma***@icloud.com | True | True | `expired` | — | ✅ | True | **harmless stale metadata (needs_subscription=true regardless of is_trial)** |
@@ -216,9 +216,9 @@ Set `REVENUECAT_V1_SECRET` in `backend/.env` (Project settings → API keys → 
 | Active bypass — no RC id | 1 | ✅ | NO_RC_ID (RC conclusively absent) | ⚠️ Conversion-safe | Contact for conversion; expire on non-conversion after warning. |
 | Dormant bypass (>90d) — RC id present | 16 | ✅ (credits remain) | RC_UNVERIFIABLE | ❌ NOT YET | Add REVENUECAT_V1_SECRET; then Batch D-safe. |
 | Dormant bypass (>90d) — no RC id | 0 | ✅ (credits remain) | NO_RC_ID | ✅ SAFE | Include in a future Batch D (`user_id`-keyed cleanup). |
-| tier='trial' — display-only stale | 5 | ❌ (needs_subscription=true) | no RC | ✅ SAFE | Batch D by `user_id` (email-blind) to normalize tier/is_trial. |
+| tier='trial' — display-only stale | 0 | ❌ (needs_subscription=true) | no RC | ✅ SAFE | Batch D by `user_id` (email-blind) to normalize tier/is_trial. |
 | tier='trial' — telemetry-limited / ambiguous | 1 | ⚠️ unknown | unknown | ❌ NOT YET | Investigate individually; require RC verification if any RC id. |
-| is_trial=true — display-only | 4 | ❌ (needs_subscription=true; is_trial flag has no gate effect) | no gating impact | ✅ SAFE | Batch D by `user_id` to clear the stale is_trial flag. |
+| is_trial=true — display-only | 9 | ❌ (needs_subscription=true; is_trial flag has no gate effect) | no gating impact | ✅ SAFE | Batch D by `user_id` to clear the stale is_trial flag. |
 | is_trial=true — ambiguous (has RC) | 0 | ⚠️ unknown | RC_UNVERIFIABLE | ❌ NOT YET | Require RC verification. |
 
 ### 8.1 Explicit totals

@@ -67,6 +67,20 @@ iOS app (Expo/React Native + FastAPI backend + MongoDB) that generates tattoo st
 5. **Existing user credits preserved**: Legacy/promo credits remain functional
 
 ## Recent Changes (Feb-Apr 2026)
+- **P0 DATA: Batch D — Expired Trial Access Fix — COMPLETE (Sep 04 2026)** 🔧 ✅
+  - **Problem:** 5 dormant anonymous/device-linked trial subscriptions still had `sub.tier='trial'` months after `trial_expires_at`, so `needs_subscription` (derived from `tier`) evaluated to `False` — meaning the paywall stayed open even though the trials had ended 165-184 days ago. Root cause: `get_user_credits()` only auto-expires on the user's next `/api/credits` call; these 5 users never came back, so the natural expiration path never ran.
+  - **Fix:** new narrow admin action `POST /api/admin-tool/action/normalize-expired-trial` — purpose-built, no arbitrary tier/credit params, hard-coded `$set = {tier: 'trial_expired', available_credits: 0}` mirroring the natural expiration path (server.py:3779-3782) byte-for-byte. Compare-and-set predicates in both request layer and Mongo filter (user_id, tier=='trial', is_trial=true, credits==10, rc_id==null, trial_expires_at exact match). dry_run default. Pydantic `extra='forbid'`. 14 pytest tests, all pass including semantic-parity vs natural expiration.
+  - **Result:** 5/5 writes succeeded with matched=modified=1 and empty drift on every target. Post-batch regression proven byte-identical: raw paid 48 (unchanged, exact user_id set), real paid 46, MRR $734.54, bypass count 47 (unchanged exact set), `trial_expired` +5, `trial` −5. Only remaining `tier='trial'` = `user_673ab0d5552a` (the intentionally-preserved ambiguous 6th). Ambiguous 6th, all RC-linked, all bypass, all paying — untouched. Audit-log has 5 `normalize_expired_trial` entries for `BB-CLEANUP-2026-09-04-D`.
+  - **Files:** `backend/server.py` (+229), `backend/tests/test_normalize_expired_trial.py` (+390). Branch `stabilization/normalize-expired-trial` (commit `01ee80b9`), deployed to prod.
+  - **Audit artifacts:** `/app/audit/batch_d_preflight_report.md`, `/app/audit/batch_d_prod_preflight_report.md`, `/app/audit/batch_d_execution_report.md`, `/app/audit/reconciliation_report.md`, `/app/audit/final_audit_report.md`.
+
+- **P0 DATA: Post-cleanup reconciliation + Batches A/B/C (Sep 03 2026)** ✅
+  - Batches A/B/C already deployed and executed: 128 legacy accounts expired via `POST /api/admin-tool/action/cleanup-entitlement` (preservation-safe endpoint, tier→'expired', metadata written, `last_event`/RC preserved). Rollback snapshots at `/app/audit/rollback_snapshots/`.
+  - Read-only reconciliation established the true post-cleanup state: 46 real paying subscribers (48 raw, 2 excluded: `demo_reviewer_account` + one `@studio.test` seat), 47 `paywall_bypass` (31 active B1 + 16 dormant B2 with RC), 57 total legacy universe.
+  - Authoritative entitlement source confirmed: `subscriptions.tier` — the `users` collection has no `tier`/`is_trial` fields.
+  - Live RC REST verification unavailable in preview env (only `REVENUECAT_WEBHOOK_AUTH` set); 46 RC-linked bypass accounts remain `RC_UNVERIFIABLE` until a v1 secret is added.
+
+## Recent Changes (Feb-Apr 2026 — pre-Sep audit)
 - **P1 PLAN DOCUMENTED: Workspace = Canvas (May 22 2026)** 📋
   - User clarified the intended frontend direction: the existing `showEditModal` (Procreate-style fullscreen edit canvas) should BECOME the primary screen the moment an image is picked. Not a re-skinned landing page.
   - Generation buttons (Light/Medium/Heavy) + history nav + thumbs up/down + reroll must work INSIDE the canvas, "exactly how they were functioning on the original landing screen."
