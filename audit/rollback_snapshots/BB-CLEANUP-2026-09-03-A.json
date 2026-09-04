@@ -1,0 +1,611 @@
+{
+  "batch_id": "BB-CLEANUP-2026-09-03-A",
+  "generated_at": "2026-09-04T00:26:54.003765+00:00",
+  "row_count": 32,
+  "rows": [
+    {
+      "email": "studio_admin_3f3dbf61@studio.test",
+      "user_id": "user_07496fee4536",
+      "full_pre_state": {
+        "user_id": "user_07496fee4536",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-01T07:38:41.967305+00:00",
+        "trial_expires_at": "2026-03-04T07:38:41.967305+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "studio_admin_3f3dbf61@studio.test",
+        "anti_abuse_device_id": "device_studio_admin_3f3dbf61",
+        "anti_abuse_provider": "apple:studio_admin_3f3dbf61",
+        "created_at": "2026-03-01T07:38:41.967305+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "test@example.com",
+      "user_id": "user_0e16e31579f9",
+      "full_pre_state": {
+        "user_id": "user_0e16e31579f9",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_key": "apple:test_user_123:test@example.com:test_user_123",
+        "created_at": "2026-03-01T04:14:36.258403+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "admin_leave_867389b3@leave.test",
+      "user_id": "user_e0e050742fd6",
+      "full_pre_state": {
+        "user_id": "user_e0e050742fd6",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-01T07:38:42.634932+00:00",
+        "trial_expires_at": "2026-03-04T07:38:42.634932+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "admin_leave_867389b3@leave.test",
+        "anti_abuse_device_id": "device_admin_leave_867389b3",
+        "anti_abuse_provider": "apple:admin_leave_867389b3",
+        "created_at": "2026-03-01T07:38:42.634932+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "admin_self_b2d99383@self.test",
+      "user_id": "user_49ced464b7dc",
+      "full_pre_state": {
+        "user_id": "user_49ced464b7dc",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-01T07:38:43.271339+00:00",
+        "trial_expires_at": "2026-03-04T07:38:43.271339+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "admin_self_b2d99383@self.test",
+        "anti_abuse_device_id": "device_admin_self_b2d99383",
+        "anti_abuse_provider": "apple:admin_self_b2d99383",
+        "created_at": "2026-03-01T07:38:43.271339+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "d9t2zywtgp@privaterelay.appleid.com",
+      "user_id": "user_3961ce8c03d5",
+      "full_pre_state": {
+        "user_id": "user_3961ce8c03d5",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-05T20:04:22.765024+00:00",
+        "trial_expires_at": "2026-03-08T20:04:22.765024+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "d9t2zywtgp@privaterelay.appleid.com",
+        "anti_abuse_device_id": "5B07F47E-57FF-4441-AF2F-56AC7F55051B",
+        "anti_abuse_provider": "apple:000013.c7113e4e936c4bca875819696b62c24c.2004",
+        "created_at": "2026-03-05T20:04:22.765024+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "7whmgft88g@privaterelay.appleid.com",
+      "user_id": "user_f8dabce849c2",
+      "full_pre_state": {
+        "user_id": "user_f8dabce849c2",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-06T00:43:35.866195+00:00",
+        "trial_expires_at": "2026-03-09T00:43:35.866195+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "7whmgft88g@privaterelay.appleid.com",
+        "anti_abuse_device_id": "9A4E99BE-FC4D-4A3B-A935-FEF96A3168EF",
+        "anti_abuse_provider": "apple:001703.626791d6d1eb4978a3b2259073a4c92e.0043",
+        "created_at": "2026-03-06T00:43:35.866195+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "paigesimpson93@gmail.com",
+      "user_id": "user_c129f096f73c",
+      "full_pre_state": {
+        "user_id": "user_c129f096f73c",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-15T16:25:51.284091+00:00",
+        "trial_expires_at": "2026-03-18T16:25:51.284091+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "paigesimpson93@gmail.com",
+        "anti_abuse_device_id": "BEB5E9B8-873F-4AB9-993D-DC21500A33AA",
+        "anti_abuse_provider": "google:105639112709581080285",
+        "created_at": "2026-03-15T16:25:51.284091+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "xtremetattoo7695@gmail.com",
+      "user_id": "user_3fd9154d0f22",
+      "full_pre_state": {
+        "user_id": "user_3fd9154d0f22",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-15T23:16:39.895804+00:00",
+        "trial_expires_at": "2026-03-18T23:16:39.895804+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "xtremetattoo7695@gmail.com",
+        "anti_abuse_device_id": "84245626-D7AE-46BA-8A5F-41637D98B781",
+        "anti_abuse_provider": "apple:000038.d8da0885fca54b5192d35c291855e8b0.2316",
+        "created_at": "2026-03-15T23:16:39.895804+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "adoradevan@yahoo.com",
+      "user_id": "user_6146b8af2aee",
+      "full_pre_state": {
+        "user_id": "user_6146b8af2aee",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-15T23:40:58.909932+00:00",
+        "trial_expires_at": "2026-03-18T23:40:58.909932+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "adoradevan@yahoo.com",
+        "anti_abuse_device_id": "0674EC3A-86A1-44F6-9563-005CD9B7F693",
+        "anti_abuse_provider": "apple:000173.cf7f059b4f8948228cfa70b8108b2a62.2340",
+        "created_at": "2026-03-15T23:40:58.909932+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "rb7827cqx2@privaterelay.appleid.com",
+      "user_id": "user_b69a9fea5129",
+      "full_pre_state": {
+        "user_id": "user_b69a9fea5129",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-16T17:40:06.059139+00:00",
+        "trial_expires_at": "2026-03-19T17:40:06.059139+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "rb7827cqx2@privaterelay.appleid.com",
+        "anti_abuse_device_id": "D16400D0-F476-42DC-9181-E00D000649A2",
+        "anti_abuse_provider": "apple:001194.98087ebd43904967a260c732905adf1e.1740",
+        "created_at": "2026-03-16T17:40:06.059139+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "bbvkxpcs25@privaterelay.appleid.com",
+      "user_id": "user_2219ab491b17",
+      "full_pre_state": {
+        "user_id": "user_2219ab491b17",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-16T22:37:43.459665+00:00",
+        "trial_expires_at": "2026-03-19T22:37:43.459665+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "bbvkxpcs25@privaterelay.appleid.com",
+        "anti_abuse_device_id": "7422E7F6-C423-49F3-A6FD-D20F7C4A1830",
+        "anti_abuse_provider": "apple:001861.c191ecc1d319473eb2d48910d64ab62a.2237",
+        "created_at": "2026-03-16T22:37:43.459665+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "rebeccajusticetattoo@gmail.com",
+      "user_id": "user_6e54dc071acd",
+      "full_pre_state": {
+        "user_id": "user_6e54dc071acd",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-17T17:25:44.353455+00:00",
+        "trial_expires_at": "2026-03-20T17:25:44.353455+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "rebeccajusticetattoo@gmail.com",
+        "anti_abuse_device_id": "D63D771A-4E79-4499-A87E-C48639D03E15",
+        "anti_abuse_provider": "google:109349876911938947205",
+        "created_at": "2026-03-17T17:25:44.353455+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "huber54dan@gmail.com",
+      "user_id": "user_0ce25c0778ea",
+      "full_pre_state": {
+        "user_id": "user_0ce25c0778ea",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-18T03:15:54.474119+00:00",
+        "trial_expires_at": "2026-03-21T03:15:54.474119+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "huber54dan@gmail.com",
+        "anti_abuse_device_id": "ED45B7E4-E7CE-4389-A23A-5A61188E747A",
+        "anti_abuse_provider": "google:117954713202584866565",
+        "created_at": "2026-03-18T03:15:54.474119+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "berimbolo13@yahoo.com",
+      "user_id": "user_a83b2776472e",
+      "full_pre_state": {
+        "user_id": "user_a83b2776472e",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-18T03:44:42.030061+00:00",
+        "trial_expires_at": "2026-03-21T03:44:42.030061+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "berimbolo13@yahoo.com",
+        "anti_abuse_device_id": "4426C408-2963-425A-883D-A657ECEBDFB3",
+        "anti_abuse_provider": "apple:000226.70128d6f92db43cb85a344ac03930aed.0344",
+        "created_at": "2026-03-18T03:44:42.030061+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "p8gwjy2gsx@privaterelay.appleid.com",
+      "user_id": "user_4fb5f9c325f0",
+      "full_pre_state": {
+        "user_id": "user_4fb5f9c325f0",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-18T23:46:38.139123+00:00",
+        "trial_expires_at": "2026-03-21T23:46:38.139123+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "p8gwjy2gsx@privaterelay.appleid.com",
+        "anti_abuse_device_id": "2208F4EB-3CF8-47BC-802B-C887D06A32BF",
+        "anti_abuse_provider": "apple:001871.ed4727130a8e47d1a8a77ae02d8ef43e.2346",
+        "created_at": "2026-03-18T23:46:38.139123+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "bigx52936@gmail.com",
+      "user_id": "user_2b921b1e6b13",
+      "full_pre_state": {
+        "user_id": "user_2b921b1e6b13",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-19T05:44:28.025949+00:00",
+        "trial_expires_at": "2026-03-22T05:44:28.025949+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "bigx52936@gmail.com",
+        "anti_abuse_device_id": "DAB739D9-4DBA-4AE2-B998-9F31FBE4FD53",
+        "anti_abuse_provider": "google:117849196730986357724",
+        "created_at": "2026-03-19T05:44:28.025949+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "imperialstoneproducts13@gmail.com",
+      "user_id": "user_8dcf40c8549a",
+      "full_pre_state": {
+        "user_id": "user_8dcf40c8549a",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-21T09:53:49.837295+00:00",
+        "trial_expires_at": "2026-03-24T09:53:49.837295+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "imperialstoneproducts13@gmail.com",
+        "anti_abuse_device_id": "9FA70A77-031E-4326-8C3C-3C62A2B3ECB0",
+        "anti_abuse_provider": "google:117560024815756493961",
+        "created_at": "2026-03-21T09:53:49.837295+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "cqhyc245ry@privaterelay.appleid.com",
+      "user_id": "user_f186c8de49b2",
+      "full_pre_state": {
+        "user_id": "user_f186c8de49b2",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-21T18:32:51.411812+00:00",
+        "trial_expires_at": "2026-03-24T18:32:51.411812+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "cqhyc245ry@privaterelay.appleid.com",
+        "anti_abuse_device_id": "C5909EFD-20CA-4B1E-82E3-63E74C3C18CC",
+        "anti_abuse_provider": "apple:001403.2eeaa184781040818e4372fc900f85ff.1832",
+        "created_at": "2026-03-21T18:32:51.411812+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "59vqw6pdk4@privaterelay.appleid.com",
+      "user_id": "user_69991f178ac2",
+      "full_pre_state": {
+        "user_id": "user_69991f178ac2",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-21T19:16:43.216208+00:00",
+        "trial_expires_at": "2026-03-24T19:16:43.216208+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "59vqw6pdk4@privaterelay.appleid.com",
+        "anti_abuse_device_id": "098B8D71-8EE0-49C0-B286-D51B07EC8DF6",
+        "anti_abuse_provider": "apple:001168.33d335c55b5843d9a6a801c1047cf787.1916",
+        "created_at": "2026-03-21T19:16:43.216208+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "7296hyqz8s@privaterelay.appleid.com",
+      "user_id": "user_b04749f98542",
+      "full_pre_state": {
+        "user_id": "user_b04749f98542",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-21T20:28:29.426178+00:00",
+        "trial_expires_at": "2026-03-24T20:28:29.426178+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "7296hyqz8s@privaterelay.appleid.com",
+        "anti_abuse_device_id": "E5D9ADB7-1F82-41C5-BA47-39436B5E01B8",
+        "anti_abuse_provider": "apple:001794.b3f51e9c304345b19ef74a2d4eb87848.2028",
+        "created_at": "2026-03-21T20:28:29.426178+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "4zwds6m68s@privaterelay.appleid.com",
+      "user_id": "user_451a59e33b3f",
+      "full_pre_state": {
+        "user_id": "user_451a59e33b3f",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-21T23:13:58.484332+00:00",
+        "trial_expires_at": "2026-03-24T23:13:58.484332+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "4zwds6m68s@privaterelay.appleid.com",
+        "anti_abuse_device_id": "E5C40BD4-5952-4FFE-A19E-F6C3E09BAB64",
+        "anti_abuse_provider": "apple:001944.37d8f9e694f547ea93e613fc2495737c.2313",
+        "created_at": "2026-03-21T23:13:58.484332+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "tonyntonya0726@gmail.com",
+      "user_id": "user_c4fc58b58bc9",
+      "full_pre_state": {
+        "user_id": "user_c4fc58b58bc9",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-22T05:50:41.211261+00:00",
+        "trial_expires_at": "2026-03-25T05:50:41.211261+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "tonyntonya0726@gmail.com",
+        "anti_abuse_device_id": "1C965EE6-E04E-4B51-BE89-F97CF6B84F25",
+        "anti_abuse_provider": "google:100326450656946751790",
+        "created_at": "2026-03-22T05:50:41.211261+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "evans.solo1224@gmail.com",
+      "user_id": "user_a3232b5035e1",
+      "full_pre_state": {
+        "user_id": "user_a3232b5035e1",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-22T09:19:34.946030+00:00",
+        "trial_expires_at": "2026-03-25T09:19:34.946030+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "evans.solo1224@gmail.com",
+        "anti_abuse_device_id": "4D00ED75-D08E-49C0-A2F0-568240D5FFA8",
+        "anti_abuse_provider": "google:113735101552390374971",
+        "created_at": "2026-03-22T09:19:34.946030+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "jasonluna1110@icloud.com",
+      "user_id": "user_197e49f86774",
+      "full_pre_state": {
+        "user_id": "user_197e49f86774",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-23T05:26:43.929523+00:00",
+        "trial_expires_at": "2026-03-26T05:26:43.929523+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "jasonluna1110@icloud.com",
+        "anti_abuse_device_id": "332E426B-6A82-4689-9295-149DCB9C529E",
+        "anti_abuse_provider": "apple:000406.bf348163293341f5b4f8ddddc8cbd6d8.0526",
+        "created_at": "2026-03-23T05:26:43.929523+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "littlepayaso479@gmail.com",
+      "user_id": "user_b8061dbd49e1",
+      "full_pre_state": {
+        "user_id": "user_b8061dbd49e1",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-23T22:47:58.125351+00:00",
+        "trial_expires_at": "2026-03-26T22:47:58.125351+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "littlepayaso479@gmail.com",
+        "anti_abuse_device_id": "D1E354DF-A4D6-4FCB-A1FE-2B64C68BE034",
+        "anti_abuse_provider": "apple:001062.1f83954723ff437c808462c877fab2fb.2247",
+        "created_at": "2026-03-23T22:47:58.125351+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "j99t9p4z8s@privaterelay.appleid.com",
+      "user_id": "user_57b23258b720",
+      "full_pre_state": {
+        "user_id": "user_57b23258b720",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-24T14:20:31.977712+00:00",
+        "trial_expires_at": "2026-03-27T14:20:31.977712+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "j99t9p4z8s@privaterelay.appleid.com",
+        "anti_abuse_device_id": "460B53C0-F7D0-4AE1-A4CA-B7C0D238BCC2",
+        "anti_abuse_provider": "apple:001085.25ba8457f3b34c82a8cce5878e4c7bc3.1420",
+        "created_at": "2026-03-24T14:20:31.977712+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "skjenkins719@gmail.com",
+      "user_id": "user_d46f9051d704",
+      "full_pre_state": {
+        "user_id": "user_d46f9051d704",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-24T14:47:46.296630+00:00",
+        "trial_expires_at": "2026-03-27T14:47:46.296630+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "skjenkins719@gmail.com",
+        "anti_abuse_device_id": "E9821493-D889-4D5B-8F8E-B7D4BE184D4A",
+        "anti_abuse_provider": "google:100913965433356281426",
+        "created_at": "2026-03-24T14:47:46.296630+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "fakekaustubh@gmail.com",
+      "user_id": "user_b163df3592fb",
+      "full_pre_state": {
+        "user_id": "user_b163df3592fb",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-25T00:36:03.109882+00:00",
+        "trial_expires_at": "2026-03-28T00:36:03.109882+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "fakekaustubh@gmail.com",
+        "anti_abuse_device_id": "A1643883-B3E0-49AC-B4F6-E99C434F024A",
+        "anti_abuse_provider": "google:107326740890023859706",
+        "created_at": "2026-03-25T00:36:03.109882+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "sillywilly216419@gmail.com",
+      "user_id": "user_c47eb84f88cc",
+      "full_pre_state": {
+        "user_id": "user_c47eb84f88cc",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-25T04:36:45.068523+00:00",
+        "trial_expires_at": "2026-03-28T04:36:45.068523+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "sillywilly216419@gmail.com",
+        "anti_abuse_device_id": "F8979F76-B730-446F-9614-D7FBFC1C1543",
+        "anti_abuse_provider": "apple:000131.1fd84202edf347c6be1015062f346641.0436",
+        "created_at": "2026-03-25T04:36:45.068523+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "cdctzqb6bm@privaterelay.appleid.com",
+      "user_id": "user_1df15ff08e02",
+      "full_pre_state": {
+        "user_id": "user_1df15ff08e02",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-27T00:26:13.254785+00:00",
+        "trial_expires_at": "2026-03-30T00:26:13.254785+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "cdctzqb6bm@privaterelay.appleid.com",
+        "anti_abuse_device_id": "97FE1197-3968-4420-B69D-5FCC3FD8630C",
+        "anti_abuse_provider": "apple:001301.1e489a7dd18741cf83314620e240773e.0026",
+        "created_at": "2026-03-27T00:26:13.254785+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "mswhytxg7h@privaterelay.appleid.com",
+      "user_id": "user_24146c6b71de",
+      "full_pre_state": {
+        "user_id": "user_24146c6b71de",
+        "tier": "trial",
+        "available_credits": 10,
+        "is_trial": true,
+        "trial_start_date": "2026-03-29T02:31:34.008666+00:00",
+        "trial_expires_at": "2026-04-01T02:31:34.008666+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "mswhytxg7h@privaterelay.appleid.com",
+        "anti_abuse_device_id": "52C5C30B-A698-4A5F-9297-AA820AFCC2AC",
+        "anti_abuse_provider": "apple:001137.00b6846ef70d483cb00e2da698ab2616.0231",
+        "created_at": "2026-03-29T02:31:34.008666+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "traviesso53@gmail.com",
+      "user_id": "user_16440cfd7156",
+      "full_pre_state": {
+        "user_id": "user_16440cfd7156",
+        "tier": "trial",
+        "available_credits": 35,
+        "is_trial": true,
+        "trial_start_date": "2026-03-29T10:25:32.080815+00:00",
+        "trial_expires_at": "2026-04-01T10:25:32.080815+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "traviesso53@gmail.com",
+        "anti_abuse_device_id": "D916DE09-3F13-4415-B907-098E1B9A762B",
+        "anti_abuse_provider": "google:103141778865247494508",
+        "created_at": "2026-03-29T10:25:32.080815+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    }
+  ]
+}

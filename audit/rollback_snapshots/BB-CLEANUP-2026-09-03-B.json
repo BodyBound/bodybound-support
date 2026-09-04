@@ -1,0 +1,91 @@
+{
+  "batch_id": "BB-CLEANUP-2026-09-03-B",
+  "generated_at": "2026-09-04T00:26:54.003765+00:00",
+  "row_count": 3,
+  "rows": [
+    {
+      "email": "kyb587vgsh@privaterelay.appleid.com",
+      "user_id": "user_977b263b93e4",
+      "full_pre_state": {
+        "user_id": "user_977b263b93e4",
+        "tier": "expired",
+        "available_credits": 8,
+        "is_trial": true,
+        "trial_expires_at": null,
+        "renewal_date": "2026-07-11T01:23:18.637798+00:00",
+        "revenuecat_customer_id": "$RCAnonymousID:688f370eaf5f4fcaa52bbb4203cf74c6",
+        "anti_abuse_email": "kyb587vgsh@privaterelay.appleid.com",
+        "anti_abuse_device_id": "59DA5037-0ED3-49F5-849F-3A55B0666216",
+        "anti_abuse_provider": "apple:000033.19e35a97162a41f6929ceb1c1ac9adce.0122",
+        "created_at": "2026-06-11T01:22:23.488447+00:00",
+        "credits_consumed_this_cycle": 2,
+        "last_applied_at": "2026-06-11T01:26:34.906140+00:00",
+        "last_event": "EXPIRATION",
+        "last_product_id": "02",
+        "last_refill_at": "paid:2026-06-11T01:23:18.632737+00:00",
+        "max_balance_cap": 1000,
+        "monthly_allowance": 500,
+        "period_type": "TRIAL",
+        "upsell_dismissed_for_cycle": null,
+        "upsell_shown_for_cycle": null
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "Ugglyducklingg500@icloud.com",
+      "user_id": "user_7fb73dfbd454",
+      "full_pre_state": {
+        "user_id": "user_7fb73dfbd454",
+        "tier": "expired",
+        "available_credits": 1,
+        "is_trial": true,
+        "trial_expires_at": null,
+        "renewal_date": "2026-07-25T07:50:11.690484+00:00",
+        "revenuecat_customer_id": "ugglyducklingg500@icloud.com",
+        "anti_abuse_email": "ugglyducklingg500@icloud.com",
+        "anti_abuse_device_id": "4A5DA8E4-F675-404C-B23D-DC254D2B596D",
+        "anti_abuse_provider": "apple:000940.60ddb09421534c48ba0bb449bf8aeb68.0747",
+        "created_at": "2026-06-25T07:47:19.908614+00:00",
+        "credits_consumed_this_cycle": 9,
+        "last_applied_at": "2026-06-28T04:45:20.440492+00:00",
+        "last_event": "EXPIRATION",
+        "last_product_id": "02",
+        "last_refill_at": "paid:2026-06-25T07:50:11.686381+00:00",
+        "max_balance_cap": 1000,
+        "monthly_allowance": 500,
+        "period_type": "TRIAL",
+        "upsell_dismissed_for_cycle": null,
+        "upsell_shown_for_cycle": null
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "JamesPeters0513@icloud.com",
+      "user_id": "user_3e7e8b588a90",
+      "full_pre_state": {
+        "user_id": "user_3e7e8b588a90",
+        "tier": "expired",
+        "available_credits": 6,
+        "is_trial": true,
+        "trial_expires_at": null,
+        "renewal_date": "2026-08-23T15:31:53.302539+00:00",
+        "revenuecat_customer_id": "$RCAnonymousID:b92297b745b64cb190a3f8e2de949808",
+        "anti_abuse_email": "jamespeters0513@icloud.com",
+        "anti_abuse_device_id": "7B1FC425-97FC-4378-9472-1DF5EB6B983E",
+        "anti_abuse_provider": "apple:000232.9e5fc372cfc34aecb3d5f922996800b6.1530",
+        "created_at": "2026-07-24T15:30:18.353317+00:00",
+        "credits_consumed_this_cycle": 4,
+        "last_applied_at": "2026-07-27T13:43:11.625889+00:00",
+        "last_event": "EXPIRATION",
+        "last_product_id": "02",
+        "last_refill_at": "paid:2026-07-24T15:31:53.299878+00:00",
+        "max_balance_cap": 1000,
+        "monthly_allowance": 500,
+        "period_type": "TRIAL",
+        "upsell_dismissed_for_cycle": null,
+        "upsell_shown_for_cycle": null
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    }
+  ]
+}

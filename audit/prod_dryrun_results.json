@@ -1,0 +1,1996 @@
+{
+  "A": {
+    "status": "dry_run",
+    "batch_type": "legacy_trial_no_rc_entitlement",
+    "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+    "attempted": 32,
+    "eligible": 32,
+    "changed": 0,
+    "skipped": 0,
+    "errors": [],
+    "protected_fields_confirmed_preserved": true,
+    "per_user": [
+      {
+        "user_id": "user_07496fee4536",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_0e16e31579f9",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_e0e050742fd6",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_49ced464b7dc",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_3961ce8c03d5",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_f8dabce849c2",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_c129f096f73c",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_3fd9154d0f22",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_6146b8af2aee",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_b69a9fea5129",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_2219ab491b17",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_6e54dc071acd",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_0ce25c0778ea",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_a83b2776472e",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_4fb5f9c325f0",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_2b921b1e6b13",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_8dcf40c8549a",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_f186c8de49b2",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_69991f178ac2",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_b04749f98542",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_451a59e33b3f",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_c4fc58b58bc9",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_a3232b5035e1",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_197e49f86774",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_b8061dbd49e1",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_57b23258b720",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_d46f9051d704",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_b163df3592fb",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_c47eb84f88cc",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_1df15ff08e02",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_24146c6b71de",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_16440cfd7156",
+        "status": "would_change",
+        "pre_tier": "trial",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_trial_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:24.760909+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-A",
+          "pre_cleanup_tier": "trial",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      }
+    ]
+  },
+  "B": {
+    "status": "dry_run",
+    "batch_type": "stale_is_trial_rc_expired",
+    "cleanup_batch_id": "BB-CLEANUP-2026-09-03-B",
+    "attempted": 3,
+    "eligible": 3,
+    "changed": 0,
+    "skipped": 0,
+    "errors": [],
+    "protected_fields_confirmed_preserved": true,
+    "per_user": [
+      {
+        "user_id": "user_977b263b93e4",
+        "status": "would_change",
+        "pre_tier": "expired",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "stale_is_trial_rc_expired",
+          "admin_cleanup_at": "2026-09-04T00:27:25.094890+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-B",
+          "pre_cleanup_tier": "expired",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_7fb73dfbd454",
+        "status": "would_change",
+        "pre_tier": "expired",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "stale_is_trial_rc_expired",
+          "admin_cleanup_at": "2026-09-04T00:27:25.094890+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-B",
+          "pre_cleanup_tier": "expired",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      },
+      {
+        "user_id": "user_3e7e8b588a90",
+        "status": "would_change",
+        "pre_tier": "expired",
+        "pre_is_trial": true,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "stale_is_trial_rc_expired",
+          "admin_cleanup_at": "2026-09-04T00:27:25.094890+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-B",
+          "pre_cleanup_tier": "expired",
+          "pre_cleanup_is_trial": true,
+          "is_trial": false
+        }
+      }
+    ]
+  },
+  "C": {
+    "status": "dry_run",
+    "batch_type": "legacy_bypass_no_rc_entitlement",
+    "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+    "attempted": 93,
+    "eligible": 93,
+    "changed": 0,
+    "skipped": 0,
+    "errors": [],
+    "protected_fields_confirmed_preserved": true,
+    "per_user": [
+      {
+        "user_id": "user_57a09f0edeba",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_d5cd45cd4832",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_fe7626e9ddd4",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_e456c6beaeab",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_f7254b5342e4",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_5c84e0e48b3c",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_af4c33d02999",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_ce6767fc48db",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_7153f495599f",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_2b2ed655ce37",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_627971ba6355",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_76962956b898",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_b557335e4d42",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_f49a5bf5abb9",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_07a762918f14",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_32618c53cf24",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_fe4b19a1342b",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_1bb5cd782b46",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_ab081c8b1fc3",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_8a787f7ec0e9",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_03a3a72c0621",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_a3bf3bd0250f",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_6bf4c1909241",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_e09054f5d68a",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_cc93756b09eb",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_6204bfff2a76",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_7efbad8e5b9c",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_23fcacf97e32",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_f0be7d44916c",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_2e368b58b20b",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_677a98bea3e4",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_19a1bc992ca9",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_58c676a0a16a",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_7777ac4b5235",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_1840202fca48",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_cb07c44da99c",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_23356315bb8e",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_829addd80bc4",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_914f078e659b",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_f110223625f3",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_0381c790064c",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_5425bce133cd",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_4834626d8542",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_4d6e0c5bc3e4",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_93f0386efb2d",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_3b2c4257c493",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_c5cd43ced6fd",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_194710d23441",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_8a1bbd3bf051",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_bc233da24ae5",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_bb1618c4fc9f",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_f8927f5dd441",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_116a617e8a43",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_f192812bc002",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_752a5369915d",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_4bfde5e4d4e0",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_1be699c2ba65",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_7b0d93857ed4",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_0d73e6b15be1",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_b8de63dc9830",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_58292087a021",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_4f9d855f0811",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_64d982e92965",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_79faf4b0324d",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_69675f2f8b78",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_49e426b220ba",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_401fb783b73f",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_a8c391e92912",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_c7bdb703a8f1",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_70b73f5152a4",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_470502d3d741",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_3a9cb5ca6d30",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_eca41ba47fac",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_95d3fceb3226",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_7679bb13f2f2",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_702ddc2a4efb",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_3bfe14756b21",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_9861f90a2d2d",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_a009b9d27ef2",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_fc0fe36399cd",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_8fc9b30dece3",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_1f8e37283af6",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_121933f0f562",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_fee681d6e507",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_c1fa4919ce88",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_005e0c144564",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_6276f381819d",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_4dc2502573de",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_488bab5e4988",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_92f31e298728",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_2d0425bfe37b",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_87586c4c76c7",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      },
+      {
+        "user_id": "user_90df9a5af667",
+        "status": "would_change",
+        "pre_tier": "paywall_bypass",
+        "pre_is_trial": false,
+        "would_set": {
+          "tier": "expired",
+          "admin_cleanup_reason": "legacy_bypass_no_rc_entitlement",
+          "admin_cleanup_at": "2026-09-04T00:27:25.310558+00:00",
+          "admin_cleanup_by": "bodyboundstencil@yahoo.com",
+          "cleanup_batch_id": "BB-CLEANUP-2026-09-03-C",
+          "pre_cleanup_tier": "paywall_bypass",
+          "pre_cleanup_is_trial": false
+        }
+      }
+    ]
+  }
+}

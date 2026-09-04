@@ -1,0 +1,1860 @@
+{
+  "batch_id": "BB-CLEANUP-2026-09-03-C",
+  "generated_at": "2026-09-04T00:26:54.003765+00:00",
+  "row_count": 93,
+  "rows": [
+    {
+      "email": "dk9hq2yxm7@privaterelay.appleid.com",
+      "user_id": "user_57a09f0edeba",
+      "full_pre_state": {
+        "user_id": "user_57a09f0edeba",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_start_date": "2026-03-16T04:14:14.785988+00:00",
+        "trial_expires_at": "2026-03-19T04:14:14.785988+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "dk9hq2yxm7@privaterelay.appleid.com",
+        "anti_abuse_device_id": "56680C08-6FB7-447E-B2F1-253EC1E17418",
+        "anti_abuse_provider": "apple:000411.bf2a092adf38414e85ea677c6cf16d04.0414",
+        "created_at": "2026-03-16T04:14:14.785988+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:30.766286+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "pfzc47fm2z@privaterelay.appleid.com",
+      "user_id": "user_d5cd45cd4832",
+      "full_pre_state": {
+        "user_id": "user_d5cd45cd4832",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_start_date": "2026-03-19T05:42:32.596851+00:00",
+        "trial_expires_at": "2026-03-22T05:42:32.596851+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "pfzc47fm2z@privaterelay.appleid.com",
+        "anti_abuse_device_id": "441B704A-F472-41E0-9C13-4819A0DACDDA",
+        "anti_abuse_provider": "apple:000428.d8515b99501c4b5ea780b724bf908f67.0542",
+        "created_at": "2026-03-19T05:42:32.596851+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:31.451038+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "threetart@gmail.com",
+      "user_id": "user_fe7626e9ddd4",
+      "full_pre_state": {
+        "user_id": "user_fe7626e9ddd4",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "threetart@gmail.com",
+        "anti_abuse_device_id": "5B07F47E-57FF-4441-AF2F-56AC7F55051B",
+        "anti_abuse_provider": "google:115816847931662421325",
+        "anti_abuse_reason": "device_used",
+        "created_at": "2026-03-20T17:32:07.450210+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:31.714097+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "ft6wd9q7zg@privaterelay.appleid.com",
+      "user_id": "user_e456c6beaeab",
+      "full_pre_state": {
+        "user_id": "user_e456c6beaeab",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_start_date": "2026-03-24T04:06:11.798091+00:00",
+        "trial_expires_at": "2026-03-27T04:06:11.798091+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "ft6wd9q7zg@privaterelay.appleid.com",
+        "anti_abuse_device_id": "BDD14794-76A6-4533-B953-E5FB662CB80F",
+        "anti_abuse_provider": "apple:000880.631c12dd364041e5ba4dba1e4a9bc326.0406",
+        "created_at": "2026-03-24T04:06:11.798091+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:32.207029+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "4k2m7n75gv@privaterelay.appleid.com",
+      "user_id": "user_f7254b5342e4",
+      "full_pre_state": {
+        "user_id": "user_f7254b5342e4",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_start_date": "2026-03-24T17:13:08.741975+00:00",
+        "trial_expires_at": "2026-03-27T17:13:08.741975+00:00",
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "4k2m7n75gv@privaterelay.appleid.com",
+        "anti_abuse_device_id": "7B5C5A08-A7C6-49BC-A947-2682DD7DD310",
+        "anti_abuse_provider": "apple:001589.f538e65ae7434a4fbdd6d581d6fa9c85.1713",
+        "created_at": "2026-03-24T17:13:08.741975+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:32.451397+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "scharajoshua@gmail.com",
+      "user_id": "user_5c84e0e48b3c",
+      "full_pre_state": {
+        "user_id": "user_5c84e0e48b3c",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "scharajoshua@gmail.com",
+        "anti_abuse_device_id": "E09BB6F9-A568-4B49-A845-0C3F6C33774B",
+        "anti_abuse_provider": "google:104347825957355778998",
+        "created_at": "2026-04-01T01:21:48.276848+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:33.195330+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "ben.dlc75@gmail.com",
+      "user_id": "user_af4c33d02999",
+      "full_pre_state": {
+        "user_id": "user_af4c33d02999",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "ben.dlc75@gmail.com",
+        "anti_abuse_device_id": "86DFFCA4-7907-4067-B71A-3294ACDECDDC",
+        "anti_abuse_provider": "apple:000401.a17d65db62b94e28b0ada78277cc9062.0505",
+        "created_at": "2026-04-02T05:06:00.934481+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:33.417395+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "tmounga117@gmail.com",
+      "user_id": "user_ce6767fc48db",
+      "full_pre_state": {
+        "user_id": "user_ce6767fc48db",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "tmounga117@gmail.com",
+        "anti_abuse_device_id": "72EBADB1-4CA5-4D35-8F49-57973D3A6E43",
+        "anti_abuse_provider": "google:110407410235871831535",
+        "created_at": "2026-04-02T15:35:51.295495+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:33.835650+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "jessicacreamerh@gmail.com",
+      "user_id": "user_7153f495599f",
+      "full_pre_state": {
+        "user_id": "user_7153f495599f",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "jessicacreamerh@gmail.com",
+        "anti_abuse_device_id": "3E6AFCCC-ED52-467E-ADEE-EF883D4A470F",
+        "anti_abuse_provider": "apple:001054.ee7a5625542d442d98dabf1b7f66b15c.1950",
+        "created_at": "2026-04-03T19:50:58.533741+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:34.057195+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "zkk2mvh48b@privaterelay.appleid.com",
+      "user_id": "user_2b2ed655ce37",
+      "full_pre_state": {
+        "user_id": "user_2b2ed655ce37",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "zkk2mvh48b@privaterelay.appleid.com",
+        "anti_abuse_device_id": "B6DB12C4-B45C-4436-9BEE-C0890AB3DB5C",
+        "anti_abuse_provider": "apple:002016.027e804ad3b541ce8bd40eac4ad3c720.1948",
+        "created_at": "2026-04-05T19:48:37.034444+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:34.506605+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "juliochavezz1981@gmail.com",
+      "user_id": "user_627971ba6355",
+      "full_pre_state": {
+        "user_id": "user_627971ba6355",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "juliochavezz1981@gmail.com",
+        "anti_abuse_device_id": "D916DE09-3F13-4415-B907-098E1B9A762B",
+        "anti_abuse_provider": "google:117517812134534241901",
+        "created_at": "2026-04-06T16:33:08.788879+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:34.730716+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "hyghvjdyfn@privaterelay.appleid.com",
+      "user_id": "user_76962956b898",
+      "full_pre_state": {
+        "user_id": "user_76962956b898",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "hyghvjdyfn@privaterelay.appleid.com",
+        "anti_abuse_device_id": "2AE03DA2-3E0F-4649-AAFA-D16AD0DF9380",
+        "anti_abuse_provider": "apple:001079.9bfbc02a74b148e48b7c1f41bd758313.1839",
+        "created_at": "2026-04-06T18:39:03.473383+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:34.941630+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "art.artocitiez@gmail.com",
+      "user_id": "user_b557335e4d42",
+      "full_pre_state": {
+        "user_id": "user_b557335e4d42",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "art.artocitiez@gmail.com",
+        "anti_abuse_device_id": "86C6007F-9AAD-474B-9B26-C094C983A55D",
+        "anti_abuse_provider": "apple:001368.1a691fa318f24d918842a82451d74fcd.0209",
+        "created_at": "2026-04-07T02:09:38.501466+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:35.157307+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "marcusfarmer1841@gmail.com",
+      "user_id": "user_f49a5bf5abb9",
+      "full_pre_state": {
+        "user_id": "user_f49a5bf5abb9",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "marcusfarmer1841@gmail.com",
+        "anti_abuse_device_id": "266613E0-15E6-4E6D-A8FF-7697BFFCC0FE",
+        "anti_abuse_provider": "apple:000605.bbadbd7c8cc84accabc6ad49c509dd8b.0249",
+        "created_at": "2026-04-07T02:49:51.094652+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:35.356498+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "nns9mxhjy2@privaterelay.appleid.com",
+      "user_id": "user_07a762918f14",
+      "full_pre_state": {
+        "user_id": "user_07a762918f14",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "nns9mxhjy2@privaterelay.appleid.com",
+        "anti_abuse_device_id": "00C109A0-159C-4F4B-90D6-44ED0F9D84B7",
+        "anti_abuse_provider": "apple:000405.2c6ece29720b48a9a11c4cdd839bf5a0.1635",
+        "created_at": "2026-04-07T16:35:33.338841+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:35.566171+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "kratika@emergent.sh",
+      "user_id": "user_32618c53cf24",
+      "full_pre_state": {
+        "user_id": "user_32618c53cf24",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "kratika@emergent.sh",
+        "anti_abuse_device_id": "c914357bf397a722",
+        "anti_abuse_provider": "google:108521703084479560679",
+        "created_at": "2026-04-09T06:25:36.103824+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:35.995506+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "aleonard@girard248.org",
+      "user_id": "user_fe4b19a1342b",
+      "full_pre_state": {
+        "user_id": "user_fe4b19a1342b",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "aleonard@girard248.org",
+        "anti_abuse_device_id": "0B60BDFF-E4AD-45F3-93BB-34EE5682B9F4",
+        "anti_abuse_provider": "google:100427015247158322291",
+        "created_at": "2026-04-12T17:53:04.547020+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:36.839290+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "kerryteves1@gmail.com",
+      "user_id": "user_1bb5cd782b46",
+      "full_pre_state": {
+        "user_id": "user_1bb5cd782b46",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "kerryteves1@gmail.com",
+        "anti_abuse_device_id": "48F3E895-03C6-4EC7-8105-0E3E169335F3",
+        "anti_abuse_provider": "google:110759622826727681754",
+        "created_at": "2026-04-12T21:22:47.425332+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:37.072202+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "7j5xqkm57k@privaterelay.appleid.com",
+      "user_id": "user_ab081c8b1fc3",
+      "full_pre_state": {
+        "user_id": "user_ab081c8b1fc3",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "7j5xqkm57k@privaterelay.appleid.com",
+        "anti_abuse_device_id": "9CF9D5A5-B31A-466C-8385-B458456F25BA",
+        "anti_abuse_provider": "apple:000594.6a732aa93e34406cb431bd1c1efa6a64.1639",
+        "created_at": "2026-04-13T16:39:54.664139+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:37.287906+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "rebeccajusticetattoo2@gmail.com",
+      "user_id": "user_8a787f7ec0e9",
+      "full_pre_state": {
+        "user_id": "user_8a787f7ec0e9",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "rebeccajusticetattoo2@gmail.com",
+        "anti_abuse_device_id": "D63D771A-4E79-4499-A87E-C48639D03E15",
+        "anti_abuse_provider": "google:104973521803544521587",
+        "created_at": "2026-04-14T13:21:57.474459+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:37.553254+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "psychopunx13@outlook.com",
+      "user_id": "user_03a3a72c0621",
+      "full_pre_state": {
+        "user_id": "user_03a3a72c0621",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "psychopunx13@outlook.com",
+        "anti_abuse_device_id": "400BDCDB-31D4-49FC-886E-A330406EBB9A",
+        "anti_abuse_provider": "apple:001270.3a1b5fabad8a4a24b1255dd4d79a7084.2253",
+        "created_at": "2026-04-14T22:53:09.866248+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:37.761339+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "lex531508@gmail.com",
+      "user_id": "user_a3bf3bd0250f",
+      "full_pre_state": {
+        "user_id": "user_a3bf3bd0250f",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "lex531508@gmail.com",
+        "anti_abuse_device_id": "D6E5A571-D91B-4264-BEA1-6DC55CA943D3",
+        "anti_abuse_provider": "google:104164415892422517522",
+        "created_at": "2026-04-15T02:07:54.519951+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:37.975421+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "8rg7f9g8hv@privaterelay.appleid.com",
+      "user_id": "user_6bf4c1909241",
+      "full_pre_state": {
+        "user_id": "user_6bf4c1909241",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "8rg7f9g8hv@privaterelay.appleid.com",
+        "anti_abuse_device_id": "D9CC7CC8-C99A-4AEA-8F07-A39F32B73A75",
+        "anti_abuse_provider": "apple:000675.7625644e8d074185825134f81dec54de.0310",
+        "created_at": "2026-04-15T03:10:52.847773+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:38.195078+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "psychopunx13@gmail.com",
+      "user_id": "user_e09054f5d68a",
+      "full_pre_state": {
+        "user_id": "user_e09054f5d68a",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "psychopunx13@gmail.com",
+        "anti_abuse_device_id": "2C68E543-AFE8-477B-B760-51567E43A0D2",
+        "anti_abuse_provider": "google:113430474411230765191",
+        "created_at": "2026-04-15T21:13:02.211623+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:38.400981+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "jxdmxw99wg@privaterelay.appleid.com",
+      "user_id": "user_cc93756b09eb",
+      "full_pre_state": {
+        "user_id": "user_cc93756b09eb",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "jxdmxw99wg@privaterelay.appleid.com",
+        "anti_abuse_device_id": "B8653AA2-0BEF-4CC6-9977-8C076BD478F6",
+        "anti_abuse_provider": "apple:001051.12371b4082a54154a83fe56278939232.0338",
+        "created_at": "2026-04-16T03:38:11.916666+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:38.606966+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "nitemareb4xmas90@gmail.com",
+      "user_id": "user_6204bfff2a76",
+      "full_pre_state": {
+        "user_id": "user_6204bfff2a76",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "nitemareb4xmas90@gmail.com",
+        "anti_abuse_device_id": "6AA545E4-994D-43A9-BA9D-CF559EF4A744",
+        "anti_abuse_provider": "google:114152302718847323450",
+        "created_at": "2026-04-16T04:20:04.252555+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:38.817550+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "morehotdogs@outlook.com",
+      "user_id": "user_7efbad8e5b9c",
+      "full_pre_state": {
+        "user_id": "user_7efbad8e5b9c",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "morehotdogs@outlook.com",
+        "anti_abuse_device_id": "F66C288A-A142-4B46-99DA-1422F2881F1F",
+        "anti_abuse_provider": "apple:001469.9ebca9cb2e8f43c0a4e5f6a83e029f0f.0423",
+        "created_at": "2026-04-16T04:23:33.631560+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:39.024300+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "lothbroktattoo@gmail.com",
+      "user_id": "user_23fcacf97e32",
+      "full_pre_state": {
+        "user_id": "user_23fcacf97e32",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "lothbroktattoo@gmail.com",
+        "anti_abuse_device_id": "6DE05811-B278-4176-B70E-A5C3120FB5AC",
+        "anti_abuse_provider": "google:115083892262108769846",
+        "created_at": "2026-04-16T04:43:25.328060+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:39.228163+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "645bt6vwm4@privaterelay.appleid.com",
+      "user_id": "user_f0be7d44916c",
+      "full_pre_state": {
+        "user_id": "user_f0be7d44916c",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "645bt6vwm4@privaterelay.appleid.com",
+        "anti_abuse_device_id": "03E25AC5-8246-48E6-96D7-DF65A094DF7F",
+        "anti_abuse_provider": "apple:000153.679b0a9bd16246e5b29cc8137a06eff7.0510",
+        "created_at": "2026-04-16T05:10:15.108215+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:39.477815+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "ncky7jv692@privaterelay.appleid.com",
+      "user_id": "user_2e368b58b20b",
+      "full_pre_state": {
+        "user_id": "user_2e368b58b20b",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "ncky7jv692@privaterelay.appleid.com",
+        "anti_abuse_device_id": "BB9198B8-B05C-4548-861A-70B5E6B9850A",
+        "anti_abuse_provider": "apple:001198.11ceae85ddc642fab51db0017b4be988.0517",
+        "created_at": "2026-04-16T05:17:38.794100+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:39.710686+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "96qrn2rbds@privaterelay.appleid.com",
+      "user_id": "user_677a98bea3e4",
+      "full_pre_state": {
+        "user_id": "user_677a98bea3e4",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "96qrn2rbds@privaterelay.appleid.com",
+        "anti_abuse_device_id": "29FA29EB-B4C4-48F1-BB70-4E9CEEB03C64",
+        "anti_abuse_provider": "apple:000443.d795c06564a14a11b0fad6ec82673002.0545",
+        "created_at": "2026-04-16T05:45:47.232773+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:39.921052+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "rayherrera.tattoo@gmail.com",
+      "user_id": "user_19a1bc992ca9",
+      "full_pre_state": {
+        "user_id": "user_19a1bc992ca9",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "rayherrera.tattoo@gmail.com",
+        "anti_abuse_device_id": "EC0DD046-F38E-4BA6-9074-807D7516524C",
+        "anti_abuse_provider": "apple:001925.bdb949f6364c4d79911aae71882ab7c5.0602",
+        "created_at": "2026-04-16T06:02:55.983854+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:40.130328+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "mq8x5vpzkv@privaterelay.appleid.com",
+      "user_id": "user_58c676a0a16a",
+      "full_pre_state": {
+        "user_id": "user_58c676a0a16a",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "mq8x5vpzkv@privaterelay.appleid.com",
+        "anti_abuse_device_id": "77BFE88A-806E-4D2B-AFF8-B590E60A320D",
+        "anti_abuse_provider": "apple:001169.98008ea5a56f4932b6519e4e92d3949f.0652",
+        "created_at": "2026-04-16T06:52:26.963638+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:40.360155+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "4n9f8mfnd5@privaterelay.appleid.com",
+      "user_id": "user_7777ac4b5235",
+      "full_pre_state": {
+        "user_id": "user_7777ac4b5235",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "4n9f8mfnd5@privaterelay.appleid.com",
+        "anti_abuse_device_id": "BEC30102-8287-4C0E-8E47-2687C3770639",
+        "anti_abuse_provider": "apple:000483.1c255215b92d4e2a828f3f1406cbbf2b.0653",
+        "created_at": "2026-04-16T06:53:09.194762+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:40.550055+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "studio@dnatattoo.co.uk",
+      "user_id": "user_1840202fca48",
+      "full_pre_state": {
+        "user_id": "user_1840202fca48",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "studio@dnatattoo.co.uk",
+        "anti_abuse_device_id": "93254B01-B769-42F5-8280-E05CE679390E",
+        "anti_abuse_provider": "apple:000661.8568dc878d3e46b0b6b70f8fe3784190.0653",
+        "created_at": "2026-04-16T06:53:35.122058+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:40.776375+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "absoluteink8@gmail.com",
+      "user_id": "user_cb07c44da99c",
+      "full_pre_state": {
+        "user_id": "user_cb07c44da99c",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "absoluteink8@gmail.com",
+        "anti_abuse_device_id": "FDE8BBB1-9DDF-47E1-B234-A058C2557E72",
+        "anti_abuse_provider": "apple:000948.6b8f76eac9bf4dd8a9cb0e9ed9953e8c.0654",
+        "created_at": "2026-04-16T06:54:52.948597+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:40.998874+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "5vsf78dmgn@privaterelay.appleid.com",
+      "user_id": "user_23356315bb8e",
+      "full_pre_state": {
+        "user_id": "user_23356315bb8e",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "5vsf78dmgn@privaterelay.appleid.com",
+        "anti_abuse_device_id": "F58837F5-9407-42D6-8282-DF3A163AD1F4",
+        "anti_abuse_provider": "apple:000438.943816cb3f2d4545b121c4a8534bd9cf.0703",
+        "created_at": "2026-04-16T07:03:48.748430+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:41.226252+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "mulysa@mulysamayhem.com",
+      "user_id": "user_829addd80bc4",
+      "full_pre_state": {
+        "user_id": "user_829addd80bc4",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "mulysa@mulysamayhem.com",
+        "anti_abuse_device_id": "0F281650-8F3B-4B25-BA29-0FD2004F279A",
+        "anti_abuse_provider": "google:117627915276613181223",
+        "created_at": "2026-04-16T07:07:53.437665+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:41.443894+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "chhqkjh9ny@privaterelay.appleid.com",
+      "user_id": "user_914f078e659b",
+      "full_pre_state": {
+        "user_id": "user_914f078e659b",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "chhqkjh9ny@privaterelay.appleid.com",
+        "anti_abuse_device_id": "8FE0824C-2792-4CC8-91EA-DA311A05888F",
+        "anti_abuse_provider": "apple:001843.fc8d23c4ad4f4b248eae0fc7e4c6e823.0736",
+        "created_at": "2026-04-16T07:36:24.920308+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:41.648253+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "jk77t446v2@privaterelay.appleid.com",
+      "user_id": "user_f110223625f3",
+      "full_pre_state": {
+        "user_id": "user_f110223625f3",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "jk77t446v2@privaterelay.appleid.com",
+        "anti_abuse_device_id": "160FA94A-F87A-48BD-962F-29FC537E7845",
+        "anti_abuse_provider": "apple:000266.da2e3dc6c4ba4a16b3d1febab1fbb360.0752",
+        "created_at": "2026-04-16T07:52:29.769264+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:41.850079+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "mvwvh7jwbw@privaterelay.appleid.com",
+      "user_id": "user_0381c790064c",
+      "full_pre_state": {
+        "user_id": "user_0381c790064c",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "mvwvh7jwbw@privaterelay.appleid.com",
+        "anti_abuse_device_id": "CFC686BB-C9E5-4150-874B-DB19985C1298",
+        "anti_abuse_provider": "apple:000673.ed90272d68de4814b6eec49457ed4c51.0815",
+        "created_at": "2026-04-16T08:15:43.741221+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:42.068785+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "jayde.redington@gmail.com",
+      "user_id": "user_5425bce133cd",
+      "full_pre_state": {
+        "user_id": "user_5425bce133cd",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "jayde.redington@gmail.com",
+        "anti_abuse_device_id": "C0FD8915-2832-4FA6-8BA8-B48008D4AD5D",
+        "anti_abuse_provider": "google:114639964845170489524",
+        "created_at": "2026-04-16T08:28:35.564663+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:42.278981+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "ydsmzgbrmq@privaterelay.appleid.com",
+      "user_id": "user_4834626d8542",
+      "full_pre_state": {
+        "user_id": "user_4834626d8542",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "ydsmzgbrmq@privaterelay.appleid.com",
+        "anti_abuse_device_id": "273EA790-A48F-46E0-B6A5-B0D2D6D7737D",
+        "anti_abuse_provider": "apple:002032.fa1f62650aa84737883fd92c85d19849.0851",
+        "created_at": "2026-04-16T08:52:02.797247+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:42.493643+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "tribalismstudio@hotmail.co.uk",
+      "user_id": "user_4d6e0c5bc3e4",
+      "full_pre_state": {
+        "user_id": "user_4d6e0c5bc3e4",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "tribalismstudio@hotmail.co.uk",
+        "anti_abuse_device_id": "AB5D83B6-94AB-466B-A9DA-52354A7D550E",
+        "anti_abuse_provider": "apple:001280.e89c7793f630433a8a2d68c50e9f8e77.0914",
+        "created_at": "2026-04-16T09:14:11.085372+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:42.718193+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "y2k9knw8kf@privaterelay.appleid.com",
+      "user_id": "user_93f0386efb2d",
+      "full_pre_state": {
+        "user_id": "user_93f0386efb2d",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "y2k9knw8kf@privaterelay.appleid.com",
+        "anti_abuse_device_id": "707137AA-1546-4F68-A62F-EFA208475DB0",
+        "anti_abuse_provider": "apple:001438.8c33d241bf5c4ec5a0c1c46ef611543f.0928",
+        "created_at": "2026-04-16T09:28:50.370485+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:42.942144+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "rgdyqfs25h@privaterelay.appleid.com",
+      "user_id": "user_3b2c4257c493",
+      "full_pre_state": {
+        "user_id": "user_3b2c4257c493",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "rgdyqfs25h@privaterelay.appleid.com",
+        "anti_abuse_device_id": "30652DE4-249A-4DBF-849F-F2C0B2D6586E",
+        "anti_abuse_provider": "apple:000008.810f53fe75bc4395b3e8c5b30b6652e2.0937",
+        "created_at": "2026-04-16T09:37:29.964264+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:43.173504+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "blvckwolftattoo@gmail.com",
+      "user_id": "user_c5cd43ced6fd",
+      "full_pre_state": {
+        "user_id": "user_c5cd43ced6fd",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "blvckwolftattoo@gmail.com",
+        "anti_abuse_device_id": "1F691027-ECC6-42A0-AFFC-F2B0298E4093",
+        "anti_abuse_provider": "google:109834041709219648284",
+        "created_at": "2026-04-16T10:23:16.443118+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:43.386356+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "ps29k2yh75@privaterelay.appleid.com",
+      "user_id": "user_194710d23441",
+      "full_pre_state": {
+        "user_id": "user_194710d23441",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "ps29k2yh75@privaterelay.appleid.com",
+        "anti_abuse_device_id": "2DC251C6-762E-43AE-A168-876B7BCB1F8C",
+        "anti_abuse_provider": "apple:001134.b645a2c0439941acb84da393413ae216.1034",
+        "created_at": "2026-04-16T10:34:59.258992+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:43.613603+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "aevans0313@icloud.com",
+      "user_id": "user_8a1bbd3bf051",
+      "full_pre_state": {
+        "user_id": "user_8a1bbd3bf051",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "aevans0313@icloud.com",
+        "anti_abuse_device_id": "0C07DEBA-A5D3-4640-807A-D4170BACB846",
+        "anti_abuse_provider": "apple:000015.55532a31ea5e4473b24657d4742d95c8.1115",
+        "created_at": "2026-04-16T11:15:49.719290+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:43.829095+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "t4fgggk7hh@privaterelay.appleid.com",
+      "user_id": "user_bc233da24ae5",
+      "full_pre_state": {
+        "user_id": "user_bc233da24ae5",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "t4fgggk7hh@privaterelay.appleid.com",
+        "anti_abuse_device_id": "9BFA0034-AA43-453B-9234-3EC48A238355",
+        "anti_abuse_provider": "apple:000260.2c6184371214410b994d8481a38706aa.1116",
+        "created_at": "2026-04-16T11:16:51.647545+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:44.047181+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "andy.joss@live.co.uk",
+      "user_id": "user_bb1618c4fc9f",
+      "full_pre_state": {
+        "user_id": "user_bb1618c4fc9f",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "andy.joss@live.co.uk",
+        "anti_abuse_device_id": "7E15CB1D-8D69-4649-9A93-83BD82FB7BE0",
+        "anti_abuse_provider": "apple:000475.32d234a978e84ce2a797ded1662cd27d.1159",
+        "created_at": "2026-04-16T11:59:43.333812+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:44.261029+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "8sbh7hmn78@privaterelay.appleid.com",
+      "user_id": "user_f8927f5dd441",
+      "full_pre_state": {
+        "user_id": "user_f8927f5dd441",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "8sbh7hmn78@privaterelay.appleid.com",
+        "anti_abuse_device_id": "D901FC01-4192-45D3-B2F1-7A1CE20C0868",
+        "anti_abuse_provider": "apple:000442.cc452b4923254262b07aad986f8b34d4.1235",
+        "created_at": "2026-04-16T12:35:14.363541+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:44.700129+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "xct7rq9bct@privaterelay.appleid.com",
+      "user_id": "user_116a617e8a43",
+      "full_pre_state": {
+        "user_id": "user_116a617e8a43",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "xct7rq9bct@privaterelay.appleid.com",
+        "anti_abuse_device_id": "ED4078F9-ECB2-447F-8E40-3043098D4DE6",
+        "anti_abuse_provider": "apple:000281.55a45dd0625a48ca90e0993967c0e9bf.1309",
+        "created_at": "2026-04-16T13:09:37.390166+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:44.933952+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "g8ybxrtszn@privaterelay.appleid.com",
+      "user_id": "user_f192812bc002",
+      "full_pre_state": {
+        "user_id": "user_f192812bc002",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "g8ybxrtszn@privaterelay.appleid.com",
+        "anti_abuse_device_id": "7DA90B42-46EB-4182-82AC-E9B20657703F",
+        "anti_abuse_provider": "apple:000759.8473bbbb549946ae84e90a7335d24728.1332",
+        "created_at": "2026-04-16T13:32:53.474063+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:45.397888+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "diquartel@gmail.com",
+      "user_id": "user_752a5369915d",
+      "full_pre_state": {
+        "user_id": "user_752a5369915d",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "diquartel@gmail.com",
+        "anti_abuse_device_id": "5C6A2DC6-BB10-4F1C-89B5-BF952494D583",
+        "anti_abuse_provider": "apple:000209.a084759dae6c48569e100078adfaee3e.1604",
+        "created_at": "2026-04-16T16:04:38.807820+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:45.637735+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "r2tat2@gmail.com",
+      "user_id": "user_4bfde5e4d4e0",
+      "full_pre_state": {
+        "user_id": "user_4bfde5e4d4e0",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "r2tat2@gmail.com",
+        "anti_abuse_device_id": "78FE0438-1F5C-4D12-982F-3A0004874B40",
+        "anti_abuse_provider": "google:102483462675702511191",
+        "created_at": "2026-04-16T17:27:43.834531+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:46.079102+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "k9kh4fysth@privaterelay.appleid.com",
+      "user_id": "user_1be699c2ba65",
+      "full_pre_state": {
+        "user_id": "user_1be699c2ba65",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "k9kh4fysth@privaterelay.appleid.com",
+        "anti_abuse_device_id": "88444065-6353-49E9-9174-F353FF57685B",
+        "anti_abuse_provider": "apple:000098.06dac50aca8c45d684e41f4ed5a535bf.1735",
+        "created_at": "2026-04-16T17:35:06.170592+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:46.303588+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "ritapimpin1@gmail.com",
+      "user_id": "user_7b0d93857ed4",
+      "full_pre_state": {
+        "user_id": "user_7b0d93857ed4",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "ritapimpin1@gmail.com",
+        "anti_abuse_device_id": "217C72CB-C530-40FC-9E0B-7254F192D9A1",
+        "anti_abuse_provider": "google:117744621904592310765",
+        "created_at": "2026-04-16T18:28:06.907483+00:00",
+        "bypass_granted_at": "2026-04-17T13:45:46.498225+00:00",
+        "last_event": "PAYWALL_BYPASS",
+        "synced_from": "admin_temp_bypass"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "mgxxyz@live.com",
+      "user_id": "user_0d73e6b15be1",
+      "full_pre_state": {
+        "user_id": "user_0d73e6b15be1",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "mgxxyz@live.com",
+        "anti_abuse_device_id": "235CAD29-B36C-453F-BF35-1ACC92C4F4A6",
+        "anti_abuse_provider": "apple:001226.1a560682206047769c3b01522c738415.1857",
+        "created_at": "2026-04-16T18:57:30.134940+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "biglakeforge@gmail.com",
+      "user_id": "user_b8de63dc9830",
+      "full_pre_state": {
+        "user_id": "user_b8de63dc9830",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "biglakeforge@gmail.com",
+        "anti_abuse_device_id": "9C6A5231-3E75-4CBE-9927-EE6ABDC92E1F",
+        "anti_abuse_provider": "apple:001380.037f8e53e3014e8fa1be07fb4c7269f5.1904",
+        "created_at": "2026-04-16T19:04:56.838951+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "highpriestesstattoo420@gmail.com",
+      "user_id": "user_58292087a021",
+      "full_pre_state": {
+        "user_id": "user_58292087a021",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "highpriestesstattoo420@gmail.com",
+        "anti_abuse_device_id": "D90F7D60-D8BE-4039-9595-AF760FD8ABE1",
+        "anti_abuse_provider": "google:109546486152038209220",
+        "created_at": "2026-04-16T20:22:56.497874+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "r2k8zp25x2@privaterelay.appleid.com",
+      "user_id": "user_4f9d855f0811",
+      "full_pre_state": {
+        "user_id": "user_4f9d855f0811",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "r2k8zp25x2@privaterelay.appleid.com",
+        "anti_abuse_device_id": "CD3767E8-A7CA-4149-9CD2-FFACAF0797CD",
+        "anti_abuse_provider": "apple:000532.ea74acfbe2124a5c8aa1187806a20eec.2037",
+        "created_at": "2026-04-16T20:37:35.247713+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "s8gf24n4t7@privaterelay.appleid.com",
+      "user_id": "user_64d982e92965",
+      "full_pre_state": {
+        "user_id": "user_64d982e92965",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "s8gf24n4t7@privaterelay.appleid.com",
+        "anti_abuse_device_id": "64D49A27-3CBB-4AE3-A6E6-E08DBB74E0A2",
+        "anti_abuse_provider": "apple:001983.c3dcc7290b4c4333b69edc6857c9cfcb.2206",
+        "created_at": "2026-04-16T22:06:29.313043+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "jeremybaas@icloud.com",
+      "user_id": "user_79faf4b0324d",
+      "full_pre_state": {
+        "user_id": "user_79faf4b0324d",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "jeremybaas@icloud.com",
+        "anti_abuse_device_id": "E7A87F40-05E0-42CF-9D82-3B28B9F47F38",
+        "anti_abuse_provider": "apple:001404.33c4b3e545204f4481c8c4de843db166.2232",
+        "created_at": "2026-04-16T22:32:38.846837+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "fmhp8n482b@privaterelay.appleid.com",
+      "user_id": "user_69675f2f8b78",
+      "full_pre_state": {
+        "user_id": "user_69675f2f8b78",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "fmhp8n482b@privaterelay.appleid.com",
+        "anti_abuse_device_id": "0BB277F3-8CCC-4617-B742-B12878EDDB90",
+        "anti_abuse_provider": "apple:001430.ed32e0bed05348428d42498f256ccc3b.0037",
+        "created_at": "2026-04-17T00:37:11.134981+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "nyssa.elliott@gmail.com",
+      "user_id": "user_49e426b220ba",
+      "full_pre_state": {
+        "user_id": "user_49e426b220ba",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "nyssa.elliott@gmail.com",
+        "anti_abuse_device_id": "E1B6A444-2DEC-4D13-9573-DBEED479B09D",
+        "anti_abuse_provider": "google:114564589674272485730",
+        "created_at": "2026-04-17T00:40:50.832887+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "lefrogeh@gmail.com",
+      "user_id": "user_401fb783b73f",
+      "full_pre_state": {
+        "user_id": "user_401fb783b73f",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "lefrogeh@gmail.com",
+        "anti_abuse_device_id": "FE90AF34-8FB0-4FC5-89E0-875920987498",
+        "anti_abuse_provider": "apple:000382.55a3ea71d591422aa55de1f6bdee022d.0119",
+        "created_at": "2026-04-17T01:19:50.567762+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "tx5n5s5xv4@privaterelay.appleid.com",
+      "user_id": "user_a8c391e92912",
+      "full_pre_state": {
+        "user_id": "user_a8c391e92912",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "tx5n5s5xv4@privaterelay.appleid.com",
+        "anti_abuse_device_id": "A1EC50FA-B83B-48FB-AEAB-8CC7F8C98E49",
+        "anti_abuse_provider": "apple:000404.6541837cdada4c7ca1d5293f8261503b.0138",
+        "created_at": "2026-04-17T01:39:06.511725+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "lerwiick@gmail.com",
+      "user_id": "user_c7bdb703a8f1",
+      "full_pre_state": {
+        "user_id": "user_c7bdb703a8f1",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "lerwiick@gmail.com",
+        "anti_abuse_device_id": "73DE2883-360D-4AC0-986F-F826A11B4C28",
+        "anti_abuse_provider": "apple:000303.95ad3a979fbc450ab967dac4dcbde84a.0226",
+        "created_at": "2026-04-17T02:26:09.523834+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "74jdb62k2b@privaterelay.appleid.com",
+      "user_id": "user_70b73f5152a4",
+      "full_pre_state": {
+        "user_id": "user_70b73f5152a4",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "74jdb62k2b@privaterelay.appleid.com",
+        "anti_abuse_device_id": "978132AD-4D13-43D6-B8E9-B10232917695",
+        "anti_abuse_provider": "apple:000565.1fe52c7bb4cf49d6a953c2bfc4844f0d.0355",
+        "created_at": "2026-04-17T03:55:44.290698+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "adickinson1998@gmail.com",
+      "user_id": "user_470502d3d741",
+      "full_pre_state": {
+        "user_id": "user_470502d3d741",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "adickinson1998@gmail.com",
+        "anti_abuse_device_id": "0FF3CC1E-36A2-4862-9DF1-512A69DE77BD",
+        "anti_abuse_provider": "google:107868583645760541870",
+        "created_at": "2026-04-17T05:05:25.290071+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "jrowlandsart@gmail.com",
+      "user_id": "user_3a9cb5ca6d30",
+      "full_pre_state": {
+        "user_id": "user_3a9cb5ca6d30",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "jrowlandsart@gmail.com",
+        "anti_abuse_device_id": "92751906-EB00-4489-A904-C1AC775C6156",
+        "anti_abuse_provider": "apple:001235.3c9a46f32eb9475db3fd25d2da30e167.0804",
+        "created_at": "2026-04-17T08:04:23.942105+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "otterchops@gmail.com",
+      "user_id": "user_eca41ba47fac",
+      "full_pre_state": {
+        "user_id": "user_eca41ba47fac",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "otterchops@gmail.com",
+        "anti_abuse_device_id": "7ADDE452-E1E6-4E08-B4CF-53D3ADC62098",
+        "anti_abuse_provider": "google:115360360020830844960",
+        "created_at": "2026-04-17T12:52:23.753251+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "hm4f9hr5sq@privaterelay.appleid.com",
+      "user_id": "user_95d3fceb3226",
+      "full_pre_state": {
+        "user_id": "user_95d3fceb3226",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "hm4f9hr5sq@privaterelay.appleid.com",
+        "anti_abuse_device_id": "626C92AB-73D9-415D-9F1E-E299C84575CC",
+        "anti_abuse_provider": "apple:001514.eb5c908d7a8c42729922d88c5b0eb1dc.1603",
+        "created_at": "2026-04-17T16:03:56.327248+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "p5yzm5vxw8@privaterelay.appleid.com",
+      "user_id": "user_7679bb13f2f2",
+      "full_pre_state": {
+        "user_id": "user_7679bb13f2f2",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "p5yzm5vxw8@privaterelay.appleid.com",
+        "anti_abuse_device_id": "6E1F8E9C-9FEA-44A1-9011-85F604BE4E20",
+        "anti_abuse_provider": "apple:000757.23af5aef5cdc4e7da4324d5e775e7776.1655",
+        "created_at": "2026-04-17T16:55:35.176115+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "sarahdanielletattoo@gmail.com",
+      "user_id": "user_702ddc2a4efb",
+      "full_pre_state": {
+        "user_id": "user_702ddc2a4efb",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "sarahdanielletattoo@gmail.com",
+        "anti_abuse_device_id": "DB0B6AFB-334F-4A9B-A4B0-85C96439837E",
+        "anti_abuse_provider": "apple:001669.a1e9c84061844807a1957d622c296256.1926",
+        "created_at": "2026-04-17T19:26:16.811147+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "sacredart325@gmail.com",
+      "user_id": "user_3bfe14756b21",
+      "full_pre_state": {
+        "user_id": "user_3bfe14756b21",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "sacredart325@gmail.com",
+        "anti_abuse_device_id": "1010D056-1A41-4326-8871-339FB8CEA4E8",
+        "anti_abuse_provider": "google:103049538519388162220",
+        "created_at": "2026-04-17T20:19:53.980393+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "2hy2429yrs@privaterelay.appleid.com",
+      "user_id": "user_9861f90a2d2d",
+      "full_pre_state": {
+        "user_id": "user_9861f90a2d2d",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "2hy2429yrs@privaterelay.appleid.com",
+        "anti_abuse_device_id": "F1FA4AF4-AE4E-4C87-B043-0E4D3188F6D6",
+        "anti_abuse_provider": "apple:001815.c98418883a6646bcbf18e85f83fca14d.0220",
+        "created_at": "2026-04-18T02:20:05.243837+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "ematuschek25@gmail.com",
+      "user_id": "user_a009b9d27ef2",
+      "full_pre_state": {
+        "user_id": "user_a009b9d27ef2",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "ematuschek25@gmail.com",
+        "anti_abuse_device_id": "752F187C-E6DF-4269-857C-589151670B21",
+        "anti_abuse_provider": "google:111717306155704044873",
+        "created_at": "2026-04-18T16:05:47.944505+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "Artbykell@icloud.com",
+      "user_id": "user_fc0fe36399cd",
+      "full_pre_state": {
+        "user_id": "user_fc0fe36399cd",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "artbykell@icloud.com",
+        "anti_abuse_device_id": "1B2C5788-2A9F-4F36-87AF-620EF56D3DE1",
+        "anti_abuse_provider": "apple:001028.2c76c141db794d869fed549cb508c230.1619",
+        "created_at": "2026-04-18T16:19:34.248069+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "vp677b88hd@privaterelay.appleid.com",
+      "user_id": "user_8fc9b30dece3",
+      "full_pre_state": {
+        "user_id": "user_8fc9b30dece3",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "vp677b88hd@privaterelay.appleid.com",
+        "anti_abuse_device_id": "C541C256-5236-4B5E-83A6-D000E11C7BA6",
+        "anti_abuse_provider": "apple:000086.0cc5f81a19b74d068d042074878eaf5f.1735",
+        "created_at": "2026-04-18T17:35:12.563362+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "nw2vptm9vv@privaterelay.appleid.com",
+      "user_id": "user_1f8e37283af6",
+      "full_pre_state": {
+        "user_id": "user_1f8e37283af6",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "nw2vptm9vv@privaterelay.appleid.com",
+        "anti_abuse_device_id": "263F5F23-2CD9-4783-94C8-60C187D720A0",
+        "anti_abuse_provider": "apple:001649.08f9b3c645da4daab2ade2c903f49b62.2112",
+        "created_at": "2026-04-18T21:12:24.144306+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "mjtjvgvb4h@privaterelay.appleid.com",
+      "user_id": "user_121933f0f562",
+      "full_pre_state": {
+        "user_id": "user_121933f0f562",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "mjtjvgvb4h@privaterelay.appleid.com",
+        "anti_abuse_device_id": "D0002B5A-1AC9-4AEB-83DC-E643F1731923",
+        "anti_abuse_provider": "apple:000296.1ae909a957714509bca1b2b479a5cfb6.0231",
+        "created_at": "2026-04-19T02:31:11.683538+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "zr6sj5k9dc@privaterelay.appleid.com",
+      "user_id": "user_fee681d6e507",
+      "full_pre_state": {
+        "user_id": "user_fee681d6e507",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "zr6sj5k9dc@privaterelay.appleid.com",
+        "anti_abuse_device_id": "BACA9945-807E-4CAD-BC87-2EBEA63B69DA",
+        "anti_abuse_provider": "apple:000699.3b7fd6960afa47e4bd1cb18243591f62.1837",
+        "created_at": "2026-04-19T18:37:08.693008+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "joshuastaubin1985@gmail.com",
+      "user_id": "user_c1fa4919ce88",
+      "full_pre_state": {
+        "user_id": "user_c1fa4919ce88",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "joshuastaubin1985@gmail.com",
+        "anti_abuse_device_id": "6E7C931C-7C9D-4E92-BDE0-F8BC5D96A33D",
+        "anti_abuse_provider": "google:110743776197624667076",
+        "created_at": "2026-04-20T13:29:17.673188+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "nyqvnii@gmail.com",
+      "user_id": "user_005e0c144564",
+      "full_pre_state": {
+        "user_id": "user_005e0c144564",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "nyqvnii@gmail.com",
+        "anti_abuse_device_id": "1640DB0B-3107-459E-A62E-4C03BF1E5A5F",
+        "anti_abuse_provider": "apple:001088.8092c88e953c40c5ac6eb2452eef3ba5.2025",
+        "created_at": "2026-04-20T20:25:17.349728+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "gy989g8mjc@privaterelay.appleid.com",
+      "user_id": "user_6276f381819d",
+      "full_pre_state": {
+        "user_id": "user_6276f381819d",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "gy989g8mjc@privaterelay.appleid.com",
+        "anti_abuse_device_id": "BECC72E9-3AC6-4DC8-83BD-8CDE1E7DEEA7",
+        "anti_abuse_provider": "apple:001198.69c9d54ef7b94f49bee938e78a4eff3c.2051",
+        "created_at": "2026-04-20T20:51:53.134743+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "triggtattoos273@gmail.com",
+      "user_id": "user_4dc2502573de",
+      "full_pre_state": {
+        "user_id": "user_4dc2502573de",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "triggtattoos273@gmail.com",
+        "anti_abuse_device_id": "9B98EC23-FEF3-4740-B9D3-FC86C9503BC2",
+        "anti_abuse_provider": "google:104822685946273389030",
+        "created_at": "2026-04-22T06:48:44.552942+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "santianamartinez10@gmail.com",
+      "user_id": "user_488bab5e4988",
+      "full_pre_state": {
+        "user_id": "user_488bab5e4988",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "santianamartinez10@gmail.com",
+        "anti_abuse_device_id": "1B028A88-ECB0-4416-B609-F0E3DE5F1C72",
+        "anti_abuse_provider": "apple:000222.50f50af5b7464c9582c60547dd92748e.1644",
+        "created_at": "2026-04-24T16:44:20.278251+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "manuel_1339@yahoo.com",
+      "user_id": "user_92f31e298728",
+      "full_pre_state": {
+        "user_id": "user_92f31e298728",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "manuel_1339@yahoo.com",
+        "anti_abuse_device_id": "5E2A206F-9CF8-4BB4-8605-32AF475D0CA6",
+        "anti_abuse_provider": "apple:001383.7ada0c7aa7344b12a531e03fbed5a775.0049",
+        "created_at": "2026-04-25T00:49:39.148991+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "taylormass12@gmail.com",
+      "user_id": "user_2d0425bfe37b",
+      "full_pre_state": {
+        "user_id": "user_2d0425bfe37b",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "taylormass12@gmail.com",
+        "anti_abuse_device_id": "B809014F-8052-4C29-8AA1-DA62A72D9136",
+        "anti_abuse_provider": "apple:000590.661eccca5a684a6fb58e3235d709adf1.0839",
+        "created_at": "2026-04-26T08:39:53.672222+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "thebigboss1121@gmail.com",
+      "user_id": "user_87586c4c76c7",
+      "full_pre_state": {
+        "user_id": "user_87586c4c76c7",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "thebigboss1121@gmail.com",
+        "anti_abuse_device_id": "717903FC-2EC0-4C3C-B9E3-49DC57E48433",
+        "anti_abuse_provider": "apple:001992.4222dc1488e0419c86c1a2530a7d7d93.2336",
+        "created_at": "2026-04-27T23:36:15.456792+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    },
+    {
+      "email": "jojosjhc13@icloud.com",
+      "user_id": "user_90df9a5af667",
+      "full_pre_state": {
+        "user_id": "user_90df9a5af667",
+        "tier": "paywall_bypass",
+        "available_credits": 10,
+        "is_trial": false,
+        "trial_expires_at": null,
+        "renewal_date": null,
+        "revenuecat_customer_id": null,
+        "anti_abuse_email": "jojosjhc13@icloud.com",
+        "anti_abuse_device_id": "B19C6B72-52BD-4FB1-B44E-B6C44FB4FEFA",
+        "anti_abuse_provider": "apple:000263.940e1af812b6495b94147c843b17cba4.0648",
+        "created_at": "2026-04-28T06:49:00.847926+00:00"
+      },
+      "fetched_at": "2026-09-04T00:26:54.003765+00:00"
+    }
+  ]
+}
