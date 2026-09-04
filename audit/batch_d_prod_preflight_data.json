@@ -1,0 +1,693 @@
+{
+  "generated_at": "2026-09-04T11:58:18.062542+00:00",
+  "target": "https://bodybound-subs.emergent.host",
+  "batch_id": "BB-CLEANUP-2026-09-04-D",
+  "route_confirmed": true,
+  "targets": [
+    {
+      "user_id": "user_a413c2ff83f9",
+      "pre_fetch": {
+        "user_id": "user_a413c2ff83f9",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-04T19:08:04.519584+00:00",
+        "trial_start_date": "2026-03-01T19:08:04.519584+00:00",
+        "last_event": null,
+        "last_product_id": null,
+        "renewal_date": null
+      },
+      "expected_trial_expires_at": "2026-03-04T19:08:04.519584+00:00",
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "dry_run",
+        "user_id": "user_a413c2ff83f9",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "would_set": {
+          "tier": "trial_expired",
+          "available_credits": 0
+        },
+        "pre_state": {
+          "user_id": "user_a413c2ff83f9",
+          "tier": "trial",
+          "is_trial": true,
+          "available_credits": 10,
+          "revenuecat_customer_id": null,
+          "trial_expires_at": "2026-03-04T19:08:04.519584+00:00",
+          "trial_start_date": "2026-03-01T19:08:04.519584+00:00",
+          "last_event": null,
+          "anti_abuse_provider": "apple:test",
+          "created_at": "2026-03-01T19:08:04.519584+00:00"
+        }
+      },
+      "eligible": true
+    },
+    {
+      "user_id": "user_5a08baad0eb6",
+      "pre_fetch": {
+        "user_id": "user_5a08baad0eb6",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-04T19:10:41.448946+00:00",
+        "trial_start_date": "2026-03-01T19:10:41.448946+00:00",
+        "last_event": null,
+        "last_product_id": null,
+        "renewal_date": null
+      },
+      "expected_trial_expires_at": "2026-03-04T19:10:41.448946+00:00",
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "dry_run",
+        "user_id": "user_5a08baad0eb6",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "would_set": {
+          "tier": "trial_expired",
+          "available_credits": 0
+        },
+        "pre_state": {
+          "user_id": "user_5a08baad0eb6",
+          "tier": "trial",
+          "is_trial": true,
+          "available_credits": 10,
+          "revenuecat_customer_id": null,
+          "trial_expires_at": "2026-03-04T19:10:41.448946+00:00",
+          "trial_start_date": "2026-03-01T19:10:41.448946+00:00",
+          "last_event": null,
+          "anti_abuse_provider": "apple:001234.abcdef",
+          "created_at": "2026-03-01T19:10:41.448946+00:00"
+        }
+      },
+      "eligible": true
+    },
+    {
+      "user_id": "user_853c847c8f91",
+      "pre_fetch": {
+        "user_id": "user_853c847c8f91",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-08T01:34:48.596477+00:00",
+        "trial_start_date": "2026-03-05T01:34:48.596477+00:00",
+        "last_event": null,
+        "last_product_id": null,
+        "renewal_date": null
+      },
+      "expected_trial_expires_at": "2026-03-08T01:34:48.596477+00:00",
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "dry_run",
+        "user_id": "user_853c847c8f91",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "would_set": {
+          "tier": "trial_expired",
+          "available_credits": 0
+        },
+        "pre_state": {
+          "user_id": "user_853c847c8f91",
+          "tier": "trial",
+          "is_trial": true,
+          "available_credits": 10,
+          "revenuecat_customer_id": null,
+          "trial_expires_at": "2026-03-08T01:34:48.596477+00:00",
+          "trial_start_date": "2026-03-05T01:34:48.596477+00:00",
+          "last_event": null,
+          "anti_abuse_provider": "apple:000499.3741b694ebe340ef931503a98be58c02.1425",
+          "created_at": "2026-03-05T01:34:48.596477+00:00"
+        }
+      },
+      "eligible": true
+    },
+    {
+      "user_id": "user_714df781c4f8",
+      "pre_fetch": {
+        "user_id": "user_714df781c4f8",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-20T15:29:43.161934+00:00",
+        "trial_start_date": "2026-03-17T15:29:43.161934+00:00",
+        "last_event": null,
+        "last_product_id": null,
+        "renewal_date": null
+      },
+      "expected_trial_expires_at": "2026-03-20T15:29:43.161934+00:00",
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "dry_run",
+        "user_id": "user_714df781c4f8",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "would_set": {
+          "tier": "trial_expired",
+          "available_credits": 0
+        },
+        "pre_state": {
+          "user_id": "user_714df781c4f8",
+          "tier": "trial",
+          "is_trial": true,
+          "available_credits": 10,
+          "revenuecat_customer_id": null,
+          "trial_expires_at": "2026-03-20T15:29:43.161934+00:00",
+          "trial_start_date": "2026-03-17T15:29:43.161934+00:00",
+          "last_event": null,
+          "anti_abuse_provider": "apple:001524.a1997ec6cd0e438e9b868b706cba79f1.1519",
+          "created_at": "2026-03-17T15:29:43.161934+00:00"
+        }
+      },
+      "eligible": true
+    },
+    {
+      "user_id": "user_2c877c5ff51f",
+      "pre_fetch": {
+        "user_id": "user_2c877c5ff51f",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-23T02:19:43.576524+00:00",
+        "trial_start_date": "2026-03-20T02:19:43.576524+00:00",
+        "last_event": null,
+        "last_product_id": null,
+        "renewal_date": null
+      },
+      "expected_trial_expires_at": "2026-03-23T02:19:43.576524+00:00",
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "dry_run",
+        "user_id": "user_2c877c5ff51f",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "would_set": {
+          "tier": "trial_expired",
+          "available_credits": 0
+        },
+        "pre_state": {
+          "user_id": "user_2c877c5ff51f",
+          "tier": "trial",
+          "is_trial": true,
+          "available_credits": 10,
+          "revenuecat_customer_id": null,
+          "trial_expires_at": "2026-03-23T02:19:43.576524+00:00",
+          "trial_start_date": "2026-03-20T02:19:43.576524+00:00",
+          "last_event": null,
+          "anti_abuse_provider": "apple:001071.d87dfd06ac4b4096a3b5c70fb44d09e5.1650",
+          "created_at": "2026-03-20T02:19:43.576524+00:00"
+        }
+      },
+      "eligible": true
+    }
+  ],
+  "ambiguous_sixth": {
+    "user_id": "user_673ab0d5552a",
+    "pre_fetch": {
+      "user_id": "user_673ab0d5552a",
+      "tier": "trial",
+      "is_trial": true,
+      "available_credits": 0,
+      "revenuecat_customer_id": null,
+      "trial_expires_at": null,
+      "trial_start_date": null,
+      "last_event": null,
+      "last_product_id": null,
+      "renewal_date": null
+    },
+    "dry_run_http_status": 200,
+    "dry_run_response": {
+      "status": "skipped",
+      "user_id": "user_673ab0d5552a",
+      "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+      "reasons": [
+        "precondition_failed:available_credits_is_0_expected_10",
+        "precondition_failed:trial_expires_at_missing",
+        "precondition_failed:trial_expires_at_drift"
+      ],
+      "pre_state": {
+        "user_id": "user_673ab0d5552a",
+        "tier": "trial",
+        "is_trial": true,
+        "available_credits": 0,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": null,
+        "trial_start_date": null,
+        "last_event": null,
+        "anti_abuse_provider": null,
+        "created_at": "2026-03-01T04:14:37.198398+00:00"
+      }
+    },
+    "eligible": false
+  },
+  "paying_controls": [
+    {
+      "user_id": "user_50aab4a6df20",
+      "pre_fetch": {
+        "user_id": "user_50aab4a6df20",
+        "tier": "walk-in",
+        "is_trial": false,
+        "available_credits": 250,
+        "revenuecat_customer_id": null,
+        "trial_expires_at": "2026-03-04T17:33:21.305450+00:00",
+        "trial_start_date": "2026-03-01T17:33:21.305450+00:00",
+        "last_event": "ADMIN_FIX",
+        "last_product_id": null,
+        "renewal_date": "2026-08-13T01:11:23.852890+00:00"
+      },
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "skipped",
+        "user_id": "user_50aab4a6df20",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "reasons": [
+          "precondition_failed:tier_is_'walk-in'_expected_trial",
+          "precondition_failed:is_trial_is_false",
+          "precondition_failed:available_credits_is_250_expected_10"
+        ],
+        "pre_state": {
+          "user_id": "user_50aab4a6df20",
+          "tier": "walk-in",
+          "is_trial": false,
+          "available_credits": 250,
+          "revenuecat_customer_id": null,
+          "trial_expires_at": "2026-03-04T17:33:21.305450+00:00",
+          "trial_start_date": "2026-03-01T17:33:21.305450+00:00",
+          "last_event": "ADMIN_FIX",
+          "anti_abuse_provider": "apple:000406.ec8c990c689e49e48aac5fb9c5acf0f8.1733",
+          "created_at": "2026-03-01T17:33:21.305450+00:00"
+        }
+      },
+      "eligible": false
+    },
+    {
+      "user_id": "user_8305f4c0c6ac",
+      "pre_fetch": {
+        "user_id": "user_8305f4c0c6ac",
+        "tier": "walk-in",
+        "is_trial": false,
+        "available_credits": 230,
+        "revenuecat_customer_id": "pa1dd3wz@gmail.com",
+        "trial_expires_at": null,
+        "trial_start_date": null,
+        "last_event": "FRONTEND_SYNC",
+        "last_product_id": "01",
+        "renewal_date": "2026-08-24T16:19:45.573412+00:00"
+      },
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "skipped",
+        "user_id": "user_8305f4c0c6ac",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "reasons": [
+          "precondition_failed:tier_is_'walk-in'_expected_trial",
+          "precondition_failed:is_trial_is_false",
+          "precondition_failed:available_credits_is_230_expected_10",
+          "precondition_failed:revenuecat_customer_id_present",
+          "precondition_failed:trial_expires_at_missing",
+          "precondition_failed:trial_expires_at_drift"
+        ],
+        "pre_state": {
+          "user_id": "user_8305f4c0c6ac",
+          "tier": "walk-in",
+          "is_trial": false,
+          "available_credits": 230,
+          "revenuecat_customer_id": "pa1dd3wz@gmail.com",
+          "trial_expires_at": null,
+          "trial_start_date": null,
+          "last_event": "FRONTEND_SYNC",
+          "anti_abuse_provider": null,
+          "created_at": "2026-03-01T06:28:49.775849+00:00"
+        }
+      },
+      "eligible": false
+    },
+    {
+      "user_id": "user_570f85906b8c",
+      "pre_fetch": {
+        "user_id": "user_570f85906b8c",
+        "tier": "booked-out",
+        "is_trial": false,
+        "available_credits": 994,
+        "revenuecat_customer_id": "riendeautatt2@gmail.com",
+        "trial_expires_at": null,
+        "trial_start_date": "2026-03-15T22:55:02.513415+00:00",
+        "last_event": "RENEWAL",
+        "last_product_id": "02",
+        "renewal_date": "2026-09-10T05:43:06.158983+00:00"
+      },
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "skipped",
+        "user_id": "user_570f85906b8c",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "reasons": [
+          "precondition_failed:tier_is_'booked-out'_expected_trial",
+          "precondition_failed:is_trial_is_false",
+          "precondition_failed:available_credits_is_994_expected_10",
+          "precondition_failed:revenuecat_customer_id_present",
+          "precondition_failed:trial_expires_at_missing",
+          "precondition_failed:trial_expires_at_drift"
+        ],
+        "pre_state": {
+          "user_id": "user_570f85906b8c",
+          "tier": "booked-out",
+          "is_trial": false,
+          "available_credits": 994,
+          "revenuecat_customer_id": "riendeautatt2@gmail.com",
+          "trial_expires_at": null,
+          "trial_start_date": "2026-03-15T22:55:02.513415+00:00",
+          "last_event": "RENEWAL",
+          "anti_abuse_provider": "apple:000681.e9850345093148b29fe47bb7e778a9b1.2254",
+          "created_at": "2026-03-15T22:55:02.513415+00:00"
+        }
+      },
+      "eligible": false
+    }
+  ],
+  "bypass_controls": [
+    {
+      "email": "nazgultattoos@gmail.com",
+      "user_id": "user_7fc87142a35d",
+      "pre_fetch": {
+        "user_id": "user_7fc87142a35d",
+        "tier": "paywall_bypass",
+        "is_trial": false,
+        "available_credits": 4,
+        "revenuecat_customer_id": "nazgultattoos@gmail.com",
+        "trial_expires_at": null,
+        "trial_start_date": null,
+        "last_event": null,
+        "last_product_id": null,
+        "renewal_date": null
+      },
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "skipped",
+        "user_id": "user_7fc87142a35d",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "reasons": [
+          "precondition_failed:tier_is_'paywall_bypass'_expected_trial",
+          "precondition_failed:is_trial_is_false",
+          "precondition_failed:available_credits_is_4_expected_10",
+          "precondition_failed:revenuecat_customer_id_present",
+          "precondition_failed:trial_expires_at_missing",
+          "precondition_failed:trial_expires_at_drift"
+        ],
+        "pre_state": {
+          "user_id": "user_7fc87142a35d",
+          "tier": "paywall_bypass",
+          "is_trial": false,
+          "available_credits": 4,
+          "revenuecat_customer_id": "nazgultattoos@gmail.com",
+          "trial_expires_at": null,
+          "trial_start_date": null,
+          "last_event": null,
+          "anti_abuse_provider": "apple:001639.265344f9800f4c669ebdc5df421f24f5.1839",
+          "created_at": "2026-04-19T18:39:36.231095+00:00"
+        }
+      },
+      "eligible": false
+    },
+    {
+      "email": "coltrichardsontattoo@gmail.com",
+      "user_id": "user_182dbdc3ef14",
+      "pre_fetch": {
+        "user_id": "user_182dbdc3ef14",
+        "tier": "paywall_bypass",
+        "is_trial": false,
+        "available_credits": 1,
+        "revenuecat_customer_id": "coltrichardsontattoo@gmail.com",
+        "trial_expires_at": null,
+        "trial_start_date": null,
+        "last_event": null,
+        "last_product_id": null,
+        "renewal_date": null
+      },
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "skipped",
+        "user_id": "user_182dbdc3ef14",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "reasons": [
+          "precondition_failed:tier_is_'paywall_bypass'_expected_trial",
+          "precondition_failed:is_trial_is_false",
+          "precondition_failed:available_credits_is_1_expected_10",
+          "precondition_failed:revenuecat_customer_id_present",
+          "precondition_failed:trial_expires_at_missing",
+          "precondition_failed:trial_expires_at_drift"
+        ],
+        "pre_state": {
+          "user_id": "user_182dbdc3ef14",
+          "tier": "paywall_bypass",
+          "is_trial": false,
+          "available_credits": 1,
+          "revenuecat_customer_id": "coltrichardsontattoo@gmail.com",
+          "trial_expires_at": null,
+          "trial_start_date": null,
+          "last_event": null,
+          "anti_abuse_provider": "google:104344669853301246910",
+          "created_at": "2026-04-23T14:30:29.734040+00:00"
+        }
+      },
+      "eligible": false
+    },
+    {
+      "email": "beyondthelinesllc@gmail.com",
+      "user_id": "user_9ab836a173f4",
+      "pre_fetch": {
+        "user_id": "user_9ab836a173f4",
+        "tier": "paywall_bypass",
+        "is_trial": false,
+        "available_credits": 0,
+        "revenuecat_customer_id": "beyondthelinesllc@gmail.com",
+        "trial_expires_at": null,
+        "trial_start_date": null,
+        "last_event": null,
+        "last_product_id": null,
+        "renewal_date": null
+      },
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "skipped",
+        "user_id": "user_9ab836a173f4",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "reasons": [
+          "precondition_failed:tier_is_'paywall_bypass'_expected_trial",
+          "precondition_failed:is_trial_is_false",
+          "precondition_failed:available_credits_is_0_expected_10",
+          "precondition_failed:revenuecat_customer_id_present",
+          "precondition_failed:trial_expires_at_missing",
+          "precondition_failed:trial_expires_at_drift"
+        ],
+        "pre_state": {
+          "user_id": "user_9ab836a173f4",
+          "tier": "paywall_bypass",
+          "is_trial": false,
+          "available_credits": 0,
+          "revenuecat_customer_id": "beyondthelinesllc@gmail.com",
+          "trial_expires_at": null,
+          "trial_start_date": null,
+          "last_event": null,
+          "anti_abuse_provider": "google:109894516175136641764",
+          "created_at": "2026-04-19T19:49:35.379116+00:00"
+        }
+      },
+      "eligible": false
+    }
+  ],
+  "rc_linked_controls": [
+    {
+      "email": "tattoosbykev5@gmail.com",
+      "user_id": "user_6bc049c92733",
+      "pre_fetch": {
+        "user_id": "user_6bc049c92733",
+        "tier": "trial_expired",
+        "is_trial": true,
+        "available_credits": 0,
+        "revenuecat_customer_id": "tattoosbykev5@gmail.com",
+        "trial_expires_at": "2026-03-23T06:11:13.284851+00:00",
+        "trial_start_date": "2026-03-20T06:11:13.284851+00:00",
+        "last_event": null,
+        "last_product_id": null,
+        "renewal_date": null
+      },
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "skipped",
+        "user_id": "user_6bc049c92733",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "reasons": [
+          "precondition_failed:tier_is_'trial_expired'_expected_trial",
+          "precondition_failed:available_credits_is_0_expected_10",
+          "precondition_failed:revenuecat_customer_id_present"
+        ],
+        "pre_state": {
+          "user_id": "user_6bc049c92733",
+          "tier": "trial_expired",
+          "is_trial": true,
+          "available_credits": 0,
+          "revenuecat_customer_id": "tattoosbykev5@gmail.com",
+          "trial_expires_at": "2026-03-23T06:11:13.284851+00:00",
+          "trial_start_date": "2026-03-20T06:11:13.284851+00:00",
+          "last_event": null,
+          "anti_abuse_provider": "apple:001054.8aff9685a18b42eda9a51e25f7820972.0611",
+          "created_at": "2026-03-20T06:11:13.284851+00:00"
+        }
+      },
+      "eligible": false
+    },
+    {
+      "email": "marika_farmer90@icloud.com",
+      "user_id": "user_046f6e48e8ce",
+      "pre_fetch": {
+        "user_id": "user_046f6e48e8ce",
+        "tier": "expired",
+        "is_trial": true,
+        "available_credits": 10,
+        "revenuecat_customer_id": "$RCAnonymousID:a1f642eb49ed4767bf8c192bbef3a5fb",
+        "trial_expires_at": null,
+        "trial_start_date": null,
+        "last_event": "CANCELLATION",
+        "last_product_id": "02",
+        "renewal_date": "2026-07-16T18:33:46.353231+00:00"
+      },
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "skipped",
+        "user_id": "user_046f6e48e8ce",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "reasons": [
+          "precondition_failed:tier_is_'expired'_expected_trial",
+          "precondition_failed:revenuecat_customer_id_present",
+          "precondition_failed:trial_expires_at_missing",
+          "precondition_failed:trial_expires_at_drift"
+        ],
+        "pre_state": {
+          "user_id": "user_046f6e48e8ce",
+          "tier": "expired",
+          "is_trial": true,
+          "available_credits": 10,
+          "revenuecat_customer_id": "$RCAnonymousID:a1f642eb49ed4767bf8c192bbef3a5fb",
+          "trial_expires_at": null,
+          "trial_start_date": null,
+          "last_event": "CANCELLATION",
+          "anti_abuse_provider": "apple:000047.785e55e37d544c7abdfe422a41e5c018.1832",
+          "created_at": "2026-06-16T18:32:32.097019+00:00"
+        }
+      },
+      "eligible": false
+    },
+    {
+      "email": "kaleymerrill@gmail.com",
+      "user_id": "user_13f81de37ea8",
+      "pre_fetch": {
+        "user_id": "user_13f81de37ea8",
+        "tier": "paywall_bypass",
+        "is_trial": false,
+        "available_credits": 3,
+        "revenuecat_customer_id": "kaleymerrill@gmail.com",
+        "trial_expires_at": null,
+        "trial_start_date": null,
+        "last_event": null,
+        "last_product_id": null,
+        "renewal_date": null
+      },
+      "dry_run_http_status": 200,
+      "dry_run_response": {
+        "status": "skipped",
+        "user_id": "user_13f81de37ea8",
+        "cleanup_batch_id": "BB-CLEANUP-2026-09-04-D",
+        "reasons": [
+          "precondition_failed:tier_is_'paywall_bypass'_expected_trial",
+          "precondition_failed:is_trial_is_false",
+          "precondition_failed:available_credits_is_3_expected_10",
+          "precondition_failed:revenuecat_customer_id_present",
+          "precondition_failed:trial_expires_at_missing",
+          "precondition_failed:trial_expires_at_drift"
+        ],
+        "pre_state": {
+          "user_id": "user_13f81de37ea8",
+          "tier": "paywall_bypass",
+          "is_trial": false,
+          "available_credits": 3,
+          "revenuecat_customer_id": "kaleymerrill@gmail.com",
+          "trial_expires_at": null,
+          "trial_start_date": null,
+          "last_event": null,
+          "anti_abuse_provider": "apple:001694.55ae206a2829499983802e3e9d7469fb.1532",
+          "created_at": "2026-04-30T15:32:53.580504+00:00"
+        }
+      },
+      "eligible": false
+    }
+  ],
+  "post_dry_run_states": {
+    "user_a413c2ff83f9": {
+      "user_id": "user_a413c2ff83f9",
+      "tier": "trial",
+      "is_trial": true,
+      "available_credits": 10,
+      "revenuecat_customer_id": null,
+      "trial_expires_at": "2026-03-04T19:08:04.519584+00:00",
+      "trial_start_date": "2026-03-01T19:08:04.519584+00:00",
+      "last_event": null,
+      "last_product_id": null,
+      "renewal_date": null
+    },
+    "user_5a08baad0eb6": {
+      "user_id": "user_5a08baad0eb6",
+      "tier": "trial",
+      "is_trial": true,
+      "available_credits": 10,
+      "revenuecat_customer_id": null,
+      "trial_expires_at": "2026-03-04T19:10:41.448946+00:00",
+      "trial_start_date": "2026-03-01T19:10:41.448946+00:00",
+      "last_event": null,
+      "last_product_id": null,
+      "renewal_date": null
+    },
+    "user_853c847c8f91": {
+      "user_id": "user_853c847c8f91",
+      "tier": "trial",
+      "is_trial": true,
+      "available_credits": 10,
+      "revenuecat_customer_id": null,
+      "trial_expires_at": "2026-03-08T01:34:48.596477+00:00",
+      "trial_start_date": "2026-03-05T01:34:48.596477+00:00",
+      "last_event": null,
+      "last_product_id": null,
+      "renewal_date": null
+    },
+    "user_714df781c4f8": {
+      "user_id": "user_714df781c4f8",
+      "tier": "trial",
+      "is_trial": true,
+      "available_credits": 10,
+      "revenuecat_customer_id": null,
+      "trial_expires_at": "2026-03-20T15:29:43.161934+00:00",
+      "trial_start_date": "2026-03-17T15:29:43.161934+00:00",
+      "last_event": null,
+      "last_product_id": null,
+      "renewal_date": null
+    },
+    "user_2c877c5ff51f": {
+      "user_id": "user_2c877c5ff51f",
+      "tier": "trial",
+      "is_trial": true,
+      "available_credits": 10,
+      "revenuecat_customer_id": null,
+      "trial_expires_at": "2026-03-23T02:19:43.576524+00:00",
+      "trial_start_date": "2026-03-20T02:19:43.576524+00:00",
+      "last_event": null,
+      "last_product_id": null,
+      "renewal_date": null
+    }
+  },
+  "post_dry_run_unchanged": true,
+  "post_dry_run_diffs": {},
+  "summary": {
+    "eligible_targets": 5,
+    "expected_eligible": 5,
+    "all_negative_controls_excluded": true
+  }
+}
